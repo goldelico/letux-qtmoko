@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/graphicsview/qgraphicsitem.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicsitem.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsTextItem Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -88,7 +88,7 @@
 <p>It is possible to make the item editable by setting the <a href="qt.html#TextInteractionFlag-enum">Qt::TextEditorInteraction</a> flag using <a href="qgraphicstextitem.html#setTextInteractionFlags">setTextInteractionFlags</a>().</p>
 <p>The item's preferred text width can be set using <a href="qgraphicstextitem.html#setTextWidth">setTextWidth</a>() and obtained using <a href="qgraphicstextitem.html#textWidth">textWidth</a>().</p>
 <p><b>Note:</b> In order to align HTML text in the center, the item's text width must be set.</p>
-<p align="center"><img src="images/graphicsview-textitem.png" /></p><p><b>Note:</b> QGraphicsTextItem accepts <a href="qgraphicsitem.html#acceptHoverEvents">hoover events</a> by default. You can change this with <a href="qgraphicsitem.html#setAcceptHoverEvents">setAcceptHoverEvents()</a>.</p>
+<p align="center"><img src="images/graphicsview-textitem.png" /></p><p><b>Note:</b> QGraphicsTextItem accepts <a href="qgraphicsitem.html#acceptHoverEvents">hover events</a> by default. You can change this with <a href="qgraphicsitem.html#setAcceptHoverEvents">setAcceptHoverEvents()</a>.</p>
 <p>See also <a href="qgraphicssimpletextitem.html">QGraphicsSimpleTextItem</a>, <a href="qgraphicspathitem.html">QGraphicsPathItem</a>, <a href="qgraphicsrectitem.html">QGraphicsRectItem</a>, <a href="qgraphicsellipseitem.html">QGraphicsEllipseItem</a>, <a href="qgraphicspixmapitem.html">QGraphicsPixmapItem</a>, <a href="qgraphicspolygonitem.html">QGraphicsPolygonItem</a>, <a href="qgraphicslineitem.html">QGraphicsLineItem</a>, and <a href="graphicsview.html">The Graphics View Framework</a>.</p>
 <hr />
 <h2>Property Documentation</h2>
@@ -168,6 +168,7 @@
 <p>See also <a href="qgraphicstextitem.html#textWidth">textWidth</a>() and <a href="qtextdocument.html#textWidth-prop">QTextDocument::setTextWidth</a>().</p>
 <h3 class="fn"><a name="tabChangesFocus"></a>bool QGraphicsTextItem::tabChangesFocus () const</h3>
 <p>Returns true if the <b>Tab</b> key will cause the widget to change focus; otherwise, false is returned.</p>
+<p>By default, this behavior is disabled, and this function will return false.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qgraphicstextitem.html#setTabChangesFocus">setTabChangesFocus</a>().</p>
 <h3 class="fn"><a name="textInteractionFlags"></a><a href="qt.html#TextInteractionFlag-enum">Qt::TextInteractionFlags</a> QGraphicsTextItem::textInteractionFlags () const</h3>
@@ -187,6 +188,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1252,12 +1252,23 @@ DomWidget *QDesignerResource::createDom(QWidget *widget, DomWidget *ui_parentWid
         return 0;
     }
 
+    const QDesignerWidgetDataBaseInterface *wdb = core()->widgetDataBase();
     QDesignerWidgetDataBaseItemInterface *widgetInfo =  0;
-    const int widgetInfoIndex = core()->widgetDataBase()->indexOfObject(widget, false);
+    const int widgetInfoIndex = wdb->indexOfObject(widget, false);
     if (widgetInfoIndex != -1) {
-        widgetInfo = core()->widgetDataBase()->item(widgetInfoIndex);
-        if (widgetInfo->isCustom())
-            m_usedCustomWidgets.insert(widgetInfo, true);
+        widgetInfo = wdb->item(widgetInfoIndex);
+        // Recursively add all dependent custom widgets
+        QDesignerWidgetDataBaseItemInterface *customInfo = widgetInfo;
+        while (customInfo && customInfo->isCustom()) {
+            m_usedCustomWidgets.insert(customInfo, true);
+            const QString extends = customInfo->extends();
+            if (extends == customInfo->name()) {
+                break; // There are faulty files around that have name==extends
+            } else {
+                const int extendsIndex = wdb->indexOfClassName(customInfo->extends());
+                customInfo = extendsIndex != -1 ?  wdb->item(extendsIndex) : static_cast<QDesignerWidgetDataBaseItemInterface *>(0);
+            }
+        }
     }
 
     DomWidget *w = 0;
@@ -1879,6 +1890,7 @@ DomWidget *QDesignerResource::saveWidget(QWizardPage *wizardPage, DomWidget *ui_
     if (pageIdIndex != -1 && sheet->isChanged(pageIdIndex)) {
         DomProperty *property = variantToDomProperty(this, wizardPage->metaObject(), pageIdPropertyName, sheet->property(pageIdIndex));
         Q_ASSERT(property);
+        property->elementString()->setAttributeNotr(QLatin1String("true"));
         DomPropertyList attributes = ui_widget->elementAttribute();
         attributes.push_back(property);
         ui_widget->setElementAttribute(attributes);

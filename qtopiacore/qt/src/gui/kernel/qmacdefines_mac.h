@@ -105,7 +105,11 @@ Yes, it is an informative comment ;-)
 #  undef qDebug
 #endif
 
-#include <libkern/OSTypes.h>
+#if __LP64__
+typedef signed int OSStatus;
+#else
+typedef signed long OSStatus;
+#endif
 
 #ifdef __OBJC__
 #    ifdef slots

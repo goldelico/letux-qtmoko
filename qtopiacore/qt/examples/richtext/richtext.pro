@@ -1,8 +1,9 @@
 TEMPLATE    = subdirs
 SUBDIRS     = calendar \
               orderform \
-              syntaxhighlighter \
-              textobject
+              syntaxhighlighter
+
+contains(QT_CONFIG, svg): SUBDIRS += textobject
 
 # install
 target.path = $$[QT_INSTALL_EXAMPLES]/richtext

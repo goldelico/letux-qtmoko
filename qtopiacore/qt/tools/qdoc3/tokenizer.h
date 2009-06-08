@@ -90,16 +90,16 @@ enum { Tok_Eoi, Tok_Ampersand, Tok_Aster, Tok_Caret, Tok_LeftParen,
   The Tokenizer class implements lexical analysis of C++ source
   files.
 
-  Not every operator or keyword of C++ is recognized; only those that
-  are interesting to us. Some Qt keywords or macros are also
+  Not every operator or keyword of C++ is recognized; only those
+  that are interesting to us. Some Qt keywords or macros are also
   recognized.
 */
 
 class Tokenizer
 {
-public:
-    Tokenizer( const Location& loc, const QByteArray &in );
-    Tokenizer( const Location& loc, FILE *in );
+ public:
+    Tokenizer(const Location& loc, const QByteArray &in);
+    Tokenizer(const Location& loc, FILE *in);
 
     ~Tokenizer();
 
@@ -108,8 +108,8 @@ public:
     bool parsingFnOrMacro() const { return parsingMacro; }
 
     const Location &location() const { return yyTokLoc; }
-    QString previousLexeme() const { return QString( yyPrevLex ); }
-    QString lexeme() const { return QString( yyLex ); }
+    QString previousLexeme() const { return QString(yyPrevLex); }
+    QString lexeme() const { return QString(yyLex); }
     QString version() const { return yyVersion; }
     int braceDepth() const { return yyBraceDepth; }
     int parenDepth() const { return yyParenDepth; }
@@ -119,9 +119,9 @@ public:
     static void terminate();
     static bool isTrue(const QString &condition);
 
-private:
+ private:
     void init();
-    void start( const Location& loc );
+    void start(const Location& loc);
     /*
       This limit on the length of a lexeme seems fairly high, but a
       doc comment can be arbitrarily long. The previous 65,536 limit
@@ -136,13 +136,13 @@ private:
 
     inline int getChar()
     {
-        if ( yyCh == EOF )
+        if (yyCh == EOF)
             return EOF;
-        if ( yyLexLen < yyLexBufSize - 1 ) {
+        if (yyLexLen < yyLexBufSize - 1) {
             yyLex[yyLexLen++] = (char) yyCh;
             yyLex[yyLexLen] = '\0';
         }
-        yyCurLoc.advance( yyCh );
+        yyCurLoc.advance(yyCh);
         int ch = getch();
         if (ch == EOF)
             return EOF;
@@ -153,7 +153,7 @@ private:
     }
 
     int getTokenAfterPreprocessor();
-    void pushSkipping( bool skip );
+    void pushSkipping(bool skip);
     bool popSkipping();
 
     Location yyTokLoc;
@@ -173,7 +173,7 @@ private:
     QString yyVersion;
     bool parsingMacro;
 
-protected:
+ protected:
     QByteArray yyIn;
     int yyPos;
 };

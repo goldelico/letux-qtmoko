@@ -52,16 +52,16 @@ QT_BEGIN_NAMESPACE
 
 class PolyArchiveExtractor : public ArchiveExtractor
 {
-public:
-    PolyArchiveExtractor( const QStringList& extensions,
-			  const QString& commandFormat );
+ public:
+    PolyArchiveExtractor(const QStringList& extensions,
+			 const QString& commandFormat);
     ~PolyArchiveExtractor();
 
-    virtual void extractArchive( const Location& location,
-				 const QString& filePath,
-				 const QString& outputDir );
+    virtual void extractArchive(const Location& location,
+				const QString& filePath,
+				const QString& outputDir);
 
-private:
+ private:
     QString cmd;
 };
 

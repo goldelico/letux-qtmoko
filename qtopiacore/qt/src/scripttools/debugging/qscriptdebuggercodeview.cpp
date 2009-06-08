@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtScriptTools module of the Qt Toolkit.
+** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -81,6 +81,7 @@ QScriptDebuggerCodeView::QScriptDebuggerCodeView(QWidget *parent)
     QObject::connect(d->editor, SIGNAL(breakpointEnableRequest(int,bool)),
                      this, SIGNAL(breakpointEnableRequest(int,bool)));
     QVBoxLayout *vbox = new QVBoxLayout(this);
+    vbox->setMargin(0);
     vbox->addWidget(d->editor);
 }
 

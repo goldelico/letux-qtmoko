@@ -3588,7 +3588,7 @@ void QCommonStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCompl
                 int mbi = pixelMetric(PM_MenuButtonIndicator, toolbutton, widget);
                 QRect ir = toolbutton->rect;
                 QStyleOptionToolButton newBtn = *toolbutton;
-                newBtn.rect = QRect(ir.right() + 5 - mbi, ir.height() - mbi + 4, mbi - 6, mbi - 6);
+                newBtn.rect = QRect(ir.right() + 5 - mbi, ir.y() + ir.height() - mbi + 4, mbi - 6, mbi - 6);
                 drawPrimitive(PE_IndicatorArrowDown, &newBtn, p, widget);
             }
         }

@@ -121,7 +121,7 @@ void QWSEmbedWidgetPrivate::resize(const QSize &size)
     \ingroup qws
     \ingroup advanced
 
-    \brief The QWSEmbedWidget class enabels embedded top-level widgets
+    \brief The QWSEmbedWidget class enables embedded top-level widgets
     in Qt for Embedded Linux.
 
     Note that this class is only available in \l{Qt for Embedded Linux}.

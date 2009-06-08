@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/concurrent/qthreadpool.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/concurrent/qthreadpool.cpp -->
 <head>
   <title>Qt 4.5: QThreadPool Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -82,11 +82,11 @@
 <span class="comment"> // QThreadPool takes ownership and deletes 'hello' automatically</span>
  QThreadPool::globalInstance()-&gt;start(hello);</pre>
 <p>QThreadPool deletes the <a href="qrunnable.html">QRunnable</a> automatically by default. Use <a href="qrunnable.html#setAutoDelete">QRunnable::setAutoDelete</a>() to change the auto-deletion flag.</p>
-<p>QThreadPool supports executing the same <a href="qrunnable.html">QRunnable</a> more than once by calling tryStart(this) from within <a href="qrunnable.html#runx">QRunnable::run</a>(). If autoDelete is enabled the <a href="qrunnable.html">QRunnable</a> will be deleted when the last thread exits the run function. Calling <a href="qthreadpool.html#start">start</a>() multiple times with the same <a href="qrunnable.html">QRunnable</a> when autoDelete is enabled creates a race condition and is not recommended.</p>
+<p>QThreadPool supports executing the same <a href="qrunnable.html">QRunnable</a> more than once by calling tryStart(this) from within <a href="qrunnable.html#run">QRunnable::run</a>(). If autoDelete is enabled the <a href="qrunnable.html">QRunnable</a> will be deleted when the last thread exits the run function. Calling <a href="qthreadpool.html#start">start</a>() multiple times with the same <a href="qrunnable.html">QRunnable</a> when autoDelete is enabled creates a race condition and is not recommended.</p>
 <p>Threads that are unused for a certain amount of time will expire. The default expiry timeout is 30000 milliseconds (30 seconds). This can be changed using <a href="qthreadpool.html#expiryTimeout-prop">setExpiryTimeout</a>(). Setting a negative expiry timeout disables the expiry mechanism.</p>
 <p>Call <a href="qthreadpool.html#maxThreadCount-prop">maxThreadCount</a>() to query the maximum number of threads to be used. If needed, you can change the limit with <a href="qthreadpool.html#maxThreadCount-prop">setMaxThreadCount</a>(). The default <a href="qthreadpool.html#maxThreadCount-prop">maxThreadCount</a>() is <a href="qthread.html#idealThreadCount">QThread::idealThreadCount</a>(). The <a href="qthreadpool.html#activeThreadCount-prop">activeThreadCount</a>() function returns the number of threads currently doing work.</p>
 <p>The <a href="qthreadpool.html#reserveThread">reserveThread</a>() function reserves a thread for external use. Use <a href="qthreadpool.html#releaseThread">releaseThread</a>() when your are done with the thread, so that it may be reused. Essentially, these functions temporarily increase or reduce the active thread count and are useful when implementing time-consuming operations that are not visible to the QThreadPool.</p>
-<p>Note that QThreadPool is a low-level class for managing threads, see <a href="qtconcurrentrun.html#runx">QtConcurrent::run</a>() or the other <a href="threads.html#qtconcurrent-intro">Qt Concurrent</a> APIs for higher level alternatives.</p>
+<p>Note that QThreadPool is a low-level class for managing threads, see <a href="qtconcurrentrun.html#run">QtConcurrent::run</a>() or the other <a href="threads.html#qtconcurrent-intro">Qt Concurrent</a> APIs for higher level alternatives.</p>
 <p>See also <a href="qrunnable.html">QRunnable</a>.</p>
 <hr />
 <h2>Property Documentation</h2>
@@ -134,17 +134,17 @@
 <p>See also <a href="qthreadpool.html#releaseThread">releaseThread</a>().</p>
 <h3 class="fn"><a name="start"></a>void QThreadPool::start ( <a href="qrunnable.html">QRunnable</a> * <i>runnable</i>, int <i>priority</i> = 0 )</h3>
 <p>Reserves a thread and uses it to run <i>runnable</i>, unless this thread will make the current thread count exceed <a href="qthreadpool.html#maxThreadCount-prop">maxThreadCount</a>(). In that case, <i>runnable</i> is added to a run queue instead. The <i>priority</i> argument can be used to control the run queue's order of execution.</p>
-<p>Note that the thread pool takes ownership of the <i>runnable</i> if <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns true, and the <i>runnable</i> will be deleted automatically by the thread pool after the <a href="qrunnable.html#runx">runnable-&gt;run()</a> returns. If <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns false, ownership of <i>runnable</i> remains with the caller. Note that changing the auto-deletion on <i>runnable</i> after calling this functions results in undefined behavior.</p>
+<p>Note that the thread pool takes ownership of the <i>runnable</i> if <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns true, and the <i>runnable</i> will be deleted automatically by the thread pool after the <a href="qrunnable.html#run">runnable-&gt;run()</a> returns. If <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns false, ownership of <i>runnable</i> remains with the caller. Note that changing the auto-deletion on <i>runnable</i> after calling this functions results in undefined behavior.</p>
 <h3 class="fn"><a name="tryStart"></a>bool QThreadPool::tryStart ( <a href="qrunnable.html">QRunnable</a> * <i>runnable</i> )</h3>
 <p>Attempts to reserve a thread to run <i>runnable</i>.</p>
 <p>If no threads are available at the time of calling, then this function does nothing and returns false. Otherwise, <i>runnable</i> is run immediately using one available thread and this function returns true.</p>
-<p>Note that the thread pool takes ownership of the <i>runnable</i> if <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns true, and the <i>runnable</i> will be deleted automatically by the thread pool after the <a href="qrunnable.html#runx">runnable-&gt;run()</a> returns. If <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns false, ownership of <i>runnable</i> remains with the caller. Note that changing the auto-deletion on <i>runnable</i> after calling this function results in undefined behavior.</p>
+<p>Note that the thread pool takes ownership of the <i>runnable</i> if <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns true, and the <i>runnable</i> will be deleted automatically by the thread pool after the <a href="qrunnable.html#run">runnable-&gt;run()</a> returns. If <a href="qrunnable.html#autoDelete">runnable-&gt;autoDelete()</a> returns false, ownership of <i>runnable</i> remains with the caller. Note that changing the auto-deletion on <i>runnable</i> after calling this function results in undefined behavior.</p>
 <h3 class="fn"><a name="waitForDone"></a>void QThreadPool::waitForDone ()</h3>
 <p>Waits for each thread to exit and removes all threads from the thread pool.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

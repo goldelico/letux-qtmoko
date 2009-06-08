@@ -59,5 +59,7 @@
     bool leftButtonIsRightButton;
 }
 
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask;
+
 @end
 #endif

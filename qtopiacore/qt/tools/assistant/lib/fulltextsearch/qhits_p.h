@@ -24,10 +24,8 @@
 
 #include "qsort_p.h"
 #include "qquery_p.h"
-#include "qhits_p.h"
 #include "qfilter_p.h"
 #include "qdocument_p.h"
-#include "qsearchable_p.h"
 #include "qclucene_global_p.h"
 
 #include <QtCore/QSharedDataPointer>

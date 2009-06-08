@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/tools/qvector.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qvector.cpp -->
 <head>
   <title>Qt 4.5: QVector Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -117,8 +117,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qvector.html#operator-lt-lt-80">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QVector&lt;T&gt; &amp; <i>vector</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qvector.html#operator-gt-gt-49">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QVector&lt;T&gt; &amp; <i>vector</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qvector.html#operator-lt-lt-161">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QVector&lt;T&gt; &amp; <i>vector</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qvector.html#operator-gt-gt-92">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QVector&lt;T&gt; &amp; <i>vector</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -217,7 +217,7 @@
  vector.append(&quot;one&quot;);
  vector.append(&quot;two&quot;);
  vector.append(&quot;three&quot;);
-<span class="comment"> // vector: [&quot;one&quot;, &quot;two&quot;, three&quot;]</span></pre>
+<span class="comment"> // vector: [&quot;one&quot;, &quot;two&quot;, &quot;three&quot;]</span></pre>
 <p>This is the same as calling resize(<a href="qvector.html#size">size</a>() + 1) and assigning <i>value</i> to the new last element in the vector.</p>
 <p>This operation is relatively fast, because <a href="qvector.html">QVector</a> typically allocates more memory than necessary, so it can grow without reallocating the entire vector each time.</p>
 <p>See also <a href="qvector.html#operator-lt-lt">operator&lt;&lt;</a>(), <a href="qvector.html#prepend">prepend</a>(), and <a href="qvector.html#insert">insert</a>().</p>
@@ -239,8 +239,7 @@
 <p>The sole purpose of this function is to provide a means of fine tuning <a href="qvector.html">QVector</a>'s memory usage. In general, you will rarely ever need to call this function. If you want to know how many items are in the vector, call <a href="qvector.html#size">size</a>().</p>
 <p>See also <a href="qvector.html#reserve">reserve</a>() and <a href="qvector.html#squeeze">squeeze</a>().</p>
 <h3 class="fn"><a name="clear"></a>void QVector::clear ()</h3>
-<p>Removes all the elements from the vector.</p>
-<p>Same as resize(0).</p>
+<p>Removes all the elements from the vector and releases the memory used by the vector.</p>
 <h3 class="fn"><a name="constBegin"></a><a href="qvector.html#const_iterator-typedef">const_iterator</a> QVector::constBegin () const</h3>
 <p>Returns a const <a href="containers.html#stl-style-iterators">STL-style iterator</a> pointing to the first item in the vector.</p>
 <p>See also <a href="qvector.html#begin">begin</a>() and <a href="qvector.html#constEnd">constEnd</a>().</p>
@@ -492,11 +491,11 @@
 <p>Same as at(<i>i</i>).</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-80"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QVector&lt;T&gt; &amp; <i>vector</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-161"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QVector&lt;T&gt; &amp; <i>vector</i> )</h3>
 <p>Writes the vector <i>vector</i> to stream <i>out</i>.</p>
 <p>This function requires the value type to implement <tt>operator&lt;&lt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-49"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QVector&lt;T&gt; &amp; <i>vector</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-92"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QVector&lt;T&gt; &amp; <i>vector</i> )</h3>
 <p>Reads a vector from stream <i>in</i> into <i>vector</i>.</p>
 <p>This function requires the value type to implement <tt>operator&gt;&gt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
@@ -504,6 +503,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

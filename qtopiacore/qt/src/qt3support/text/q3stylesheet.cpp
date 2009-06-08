@@ -81,7 +81,7 @@ public:
 };
 
 /*!
-    \class Q3StyleSheetItem qstylesheet.h
+    \class Q3StyleSheetItem
     \brief The Q3StyleSheetItem class provides an encapsulation of a set of text styles.
 
     \compat
@@ -861,7 +861,7 @@ int Q3StyleSheetItem::lineSpacing() const
 
 
 /*!
-    \class Q3StyleSheet qstylesheet.h
+    \class Q3StyleSheet
     \brief The Q3StyleSheet class is a collection of styles for rich text
     rendering and a generator of tags.
 

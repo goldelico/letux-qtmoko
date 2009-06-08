@@ -191,8 +191,11 @@ QSizeF QItemDelegatePrivate::doTextLayout(int lineWidth) const
     delegate for this purpose allows the display and editing mechanisms to be
     customized and developed independently from the model and view.
 
-    The QItemDelegate class is one of the \l{Model/View Classes}
-    and is part of Qt's \l{Model/View Programming}{model/view framework}.
+    The QItemDelegate class is one of the \l{Model/View Classes} and
+    is part of Qt's \l{Model/View Programming}{model/view framework}.
+    Note that QStyledItemDelegate has taken over the job of drawing
+    Qt's item views. We recommend the use of QStyledItemDelegate when
+    creating new delegates.
 
     When displaying items from a custom model in a standard view, it is
     often sufficient to simply ensure that the model returns appropriate
@@ -287,6 +290,18 @@ QSizeF QItemDelegatePrivate::doTextLayout(int lineWidth) const
     alternative is to reimplement createEditor(), setEditorData(),
     setModelData(), and updateEditorGeometry(). This process is
     described in the \l{Spin Box Delegate Example}.
+
+    \section1 QStyledItemDelegate vs. QItemDelegate
+
+    Since Qt 4.4, there are two delegate classes: QItemDelegate and
+    QStyledItemDelegate. However, the default delegate is QStyledItemDelegate.
+    These two classes are independent alternatives to painting and providing
+    editors for items in views. The difference between them is that
+    QStyledItemDelegate uses the current style to paint its items. We therefore
+    recommend using QStyledItemDelegate as the base class when implementing
+    custom delegates or when working with Qt style sheets. The code required
+    for either class should be equal unless the custom delegate needs to use
+    the style for drawing.
 
     \sa {Delegate Classes}, QStyledItemDelegate, QAbstractItemDelegate,
         {Spin Box Delegate Example}, {Settings Editor Example},

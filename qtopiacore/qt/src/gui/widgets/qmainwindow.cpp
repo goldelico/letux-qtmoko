@@ -300,6 +300,9 @@ void QMainWindowPrivate::init()
 /*!
     Constructs a QMainWindow with the given \a parent and the specified
     widget \a flags.
+
+    QMainWindow sets the Qt::Window flag itself, and will hence
+    always be created as a top-level widget.
  */
 QMainWindow::QMainWindow(QWidget *parent, Qt::WindowFlags flags)
     : QWidget(*(new QMainWindowPrivate()), parent, flags | Qt::Window)
@@ -477,6 +480,9 @@ void QMainWindow::setMenuBar(QMenuBar *menuBar)
         oldMenuBar->hide();
         oldMenuBar->deleteLater();
     }
+#ifdef Q_OS_WINCE
+    if (menuBar && menuBar->size().height() > 0)
+#endif
     d->layout->setMenuBar(menuBar);
 }
 

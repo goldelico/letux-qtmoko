@@ -52,17 +52,17 @@ QT_BEGIN_NAMESPACE
 
 class PolyUncompressor : public Uncompressor
 {
-public:
-    PolyUncompressor( const QStringList& extensions,
-		      const QString& commandFormat );
+ public:
+    PolyUncompressor(const QStringList& extensions,
+		     const QString& commandFormat);
     ~PolyUncompressor();
 
-    virtual QString uncompressedFilePath( const QString& filePath );
-    virtual void uncompressFile( const Location& location,
-				 const QString& filePath,
-				 const QString& outputFilePath );
+    virtual QString uncompressedFilePath(const QString& filePath);
+    virtual void uncompressFile(const Location& location,
+				const QString& filePath,
+				const QString& outputFilePath);
 
-private:
+ private:
     QString cmd;
 };
 

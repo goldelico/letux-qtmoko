@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/model-view-programming.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/model-view-programming.qdoc -->
 <head>
   <title>Qt 4.5: An Introduction to Model/View Programming</title>
   <link rel="prev" href="model-view-programming.html" />
@@ -70,7 +70,7 @@
 <p>The available views are examined in the section on <a href="model-view-view.html">View Classes</a>.</p>
 <a name="delegates"></a>
 <h3>Delegates</h3>
-<p><a href="qabstractitemdelegate.html">QAbstractItemDelegate</a> is the abstract base class for delegates in the model/view framework. A default delegate implementation is provided by the <a href="qitemdelegate.html">QItemDelegate</a> class, and this is used as the default delegate by Qt's standard views.</p>
+<p><a href="qabstractitemdelegate.html">QAbstractItemDelegate</a> is the abstract base class for delegates in the model/view framework. Since Qt 4.4, the default delegate implementation is provided by <a href="qstyleditemdelegate.html">QStyledItemDelegate</a>, and this is used as the default delegate by Qt's standard views. However, <a href="qstyleditemdelegate.html">QStyledItemDelegate</a> and <a href="qitemdelegate.html">QItemDelegate</a> are independent alternatives to painting and providing editors for items in views. The difference between them is that <a href="qstyleditemdelegate.html">QStyledItemDelegate</a> uses the current style to paint its items. We therefore recommend using <a href="qstyleditemdelegate.html">QStyledItemDelegate</a> as the base class when implementing custom delegates or when working with Qt style sheets.</p>
 <p>Delegates are described in the section on <a href="model-view-delegate.html">Delegate Classes</a>.</p>
 <a name="sorting"></a>
 <h3>Sorting</h3>
@@ -93,6 +93,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

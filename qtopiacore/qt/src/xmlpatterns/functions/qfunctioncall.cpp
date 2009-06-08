@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -81,7 +81,7 @@ Expression::Ptr FunctionCall::typeCheck(const StaticContext::Ptr &context,
        has(UseContextItem))
     {
         m_operands.append(Expression::Ptr(new ContextItem()));
-        context->addLocation(m_operands.last().data(), context->locationFor(this));
+        context->wrapExpressionWith(this, m_operands.last());
     }
 
     const Expression::Ptr me(UnlimitedContainer::typeCheck(context, reqType));
@@ -100,7 +100,7 @@ Expression::Ptr FunctionCall::typeCheck(const StaticContext::Ptr &context,
        m_operands.count() == maxArgs)
     {
         m_operands.last() = Expression::Ptr(new CollationChecker(m_operands.last()));
-        context->addLocation(m_operands.last().data(), context->locationFor(this));
+        context->wrapExpressionWith(this, m_operands.last());
     }
 
     return me;

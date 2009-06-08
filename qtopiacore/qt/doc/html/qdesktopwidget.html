@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qdesktopwidget.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qdesktopwidget.qdoc -->
 <head>
   <title>Qt 4.5: QDesktopWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -22,8 +22,6 @@
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"></div><b><a href="qdesktopwidget.html#QDesktopWidget">QDesktopWidget</a></b> ()</li>
-<li><div class="fn"></div><b><a href="qdesktopwidget.html#dtor.QDesktopWidget">~QDesktopWidget</a></b> ()</li>
 <li><div class="fn"></div>const QRect <b><a href="qdesktopwidget.html#availableGeometry">availableGeometry</a></b> ( int <i>screen</i> = -1 ) const</li>
 <li><div class="fn"></div>const QRect <b><a href="qdesktopwidget.html#availableGeometry-2">availableGeometry</a></b> ( const QWidget * <i>widget</i> ) const</li>
 <li><div class="fn"></div>const QRect <b><a href="qdesktopwidget.html#availableGeometry-3">availableGeometry</a></b> ( const QPoint &amp; <i>p</i> ) const</li>
@@ -60,7 +58,7 @@
 <li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 <li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
 <li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 <li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
@@ -69,21 +67,16 @@
 <hr />
 <h2>Detailed Description</h2>
 <p>The QDesktopWidget class provides access to screen information on multi-head systems.</p>
+<p><a href="qapplication.html#desktop">QApplication::desktop</a>() function should be used to get an instance of the QDesktopWidget.</p>
 <p>Systems with more than one graphics card and monitor can manage the physical screen space available either as multiple desktops, or as a large virtual desktop, which usually has the size of the bounding rectangle of all the screens (see <a href="qdesktopwidget.html#isVirtualDesktop">isVirtualDesktop</a>()). For an application, one of the available screens is the primary screen, i.e&#x2e; the screen where the main widget resides (see <a href="qdesktopwidget.html#primaryScreen">primaryScreen</a>()). All windows opened in the context of the application should be constrained to the boundaries of the primary screen; for example, it would be inconvenient if a dialog box popped up on a different screen, or split over two screens.</p>
 <p>The QDesktopWidget provides information about the geometry of the available screens with <a href="qdesktopwidget.html#screenGeometry">screenGeometry</a>(). The number of screens available is returned by <a href="qdesktopwidget.html#numScreens">numScreens</a>(). The screen number that a particular point or widget is located in is returned by <a href="qdesktopwidget.html#screenNumber">screenNumber</a>().</p>
 <p>Widgets provided by Qt use this class, for example, to place tooltips, menus and dialog boxes according to the parent or application widget.</p>
 <p>Applications can use this class to save window positions, or to place child widgets on one screen.</p>
 <p align="center"><img src="images/qdesktopwidget.png" alt="Managing Multiple Screens" /></p><p>In the illustration above, Application One's primary screen is screen 0, and App Two's primary screen is screen 1.</p>
 <a name="multiple-screens-note"></a><p><b>Note:</b> QDesktopWidget inherits the <a href="qwidget.html">QWidget</a> properties, <a href="qwidget.html#width-prop">width</a>() and <a href="qwidget.html#height-prop">height</a>(), which specify the size of the desktop. However, for desktops with multiple screens, the size of the desktop is the union of all the screen sizes, so <a href="qwidget.html#width-prop">width</a>() and <a href="qwidget.html#height-prop">height</a>() should <i>not</i> be used for computing the size of a widget to be placed on one of the screens. The correct width and height values are obtained using <a href="qdesktopwidget.html#availableGeometry">availableGeometry</a>() or <a href="qdesktopwidget.html#screenGeometry">screenGeometry</a>() for a particular screen.</p>
-<p>See also <a href="qapplication.html">QApplication</a> and <a href="qx11info.html#appRootWindow">QX11Info::appRootWindow</a>().</p>
+<p>See also <a href="qapplication.html">QApplication</a>, <a href="qapplication.html#desktop">QApplication::desktop</a>(), and <a href="qx11info.html#appRootWindow">QX11Info::appRootWindow</a>().</p>
 <hr />
 <h2>Member Function Documentation</h2>
-<h3 class="fn"><a name="QDesktopWidget"></a>QDesktopWidget::QDesktopWidget ()</h3>
-<p>Creates the desktop widget.</p>
-<p>If the system supports a virtual desktop, this widget will have the size of the virtual desktop; otherwise this widget will have the size of the primary screen.</p>
-<p>Instead of using <a href="qdesktopwidget.html">QDesktopWidget</a> directly, use <a href="qapplication.html#desktop">QApplication::desktop</a>().</p>
-<h3 class="fn"><a name="dtor.QDesktopWidget"></a>QDesktopWidget::~QDesktopWidget ()</h3>
-<p>Destroys the desktop widget and frees any allocated resources.</p>
 <h3 class="fn"><a name="availableGeometry"></a>const <a href="qrect.html">QRect</a> QDesktopWidget::availableGeometry ( int <i>screen</i> = -1 ) const</h3>
 <p>Returns the available geometry of the screen with index <i>screen</i>. What is available will be subrect of <a href="qdesktopwidget.html#screenGeometry">screenGeometry</a>() based on what the platform decides is available (for example excludes the dock and menu bar on Mac OS X, or the task bar on Windows). The default screen is used if <i>screen</i> is -1.</p>
 <p>See also <a href="qdesktopwidget.html#screenNumber">screenNumber</a>() and <a href="qdesktopwidget.html#screenGeometry">screenGeometry</a>().</p>
@@ -132,6 +125,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

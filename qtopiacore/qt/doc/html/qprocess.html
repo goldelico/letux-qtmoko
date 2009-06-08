@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/io/qprocess.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qprocess.cpp -->
 <head>
   <title>Qt 4.5: QProcess Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -383,14 +383,15 @@
 <p>You cannot exit the process (by calling exit(), for instance) from this function. If you need to stop the program before it starts execution, your workaround is to emit <a href="qprocess.html#finished">finished</a>() and then call exit().</p>
 <p><b>Warning:</b> This function is called by <a href="qprocess.html">QProcess</a> on Unix and Mac OS X only. On Windows, it is not called.</p>
 <h3 class="fn"><a name="start"></a>void QProcess::start ( const <a href="qstring.html">QString</a> &amp; <i>program</i>, const <a href="qstringlist.html">QStringList</a> &amp; <i>arguments</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>mode</i> = ReadWrite )</h3>
-<p>Starts the program <i>program</i> in a new process, passing the command line arguments in <i>arguments</i>. The <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> is set to <i>mode</i>. <a href="qprocess.html">QProcess</a> will immediately enter the Starting state. If the process starts successfully, <a href="qprocess.html">QProcess</a> will emit <a href="qprocess.html#started">started</a>(); otherwise, <a href="qprocess.html#error">error</a>() will be emitted.</p>
+<p>Starts the program <i>program</i> in a new process, if one is not already running, passing the command line arguments in <i>arguments</i>. The <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> is set to <i>mode</i>.</p>
+<p>The <a href="qprocess.html">QProcess</a> object will immediately enter the Starting state. If the process starts successfully, <a href="qprocess.html">QProcess</a> will emit <a href="qprocess.html#started">started</a>(); otherwise, <a href="qprocess.html#error">error</a>() will be emitted. If the <a href="qprocess.html">QProcess</a> object is already running a process, a warning may be printed at the console, and the existing process will continue running.</p>
 <p>Note that arguments that contain spaces are not passed to the process as separate arguments.</p>
 <p><b>Windows:</b> Arguments that contain spaces are wrapped in quotes.</p>
 <p><b>Note:</b> Processes are started asynchronously, which means the <a href="qprocess.html#started">started</a>() and <a href="qprocess.html#error">error</a>() signals may be delayed. Call <a href="qprocess.html#waitForStarted">waitForStarted</a>() to make sure the process has started (or has failed to start) and those signals have been emitted.</p>
 <p>See also <a href="qprocess.html#pid">pid</a>(), <a href="qprocess.html#started">started</a>(), and <a href="qprocess.html#waitForStarted">waitForStarted</a>().</p>
 <h3 class="fn"><a name="start-2"></a>void QProcess::start ( const <a href="qstring.html">QString</a> &amp; <i>program</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>mode</i> = ReadWrite )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
-<p>Starts the program <i>program</i> in a new process. <i>program</i> is a single string of text containing both the program name and its arguments. The arguments are separated by one or more spaces. For example:</p>
+<p>Starts the program <i>program</i> in a new process, if one is not already running. <i>program</i> is a single string of text containing both the program name and its arguments. The arguments are separated by one or more spaces. For example:</p>
 <pre> QProcess process;
  process.start(&quot;del /s *.txt&quot;);
 <span class="comment"> // same as process.start(&quot;del&quot;, QStringList() &lt;&lt; &quot;/s&quot; &lt;&lt; &quot;*.txt&quot;);</span>
@@ -398,6 +399,7 @@
 <p>The <i>program</i> string can also contain quotes, to ensure that arguments containing spaces are correctly supplied to the new process. For example:</p>
 <pre> QProcess process;
  process.start(&quot;dir \&quot;My Documents\&quot;&quot;);</pre>
+<p>If the <a href="qprocess.html">QProcess</a> object is already running a process, a warning may be printed at the console, and the existing process will continue running.</p>
 <p>Note that, on Windows, quotes need to be both escaped and quoted. For example, the above code would be specified in the following way to ensure that <tt>&quot;My Documents&quot;</tt> is used as the argument to the <tt>dir</tt> executable:</p>
 <pre> QProcess process;
  process.start(&quot;dir \&quot;\&quot;\&quot;My Documents\&quot;\&quot;\&quot;&quot;);</pre>
@@ -464,6 +466,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

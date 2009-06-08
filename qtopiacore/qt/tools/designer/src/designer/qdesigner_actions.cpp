@@ -47,7 +47,6 @@
 #include "newform.h"
 #include "versiondialog.h"
 #include "saveformastemplate.h"
-#include "plugindialog.h"
 #include "qdesigner_toolwindow.h"
 #include "preferencesdialog.h"
 #include "appfontdialog.h"
@@ -60,17 +59,15 @@
 #include <previewmanager_p.h>
 #include <codedialog_p.h>
 #include <qdesigner_formwindowmanager_p.h>
+#include "qdesigner_integration_p.h"
 
 // sdk
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerLanguageExtension>
-#include <QtDesigner/QDesignerWidgetDataBaseInterface>
 #include <QtDesigner/QDesignerMetaDataBaseInterface>
 #include <QtDesigner/QDesignerFormWindowManagerInterface>
 #include <QtDesigner/QDesignerFormWindowCursorInterface>
-#include <QtDesigner/QDesignerPropertySheetExtension>
-#include <QtDesigner/QDesignerPropertyEditorInterface>
 #include <QtDesigner/QDesignerFormEditorPluginInterface>
 #include <QtDesigner/QExtensionManager>
 
@@ -441,7 +438,7 @@ QActionGroup *QDesignerActions::createHelpActions()
     QAction *aboutPluginsAction = new QAction(tr("About Plugins"), this);
     aboutPluginsAction->setObjectName(QLatin1String("__qt_about_plugins_action"));
     aboutPluginsAction->setMenuRole(QAction::ApplicationSpecificRole);
-    connect(aboutPluginsAction, SIGNAL(triggered()), this, SLOT(aboutPlugins()));
+    connect(aboutPluginsAction, SIGNAL(triggered()), m_core->formWindowManager(), SLOT(aboutPlugins()));
     helpActions->addAction(aboutPluginsAction);
 
     QAction *aboutDesignerAction = new QAction(tr("About Qt Designer"), this);
@@ -1061,57 +1058,19 @@ QAction *QDesignerActions::editWidgets() const
 
 void QDesignerActions::showWidgetSpecificHelp()
 {
-    QDesignerFormWindowInterface *fw = core()->formWindowManager()->activeFormWindow();
-    if (!fw) {
+    QString helpId;
+    if (const qdesigner_internal::QDesignerIntegration *integration = qobject_cast<qdesigner_internal::QDesignerIntegration *>(core()->integration()))
+        helpId = integration->contextHelpId();
+
+    if (helpId.isEmpty()) {
         showDesignerHelp();
         return;
     }
 
-    QString className;
-    const QString currentPropertyName = core()->propertyEditor()->currentPropertyName();
-    if (!currentPropertyName.isEmpty()) {
-        QDesignerPropertySheetExtension *ps
-            = qt_extension<QDesignerPropertySheetExtension *>(core()->extensionManager(),
-                                                            core()->propertyEditor()->object());
-        if (!ps)
-            ps = qt_extension<QDesignerPropertySheetExtension *>(core()->extensionManager(),
-                                                            fw->cursor()->selectedWidget(0));
-        Q_ASSERT(ps);
-        className = ps->propertyGroup(ps->indexOf(currentPropertyName));
-    } else {
-        QDesignerWidgetDataBaseInterface *db = core()->widgetDataBase();
-        QDesignerWidgetDataBaseItemInterface *dbi = db->item(db->indexOfObject(fw->cursor()->selectedWidget(0), true));
-        className = dbi->name();
-    }
-
-    // ### generalize using the Widget Data Base
-    if (className == QLatin1String("Line"))
-        className = QLatin1String("QFrame");
-    else if (className == QLatin1String("Spacer"))
-        className = QLatin1String("QSpacerItem");
-    else if (className == QLatin1String("QLayoutWidget"))
-        className = QLatin1String("QLayout");
-
     QString errorMessage;
-    bool rc =  false;
-    if (currentPropertyName.isEmpty()) {
-        rc = m_assistantClient.activateKeyword(className, &errorMessage);
-    } else {
-        QString assistantId = className;
-        if (!currentPropertyName.isEmpty()) {
-            assistantId += QLatin1String("::");
-            assistantId += currentPropertyName;
-        }
-        rc = m_assistantClient.activateIdentifier(assistantId, &errorMessage);
-    }
+    const bool rc = m_assistantClient.activateIdentifier(helpId, &errorMessage);
     if (!rc)
         QMessageBox::warning(core()->topLevel(), tr("Assistant"), errorMessage);
-}
-
-void QDesignerActions::aboutPlugins()
-{
-    PluginDialog dlg(core(), core()->topLevel());
-    dlg.exec();
 }
 
 void QDesignerActions::updateCloseAction()

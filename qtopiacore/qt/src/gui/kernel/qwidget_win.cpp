@@ -1037,6 +1037,8 @@ void QWidget::setWindowState(Qt::WindowStates newstate)
 #else
                 UINT style = WS_POPUP;
 #endif
+		if (d->topData()->savedFlags & WS_SYSMENU)
+		    style |= WS_SYSMENU;
                 if (isVisible())
                     style |= WS_VISIBLE;
                 SetWindowLongA(internalWinId(), GWL_STYLE, style);
@@ -1560,8 +1562,8 @@ bool QWidgetPrivate::shouldShowMaximizeButton()
     if (data.window_flags & Qt::MSWindowsFixedSizeDialogHint)
         return false;
     if (extra) {
-        if ((extra->maxw && extra->maxw != QWIDGETSIZE_MAX)
-            || (extra->maxh && extra->maxh != QWIDGETSIZE_MAX))
+        if ((extra->maxw && extra->maxw != QWIDGETSIZE_MAX && extra->maxw != QLAYOUTSIZE_MAX)
+            || (extra->maxh && extra->maxh != QWIDGETSIZE_MAX && extra->maxh != QLAYOUTSIZE_MAX))
             return false;
     }
     return data.window_flags & Qt::WindowMaximizeButtonHint;

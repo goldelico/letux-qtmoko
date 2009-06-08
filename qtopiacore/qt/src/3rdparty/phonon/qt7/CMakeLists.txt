@@ -14,44 +14,45 @@
 project(phonon-qt7)
 include(ConfigureChecks.cmake)
 
+include_directories(${OPENGL_INCLUDE_DIR})
+
 if (BUILD_PHONON_QT7)
     set(phonon_qt7_SRCS
-        medianode.cpp
-        backend.cpp
-        videowidget.cpp
-        mediaobject.cpp
-        quicktimevideoplayer.cpp
-	displaylinkcallback.cpp
-        error.cpp
-	medianodevideopart.cpp
-        medianodeevent.cpp
-        quicktimeaudioplayer.cpp
-	audionode.cpp
-        audiograph.cpp
-        audiooutput.cpp
-        quicktimemetadata.cpp
-   	audiomixer.cpp
-        audiodevice.cpp
-        backendinfo.cpp
-        audioconnection.cpp
-   	videoframe.cpp
-        audiosplitter.cpp
-        mediaobjectaudionode.cpp
+        quicktimevideoplayer.mm
+        backendheader.mm 
+        medianodevideopart.mm 
+        medianodeevent.mm 
+        audiooutput.mm 
+        backendinfo.mm 
+        audiosplitter.mm 
+        audioeffects.mm 
+        quicktimestreamreader.mm 
+        medianode.mm 
+        backend.mm 
+        mediaobject.mm 
+        mediaobjectaudionode.mm 
+        audiomixer.mm  
+        quicktimeaudioplayer.mm 
+        videoframe.mm 
+        quicktimemetadata.mm 
+        audiodevice.mm 
+        audioconnection.mm 
+        audiograph.mm 
+        audionode.mm 
+        videowidget.mm
        )
 
-   kde4_add_plugin(phonon_qt7 ${phonon_qt7_SRCS})
+   automoc4_add_library(phonon_qt7 MODULE ${phonon_qt7_SRCS})
    target_link_libraries(phonon_qt7
        ${QT_QTGUI_LIBRARY} ${QT_QTOPENGL_LIBRARY}
-       ${KDE4_PHONON_LIBS}
+       ${PHONON_LIBS}
        "-framework QuickTime"
-       "-framework OpenGL"
        "-framework AudioUnit"
        "-framework AudioToolbox"
        "-framework CoreAudio"
-       "-framework Quartz"
-#      "-framework AGL"
+       "-framework QuartzCore"
+       "-framework QTKit"
        )
     install(TARGETS phonon_qt7 DESTINATION ${PLUGIN_INSTALL_DIR})
-    #install(FILES qt7.desktop DESTINATION ${SERVICES_INSTALL_DIR}/phononbackends)
 
 endif (BUILD_PHONON_QT7)

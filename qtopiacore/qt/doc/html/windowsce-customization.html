@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/wince-customization.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/wince-customization.qdoc -->
 <head>
   <title>Qt 4.5: Windows CE - Working with Custom SDKs</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -17,6 +17,7 @@
 <p>When working with a custom SDK for Windows CE, Qt provides an easy way to add support for it to your development environment. The following is a tutorial that covers how to create a specification for Qt on Windows CE platforms.</p>
 <ul><li><a href="#creating-a-custom-build-specification">Creating a Custom Build Specification</a></li>
 <li><a href="#fine-tuning-options">Fine-Tuning Options</a></li>
+<li><a href="#cross-compilation-environment-for-a-custom-sdk">Cross-compilation Environment for a Custom SDK</a></li>
 <li><a href="#compiling-qt-for-a-custom-sdk">Compiling Qt for a Custom SDK</a></li>
 <li><a href="#making-qt-applications-start-on-a-custom-device">Making Qt Applications Start on a Custom Device</a></li>
 </ul>
@@ -41,6 +42,15 @@
 <pre></pre>
 <p>The mkspec may require additional configuration to be used inside of Visual Studio, depending on the Windows CE SDK. The above example defines <tt>_M_ARM</tt>. This definition is available internally in Visual Studio. Hence, the compiler will warn you about redefinition during the build step. These warnings can be disabled by adding a <tt>default_post.prf</tt> file containing the following lines, within the subdirectory.</p>
 <pre></pre>
+<a name="cross-compilation-environment-for-a-custom-sdk"></a>
+<h3>Cross-compilation Environment for a Custom SDK</h3>
+<p>Qt for Windows CE supports a convenience script, <tt>setcepaths.bat</tt>, that prepares the environment in a command prompt for cross-compilation. However, on custom SDKs, the <tt>checksdk</tt> tool is provided to identify the environment, so Qt compiles successfully.</p>
+<p><tt>checksdk</tt> is generated during the <tt>configure</tt> step and allows for the following options:</p>
+<ul>
+<li><tt>list</tt>: Returns a list of available Windows CE SDKs. (This list may contain one or more SDKs not supported on Qt for Windows CE, e.g&#x2e;, Pocket PC 2003.)</li>
+<li><tt>sdk</tt>: The parameter to specify an SDK. Returns a setup of environment variables that must be set to cross-compile Qt.</li>
+<li><tt>script</tt>: Stores your setup in a <tt>.bat</tt> file. This simplifies the process of switching environments when you load a command prompt in future.</li>
+</ul>
 <a name="compiling-qt-for-a-custom-sdk"></a>
 <h3>Compiling Qt for a Custom SDK</h3>
 <p>Windows CE is highly customizable, hence it is possible that some SDKs have feature-stripped setups. Depending on the SDK's configuration, Qt may not compile in its standard configuration, as Qt for Windows CE is designed to be compatible with the Standard SDK setup.</p>
@@ -66,6 +76,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

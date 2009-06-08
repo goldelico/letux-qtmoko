@@ -195,7 +195,13 @@ void QMultiInputContext::changeSlave(QAction *a)
         if (keys.at(i) == a->data().toString()) {
             if (slaves.at(i) == 0)
                 slaves.replace(i, QInputContextFactory::create(keys.at(i), this));
+            QInputContext *qic = slaves.at(current);
+            QWidget *oldWidget = qic->focusWidget();
+            qic->reset();
+            qic->setFocusWidget(0);
             current = i;
+            qic = slaves.at(current);
+            qic->setFocusWidget(oldWidget);
             return;
         }
     }

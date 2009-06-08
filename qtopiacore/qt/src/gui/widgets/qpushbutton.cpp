@@ -69,7 +69,7 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \class QPushButton qpushbutton.h
+    \class QPushButton
     \brief The QPushButton widget provides a command button.
 
     \ingroup basicwidgets

@@ -609,6 +609,8 @@ void HelpProjectWriter::generateProject(HelpProject &project)
                     while (nextPage) {
                         writeNode(project, writer, nextPage);
                         nextTitle = nextPage->links().value(Node::NextLink).first;
+                        if (nextTitle.isEmpty())
+                            break;
                         nextPage = const_cast<FakeNode *>(tree->findFakeNodeByTitle(nextTitle));
                     }
                     break;

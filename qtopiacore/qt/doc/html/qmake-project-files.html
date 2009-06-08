@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qmake-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qmake-manual.qdoc -->
 <head>
   <title>Qt 4.5: qmake Project Files</title>
   <link rel="prev" href="qmake-using.html" />
@@ -115,10 +115,13 @@
 <tr valign="top" class="odd"><td>release</td><td>The project is to be built in release mode. This is ignored if <tt>debug</tt> is also specified.</td></tr>
 <tr valign="top" class="even"><td>debug</td><td>The project is to be built in debug mode.</td></tr>
 <tr valign="top" class="odd"><td>debug_and_release</td><td>The project is built in <i>both</i> debug and release modes.</td></tr>
-<tr valign="top" class="even"><td>build_all</td><td>If <tt>debug_and_release</tt> is specified, the project is built in both debug and release modes by default.</td></tr>
+<tr valign="top" class="even"><td>debug_and_release_target</td><td>The project is built in <i>both</i> debug and release modes. TARGET is built into <i>both</i> the debug and release directories.</td></tr>
+<tr valign="top" class="odd"><td>build_all</td><td>If <tt>debug_and_release</tt> is specified, the project is built in both debug and release modes by default.</td></tr>
+<tr valign="top" class="even"><td>autogen_precompile_source</td><td>Automatically generates a <tt>.cpp</tt> file that includes the precompiled header file specified in the .pro file.</td></tr>
 <tr valign="top" class="odd"><td>ordered</td><td>When using the <tt>subdirs</tt> template, this option specifies that the directories listed should be processed in the order in which they are given.</td></tr>
 <tr valign="top" class="even"><td>warn_on</td><td>The compiler should output as many warnings as possible. This is ignored if <tt>warn_off</tt> is specified.</td></tr>
 <tr valign="top" class="odd"><td>warn_off</td><td>The compiler should output as few warnings as possible.</td></tr>
+<tr valign="top" class="even"><td>copy_dir_files</td><td>Enables the install rule to also copy directories, not just files.</td></tr>
 </table></p>
 <p>The <tt>debug_and_release</tt> option is special in that it enables <i>both</i> debug and release versions of a project to be built. In such a case, the Makefile that <tt>qmake</tt> generates includes a rule that builds both versions, and this can be invoked in the following way:</p>
 <pre> make all</pre>
@@ -189,6 +192,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

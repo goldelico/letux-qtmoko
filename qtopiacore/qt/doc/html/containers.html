@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/containers.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/containers.qdoc -->
 <head>
   <title>Qt 4.5: Generic Containers</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -324,7 +324,7 @@
 <li><b>Logarithmic time:</b> O(log <i>n</i>). A function that runs in logarithmic time is a function whose running time is proportional to the logarithm of the number of items in the container. One example is <a href="qtalgorithms.html#qBinaryFind">qBinaryFind</a>().</li>
 <li><b>Linear time:</b> O(<i>n</i>). A function that runs in linear time will execute in a time directly proportional to the number of items stored in the container. One example is <a href="qvector.html#insert">QVector::insert</a>().</li>
 <li><b>Linear-logarithmic time:</b> O(<i>n</i> log <i>n</i>). A function that runs in linear-logarithmic time is asymptotically slower than a linear-time function, but faster than a quadratic-time function.</li>
-<li><b>Quadratic time:</b> O(<i>n</i>²). A quadratic-time function executes in a time that is proportional to the square of the number of items stored in the container.</li>
+<li><b>Quadratic time:</b> O(<i>n</i>&#xb2;). A quadratic-time function executes in a time that is proportional to the square of the number of items stored in the container.</li>
 </ul>
 <p>The following table summarizes the algorithmic complexity of Qt's sequential container classes:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
@@ -358,7 +358,7 @@
      return out;
  }</pre>
 <p>We build the string <tt>out</tt> dynamically by appending one character to it at a time. Let's assume that we append 15000 characters to the <a href="qstring.html">QString</a> string. Then the following 18 reallocations (out of a possible 15000) occur when <a href="qstring.html">QString</a> runs out of space: 4, 8, 12, 16, 20, 52, 116, 244, 500, 1012, 2036, 4084, 6132, 8180, 10228, 12276, 14324, 16372. At the end, the <a href="qstring.html">QString</a> has 16372 Unicode characters allocated, 15000 of which are occupied.</p>
-<p>The values above may seem a bit strange, but here are the guiding priciples:</p>
+<p>The values above may seem a bit strange, but here are the guiding principles:</p>
 <ul>
 <li><a href="qstring.html">QString</a> allocates 4 characters at a time until it reaches size 20.</li>
 <li>From 20 to 4084, it advances by doubling the size each time. More precisely, it advances to the next power of two, minus 12. (Some memory allocators perform worst when requested exact powers of two, because they use a few bytes per block for book-keeping.)</li>
@@ -378,6 +378,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

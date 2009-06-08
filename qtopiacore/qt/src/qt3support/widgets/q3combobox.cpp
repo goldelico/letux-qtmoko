@@ -71,7 +71,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3ComboBox q3combobox.h
+    \class Q3ComboBox
     \brief The Q3ComboBox widget is a combined button and popup list.
     \since 4.1
     \compat

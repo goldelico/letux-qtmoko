@@ -200,7 +200,7 @@ MediaPlayer::MediaPlayer(const QString &filePath) :
     QPalette palette;
     palette.setBrush(QPalette::WindowText, Qt::white);
 #ifndef Q_WS_MAC
-    openButton->setMinimumSize(47, buttonSize.height());
+    openButton->setMinimumSize(54, buttonSize.height());
     rewindButton->setMinimumSize(buttonSize);
     forwardButton->setMinimumSize(buttonSize);
     playButton->setMinimumSize(buttonSize);
@@ -799,11 +799,12 @@ void MediaPlayer::openUrl()
     QSettings settings;
     settings.beginGroup(QLatin1String("BrowserMainWindow"));
     QString sourceURL = settings.value("location").toString();
-    sourceURL = QInputDialog::getText(this, tr("Open Location"), tr("Please enter a valid address here:"), QLineEdit::Normal, sourceURL);
-    if (!sourceURL.isEmpty()) {
-	    setWindowTitle(sourceURL.right(sourceURL.length() - sourceURL.lastIndexOf('/') - 1));
-	    m_MediaObject.setCurrentSource(Phonon::MediaSource(QUrl::fromEncoded(sourceURL.toUtf8())));
-	    m_MediaObject.play();
+    bool ok = false;
+    sourceURL = QInputDialog::getText(this, tr("Open Location"), tr("Please enter a valid address here:"), QLineEdit::Normal, sourceURL, &ok);
+    if (ok && !sourceURL.isEmpty()) {
+        setWindowTitle(sourceURL.right(sourceURL.length() - sourceURL.lastIndexOf('/') - 1));
+        m_MediaObject.setCurrentSource(Phonon::MediaSource(QUrl::fromEncoded(sourceURL.toUtf8())));
+        m_MediaObject.play();
         settings.setValue("location", sourceURL);
     }
 }

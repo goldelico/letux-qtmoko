@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/kernel/qcoreapplication.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/kernel/qcoreapplication.cpp -->
 <head>
   <title>Qt 4.5: QCoreApplication Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -137,6 +137,7 @@
 <p>An application has an <a href="qcoreapplication.html#applicationDirPath">applicationDirPath</a>() and an <a href="qcoreapplication.html#applicationFilePath">applicationFilePath</a>(). Translation files can be added or removed using <a href="qcoreapplication.html#installTranslator">installTranslator</a>() and <a href="qcoreapplication.html#removeTranslator">removeTranslator</a>(). Application strings can be translated using <a href="qcoreapplication.html#translate">translate</a>(). The <a href="qobject.html#tr">QObject::tr</a>() and <a href="qobject.html#trUtf8">QObject::trUtf8</a>() functions are implemented in terms of <a href="qcoreapplication.html#translate">translate</a>().</p>
 <p>The class provides a <a href="qcoreapplication.html#quit">quit</a>() slot and an <a href="qcoreapplication.html#aboutToQuit">aboutToQuit</a>() signal.</p>
 <p>Several static convenience functions are also provided. The QCoreApplication object is available from <a href="qcoreapplication.html#instance">instance</a>(). Events can be sent or posted using <a href="qcoreapplication.html#sendEvent">sendEvent</a>(), <a href="qcoreapplication.html#postEvent">postEvent</a>(), and <a href="qcoreapplication.html#sendPostedEvents">sendPostedEvents</a>(). Pending events can be removed with <a href="qcoreapplication.html#removePostedEvents">removePostedEvents</a>() or flushed with <a href="qcoreapplication.html#flush">flush</a>(). Library paths (see <a href="qlibrary.html">QLibrary</a>) can be retrieved with <a href="qcoreapplication.html#libraryPaths">libraryPaths</a>() and manipulated by <a href="qcoreapplication.html#setLibraryPaths">setLibraryPaths</a>(), <a href="qcoreapplication.html#addLibraryPath">addLibraryPath</a>(), and <a href="qcoreapplication.html#removeLibraryPath">removeLibraryPath</a>().</p>
+<p>On Unix/Linux Qt is configured to use the system local settings by default. This can cause a conflict when using POSIX functions, for instance, when converting between data types such as floats and strings, since the notation may differ between locales. To get around this problem call the POSIX function setlocale(LC_NUMERIC,&quot;C&quot;) right after initializing <a href="qapplication.html">QApplication</a> or QCoreApplication to reset the locale that is used for number formatting to &quot;C&quot;-locale.</p>
 <p>See also <a href="qapplication.html">QApplication</a>, <a href="qabstracteventdispatcher.html">QAbstractEventDispatcher</a>, <a href="qeventloop.html">QEventLoop</a>, <a href="threads-semaphores.html">Semaphores Example</a>, and <a href="threads-waitconditions.html">Wait Conditions Example</a>.</p>
 <hr />
 <h2>Member Type Documentation</h2>
@@ -458,6 +459,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

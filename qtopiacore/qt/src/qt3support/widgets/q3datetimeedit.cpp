@@ -856,7 +856,7 @@ public:
 
 
 /*!
-    \class Q3DateEdit q3datetimeedit.h
+    \class Q3DateEdit
     \brief The Q3DateEdit class provides a date editor.
 
     \compat
@@ -1782,7 +1782,7 @@ public:
 };
 
 /*!
-    \class Q3TimeEdit q3datetimeedit.h
+    \class Q3TimeEdit
     \brief The Q3TimeEdit class provides a time editor.
 
     \compat
@@ -2590,7 +2590,7 @@ public:
 };
 
 /*!
-    \class Q3DateTimeEdit q3datetimeedit.h
+    \class Q3DateTimeEdit
     \brief The Q3DateTimeEdit class combines a Q3DateEdit and Q3TimeEdit
     widget into a single widget for editing datetimes.
 

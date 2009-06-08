@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/kernel/qmetaobject.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/kernel/qmetaobject.cpp -->
 <head>
   <title>Qt 4.5: QMetaProperty Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -48,10 +48,15 @@
 <hr />
 <h2>Detailed Description</h2>
 <p>The QMetaProperty class provides meta-data about a property.</p>
+<p>Property meta-data is obtained from an object's meta-object. See <a href="qmetaobject.html#property">QMetaObject::property</a>() and <a href="qmetaobject.html#propertyCount">QMetaObject::propertyCount</a>() for details.</p>
+<a name="property-meta-data"></a>
+<h3>Property Meta-Data</h3>
 <p>A property has a <a href="qmetaproperty.html#name">name</a>() and a <a href="qmetaproperty.html#type">type</a>(), as well as various attributes that specify its behavior: <a href="qmetaproperty.html#isReadable">isReadable</a>(), <a href="qmetaproperty.html#isWritable">isWritable</a>(), <a href="qmetaproperty.html#isDesignable">isDesignable</a>(), <a href="qmetaproperty.html#isScriptable">isScriptable</a>(), and <a href="qmetaproperty.html#isStored">isStored</a>().</p>
 <p>If the property is an enumeration, <a href="qmetaproperty.html#isEnumType">isEnumType</a>() returns true; if the property is an enumeration that is also a flag (i.e&#x2e; its values can be combined using the OR operator), <a href="qmetaproperty.html#isEnumType">isEnumType</a>() and <a href="qmetaproperty.html#isFlagType">isFlagType</a>() both return true. The enumerator for these types is available from <a href="qmetaproperty.html#enumerator">enumerator</a>().</p>
 <p>The property's values are set and retrieved with <a href="qmetaproperty.html#read">read</a>(), <a href="qmetaproperty.html#write">write</a>(), and <a href="qmetaproperty.html#reset">reset</a>(); they can also be changed through <a href="qobject.html">QObject</a>'s set and get functions. See <a href="qobject.html#setProperty">QObject::setProperty</a>() and <a href="qobject.html#property">QObject::property</a>() for details.</p>
-<p>You get property meta-data through an object's meta-object. See <a href="qmetaobject.html#property">QMetaObject::property</a>() and <a href="qmetaobject.html#propertyCount">QMetaObject::propertyCount</a>() for details.</p>
+<a name="copying-and-assignment"></a>
+<h3>Copying and Assignment</h3>
+<p>QMetaProperty objects can be copied by value. However, each copy will refer to the same underlying property meta-data.</p>
 <p>See also <a href="qmetaobject.html">QMetaObject</a>, <a href="qmetaenum.html">QMetaEnum</a>, <a href="qmetamethod.html">QMetaMethod</a>, and <a href="properties.html">Qt's Property System</a>.</p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -130,6 +135,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

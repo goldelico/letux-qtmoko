@@ -87,7 +87,7 @@ public:
 
     class Instance: public QScriptObjectData {
     public:
-        Instance() { }
+        Instance() : ownership(QScriptEngine::QtOwnership) { }
         virtual void finalize(QScriptEnginePrivate *engine);
         virtual ~Instance() {}
 
@@ -248,7 +248,7 @@ public:
     };
 
     inline QScriptMetaType()
-        : m_kind(Invalid) { }
+        : m_kind(Invalid), m_typeId(0) { }
 
     inline Kind kind() const
     { return m_kind; }
@@ -305,6 +305,7 @@ class QScriptMetaMethod
 {
 public:
     inline QScriptMetaMethod()
+        : m_firstUnresolvedIndex(-1)
         { }
     inline QScriptMetaMethod(const QByteArray &name, const QVector<QScriptMetaType> &types)
         : m_name(name), m_types(types), m_firstUnresolvedIndex(-1)
@@ -367,7 +368,7 @@ struct QScriptMetaArguments
                                 const QVarLengthArray<QVariant, 9> &as)
         : matchDistance(dist), index(idx), method(mtd), args(as) { }
     inline QScriptMetaArguments()
-        : index(-1) { }
+        : matchDistance(0), index(-1) { }
 
     inline bool isValid() const
     { return (index != -1); }

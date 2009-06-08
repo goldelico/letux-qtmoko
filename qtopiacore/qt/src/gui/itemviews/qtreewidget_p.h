@@ -218,7 +218,7 @@ class QTreeWidgetPrivate : public QTreeViewPrivate
     friend class QTreeModel;
     Q_DECLARE_PUBLIC(QTreeWidget)
 public:
-    QTreeWidgetPrivate() : QTreeViewPrivate() {}
+    QTreeWidgetPrivate() : QTreeViewPrivate(), explicitSortColumn(-1) {}
     inline QTreeModel *model() const
         { return qobject_cast<QTreeModel*>(q_func()->model()); }
     inline QModelIndex index(const QTreeWidgetItem *item, int column = 0) const
@@ -237,6 +237,9 @@ public:
     void _q_sort();
     void _q_dataChanged(const QModelIndex &topLeft, const QModelIndex &bottomRight);
     void _q_selectionChanged(const QItemSelection &selected, const QItemSelection &deselected);
+
+     // used by QTreeWidgetItem::sortChildren to make sure the column argument is used
+    int explicitSortColumn;
 };
 
 QT_END_NAMESPACE

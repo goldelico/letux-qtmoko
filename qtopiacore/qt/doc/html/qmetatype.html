@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/kernel/qmetatype.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/kernel/qmetatype.cpp -->
 <head>
   <title>Qt 4.5: QMetaType Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -57,7 +57,7 @@
 <p>Any class or struct that has a public default constructor, a public copy constructor, and a public destructor can be registered.</p>
 <p>The following code allocates and destructs an instance of <tt>MyClass</tt>:</p>
 <pre> int id = QMetaType::type(&quot;MyClass&quot;);
- if (id != -1) {
+ if (id == 0) {
      void *myClassPtr = QMetaType::construct(id);
      ...
      QMetaType::destroy(id, myClassPtr);
@@ -176,7 +176,7 @@
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qmetatype.html#Q_DECLARE_METATYPE">Q_DECLARE_METATYPE</a>() and <a href="qmetatype.html#type">QMetaType::type</a>().</p>
 <h3 class="fn"><a name="qRegisterMetaType"></a>int qRegisterMetaType ( const char * <i>typeName</i> )</h3>
-<p>Registers the type name <i>typeName</i> to the type <tt>T</tt>. Returns the internal ID used by <a href="qmetatype.html">QMetaType</a>. Any class or struct that has a public constructor, a public copy constructor, and a public destructor can be registered.</p>
+<p>Registers the type name <i>typeName</i> for the type <tt>T</tt>. Returns the internal ID used by <a href="qmetatype.html">QMetaType</a>. Any class or struct that has a public default constructor, a public copy constructor and a public destructor can be registered.</p>
 <p>After a type has been registered, you can create and destroy objects of that type dynamically at run-time.</p>
 <p>This example registers the class <tt>MyClass</tt>:</p>
 <pre> qRegisterMetaType&lt;MyClass&gt;(&quot;MyClass&quot;);</pre>
@@ -203,7 +203,7 @@
 <hr />
 <h2>Macro Documentation</h2>
 <h3 class="fn"><a name="Q_DECLARE_METATYPE"></a>Q_DECLARE_METATYPE (  <i>Type</i> )</h3>
-<p>This macro makes the type <i>Type</i> known to <a href="qmetatype.html">QMetaType</a>. It is needed to use the type <i>Type</i> as a custom type in <a href="qvariant.html">QVariant</a>.</p>
+<p>This macro makes the type <i>Type</i> known to <a href="qmetatype.html">QMetaType</a> as long as it provides a public default constructor, a public copy constructor and a public destructor. It is needed to use the type <i>Type</i> as a custom type in <a href="qvariant.html">QVariant</a>.</p>
 <p>Ideally, this macro should be placed below the declaration of the class or struct. If that is not possible, it can be put in a private header file which has to be included every time that type is used in a <a href="qvariant.html">QVariant</a>.</p>
 <p>Adding a Q_DECLARE_METATYPE() makes the type known to all template based functions, including <a href="qvariant.html">QVariant</a>. Note that if you intend to use the type in <i>queued</i> signal and slot connections or in <a href="qobject.html">QObject</a>'s property system, you also have to call <a href="qmetatype.html#qRegisterMetaType">qRegisterMetaType</a>() since the names are resolved at runtime.</p>
 <p>This example shows a typical use case of Q_DECLARE_METATYPE():</p>
@@ -235,6 +235,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

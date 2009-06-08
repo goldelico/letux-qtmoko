@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -144,21 +144,60 @@ namespace QPatternist
 
         inline Token tokenizeStringLiteral();
         inline Token tokenizeNumberLiteral();
+
+        /**
+         * @returns the character @p length characters from the current
+         * position.
+         */
         inline char peekAhead(const int length = 1) const;
+
+        /**
+         * @returns whether the stream, starting from @p offset from the
+         * current position, matches @p chs. The length of @p chs is @p len.
+         */
         inline bool aheadEquals(const char *const chs,
                                 const int len,
                                 const int offset = 1) const;
+
         inline Token tokenizeNCName();
         static inline bool isOperatorKeyword(const TokenType);
 
         static inline bool isDigit(const char ch);
         static inline Token error();
         inline TokenType consumeWhitespace();
+
+        /**
+         * @short Returns the character at the current position, converted to
+         * @c ASCII.
+         *
+         * Equivalent to calling:
+         *
+         * @code
+         * current().toAscii();
+         * @endcode
+         */
         inline char peekCurrent() const;
+
+        /**
+         * Disregarding encoding conversion, equivalent to calling:
+         *
+         * @code
+         * peekAhead(0);
+         * @endcode
+         */
+        inline const QChar current() const;
+
+        /**
+         * @p hadWhitespace is always set to a proper value.
+         *
+         * @returns the length of whitespace scanned before reaching "::", or
+         * -1 if something else was found.
+         */
+        int peekForColonColon() const;
+
         static inline bool isNCNameStart(const QChar ch);
         static inline bool isNCNameBody(const QChar ch);
         static inline const TokenMap *lookupKeyword(const QString &keyword);
-        inline const QChar current() const;
         inline void popState();
         inline void pushState(const State state);
         inline State state() const;

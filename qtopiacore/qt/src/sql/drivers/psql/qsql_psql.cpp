@@ -351,8 +351,9 @@ QVariant QPSQLResult::data(int i)
 #ifndef QT_NO_DATESTRING
         if (str.isEmpty())
             return QVariant(QTime());
-        if (str.at(str.length() - 3) == QLatin1Char('+'))
+        if (str.at(str.length() - 3) == QLatin1Char('+') || str.at(str.length() - 3) == QLatin1Char('-'))
             // strip the timezone
+            // TODO: fix this when timestamp support comes into QDateTime
             return QVariant(QTime::fromString(str.left(str.length() - 3), Qt::ISODate));
         return QVariant(QTime::fromString(str, Qt::ISODate));
 #else
@@ -365,7 +366,8 @@ QVariant QPSQLResult::data(int i)
         if (dtval.length() < 10)
             return QVariant(QDateTime());
         // remove the timezone
-        if (dtval.at(dtval.length() - 3) == QLatin1Char('+'))
+        // TODO: fix this when timestamp support comes into QDateTime
+        if (dtval.at(dtval.length() - 3) == QLatin1Char('+') || dtval.at(dtval.length() - 3) == QLatin1Char('-'))
             dtval.chop(3);
         // milliseconds are sometimes returned with 2 digits only
         if (dtval.at(dtval.length() - 3).isPunct())
@@ -511,11 +513,10 @@ static QString qCreateParamString(const QVector<QVariant> boundValues, const QSq
             f.clear();
         else
             f.setValue(val);
-        
-        params.append(driver->formatValue(f)).append(QLatin1String(", "));
+        if(!params.isNull())
+            params.append(QLatin1String(", "));
+        params.append(driver->formatValue(f));
     }
-
-    params.chop(2);
     return params;
 }
 
@@ -1141,9 +1142,11 @@ QString QPSQLDriver::formatValue(const QSqlField &field, bool trimStrings) const
 QString QPSQLDriver::escapeIdentifier(const QString &identifier, IdentifierType) const
 {
     QString res = identifier;
-    res.replace(QLatin1Char('"'), QLatin1String("\"\""));
-    res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
-    res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('"')) && identifier.right(1) != QString(QLatin1Char('"')) ) {
+        res.replace(QLatin1Char('"'), QLatin1String("\"\""));
+        res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
+        res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    }
     return res;
 }
 

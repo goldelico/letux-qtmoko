@@ -221,13 +221,10 @@ QGraphicsLinearLayout::~QGraphicsLinearLayout()
 }
 
 /*!
-    \property QGraphicsLinearLayout::orientation
-    \brief the orientation of the linear layout
+  Change the layout orientation to \a orientation. Changing the layout
+  orientation will automatically invalidate the layout.
 
-    This property toggles the layout orientation. Changing the layout
-    orientation will automatically invalidate the layout.
-
-    \sa invalidate()
+  \sa orientation()
 */
 void QGraphicsLinearLayout::setOrientation(Qt::Orientation orientation)
 {
@@ -238,6 +235,11 @@ void QGraphicsLinearLayout::setOrientation(Qt::Orientation orientation)
         invalidate();
     }
 }
+
+/*!
+  Returns the layout orientation.
+  \sa setOrientation()
+ */
 Qt::Orientation QGraphicsLinearLayout::orientation() const
 {
     Q_D(const QGraphicsLinearLayout);
@@ -331,13 +333,10 @@ void QGraphicsLinearLayout::removeAt(int index)
 }
 
 /*!
-    \property QGraphicsLinearLayout::spacing
-    \brief the layout's default spacing
+  Sets the layout's spacing to \a spacing. Spacing refers to the
+  vertical and horizontal distances between items.
 
-    This property adjusts the layout's default spacing. The spacing applies to
-    the vertical and horizontal distance between items.
-
-    \sa setItemSpacing(), setStretchFactor(), QGraphicsGridLayout::setSpacing()
+   \sa setItemSpacing(), setStretchFactor(), QGraphicsGridLayout::setSpacing()
 */
 void QGraphicsLinearLayout::setSpacing(qreal spacing)
 {
@@ -350,6 +349,12 @@ void QGraphicsLinearLayout::setSpacing(qreal spacing)
     invalidate();
 }
 
+/*!
+  Returns the layout's spacing. Spacing refers to the
+  vertical and horizontal distances between items.
+
+  \sa setSpacing()
+ */
 qreal QGraphicsLinearLayout::spacing() const
 {
     Q_D(const QGraphicsLinearLayout);

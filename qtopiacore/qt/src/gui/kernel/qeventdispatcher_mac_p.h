@@ -164,7 +164,13 @@ public:
     QEventDispatcherMacPrivate();
 
     static MacTimerHash macTimerHash;
+    // Set 'blockSendPostedEvents' to true if you _really_ need
+    // to make sure that qt events are not posted while calling
+    // low-level cocoa functions (like beginModalForWindow). And
+    // use a QBoolBlocker to be safe:
+    static bool blockSendPostedEvents;
 #ifdef QT_MAC_USE_COCOA
+    // The following variables help organizing modal sessions:
     static QStack<QCocoaModalSessionInfo> cocoaModalSessionStack;
     static bool blockCocoaRequestModal;
     static NSModalSession activeModalSession();

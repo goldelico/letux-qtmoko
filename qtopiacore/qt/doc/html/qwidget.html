@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/kernel/qwidget.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qwidget.cpp -->
 <head>
   <title>Qt 4.5: QWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -392,7 +392,6 @@
 <li><div class="fn"></div>virtual void <b><a href="qwidget.html#moveEvent">moveEvent</a></b> ( QMoveEvent * <i>event</i> )</li>
 <li><div class="fn"></div>virtual void <b><a href="qwidget.html#paintEvent">paintEvent</a></b> ( QPaintEvent * <i>event</i> )</li>
 <li><div class="fn"></div>virtual bool <b><a href="qwidget.html#qwsEvent">qwsEvent</a></b> ( QWSEvent * <i>event</i> )</li>
-<li><div class="fn"></div>void <b><a href="qwidget.html#resetInputContext">resetInputContext</a></b> ()</li>
 <li><div class="fn"></div>virtual void <b><a href="qwidget.html#resizeEvent">resizeEvent</a></b> ( QResizeEvent * <i>event</i> )</li>
 <li><div class="fn"></div>virtual void <b><a href="qwidget.html#showEvent">showEvent</a></b> ( QShowEvent * <i>event</i> )</li>
 <li><div class="fn"></div>virtual void <b><a href="qwidget.html#tabletEvent">tabletEvent</a></b> ( QTabletEvent * <i>event</i> )</li>
@@ -527,7 +526,7 @@
 <p>Platform notes:</p>
 <ul>
 <li>X11: This feature relies on the use of an X server that supports ARGB visuals and a compositing window manager.</li>
-<li>Windows: This feature requires Windows 2000 or later.</li>
+<li>Windows: This feature requires Windows 2000 or later. The widget needs to have the <a href="qt.html#WindowType-enum">Qt::FramelessWindowHint</a> window flag set for the translucency to work.</li>
 </ul>
 <a name="native-widgets-vs-alien-widgets"></a>
 <h3>Native Widgets vs Alien Widgets</h3>
@@ -1211,7 +1210,7 @@
 <p>Sets the top-level widget containing this widget to be the active window.</p>
 <p>An active window is a visible top-level window that has the keyboard input focus.</p>
 <p>This function performs the same operation as clicking the mouse on the title bar of a top-level window. On X11, the result depends on the Window Manager. If you want to ensure that the window is stacked on top as well you should also call <a href="qwidget.html#raise">raise</a>(). Note that the window must be visible, otherwise activateWindow() has no effect.</p>
-<p>On Windows, if you are calling this when the application is not currently the active one then it will not make it the active window. It will change the color of the taskbar entry to indicate that the window has changed in some way. This is because Microsoft do not allow an application to interrupt what the user is currently doing in another application.</p>
+<p>On Windows, if you are calling this when the application is not currently the active one then it will not make it the active window. It will change the color of the taskbar entry to indicate that the window has changed in some way. This is because Microsoft does not allow an application to interrupt what the user is currently doing in another application.</p>
 <p>See also <a href="qwidget.html#isActiveWindow-prop">isActiveWindow</a>(), <a href="qwidget.html#window">window</a>(), and <a href="qwidget.html#show">show</a>().</p>
 <h3 class="fn"><a name="addAction"></a>void QWidget::addAction ( <a href="qaction.html">QAction</a> * <i>action</i> )</h3>
 <p>Appends the action <i>action</i> to this widget's list of actions.</p>
@@ -1632,11 +1631,12 @@
 <pre> QPixmap pixmap(widget-&gt;size());
  widget-&gt;render(&amp;pixmap);</pre>
 <p>If <i>sourceRegion</i> is a null region, this function will use <a href="qwidget.html#rect-prop">QWidget::rect</a>() as the region, i.e&#x2e; the entire widget.</p>
-<p><b>Note:</b> Make sure to call <a href="qpainter.html#end">QPainter::end</a>() for the given <i>target</i>'s active painter (if any) before rendering. For example:</p>
+<p>Ensure that you call <a href="qpainter.html#end">QPainter::end</a>() for the <i>target</i> device's active painter (if any) before rendering. For example:</p>
 <pre> QPainter painter(this);
  ...
  painter.end();
  myWidget-&gt;render(this);</pre>
+<p><b>Note:</b> To obtain the contents of an OpenGL widget, use <a href="qglwidget.html#grabFrameBuffer">QGLWidget::grabFrameBuffer</a>() or <a href="qglwidget.html#renderPixmap">QGLWidget::renderPixmap</a>() instead.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="render-2"></a>void QWidget::render ( <a href="qpainter.html">QPainter</a> * <i>painter</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>targetOffset</i> = QPoint(), const <a href="qregion.html">QRegion</a> &amp; <i>sourceRegion</i> = QRegion(), <a href="qwidget.html#RenderFlag-enum">RenderFlags</a> <i>renderFlags</i> = RenderFlags( DrawWindowBackground | DrawChildren ) )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
@@ -1659,9 +1659,6 @@
 <h3 class="fn"><a name="repaint-8"></a>void QWidget::repaint ( const <a href="qregion.html">QRegion</a> &amp; <i>rgn</i> )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
 <p>This version repaints a region <i>rgn</i> inside the widget.</p>
-<h3 class="fn"><a name="resetInputContext"></a>void QWidget::resetInputContext ()&nbsp;&nbsp;<tt> [protected]</tt></h3>
-<p>This function can be called on the widget that currently has focus to reset the input method operating on it.</p>
-<p>See also <a href="qinputcontext.html">QInputContext</a> and <a href="qinputcontext.html#reset">QInputContext::reset</a>().</p>
 <h3 class="fn"><a name="resizeEvent"></a>void QWidget::resizeEvent ( <a href="qresizeevent.html">QResizeEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>This event handler can be reimplemented in a subclass to receive widget resize events which are passed in the <i>event</i> parameter. When resizeEvent() is called, the widget already has its new geometry. The old size is accessible through <a href="qresizeevent.html#oldSize">QResizeEvent::oldSize</a>().</p>
 <p>The widget will be erased and receive a paint event immediately after processing the resize event. No drawing need be (or should be) done inside this handler.</p>
@@ -1740,8 +1737,7 @@
 <p>setFocus() gives focus to a widget regardless of its focus policy, but does not clear any keyboard grab (see <a href="qwidget.html#grabKeyboard">grabKeyboard</a>()).</p>
 <p>Be aware that if the widget is hidden, it will not accept focus until it is shown.</p>
 <p><b>Warning:</b> If you call setFocus() in a function which may itself be called from <a href="qwidget.html#focusOutEvent">focusOutEvent</a>() or <a href="qwidget.html#focusInEvent">focusInEvent</a>(), you may get an infinite recursion.</p>
-<p><a href="qwidget.html#focusPolicy-prop">setFocusPolicy</a>() <a href="qapplication.html#focusWidget">QApplication::focusWidget</a>() <a href="qwidget.html#grabKeyboard">grabKeyboard</a>() <a href="qwidget.html#grabMouse">grabMouse</a>(), {Keyboard Focus}</p>
-<p>See also <a href="qwidget.html#focus-prop">hasFocus</a>(), <a href="qwidget.html#clearFocus">clearFocus</a>(), <a href="qwidget.html#focusInEvent">focusInEvent</a>(), and <a href="qwidget.html#focusOutEvent">focusOutEvent</a>().</p>
+<p>See also <a href="qwidget.html#focus-prop">hasFocus</a>(), <a href="qwidget.html#clearFocus">clearFocus</a>(), <a href="qwidget.html#focusInEvent">focusInEvent</a>(), <a href="qwidget.html#focusOutEvent">focusOutEvent</a>(), <a href="qwidget.html#focusPolicy-prop">setFocusPolicy</a>(), <a href="qapplication.html#focusWidget">QApplication::focusWidget</a>(), <a href="qwidget.html#grabKeyboard">grabKeyboard</a>(), <a href="qwidget.html#grabMouse">grabMouse</a>(), and <a href="focus.html">Keyboard Focus</a>.</p>
 <h3 class="fn"><a name="setFocus-2"></a>void QWidget::setFocus ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
 <p>This is an overloaded member function, provided for convenience.</p>
 <p>Gives the keyboard input focus to this widget (or its focus proxy) if this widget or one of its parents is the <a href="qwidget.html#isActiveWindow-prop">active window</a>.</p>
@@ -1981,6 +1977,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

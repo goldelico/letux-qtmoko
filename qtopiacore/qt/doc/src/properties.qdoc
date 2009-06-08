@@ -240,6 +240,16 @@
 
     \sa {Meta-Object System}, {Signals and Slots}
 
+    \section1 Properties and Custom Types
+
+    Custom types used by properties need to be registered using the
+    Q_DECLARE_METATYPE() macro so that their values can be stored in
+    QVariant objects. This makes them suitable for use with both
+    static properties declared using the Q_PROPERTY() macro in class
+    definitions and dynamic properties created at run-time. 
+
+    \sa Q_DECLARE_METATYPE(), QMetaType, QVariant
+
     \section1 Adding Additional Information to a Class
 
     Connected to the property system is an additional macro,

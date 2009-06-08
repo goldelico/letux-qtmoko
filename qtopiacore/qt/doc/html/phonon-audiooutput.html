@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/phonon-api.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/phonon-api.qdoc -->
 <head>
   <title>Qt 4.5: AudioOutput Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -90,7 +90,7 @@
          new Phonon::AudioOutput(Phonon::MusicCategory, this);
      Phonon::Path path = Phonon::createPath(mediaObject, audioOutput);</pre>
 <p>The class supports changing the <a href="phonon-audiooutput.html#volume-prop">volume</a>(). It is also possible to mute the sound.</p>
-<p>To find out what <a href="phonon-objectdescription.html#AudioOutputDevice-typedef">AudioOutputDevice</a>s are available for AudioOutput, you can call BackendCapabilities::availableAudioDevices(). A default device is selected by the backend, but it is possible to set the device to be used with <a href="phonon-audiooutput.html#outputDevice-prop">setOutputDevice</a>(). The <a href="phonon-audiooutput.html#outputDeviceChanged">outputDeviceChanged</a>() signal will be emitted if the device changes.</p>
+<p>To find out what <a href="phonon-objectdescription.html#AudioOutputDevice-typedef">AudioOutputDevice</a>s are available for AudioOutput, you can call <a href="phonon-backendcapabilities.html#availableAudioOutputDevices">BackendCapabilities::availableAudioOutputDevices</a>(). A default device is selected by the backend, but it is possible to set the device to be used with <a href="phonon-audiooutput.html#outputDevice-prop">setOutputDevice</a>(). The <a href="phonon-audiooutput.html#outputDeviceChanged">outputDeviceChanged</a>() signal will be emitted if the device changes.</p>
 <p>If an error occurs with the playback, for instance, if no valid output device is found, the media object will receive a stateChanged() signal with the <a href="phonon.html#State-enum">ErrorState</a>.</p>
 <p>Note that the default values of properties are dependent on the backend.</p>
 <p>See also <a href="phonon-volumeslider.html">Phonon::VolumeSlider</a>, <a href="phonon-musicplayer.html">Music Player Example</a>, <a href="phonon-backendcapabilities.html">BackendCapabilities</a>, and <a href="phonon-module.html">Phonon Module</a>.</p>
@@ -164,6 +164,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

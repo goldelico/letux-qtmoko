@@ -95,7 +95,7 @@ public:
 };
 
 /*!
-    \class Q3UrlOperator q3urloperator.h
+    \class Q3UrlOperator
 
     \brief The Q3UrlOperator class provides common operations on URLs.
 

@@ -123,7 +123,7 @@ for (; !elt.isNull(); elt = elt.nextSiblingElement("entry")) {
 
 
 //! [14]
-Hello Qt &lt;xml is cool&gt;
+Hello Qt <xml is cool>
 //! [14]
 
 

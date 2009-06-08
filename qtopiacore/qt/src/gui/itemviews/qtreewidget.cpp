@@ -2096,10 +2096,12 @@ void QTreeWidgetItem::sortChildren(int column, Qt::SortOrder order, bool climb)
         return;
     if (model->isChanging())
         return;
-
+    int oldSortColumn = view->d_func()->explicitSortColumn;
+    view->d_func()->explicitSortColumn = column;
     emit model->layoutAboutToBeChanged();
     d->sortChildren(column, order, climb);
     emit model->layoutChanged();
+    view->d_func()->explicitSortColumn = oldSortColumn;
 }
 
 /*!
@@ -2855,7 +2857,10 @@ QRect QTreeWidget::visualItemRect(const QTreeWidgetItem *item) const
 */
 int QTreeWidget::sortColumn() const
 {
-    return header()->sortIndicatorSection();
+    Q_D(const QTreeWidget);
+    return (d->explicitSortColumn != -1
+            ? d->explicitSortColumn
+            : header()->sortIndicatorSection());
 }
 
 /*!
@@ -2946,18 +2951,21 @@ QWidget *QTreeWidget::itemWidget(QTreeWidgetItem *item, int column) const
 /*!
     \since 4.1
 
-    Sets the given \a widget to be displayed in the cell specified by
-    the given \a item and \a column.
+    Sets the given \a widget to be displayed in the cell specified by the given
+    \a item and \a column.
 
-    Note that the given \a widget's \l {QWidget}{autoFillBackground}
-    property must be set to true, otherwise the widget's background will
-    be transparent, showing both the model data and the tree widget
-    item.
+    The given \a widget's \l {QWidget::}{autoFillBackground} property must be
+    set to true, otherwise the widget's background will be transparent, showing
+    both the model data and the tree widget item.
 
-    This function should only be used to display static content in the
-    place of a tree widget item. If you want to display custom dynamic
-    content or implement a custom editor widget, use QTreeView and
-    subclass QItemDelegate instead.
+    This function should only be used to display static content in the place of
+    a tree widget item. If you want to display custom dynamic content or
+    implement a custom editor widget, use QTreeView and subclass QItemDelegate
+    instead.
+
+    This function cannot be called before the item hierarchy has been set up,
+    i.e., the QTreeWidgetItem that will hold \a widget must have been added to
+    the view before \a widget is set.
 
     \note The tree takes ownership of the widget.
 
@@ -3055,10 +3063,8 @@ bool QTreeWidget::isItemHidden(const QTreeWidgetItem *item) const
         return header()->isHidden();
     if (d->hiddenIndexes.isEmpty())
         return false;
-    foreach (const QPersistentModelIndex &idx, d->hiddenIndexes)
-        if (idx.internalPointer() == const_cast<QTreeWidgetItem*>(item))
-            return true;
-    return false;
+    QTreeModel::SkipSorting skipSorting(d->model());
+    return d->isRowHidden(d->index(item));
 }
 
 /*!

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/porting-qsa.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/porting-qsa.qdoc -->
 <head>
   <title>Qt 4.5: Moving from QSA to Qt Script</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -163,7 +163,7 @@
 <tr valign="top" class="even"><td>String.mid()</td><td>This function is not available in Qt Script. Use substring() instead.</td></tr>
 <tr valign="top" class="odd"><td>String.<a href="qtextstream.html#right">right</a>()</td><td>This function is not available in Qt Script. Use substring() instead.</td></tr>
 <tr valign="top" class="even"><td>String.searchRev()</td><td>This function is not available in Qt Script. Use search() / match() instead.</td></tr>
-<tr valign="top" class="odd"><td>String.startsWith()</td><td>This function is not available in Qt Script. Use indexOf() instead.</td></tr>
+<tr valign="top" class="odd"><td>String.startsWith()</td><td>This function is not available in Qt Script. Use indexOf() == 0 instead.</td></tr>
 <tr valign="top" class="even"><td>String.upper()</td><td>This function is not available in Qt Script. Use toUpperCase() instead.</td></tr>
 <tr valign="top" class="odd"><td>RegExp.valid</td><td>This property is not available in Qt Script because it is not required; a <tt>SyntaxError</tt> exception is thrown for bad <tt>RegExp</tt> objects.</td></tr>
 <tr valign="top" class="even"><td>RegExp.empty</td><td>This property is not available in Qt Script. Use <tt>toString().length == 0</tt> instead.</td></tr>
@@ -247,6 +247,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

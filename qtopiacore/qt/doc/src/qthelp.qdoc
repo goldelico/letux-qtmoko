@@ -114,33 +114,33 @@
         \row
             \o \l {Qt Help Project}
             \o .qhp
-            \o This is the input file for the help generator. It
-            contains the table of contents, indices and references
-            to the actual documentation files (*.html). In addition
-            it defines a unique namespace for the documentation.
+            \o The input file for the help generator consisting of the table
+               of contents, indices and references to the actual documentation
+               files (*.html); it also defines a unique namespace for the
+               documentation.
 
         \row
             \o Qt Compressed Help
             \o .qch
-            \o The output file of the help generator. This binary file
-            contains all the information specified in the help project
-            file along with all compressed documentation files.
+            \o The output file of the help generator. This binary file contains
+               all information specified in the help project file along with all
+               compressed documentation files.
 
         \row
             \o \l {Qt Help Collection Project}
             \o .qhcp
-            \o Is the input file for the help collection generator.
-            It contains references to compressed help files which
-            should be included in the collection. It may contain
-            various other information for customizing Qt Assistant.
+            \o The input file for the help collection generator. It contains
+               references to compressed help files which should be included in
+               the collection; it also may contain other information for
+               customizing Qt Assistant.
 
         \row
             \o Qt Help Collection
             \o .qhc
-            \o The output of the help collection generator. This
-            is the file, the QHelpEngine operates on. It contains
-            references to any number of compressed help files as well
-            as additional information like custom filters.
+            \o The output of the help collection generator. This is the file
+               QHelpEngine operates on. It contains references to any number of
+               compressed help files as well as additional information, such as
+               custom filters.
     \endtable
 
     \section1 Generating Qt Help

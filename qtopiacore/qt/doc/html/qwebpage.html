@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/3rdparty/webkit/WebKit/qt/Api/qwebpage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/3rdparty/webkit/WebKit/qt/Api/qwebpage.cpp -->
 <head>
   <title>Qt 4.5: QWebPage Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -237,7 +237,9 @@
 <tr><td valign="top"><tt>QWebPage::NavigationTypeOther</tt></td><td align="center" valign="top"><tt>5</tt></td><td valign="top">A navigation to another document using a method not listed above.</td></tr>
 </table></p>
 <h3 class="fn"><a name="WebAction-enum"></a>enum QWebPage::WebAction</h3>
-<p>This enum describes the types of action which can be performed on the web page. Actions which are related to text editing, cursor movement, and text selection only have an effect if <a href="qwebpage.html#contentEditable-prop">contentEditable</a> is true.</p>
+<p>This enum describes the types of action which can be performed on the web page.</p>
+<p>Actions only have an effect when they are applicable. The availability of actions can be be determined by checking enabled() on the action returned by <a href="qwebpage.html#action">action()</a>.</p>
+<p>One method of enabling the text editing, cursor movement, and text selection actions is by setting <a href="qwebpage.html#contentEditable-prop">contentEditable</a> to true.</p>
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
 <tr><th width="25%">Constant</th><th width="15%">Value</th><th width="60%">Description</th></tr>
 <tr><td valign="top"><tt>QWebPage::NoWebAction</tt></td><td align="center" valign="top"><tt>-1</tt></td><td valign="top">No action is triggered.</td></tr>
@@ -543,7 +545,7 @@
 <ul>
 <li>%Platform% and %Subplatform% are expanded to the windowing system and the operation system.</li>
 <li>%Security% expands to U if SSL is enabled, otherwise N. SSL is enabled if <a href="qsslsocket.html#supportsSsl">QSslSocket::supportsSsl</a>() returns true.</li>
-<li>%Locale% is replaced with <a href="qlocale.html#name">QLocale::name</a>().</li>
+<li>%Locale% is replaced with <a href="qlocale.html#name">QLocale::name</a>(). The locale is determined from the view of the <a href="qwebpage.html">QWebPage</a>. If no view is set on the <a href="qwebpage.html">QWebPage</a>, then a default constructed <a href="qlocale.html">QLocale</a> is used instead.</li>
 <li>%WebKitVersion% currently expands to 527+</li>
 <li>%AppVersion% expands to <a href="qcoreapplication.html#applicationName-prop">QCoreApplication::applicationName</a>()/<a href="qcoreapplication.html#applicationVersion-prop">QCoreApplication::applicationVersion</a>() if they're set; otherwise defaulting to Qt and the current Qt version.</li>
 </ul>
@@ -556,6 +558,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

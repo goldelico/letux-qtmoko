@@ -270,7 +270,11 @@ QPixmap QPixmap::fromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format)
                 QRgb *dest = (QRgb *) image.scanLine(y);
                 const QRgb *src = (const QRgb *) (data + y * bytes_per_line);
                 for (int x=0; x<w; ++x) {
-                    dest[x] = src[x] | mask;
+                    const uint pixel = src[x];
+                    if ((pixel & 0xff000000) == 0 && (pixel & 0x00ffffff) != 0)
+                        dest[x] = pixel | 0xff000000;
+                    else
+                        dest[x] = pixel | mask;
                 }
             }
         }

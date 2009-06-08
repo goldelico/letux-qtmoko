@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -42,15 +42,15 @@
 #ifndef STARDELEGATE_H
 #define STARDELEGATE_H
 
-#include <QItemDelegate>
+#include <QStyledItemDelegate>
 
 //! [0]
-class StarDelegate : public QItemDelegate
+class StarDelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 
 public:
-    StarDelegate(QWidget *parent = 0) : QItemDelegate(parent) {}
+    StarDelegate(QWidget *parent = 0) : QStyledItemDelegate(parent) {}
 
     void paint(QPainter *painter, const QStyleOptionViewItem &option,
                const QModelIndex &index) const;

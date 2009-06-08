@@ -187,8 +187,12 @@ QAction *QActionGroup::addAction(QAction* a)
     }
     if(a->isChecked())
         d->current = a;
-    if(a->d_func()->group != this)
+    QActionGroup *oldGroup = a->d_func()->group;
+    if(oldGroup != this) {
+        if (oldGroup)
+            oldGroup->removeAction(a);
         a->d_func()->group = this;
+    }
     return a;
 }
 

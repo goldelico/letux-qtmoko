@@ -60,6 +60,7 @@
 #include <QtDesigner/QDesignerWidgetBoxInterface>
 #include <QtDesigner/QExtensionManager>
 #include <QtDesigner/QDesignerResourceBrowserInterface>
+#include <QtDesigner/QDesignerPropertySheetExtension>
 
 #include <QtCore/QVariant>
 #include <QtCore/QFile>
@@ -443,6 +444,52 @@ bool QDesignerIntegration::isSlotNavigationEnabled() const
     return m_d->m_slotNavigationEnabled;
 }
 
+static QString fixHelpClassName(const QString &className)
+{
+    // ### generalize using the Widget Data Base
+    if (className == QLatin1String("Line"))
+        return QLatin1String("QFrame");
+    if (className == QLatin1String("Spacer"))
+        return QLatin1String("QSpacerItem");
+    if (className == QLatin1String("QLayoutWidget"))
+        return QLatin1String("QLayout");
+    return className;
+}
+
+// Return class in which the property is defined
+static QString classForProperty(QDesignerFormEditorInterface *core,
+                                QObject *object,
+                                const QString &property)
+{
+    if (const QDesignerPropertySheetExtension *ps = qt_extension<QDesignerPropertySheetExtension *>(core->extensionManager(), object)) {
+        const int index = ps->indexOf(property);
+        if (index >= 0)
+            return ps->propertyGroup(index);
+    }
+    return QString();
+}
+
+QString QDesignerIntegration::contextHelpId() const
+{
+    QObject *currentObject = core()->propertyEditor()->object();
+    if (!currentObject)
+        return QString();
+    // Return a help index id consisting of "class::property"
+    QString className;
+    QString currentPropertyName = core()->propertyEditor()->currentPropertyName();    
+    if (!currentPropertyName.isEmpty())
+        className = classForProperty(core(), currentObject, currentPropertyName);
+    if (className.isEmpty()) {
+        currentPropertyName.clear(); // We hit on some fake property.
+        className = WidgetFactory::classNameOf(core(), currentObject);
+    }
+    QString helpId = fixHelpClassName(className);
+    if (!currentPropertyName.isEmpty()) {
+        helpId += QLatin1String("::");
+        helpId += currentPropertyName;
+    }
+    return helpId;
+}
 
 } // namespace qdesigner_internal
 

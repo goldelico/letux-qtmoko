@@ -131,7 +131,7 @@ public:
     int itemAtCoordinate(int coordinate) const;
 
     int viewIndex(const QModelIndex &index) const;
-    QModelIndex modelIndex(int i) const;
+    QModelIndex modelIndex(int i, int column = 0) const;
 
     int firstVisibleItem(int *offset = 0) const;
     int columnAt(int x) const;

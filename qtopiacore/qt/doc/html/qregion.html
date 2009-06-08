@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qregion.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qregion.cpp -->
 <head>
   <title>Qt 4.5: QRegion Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -76,14 +76,18 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-lt-lt-147">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-gt-gt-85">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, QRegion &amp; <i>r</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-lt-lt-30">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-gt-gt-15">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, QRegion &amp; <i>r</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
 <h2>Detailed Description</h2>
 <p>The QRegion class specifies a clip region for a painter.</p>
-<p>QRegion is used with <a href="qpainter.html#setClipRegion">QPainter::setClipRegion</a>() to limit the paint area to what needs to be painted. There is also a <a href="qwidget.html#repaint">QWidget::repaint</a>() function that takes a QRegion parameter. QRegion is the best tool for reducing flicker.</p>
+<p>QRegion is used with <a href="qpainter.html#setClipRegion">QPainter::setClipRegion</a>() to limit the paint area to what needs to be painted. There is also a <a href="qwidget.html#repaint">QWidget::repaint</a>() function that takes a QRegion parameter. QRegion is the best tool for minimizing the amount of screen area to be updated by a repaint.</p>
+<p>This class is not suitable for constructing shapes for rendering, especially as outlines. Use <a href="qpainterpath.html">QPainterPath</a> to create paths and shapes for use with <a href="qpainter.html">QPainter</a>.</p>
+<p>QRegion is an <a href="shared.html#implicitly-shared">implicitly shared</a> class.</p>
+<a name="creating-and-using-regions"></a>
+<h3>Creating and Using Regions</h3>
 <p>A region can be created from a rectangle, an ellipse, a polygon or a bitmap. Complex regions may be created by combining simple regions using <a href="qregion.html#united">united</a>(), <a href="qregion.html#intersected">intersected</a>(), <a href="qregion.html#subtracted">subtracted</a>(), or <a href="qregion.html#xored">xored</a>() (exclusive or). You can move a region using <a href="qregion.html#translate">translate</a>().</p>
 <p>You can test whether a region <a href="qregion.html#isEmpty">isEmpty</a>() or if it <a href="qregion.html#contains">contains</a>() a <a href="qpoint.html">QPoint</a> or <a href="qrect.html">QRect</a>. The bounding rectangle can be found with <a href="qregion.html#boundingRect">boundingRect</a>().</p>
 <p>The function <a href="qregion.html#rects">rects</a>() gives a decomposition of the region into rectangles.</p>
@@ -99,18 +103,16 @@
      painter.setClipRegion(r3);
      ...                                     <span class="comment">// paint clipped graphics</span>
  }</pre>
-<p>QRegion is an <a href="shared.html#implicitly-shared">implicitly shared</a> class.</p>
 <p><b>Warning:</b> Due to window system limitations, the whole coordinate space for a region is limited to the points between -32767 and 32767 on Windows 95/98/ME. You can circumvent this limitation by using a <a href="qpainterpath.html">QPainterPath</a>.</p>
 <a name="additional-license-information"></a>
 <h3>Additional License Information</h3>
-<p>On Embedded Linux, Windows CE and X11 platforms, parts of this class rely on code obtained under the following license:</p>
+<p>On Embedded Linux, Windows CE and X11 platforms, parts of this class rely on code obtained under the following licenses:</p>
 <div style="padding: 0.5em; background: #e0e0e0; color: black"><p>Copyright (c) 1987 X Consortium</p>
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the &quot;Software&quot;), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:</p>
 <p>The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.</p>
 <p>THE SOFTWARE IS PROVIDED &quot;AS IS&quot;, WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE X CONSORTIUM BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <p>Except as contained in this notice, the name of the X Consortium shall not be used in advertising or otherwise to promote the sale, use or other dealings in this Software without prior written authorization from the X Consortium.</p>
-</div>    <hr />
-    <div style="padding: 0.5em; background: #e0e0e0; color: black"><p>Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.</p>
+</div><br /><div style="padding: 0.5em; background: #e0e0e0; color: black"><p>Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.</p>
 <p>All Rights Reserved</p>
 <p>Permission to use, copy, modify, and distribute this software and its documentation for any purpose and without fee is hereby granted, provided that the above copyright notice appear in all copies and that both that copyright notice and this permission notice appear in supporting documentation, and that the name of Digital not be used in advertising or publicity pertaining to distribution of the software without specific, written prior permission.</p>
 <p>DIGITAL DISCLAIMS ALL WARRANTIES WITH REGARD TO THIS SOFTWARE, INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS, IN NO EVENT SHALL DIGITAL BE LIABLE FOR ANY SPECIAL, INDIRECT OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR PERFORMANCE OF THIS SOFTWARE.</p>
@@ -293,16 +295,16 @@
 <p>See also <a href="qregion.html#united">united</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-147"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-30"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</h3>
 <p>Writes the region <i>r</i> to the stream <i>s</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-85"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, QRegion &amp; <i>r</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-15"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, QRegion &amp; <i>r</i> )</h3>
 <p>Reads a region from the stream <i>s</i> into <i>r</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

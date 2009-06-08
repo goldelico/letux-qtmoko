@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -172,7 +172,7 @@ Expression::Ptr ByIDCreator::create(const Expression::ID id,
     const QXmlName qName(StandardNamespaces::fn, fnName);
 
     const Expression::Ptr result(context->functionSignatures()->createFunctionCall(qName, operands, context, r));
-    context->addLocation(result.data(), context->locationFor(r));
+    context->wrapExpressionWith(r, result);
     return result;
 }
 

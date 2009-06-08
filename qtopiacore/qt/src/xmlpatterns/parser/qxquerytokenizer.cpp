@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -83,10 +83,38 @@ const QChar XQueryTokenizer::current() const
 
 char XQueryTokenizer::peekCurrent() const
 {
-    if(m_pos < m_length)
-        return current().toAscii();
-    else
-        return 0;
+    return current().toAscii();
+}
+
+int XQueryTokenizer::peekForColonColon() const
+{
+    /* Note, we don't modify m_pos in this function, so we need to do offset
+     * calculations. */
+    int pos = m_pos;
+
+    while(pos < m_length)
+    {
+        switch(m_data.at(pos).toAscii())
+        {
+            /* Fallthrough these four. */
+            case ' ':
+            case '\t':
+            case '\n':
+            case '\r':
+                break;
+            case ':':
+            {
+                if(peekAhead((pos - m_pos) + 1) == ':')
+                    return pos - m_pos;
+                /* Fallthrough. */
+            }
+            default:
+                return -1;
+        }
+        ++pos;
+    }
+
+    return -1;
 }
 
 Tokenizer::Token XQueryTokenizer::tokenAndChangeState(const TokenType code,
@@ -133,7 +161,6 @@ QString XQueryTokenizer::normalizeEOL(const QString &input,
             result.append(at);
             continue;
         }
-
         switch(input.at(i).unicode())
         {
             case '\r':
@@ -289,10 +316,10 @@ Tokenizer::TokenType XQueryTokenizer::consumeWhitespace()
 
 char XQueryTokenizer::peekAhead(const int length) const
 {
-    if(m_pos + length >= m_length)
-        return 0;
-    else
+    if(m_pos + length < m_length)
         return m_data.at(m_pos + length).toAscii();
+    else
+        return 0;
 }
 
 Tokenizer::Token XQueryTokenizer::error()
@@ -668,6 +695,7 @@ bool XQueryTokenizer::aheadEquals(const char *const chs,
                                   const int offset) const
 {
     Q_ASSERT(len > 0);
+    Q_ASSERT(qstrlen(chs) == uint(len));
 
     if(m_pos + len >= m_length)
         return false;
@@ -720,7 +748,6 @@ Tokenizer::Token XQueryTokenizer::nextToken()
     {
         /* We want to skip or do special whitespace handling for these
          * states. So fallthrough all of the following. */
-        case AfterAxisSeparator:
         case AposAttributeContent:
         case Axis:
         case ElementContent:
@@ -1076,6 +1103,30 @@ Tokenizer::Token XQueryTokenizer::nextToken()
 
             Q_ASSERT(state() == Default || state() == Axis || state() == AfterAxisSeparator);
 
+            /*
+             * This is hard. Consider this:
+             *
+             * Valid:           child       ::nameTest
+             * Valid:           child::     nameTest
+             * Syntax Error:    child       :localName
+             * Syntax Error:    child:      localName
+             *
+             * Consider "child ::name". Right now, we're here:
+             *                ^
+             * We don't know whether "child" is a prefix and hence the whitespace is invalid,
+             * or whether it's an axis and hence skippable. */
+            {
+                const int wsLength = peekForColonColon();
+                /* We cannot call handleWhitespace() because it returns on
+                 * END_OF_FILE, and we have parsed up keyword, and we need to
+                 * deal with that.
+                 *
+                 * If we have a colon colon, which means the whitespace is
+                 * allowed, we skip it. */
+                if(wsLength != -1)
+                    m_pos += wsLength;
+            }
+
             /* Handle name tests. */
             if(peekCurrent() == ':')
             {
@@ -1388,9 +1439,6 @@ Tokenizer::Token XQueryTokenizer::nextToken()
                     return id;
                 }
             }
-
-            // TODO
-            return Token(keyword2->token);
 
             Q_ASSERT(false);
 

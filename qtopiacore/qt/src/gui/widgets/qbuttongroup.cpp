@@ -42,7 +42,7 @@
 
 
 /*!
-    \class QButtonGroup qbuttongroup.h
+    \class QButtonGroup
     \brief The QButtonGroup class provides a container to organize groups of
     button widgets.
 

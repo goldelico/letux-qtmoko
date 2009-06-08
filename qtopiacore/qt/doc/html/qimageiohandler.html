@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/image/qimageiohandler.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimageiohandler.cpp -->
 <head>
   <title>Qt 4.5: QImageIOHandler Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -23,7 +23,7 @@
 <a name="public-types"></a>
 <h3>Public Types</h3>
 <ul>
-<li><div class="fn"></div>enum <b><a href="qimageiohandler.html#ImageOption-enum">ImageOption</a></b> { Size, ClipRect, ScaledSize, ScaledClipRect, ..., BackgroundColor }</li>
+<li><div class="fn"></div>enum <b><a href="qimageiohandler.html#ImageOption-enum">ImageOption</a></b> { Size, ClipRect, ScaledSize, ScaledClipRect, ..., ImageFormat }</li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
@@ -79,6 +79,7 @@
 <tr><td valign="top"><tt>QImageIOHandler::Endianness</tt></td><td align="center" valign="top"><tt>11</tt></td><td valign="top">The endianness of the image. Certain image formats can be stored as BigEndian or LittleEndian. A handler that supports Endianness uses the value of this option to determine how the image should be stored.</td></tr>
 <tr><td valign="top"><tt>QImageIOHandler::Animation</tt></td><td align="center" valign="top"><tt>12</tt></td><td valign="top">Image formats that support animation return true for this value in <a href="qimageiohandler.html#supportsOption">supportsOption</a>(); otherwise, false is returned.</td></tr>
 <tr><td valign="top"><tt>QImageIOHandler::BackgroundColor</tt></td><td align="center" valign="top"><tt>13</tt></td><td valign="top">Certain image formats allow the background color to be specified. A handler that supports BackgroundColor initializes the background color to this option (a <a href="qcolor.html">QColor</a>) when reading an image.</td></tr>
+<tr><td valign="top"><tt>QImageIOHandler::ImageFormat</tt></td><td align="center" valign="top"><tt>14</tt></td><td valign="top">The image's data format returned by the handler. This can be any of the formats listed in <a href="qimage.html#Format-enum">QImage::Format</a>.</td></tr>
 </table></p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -147,6 +148,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

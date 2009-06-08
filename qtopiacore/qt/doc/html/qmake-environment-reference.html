@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qmake-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qmake-manual.qdoc -->
 <head>
   <title>Qt 4.5: Configuring qmake's Environment</title>
   <link rel="prev" href="qmake-function-reference.html" />
@@ -77,6 +77,7 @@
 <a name="cache"></a><a name="cache-file"></a>
 <h2>Cache File</h2>
 <p>The cache file is a special file <tt>qmake</tt> reads to find settings not specified in the <tt>qmake.conf</tt> file, project files, or at the command line. If <tt>-nocache</tt> is not specified when <tt>qmake</tt> is run, it will try to find a file called <tt>.qmake.cache</tt> in parent directories of the current directory. If it fails to find this file, it will silently ignore this step of processing.</p>
+<p>If it finds a <tt>.qmake.cache</tt> file then it will process this file first before it processes the project file.</p>
 <a name="libdepend"></a><a name="library-dependencies"></a>
 <h2>Library Dependencies</h2>
 <p>Often when linking against a library, <tt>qmake</tt> relies on the underlying platform to know what other libraries this library links against, and lets the platform pull them in. In many cases, however, this is not sufficent. For example, when statically linking a library, no other libraries are linked to, and therefore no dependencies to those libraries are created. However, an application that later links against this library will need to know where to find the symbols that the static library will require. To help with this situation, <tt>qmake</tt> attempts to follow a library's dependencies where appropriate, but this behavior must be explicitly enabled by following two steps.</p>
@@ -172,6 +173,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

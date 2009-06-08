@@ -119,7 +119,13 @@ elif [ -f "$relpath"/src/gui/kernel/qapplication_qws.cpp ]; then
     # ~ src/gui/base/qapplication_qws.cpp is present
     # ~ this is the free or commercial edition
     # ~ this is the internal edition and Qt Embedded is explicitly enabled
-    PLATFORM_QWS=maybe
+    if [ -f "$relpath"/src/gui/kernel/qapplication_mac.mm ]; then
+        # This is a depot build, or an all-platforms package
+        PLATFORM_QWS=maybe
+    else
+        # This must be the embedded package, since the Qt/Mac source files are not present
+	PLATFORM_QWS=yes
+    fi
 fi
 
 #-----------------------------------------------------------------------------
@@ -156,42 +162,144 @@ fi
 #-------------------------------------------------------------------------------
 # check the license
 #-------------------------------------------------------------------------------
+COMMERCIAL_USER=ask
+CFG_DEV=no
+CFG_NOKIA=no
+CFG_EMBEDDED=no
+EditionString=Commercial
 
-if [ -f "$relpath"/LICENSE.Qtopia ]; then
-    # Qtopia Edition
-    [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
-    Licensee="Qtopia"
-    Edition="Qtopia"
-    QT_EDITION="QT_EDITION_DESKTOP"
-elif [ -f "$relpath"/LICENSE.QtopiaGPL ]; then
-    # Qtopia GPL Edition
-    [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
-    Licensee="Qtopia"
-    Edition="OpenSource"
+earlyArgParse()
+{
+    # parse the arguments, setting things to "yes" or "no"
+    while [ "$#" -gt 0 ]; do
+        CURRENT_OPT="$1"
+        UNKNOWN_ARG=no
+        case "$1" in
+        #Autoconf style options
+        --enable-*)
+            VAR=`echo $1 | sed "s,^--enable-\(.*\),\1,"`
+            VAL=yes
+            ;;
+        --disable-*)
+            VAR=`echo $1 | sed "s,^--disable-\(.*\),\1,"`
+            VAL=no
+            ;;
+        --*=*)
+            VAR=`echo $1 | sed "s,^--\(.*\)=.*,\1,"`
+            VAL=`echo $1 | sed "s,^--.*=\(.*\),\1,"`
+            ;;
+        --no-*)
+            VAR=`echo $1 | sed "s,^--no-\(.*\),\1,"`
+            VAL=no
+            ;;
+        -embedded)
+            VAR=embedded
+            # this option may or may not be followed by an argument
+            if [ -z "$2" ] || echo "$2" | grep '^-' >/dev/null 2>&1; then
+                VAL=auto
+            else
+                shift;
+                VAL=$1
+            fi
+            ;;
+        h|help|--help|-help)
+            if [ "$VAL" = "yes" ]; then
+                OPT_HELP="$VAL"
+                COMMERCIAL_USER="no" #doesn't matter we will display the help
+            else
+                UNKNOWN_OPT=yes
+                COMMERCIAL_USER="no" #doesn't matter we will display the help
+            fi
+            ;;
+        --*)
+            VAR=`echo $1 | sed "s,^--\(.*\),\1,"`
+            VAL=yes
+            ;;
+        -*)
+            VAR=`echo $1 | sed "s,^-\(.*\),\1,"`
+            VAL="unknown"
+            ;;
+        *)
+            UNKNOWN_ARG=yes
+            ;;
+        esac
+        if [ "$UNKNOWN_ARG" = "yes" ]; then
+            shift
+            continue
+        fi
+        shift
+
+        UNKNOWN_OPT=no
+        case "$VAR" in
+        embedded)
+            CFG_EMBEDDED="$VAL"
+            if [ "$PLATFORM_QWS" != "no" ]; then
+                if [ "$PLATFORM_QWS" = "maybe" ]; then
+                    PLATFORM_X11=no
+                    PLATFORM_MAC=no
+                    PLATFORM_QWS=yes
+                fi
+            else
+                echo "No license exists to enable Qt for Embedded Linux. Disabling."
+                CFG_EMBEDDED=no
+            fi
+            ;;
+        developer-build)
+            CFG_DEV="yes"
+            ;;
+        nokia-developer)
+            CFG_DEV="yes"
+            CFG_NOKIA="yes"
+            COMMERCIAL_USER="no"
+            ;;
+        commercial)
+            COMMERCIAL_USER="yes"
+            ;;
+        opensource)
+            COMMERCIAL_USER="no"
+            ;;
+        *)
+            UNKNOWN_OPT=yes
+            ;;
+        esac
+    done
+}
+
+earlyArgParse "$@"
+
+if [ "$COMMERCIAL_USER" = "ask" ]; then
+    while true; do
+        echo "Which edition of Qt do you want to use ?"
+        echo
+        echo "Type 'c' if you want to use the Commercial Edition."
+        echo "Type 'o' if you want to use the Open Source Edition."
+        echo
+        read commercial
+        echo
+        if [ "$commercial" = "c" ]; then
+            COMMERCIAL_USER="yes"
+            break
+        else [ "$commercial" = "o" ];
+            COMMERCIAL_USER="no"
+            break
+        fi
+    done
+fi
+
+if [ "$CFG_NOKIA" = "yes" ]; then
+    Licensee="Nokia"
+    Edition="NokiaInternalBuild"
+    EditionString="Nokia Internal Build"
     QT_EDITION="QT_EDITION_OPENSOURCE"
-elif [ -f "$relpath"/LICENSE.LGPL -o -f "$relpath"/LICENSE.GPL3 ]; then
-    # Open Source edition - may only be used under the terms of the GPL.
     [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
-    [ "$PLATFORM_QWS" = "maybe" ] && PLATFORM_QWS=yes
-    Licensee="Open Source"
-    Edition="OpenSource"
-    EditionString="Open Source"
-    QT_EDITION="QT_EDITION_OPENSOURCE"
-elif [ -f "$relpath"/LICENSE.TROLL ]; then
-    # internal Trolltech edition
-    [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
-    Licensee="Trolltech"
-    Edition="Trolltech"
-    QT_EDITION="QT_EDITION_DESKTOP"
-elif [ -f "$relpath"/LICENSE.PREVIEW.COMMERCIAL ]; then
+elif [ -f "$relpath"/LICENSE.PREVIEW.COMMERCIAL ] && [ $COMMERCIAL_USER = "yes" ]; then
     # Commercial preview release
     [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
-    [ "$PLATFORM_QWS" = "maybe" ] && PLATFORM_QWS=yes
     Licensee="Preview"
     Edition="Preview"
     QT_EDITION="QT_EDITION_DESKTOP"
     LicenseType="Technology Preview"
-else
+elif [ $COMMERCIAL_USER = "yes" ]; then
     # one of commercial editions
     [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
     [ "$PLATFORM_QWS" = "maybe" ] && PLATFORM_QWS=yes
@@ -203,7 +311,7 @@ else
             echo
             echo "You are using an old license file."
             echo
-            echo "Please install the license file supplied by Trolltech,"
+            echo "Please install the license file supplied by Qt Software,"
             echo "or install the Qt Open Source Edition if you intend to"
             echo "develop free software."
             exit 1
@@ -392,27 +500,8 @@ else
         exit 1
         ;;
     esac
-    case "$LicenseFeatureCode" in
-    G|2)
-        # delete qtusagereporter for non-metered licenses
-        rm -f "$relpath/bin/qtusagereporter"
-        ;;
-    L|5)
-        # copy qtusagereporter for metered licenses
-        if [ '!' -f "$outpath/bin/qtusagereporter" ]; then
-            mkdir -p "$outpath/bin"
-            cp -f "$relpath/bin/qtusagereporter" "$outpath/bin/qtusagereporter"
-        fi
-        QT_CONFIG="$QT_CONFIG qtusagereporter"
-        ;;
-    *)
-        echo
-        echo "Invalid license key. Please check the license key."
-        exit 1
-        ;;
-    esac
     if [ '!' -f "$outpath/LICENSE" ]; then
-        echo "The LICENSE, LICENSE.LGPL, or LICENSE.GPL3 file shipped with"
+        echo "The LICENSE, LICENSE.GPL3 LICENSE.LGPL file shipped with"
         echo "this software has disappeared."
         echo
         echo "Sorry, you are not licensed to use this software."
@@ -420,20 +509,14 @@ else
         echo
         exit 1
     fi
+elif [ $COMMERCIAL_USER = "no" ]; then
+    # Open Source edition - may only be used under the terms of the GPL or LGPL.
+    [ "$PLATFORM_MAC" = "maybe" ] && PLATFORM_MAC=yes
+    Licensee="Open Source"
+    Edition="OpenSource"
+    EditionString="Open Source"
+    QT_EDITION="QT_EDITION_OPENSOURCE"
 fi
-
-if [ "$PLATFORM_QWS" = "yes" ]; then
-    Platform="Qt for Embedded Linux"
-elif [ "$PLATFORM_MAC" = "yes" ]; then
-    Platform="Qt/Mac"
-else
-    PLATFORM_X11=yes
-    Platform="Qt/X11"
-fi
-
-echo
-echo "This is the $Platform ${EditionString-$Edition} Edition."
-echo
 
 #-------------------------------------------------------------------------------
 # initalize variables
@@ -441,9 +524,14 @@ echo
 
 SYSTEM_VARIABLES="CC CXX CFLAGS CXXFLAGS LDFLAGS"
 for varname in $SYSTEM_VARIABLES; do
+    qmakevarname="${varname}"
+    # use LDFLAGS for autoconf compat, but qmake uses QMAKE_LFLAGS
+    if [ "${varname}" = "LDFLAGS" ]; then
+        qmakevarname="LFLAGS"
+    fi
     cmd=`echo \
 'if [ -n "\$'${varname}'" ]; then
-    QMakeVar set QMAKE_'${varname}' "\$'${varname}'"
+    QMakeVar set QMAKE_'${qmakevarname}' "\$'${varname}'"
 fi'`
     eval "$cmd"
 done
@@ -458,7 +546,7 @@ QMakeVar add gfx-drivers "linuxfb"
 QMakeVar add kbd-drivers "tty"
 QMakeVar add mouse-drivers "pc linuxtp"
 
-if [ "$Edition" = "Trolltech" ]; then
+if [ "$CFG_DEV" = "yes" ]; then
     QMakeVar add kbd-drivers "um"
 fi
 
@@ -476,7 +564,6 @@ CFG_SCRIPTTOOLS=auto # (yes|no|auto)
 CFG_XMLPATTERNS=auto # (yes|no|auto)
 CFG_INCREMENTAL=auto
 CFG_QCONFIG=full
-CFG_EMBEDDED=no
 CFG_DEBUG=auto
 CFG_MYSQL_CONFIG=
 CFG_DEBUG_RELEASE=no
@@ -524,11 +611,6 @@ CFG_KBD_AVAILABLE="tty usb sl5000 yopy vr41xx qvfb"
 CFG_KBD_ON="tty"    #default, see QMakeVar above
 CFG_MOUSE_AVAILABLE="pc bus linuxtp yopy vr41xx tslib qvfb"
 CFG_MOUSE_ON="pc linuxtp"   #default, see QMakeVar above
-
-if [ "$Edition" = "Trolltech" ]; then
-    CFG_KBD_AVAILABLE="${CFG_KBD_AVAILABLE} um"
-    CFG_KBD_ON="${CFG_KBD_ON} um"
-fi
 
 CFG_ARCH=
 CFG_HOST_ARCH=
@@ -1051,7 +1133,7 @@ while [ "$#" -gt 0 ]; do
         if [ "$PLATFORM_QWS" = "yes" ]; then
             echo "Error: Graphics System plugins are not supported on QWS."
             echo "   On QWS, the graphics system API is part of the QScreen plugin architecture "
-            echo "   rather than existing as a seperate plugin."
+            echo "   rather than existing as a separate plugin."
             echo ""
             UNKNOWN_OPT=yes
         else
@@ -1258,6 +1340,9 @@ while [ "$#" -gt 0 ]; do
 	;;
     debug)
         CFG_DEBUG="$VAL"
+        ;;
+    developer-build|commercial|opensource|nokia-developer)
+        # These switches have been dealt with already
         ;;
     static)
         if [ "$VAL" = "yes" ]; then
@@ -1936,7 +2021,7 @@ if [ "$CFG_DEBUG" = "auto" ]; then
     if [ "$PLATFORM_MAC" = "yes" ]; then
         CFG_DEBUG_RELEASE=yes
         CFG_DEBUG=yes
-    elif [ "$Edition" = "Trolltech" ]; then
+    elif [ "$CFG_DEV" = "yes" ]; then
         CFG_DEBUG_RELEASE=no
         CFG_DEBUG=yes
     else
@@ -2016,7 +2101,7 @@ if [ "$OPT_SHADOW" = "yes" ]; then
 fi
 
 # symlink files from src/gui/embedded neccessary to build qvfb
-if [ "$Edition" = "Trolltech" -o "$Edition" = "Qtopia" ]; then
+if [ "$CFG_DEV" = "yes" ]; then
     for f in qvfbhdr.h qlock_p.h qlock.cpp qwssignalhandler_p.h qwssignalhandler.cpp; do
 	dest="${relpath}/tools/qvfb/${f}"
 	rm -f "$dest"
@@ -2033,7 +2118,7 @@ if [ "$PLATFORM_QWS" = "yes" ] && [ ! -e "${outpath}/lib/fonts" ]; then
 fi
 
 if [ "$OPT_FAST" = "auto" ]; then
-   if [ '!' -z "$AWK" ] && [ "$Edition" = "Trolltech" ]; then
+   if [ '!' -z "$AWK" ] && [ "$CFG_DEV" = "yes" ]; then
        OPT_FAST=yes
    else
        OPT_FAST=no
@@ -2613,6 +2698,18 @@ if [ "$QT_CROSS_COMPILE" = "yes" ]; then
     fi
 fi
 
+# check -arch arguments for validity.
+if [ "$PLATFORM_MAC" = "yes" ]; then
+    ALLOWED="x86 ppc x86_64 ppc64"
+    for i in $CFG_MAC_ARCHS 
+    do 
+        if echo "$ALLOWED" | grep -w -v "$i" > /dev/null 2>&1; then
+            echo "Unknown architecture: \"$i\". Supported architectures: x86 ppc x86_64 ppc64";
+            exit 2;
+        fi
+    done
+fi
+
 # find the default framework value
 if [ "$PLATFORM_MAC" = "yes" ] && [ "$PLATFORM" != "macx-xlc" ]; then
     if [ "$CFG_FRAMEWORK" = "auto" ]; then
@@ -2770,7 +2867,7 @@ fi
 
 #prefix
 if [ -z "$QT_INSTALL_PREFIX" ]; then
-    if [ "$Edition" = "Trolltech" ]; then
+    if [ "$CFG_DEV" = "yes" ]; then
 	QT_INSTALL_PREFIX="$outpath" # At Trolltech, we use sandboxed builds by default
     elif [ "$PLATFORM_QWS" = "yes" ]; then
         QT_INSTALL_PREFIX="/usr/local/Trolltech/QtEmbedded-${QT_VERSION}"
@@ -2944,25 +3041,26 @@ if [ "$OPT_HELP" = "yes" ]; then
     fi
 
     cat <<EOF
-Usage:  $relconf [-prefix <dir>] [-prefix-install] [-bindir <dir>] [-libdir <dir>]
+Usage:  $relconf [-h] [-prefix <dir>] [-prefix-install] [-bindir <dir>] [-libdir <dir>]
         [-docdir <dir>] [-headerdir <dir>] [-plugindir <dir> ] [-datadir <dir>]
         [-translationdir <dir>] [-sysconfdir <dir>] [-examplesdir <dir>]
         [-demosdir <dir>] [-buildkey <key>] [-release] [-debug]
-        [-debug-and-release] [-shared] [-static] [-no-fast] [-fast] [-no-largefile]
+        [-debug-and-release] [-developer-build] [-shared] [-static] [-no-fast] [-fast] [-no-largefile]
         [-largefile] [-no-exceptions] [-exceptions] [-no-accessibility]
         [-accessibility] [-no-stl] [-stl] [-no-sql-<driver>] [-sql-<driver>]
         [-plugin-sql-<driver>] [-system-sqlite] [-no-qt3support] [-qt3support]
         [-platform] [-D <string>] [-I <string>] [-L <string>] [-help]
-        [-qt-zlib] [-system-zlib] [-no-gif] [-qt-gif] [-no-libtiff] [-system-libtiff]
+        [-qt-zlib] [-system-zlib] [-no-gif] [-qt-gif] [-no-libtiff] [-qt-libtiff] [-system-libtiff]
         [-no-libpng] [-qt-libpng] [-system-libpng] [-no-libmng] [-qt-libmng]
         [-system-libmng] [-no-libjpeg] [-qt-libjpeg] [-system-libjpeg] [-make <part>]
         [-no-make <part>] [-R <string>]  [-l <string>] [-no-rpath]  [-rpath] [-continue]
         [-verbose] [-v] [-silent] [-no-nis] [-nis] [-no-cups] [-cups] [-no-iconv]
         [-iconv] [-no-pch] [-pch] [-no-dbus] [-dbus] [-dbus-linked]
         [-no-separate-debug-info] [-no-mmx] [-no-3dnow] [-no-sse] [-no-sse2]
-        [-qtnamespace <namespace>] [-separate-debug-info] [-armfpa]
+        [-qtnamespace <namespace>] [-qtlibinfix <infix>] [-separate-debug-info] [-armfpa]
         [-no-optimized-qmake] [-optimized-qmake] [-no-xmlpatterns] [-xmlpatterns]
         [-no-phonon] [-phonon] [-no-phonon-backend] [-phonon-backend]
+        [-no-openssl] [-openssl] [-openssl-linked]
         [-no-gtkstyle] [-gtkstyle] [-no-svg] [-svg] [-no-webkit] [-webkit]
         [-no-scripttools] [-scripttools]
 
@@ -3033,6 +3131,12 @@ Configure options:
     -debug ............. Compile and link Qt with debugging turned on.
     -debug-and-release . Compile and link two versions of Qt, with and without
                          debugging turned on (Mac only).
+
+    -developer-build.... Compile and link Qt with Qt developer options (including auto-tests exporting)
+
+    -opensource......... Compile and link the Open-Source Edition of Qt.
+    -commercial......... Compile and link the Commercial Edition of Qt.
+
 
  *  -shared ............ Create and use shared Qt libraries.
     -static ............ Create and use static Qt libraries.
@@ -3477,7 +3581,7 @@ Qt for Embedded Linux only:
 
     -no-freetype ........ Do not compile in Freetype2 support.
     -qt-freetype ........ Use the libfreetype bundled with Qt.
- *  -system-libfreetype.  Use libfreetype from the operating system.
+ *  -system-freetype .... Use libfreetype from the operating system.
                           See http://www.freetype.org/
 
     -qconfig local ...... Use src/corelib/global/qconfig-local.h rather than the
@@ -3560,57 +3664,44 @@ fi # Help
 # LICENSING, INTERACTIVE PART
 # -----------------------------------------------------------------------------
 
-if [ "$Edition" = "Qtopia" ]; then
-    TheLicense=`head -n 1 "$relpath/LICENSE.Qtopia"`
-    while true; do
-        if [ "$OPT_CONFIRM_LICENSE" = "yes" ]; then
-            echo "You have already accepted the terms of the $TheLicense license."
-            acceptance=yes
-        else
-            echo "You are licensed to use this software under the terms of"
-            echo "the $TheLicense"
-            echo
-            echo "Type '?' to read the $TheLicense"
-            echo "Type 'yes' to accept this license offer."
-            echo "Type 'no' to decline this license offer."
-            echo
-            if echo '\c' | grep '\c' >/dev/null; then
-                echo -n "Do you accept the terms of the license? "
-            else
-                echo "Do you accept the terms of the license? \c"
-            fi
-            read acceptance
-        fi
-        echo
-        if [ "$acceptance" = "yes" ]; then
-            break
-        elif [ "$acceptance" = "no" ] ;then
-            echo "You are not licensed to use this software."
-            echo
-            exit 0
-        elif [ "$acceptance" = "?" ]; then
-            more "$relpath/LICENSE.Qtopia"
-        fi
-    done
+if [ "$PLATFORM_QWS" = "yes" ]; then
+    Platform="Qt for Embedded Linux"
+elif [ "$PLATFORM_MAC" = "yes" ]; then
+    Platform="Qt/Mac"
+else
+    PLATFORM_X11=yes
+    Platform="Qt/X11"
+fi
+
+echo
+echo "This is the $Platform ${EditionString} Edition."
+echo
+
+if [ "$Edition" = "NokiaInternalBuild" ]; then
+    echo "Detected -nokia-developer option"
+    echo "Nokia employees and agents are allowed to use this software under"
+    echo "the authority of Nokia Corporation and/or its subsidiary(-ies)"
 elif [ "$Edition" = "OpenSource" ]; then
     while true; do
         echo "You are licensed to use this software under the terms of"
-	echo "the GNU Lesser General Public License (LGPL) version 2.1 or"
-        echo "the GNU General Public License (GPL) version 3."
+        echo "the GNU General Public License (GPL) versions 3."
+        echo "You are also licensed to use this software under the terms of"
+        echo "the Lesser GNU General Public License (LGPL) versions 2.1."
         echo
+        affix="either"
         if [ "$OPT_CONFIRM_LICENSE" = "yes" ]; then
 	    echo "You have already accepted the terms of the $LicenseType license."
             acceptance=yes
         else
 	    echo "Type '3' to view the GNU General Public License version 3."
-	    echo "Type 'L' to view the GNU Lesser General Public License version 2.1."
+            echo "Type 'L' to view the Lesser GNU General Public License version 2.1."
             echo "Type 'yes' to accept this license offer."
             echo "Type 'no' to decline this license offer."
             echo
             if echo '\c' | grep '\c' >/dev/null; then
-                echo -n "Do you accept the terms of either license? "
+                echo -n "Do you accept the terms of $affix license? "
             else
-                echo "Do you accept the terms of either license? \c"
+                echo "Do you accept the terms of $affix license? \c"
             fi
             read acceptance
         fi
@@ -3621,10 +3712,10 @@ elif [ "$Edition" = "OpenSource" ]; then
             echo "You are not licensed to use this software."
             echo
             exit 1
-        elif [ "$acceptance" = "L" ]; then
-            more "$relpath/LICENSE.LGPL"
         elif [ "$acceptance" = "3" ]; then
             more "$relpath/LICENSE.GPL3"
+        elif [ "$acceptance" = "L" ]; then
+            more "$relpath/LICENSE.LGPL"
         fi
     done
 elif [ "$Edition" = "Preview" ]; then
@@ -3660,7 +3751,7 @@ elif [ "$Edition" = "Preview" ]; then
             more "$relpath/LICENSE.PREVIEW.COMMERCIAL"
         fi
     done
-elif [ "$Edition" != "Trolltech" ]; then
+elif [ "$Edition" != "OpenSource" ]; then
     if [ -n "$ExpiryDate" ]; then
         ExpiryDate=`echo $ExpiryDate | sed -e "s,-,,g" | tr -d "\n\r"`
         [ -z "$ExpiryDate" ] && ExpiryDate="0"
@@ -3876,11 +3967,11 @@ fi
 # symlink includes
 if [ -n "$PERL" ] && [ -x "$relpath/bin/syncqt" ]; then
     SYNCQT_OPTS=
-    [ "$Edition" = "Trolltech" ] && SYNCQT_OPTS="$SYNCQT_OPTS -check-includes"
+    [ "$CFG_DEV" = "yes" ] && SYNCQT_OPTS="$SYNCQT_OPTS -check-includes"
     if [ "$OPT_SHADOW" = "yes" ]; then
-       "$outpath/bin/syncqt" $SYNCQT_OPTS
-    elif [ "$Edition" = "Trolltech" ]; then
-       QTDIR="$relpath" perl "$outpath/bin/syncqt" $SYNCQT_OPTS
+        "$outpath/bin/syncqt" $SYNCQT_OPTS
+    elif [ "$CFG_DEV" = "yes" ]; then
+        QTDIR="$relpath" perl "$outpath/bin/syncqt" $SYNCQT_OPTS
     fi
 fi
 
@@ -3959,7 +4050,7 @@ if true; then ###[ '!' -f "$outpath/bin/qmake" ];
         in_mkfile="$relpath/qmake/$in_mkfile"
         mkfile="$outpath/qmake/$mkfile"
         if [ -f "$mkfile" ]; then
-            [ "$Edition" = "Trolltech" ] && "$WHICH" chflags >/dev/null 2>&1 && chflags nouchg "$mkfile"
+            [ "$CFG_DEV" = "yes" ] && "$WHICH" chflags >/dev/null 2>&1 && chflags nouchg "$mkfile"
             rm -f "$mkfile"
         fi
         [ -f "$in_mkfile" ] || continue
@@ -4640,6 +4731,14 @@ if [ "$PLATFORM_X11" = "yes" ]; then
     if [ $NOTYPE = "yes" ]; then
 	QMakeVar add QMAKE_CXXFLAGS -fpermissive
         X11TESTS_FLAGS="$X11TESTS_FLAGS -fpermissive"
+    fi
+
+    # Check we actually have X11 :-)
+    if ! "$unixtests/compile.test" "$XQMAKESPEC" "$QMAKE_CONFIG" $OPT_VERBOSE "$relpath" "$outpath" config.tests/x11/xlib "XLib" $L_FLAGS $I_FLAGS $l_FLAGS $X11TESTS_FLAGS; then
+        echo "Basic XLib functionality test failed!"
+        echo " You might need to modify the include and library search paths by editing"
+        echo " QMAKE_INCDIR_X11 and QMAKE_LIBDIR_X11 in ${XQMAKESPEC}."
+        exit 1
     fi
 
     # auto-detect OpenGL support (es1 = OpenGL ES 1.x Common, es1cl = ES 1.x common lite, es2 = OpenGL ES 2.x)
@@ -5403,6 +5502,22 @@ if [ "$CFG_MAC_DWARF2" = "yes" ]; then
     QT_CONFIG="$QT_CONFIG dwarf2"
 fi
 
+# Set the default arch. Select 32-bit/carbon if nothing else has 
+# been specified on the configure line.
+if [ "$PLATFORM_MAC" = "yes" ]  && [ "$CFG_MAC_ARCHS" == "" ]; then
+    source "$mactests/defaultarch.test" "$TEST_COMPILER" "$OPT_VERBOSE" "$mactests"
+
+    if [ "$QT_MAC_DEFUALT_ARCH" == "x86_64" ]; then
+        CFG_MAC_ARCHS=" x86"
+    elif [ "$QT_MAC_DEFUALT_ARCH" == "ppc64" ]; then
+        CFG_MAC_ARCHS=" ppc"
+    else
+        CFG_MAC_ARCHS=" $QT_MAC_DEFUALT_ARCH"
+    fi
+
+    [ "$OPT_VERBOSE" == "yes" ] && echo "Setting Mac architechture to$CFG_MAC_ARCHS."
+fi
+
 # enable cocoa and/or carbon on Mac
 if [ "$CFG_MAC_COCOA" = "yes" ]; then
 #   -cocoa on the command line disables carbon completely (i.e. use cocoa for 32-bit as well)
@@ -6073,13 +6188,31 @@ rm -f .options
 BUILD_OPTIONS="$BUILD_CONFIG $BUILD_OPTIONS"
 # extract the operating system from the XPLATFORM
 TARGET_OPERATING_SYSTEM=`echo $XPLATFORM | cut -f 2- -d/ | cut -f -1 -d-`
+
 # when cross-compiling, don't include build-host information (build key is target specific)
 QT_BUILD_KEY="$CFG_USER_BUILD_KEY $CFG_ARCH $TARGET_OPERATING_SYSTEM $COMPILER $BUILD_OPTIONS"
+if [ -n "$QT_NAMESPACE" ]; then
+    QT_BUILD_KEY="$QT_BUILD_KEY $QT_NAMESPACE"
+fi
+MAC_NEED_TWO_BUILD_KEYS="no"
+if [ "$PLATFORM_MAC" = "yes" -a "$CFG_MAC_COCOA" = "yes" ]; then
+    QT_BUILD_KEY_CARBON=$QT_BUILD_KEY
+    TARGET_OPERATING_SYSTEM="$TARGET_OPERATING_SYSTEM-cocoa"
+    QT_BUILD_KEY_COCOA="$CFG_USER_BUILD_KEY $CFG_ARCH $TARGET_OPERATING_SYSTEM $COMPILER $BUILD_OPTIONS"
+    if [ "$CFG_MAC_CARBON" = "no" ]; then
+        QT_BUILD_KEY=$QT_BUILD_KEY_COCOA
+    else
+        MAC_NEED_TWO_BUILD_KEYS="yes"
+    fi
+fi
 # don't break loading plugins build with an older version of Qt
 QT_BUILD_KEY_COMPAT=
 if [ "$QT_CROSS_COMPILE" = "no" ]; then
     # previous versions of Qt used a build key built from the uname
     QT_BUILD_KEY_COMPAT="$CFG_USER_BUILD_KEY $UNAME_MACHINE $UNAME_SYSTEM $COMPILER $BUILD_OPTIONS"
+    if [ -n "$QT_NAMESPACE" ]; then
+        QT_BUILD_KEY_COMPAT="$QT_BUILD_KEY_COMPAT $QT_NAMESPACE"
+    fi
 fi
 # strip out leading/trailing/extra whitespace
 QT_BUILD_KEY=`echo $QT_BUILD_KEY | sed -e "s,  *, ,g" -e "s,^  *,," -e "s,  *$,,"`
@@ -6100,6 +6233,7 @@ full)
     echo "#endif" >>"$tmpconfig"
     ;;
 esac
+
 cat >>"$outpath/src/corelib/global/qconfig.h.new" <<EOF
 
 /* Qt Edition */
@@ -6110,9 +6244,19 @@ cat >>"$outpath/src/corelib/global/qconfig.h.new" <<EOF
 /* Machine byte-order */
 #define Q_BIG_ENDIAN 4321
 #define Q_LITTLE_ENDIAN 1234
-
-#define QT_BUILD_KEY "$QT_BUILD_KEY"
 EOF
+
+if [ "$MAC_NEED_TWO_BUILD_KEYS" = "no" ]; then
+    echo "#define QT_BUILD_KEY \"$QT_BUILD_KEY\"" \
+        >> "$outpath/src/corelib/global/qconfig.h.new"
+else
+    cat >>"$outpath/src/corelib/global/qconfig.h.new" <<EOF
+
+#define QT_BUILD_KEY_CARBON "$QT_BUILD_KEY_CARBON"
+#define QT_BUILD_KEY_COCOA "$QT_BUILD_KEY_COCOA"
+EOF
+fi
+
 if [ -n "$QT_BUILD_KEY_COMPAT" ]; then
     echo "#define QT_BUILD_KEY_COMPAT \"$QT_BUILD_KEY_COMPAT\"" \
         >> "$outpath/src/corelib/global/qconfig.h.new"
@@ -6216,7 +6360,7 @@ fi
 
 echo "" >>"$outpath/src/corelib/global/qconfig.h.new"
 
-if [ "$Edition" = "Trolltech" ]; then
+if [ "$CFG_DEV" = "yes" ]; then
     echo "#define QT_BUILD_INTERNAL" >>"$outpath/src/corelib/global/qconfig.h.new"
 fi
 
@@ -6240,7 +6384,7 @@ if [ "$PLATFORM_QWS" = "yes" ]; then
 
     CFG_KBD_OFF="$CFG_KBD_AVAILABLE"
     # the um driver is currently not in the available list for external builds
-    if [ "$Edition" != "Trolltech" ]; then
+    if [ "$CFG_DEV" = "no" ]; then
 	CFG_KBD_OFF="$CFG_KBD_OFF um"
     fi
     for ADRIVER in $CFG_KBD_ON; do
@@ -6554,7 +6698,7 @@ rm -f "$QMAKE_VARS_FILE" 2>/dev/null
 
 # incrementals
 INCREMENTAL=""
-[ "$CFG_INCREMENTAL" = "auto" ] && "$WHICH" p4 >/dev/null 2>&1 && [ "$Edition" = "Trolltech" ] && CFG_INCREMENTAL="yes"
+[ "$CFG_INCREMENTAL" = "auto" ] && "$WHICH" p4 >/dev/null 2>&1 && [ "$CFG_DEV" = "yes" ] && CFG_INCREMENTAL="yes"
 if [ "$CFG_INCREMENTAL" = "yes" ]; then
     find "$relpath" -perm u+w -mtime -3 | grep 'cpp$' | while read f; do
         # don't need to worry about generated files
@@ -6977,7 +7121,7 @@ for part in $CFG_BUILD_PARTS; do
     esac
 done
 
-if [ "$Edition" = "Trolltech" ]; then
+if [ "$CFG_DEV" = "yes" ]; then
     PART_ROOTS="$PART_ROOTS tests"
 fi
 

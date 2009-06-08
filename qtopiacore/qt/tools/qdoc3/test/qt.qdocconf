@@ -6,7 +6,7 @@ include(qt-defines.qdocconf)
 
 project                 = Qt
 versionsym              =
-version                 = 4.5.0
+version                 = 4.5.1
 description             = Qt Reference Documentation
 url                     = http://doc.trolltech.com/4.5
 
@@ -22,10 +22,10 @@ edition.DesktopLight.groups       = -graphicsview-api
 qhp.projects            = Qt
 
 qhp.Qt.file                = qt.qhp
-qhp.Qt.namespace           = com.trolltech.qt.450
+qhp.Qt.namespace           = com.trolltech.qt.451
 qhp.Qt.virtualFolder       = qdoc
 qhp.Qt.indexTitle          = Qt Reference Documentation
-qhp.Qt.indexRoot           = 
+qhp.Qt.indexRoot           =
 
 # Files not referenced in any qdoc file (last four are needed by qtdemo)
 # See also extraimages.HTML
@@ -35,11 +35,11 @@ qhp.Qt.extraFiles          = classic.css \
                              images/taskmenuextension-example.png \
                              images/coloreditorfactoryimage.png \
                              images/dynamiclayouts-example.png \
-                             images/stylesheet-coffee-plastique.png                             
+                             images/stylesheet-coffee-plastique.png
 
-qhp.Qt.filterAttributes    = qt 4.5.0 qtrefdoc
-qhp.Qt.customFilters.Qt.name = Qt 4.5.0
-qhp.Qt.customFilters.Qt.filterAttributes = qt 4.5.0
+qhp.Qt.filterAttributes    = qt 4.5.1 qtrefdoc
+qhp.Qt.customFilters.Qt.name = Qt 4.5.1
+qhp.Qt.customFilters.Qt.filterAttributes = qt 4.5.1
 qhp.Qt.subprojects         = classes overviews examples
 qhp.Qt.subprojects.classes.title = Classes
 qhp.Qt.subprojects.classes.indexTitle = Qt's Classes
@@ -94,7 +94,11 @@ excludedirs             = $QTDIR/src/3rdparty/clucene \
                           $QTDIR/src/3rdparty/webkit/WebCore \
                           $QTDIR/src/3rdparty/wintab \
                           $QTDIR/src/3rdparty/zlib \
-                          $QTDIR/doc/src/snippets
+                          $QTDIR/doc/src/snippets \
+                          $QTDIR/src/3rdparty/phonon/gstreamer \
+                          $QTDIR/src/3rdparty/phonon/ds9 \
+                          $QTDIR/src/3rdparty/phonon/qt7 \
+                          $QTDIR/src/3rdparty/phonon/waveout
 
 sources.fileextensions  = "*.cpp *.qdoc *.mm"
 examples.fileextensions = "*.cpp *.h *.js *.xq *.svg *.xml *.ui *.qhp *.qhcp"

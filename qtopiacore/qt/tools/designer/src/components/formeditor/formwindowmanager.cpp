@@ -791,11 +791,16 @@ QWidgetList FormWindowManager::layoutsToBeBroken() const
     return orderedLayoutList;
 }
 
-static inline int managedLayoutItemCount(const QDesignerFormEditorInterface *core, QWidget *w)
+static inline bool hasManagedLayoutItems(const QDesignerFormEditorInterface *core, QWidget *w)
 {
-    if (const QLayout *ml = LayoutInfo::managedLayout(core, w))
-        return ml->count();
-    return 0;
+    if (const QLayout *ml = LayoutInfo::managedLayout(core, w)) {
+        // Try to find managed items, ignore dummy grid spacers
+        const int count = ml->count();        
+        for (int i = 0; i < count; i++)
+            if (!LayoutInfo::isEmptyItem(ml->itemAt(i)))
+                return true;
+    }
+    return false;
 }
 
 void FormWindowManager::slotUpdateActions()
@@ -879,7 +884,7 @@ void FormWindowManager::slotUpdateActions()
              * (Note that there might be > 1 layouts to broken if the selection
              * is a red layout, however, we want the inner-most layout here). */
             if (breakAvailable && simplifiedSelection.size() == 1
-                && managedLayoutItemCount(m_core, widget)) {
+                && hasManagedLayoutItems(m_core, widget)) {
                 int type;
                 m_morphLayoutContainer = widget; // Was: page of first selected
                 m_createLayoutContext = MorphLayout;

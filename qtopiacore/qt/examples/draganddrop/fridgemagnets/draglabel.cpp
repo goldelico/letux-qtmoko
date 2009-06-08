@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -59,10 +59,16 @@ DragLabel::DragLabel(const QString &text, QWidget *parent)
 //! [0]
 
 //! [1]
+    QLinearGradient gradient(0, 0, 0, image.height()-1);
+    gradient.setColorAt(0.0, Qt::white);
+    gradient.setColorAt(0.2, QColor(200, 200, 255));
+    gradient.setColorAt(0.8, QColor(200, 200, 255));
+    gradient.setColorAt(1.0, QColor(127, 127, 200));
+
     QPainter painter;
     painter.begin(&image);
     painter.setRenderHint(QPainter::Antialiasing);
-    painter.setBrush(Qt::white);
+    painter.setBrush(gradient);
     painter.drawRoundedRect(QRectF(0.5, 0.5, image.width()-1, image.height()-1),
                             25, 25, Qt::RelativeSize);
 
@@ -74,39 +80,11 @@ DragLabel::DragLabel(const QString &text, QWidget *parent)
 
 //! [2]
     setPixmap(QPixmap::fromImage(image));
-    labelText = text;
+    m_labelText = text;
 }
 //! [2]
 
-//! [3]
-void DragLabel::mousePressEvent(QMouseEvent *event)
-//! [3]
+QString DragLabel::labelText() const
 {
-//! [4]
-    QByteArray itemData;
-    QDataStream dataStream(&itemData, QIODevice::WriteOnly);
-    dataStream << labelText << QPoint(event->pos() - rect().topLeft());
-//! [4]
-
-//! [5]
-    QMimeData *mimeData = new QMimeData;
-    mimeData->setData("application/x-fridgemagnet", itemData);
-    mimeData->setText(labelText);
-//! [5]
-
-//! [6]
-    QDrag *drag = new QDrag(this);
-    drag->setMimeData(mimeData);
-    drag->setHotSpot(event->pos() - rect().topLeft());
-    drag->setPixmap(*pixmap());
-
-    hide();
-//! [6]
-
-//! [7]
-    if (drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction) == Qt::MoveAction)
-        close();
-    else
-        show();
+    return m_labelText;
 }
-//! [7]

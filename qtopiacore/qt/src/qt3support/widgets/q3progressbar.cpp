@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3ProgressBar q3progressbar.h
+    \class Q3ProgressBar
     \brief The Q3ProgressBar widget provides a horizontal progress bar.
 
     \compat

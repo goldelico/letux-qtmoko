@@ -18,7 +18,7 @@
  ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
- ** This file is part of the example classes of the Qt Toolkit.
+ ** This file is part of the examples of the Qt Toolkit.
  **
  ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
@@ -79,7 +79,6 @@
        color(qrand() % 256, qrand() % 256, qrand() % 256)
  {
      rotate(qrand() % (360 * 16));
-     startTimer(1000 / 33);
  }
 
  QRectF Mouse::boundingRect() const
@@ -129,8 +128,10 @@
      painter-&gt;drawPath(path);
  }
 
- void Mouse::timerEvent(QTimerEvent *)
+ void Mouse::advance(int step)
  {
+     if (!step)
+         return;
      <span class="comment">// Don't move too far away</span>
      QLineF lineToCenter(QPointF(0, 0), mapFromScene(0, 0));
      if (lineToCenter.length() &gt; 150) {
@@ -196,6 +197,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

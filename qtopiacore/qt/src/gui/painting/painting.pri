@@ -14,6 +14,7 @@ HEADERS += \
         painting/qoutlinemapper_p.h \
         painting/qpaintdevice.h \
         painting/qpaintengine.h \
+	painting/qpaintengine_p.h \
         painting/qpaintengine_alpha_p.h \
         painting/qpaintengine_preview_p.h \
         painting/qpaintengineex_p.h \

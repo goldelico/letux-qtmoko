@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 QProcess builder;
 builder.setProcessChannelMode(QProcess::MergedChannels);
@@ -86,3 +90,5 @@ QStringList environment = QProcess::systemEnvironment();
 // environment = {"PATH=/usr/bin:/usr/local/bin",
 //                "USER=greg", "HOME=/home/greg"}
 //! [8]
+
+}

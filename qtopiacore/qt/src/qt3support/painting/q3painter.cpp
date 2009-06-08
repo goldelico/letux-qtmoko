@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Painter q3painter.h
+    \class Q3Painter
     \brief The Q3Painter class is a Qt 3 compatibility wrapper for QPainter.
 
     \compat

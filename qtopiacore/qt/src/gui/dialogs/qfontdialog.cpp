@@ -794,6 +794,13 @@ void QFontDialog::changeEvent(QEvent *e)
 /*!
     \since 4.5
 
+    \property QFontDialog::currentFont
+    \brief the current font of the dialog.
+*/    
+
+/*!
+    \since 4.5
+
     Sets the font highlighted in the QFontDialog to the given \a font.
 
     \sa selectedFont()

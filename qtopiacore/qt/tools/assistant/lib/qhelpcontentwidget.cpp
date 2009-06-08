@@ -44,6 +44,7 @@
 #include "qhelpengine_p.h"
 #include "qhelpdbreader_p.h"
 
+#include <QtCore/QDir>
 #include <QtCore/QStack>
 #include <QtCore/QThread>
 #include <QtCore/QMutex>
@@ -555,7 +556,7 @@ bool QHelpContentWidget::searchContentItem(QHelpContentModel *model,
     if (!parentItem)
         return false;
 
-    if (parentItem->url().path() == path) {
+    if (QDir::cleanPath(parentItem->url().path()) == path) {
         m_syncIndex = parent;
         return true;
     }

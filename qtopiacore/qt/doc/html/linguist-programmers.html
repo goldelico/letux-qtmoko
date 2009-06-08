@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/linguist-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/linguist-manual.qdoc -->
 <head>
   <title>Qt 4.5: Qt Linguist Manual: Programmers</title>
   <link rel="prev" href="linguist-translators.html" />
@@ -112,7 +112,7 @@
 <pre> QString tr(const char *text, const char *comment, int n);</pre>
 <p>Depending on the value of <tt>n</tt>, the <tt>tr()</tt> function will return a different translation, with the correct grammatical number for the target language. Also, any occurrence of <tt>%n</tt> is replaced with <tt>n</tt>'s value. For example:</p>
 <pre> tr(&quot;%n item(s) replaced&quot;, &quot;&quot;, count);</pre>
-<p>If a French translation is loaded, this will expand to &quot;0 item remplacé&quot;, &quot;1 item remplacé&quot;, &quot;2 items remplacés&quot;, etc., depending on <tt>n</tt>'s value. And if no translation is loaded, the orignal string is used, with <tt>%n</tt> replaced with count's value (e.g&#x2e;, &quot;6 item(s) replaced&quot;).</p>
+<p>If a French translation is loaded, this will expand to &quot;0 item remplac&#xe9;&quot;, &quot;1 item remplac&#xe9;&quot;, &quot;2 items remplac&#xe9;s&quot;, etc., depending on <tt>n</tt>'s value. And if no translation is loaded, the orignal string is used, with <tt>%n</tt> replaced with count's value (e.g&#x2e;, &quot;6 item(s) replaced&quot;).</p>
 <p>To handle plural forms in the native language, you need to load a translation file for this language, too. <a href="linguist-manager.html#lupdate">lupdate</a> has the <tt>-pluralonly</tt> command line option, which allows the creation of <tt>.ts</tt> files containing only entries with plural forms.</p>
 <p>See the <a href="http://doc.trolltech.com/qq/">Qt Quarterly</a> Article <a href="http://doc.trolltech.com/qq/qq19-plurals.html">Plural Forms in Translations</a> for further details on this issue.</p>
 <a name="coping-with-c-namespaces"></a>
@@ -192,6 +192,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

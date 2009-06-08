@@ -449,7 +449,7 @@ void PixmapEditor::pasteActionActivated()
     QString subtype = QLatin1String("plain");
     QString text = clipboard->text(subtype);
     if (!text.isNull()) {
-        QStringList list = text.split(QChar('\n'));
+        QStringList list = text.split(QLatin1Char('\n'));
         if (list.size() > 0) {
             text = list.at(0);
             setPath(text);

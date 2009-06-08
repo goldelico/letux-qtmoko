@@ -58,7 +58,7 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \class Q3LocalFs q3localfs.h
+    \class Q3LocalFs
     \brief The Q3LocalFs class is an implementation of a
     QNetworkProtocol that works on the local file system.
 

@@ -102,7 +102,7 @@ public:
 
     inline T result() const;
     inline T resultAt(int index) const;
-    bool isResultReadyAt(int index) const { return d.isResultReadyAt(index); }
+    bool isResultReadyAt(int resultIndex) const { return d.isResultReadyAt(resultIndex); }
 
     operator T() const { return result(); }
     QList<T> results() const { return d.results(); }

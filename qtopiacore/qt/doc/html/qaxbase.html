@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-all-opensource-src-4.5.0/src/activeqt/container/qaxbase.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-all-opensource-src-4.5.1/src/activeqt/container/qaxbase.cpp -->
 <head>
   <title>Qt 4.5: QAxBase Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -47,7 +47,7 @@
 <li><div class="fn"></div>bool <b><a href="qaxbase.html#isNull">isNull</a></b> () const</li>
 <li><div class="fn"></div>PropertyBag <b><a href="qaxbase.html#propertyBag">propertyBag</a></b> () const</li>
 <li><div class="fn"></div>virtual bool <b><a href="qaxbase.html#propertyWritable">propertyWritable</a></b> ( const char * <i>prop</i> ) const</li>
-<li><div class="fn"></div>long <b><a href="qaxbase.html#queryInterfacex">queryInterface</a></b> ( const QUuid &amp; <i>uuid</i>, void ** <i>iface</i> ) const</li>
+<li><div class="fn"></div>long <b><a href="qaxbase.html#queryInterface">queryInterface</a></b> ( const QUuid &amp; <i>uuid</i>, void ** <i>iface</i> ) const</li>
 <li><div class="fn"></div>QAxObject * <b><a href="qaxbase.html#querySubObject">querySubObject</a></b> ( const char * <i>name</i>, const QVariant &amp; <i>var1</i> = QVariant(), const QVariant &amp; <i>var2</i> = QVariant(), const QVariant &amp; <i>var3</i> = QVariant(), const QVariant &amp; <i>var4</i> = QVariant(), const QVariant &amp; <i>var5</i> = QVariant(), const QVariant &amp; <i>var6</i> = QVariant(), const QVariant &amp; <i>var7</i> = QVariant(), const QVariant &amp; <i>var8</i> = QVariant() )</li>
 <li><div class="fn"></div>QAxObject * <b><a href="qaxbase.html#querySubObject-2">querySubObject</a></b> ( const char * <i>name</i>, QList&lt;QVariant&gt; &amp; <i>vars</i> )</li>
 <li><div class="fn"></div>bool <b><a href="qaxbase.html#control-prop">setControl</a></b> ( const QString &amp; )</li>
@@ -107,6 +107,7 @@
 <tr valign="top" class="even"><td>IDispatch*</td><td><a href="qaxobject.html">QAxObject</a>*</td><td><tt>QAxBase::asVariant()</tt></td><td><a href="qaxobject.html">QAxObject</a>* (return value)</td></tr>
 <tr valign="top" class="odd"><td>IUnknown*</td><td><a href="qaxobject.html">QAxObject</a>*</td><td><tt>QAxBase::asVariant()</tt></td><td><a href="qaxobject.html">QAxObject</a>* (return value)</td></tr>
 <tr valign="top" class="even"><td>SCODE, DECIMAL</td><td><i>unsupported</i></td><td><i>unsupported</i></td><td><i>unsupported</i></td></tr>
+<tr valign="top" class="odd"><td>VARIANT* (Since Qt 4.5)</td><td><i>unsupported</i></td><td><i>QVariant&amp;</i></td><td><i>QVariant&amp;</i></td></tr>
 </table></p>
 <p>Supported are also enumerations, and typedefs to supported types.</p>
 <p>To call the methods of a COM interface described by the following IDL</p>
@@ -138,7 +139,7 @@
 
  QAxObject *item = object.querySubItem(&quot;item(int)&quot;, 5);</pre>
 <p>Note that the <a href="qlist.html">QList</a> the object should fill has to be provided as an element in the parameter list of <a href="qvariant.html">QVariant</a>s.</p>
-<p>If you need to access properties or pass parameters of unsupported datatypes you must access the COM object directly through its <tt>IDispatch</tt> implementation or other interfaces. Those interfaces can be retrieved through <a href="qaxbase.html#queryInterfacex">queryInterface</a>().</p>
+<p>If you need to access properties or pass parameters of unsupported datatypes you must access the COM object directly through its <tt>IDispatch</tt> implementation or other interfaces. Those interfaces can be retrieved through <a href="qaxbase.html#queryInterface">queryInterface</a>().</p>
 <pre> IUnknown *iface = 0;
  activeX-&gt;queryInterface(IID_IUnknown, (void**)&amp;iface);
  if (iface) {
@@ -208,12 +209,12 @@
 <a name="//apple_ref/cpp/instm/QAxBase/disableEventSink" />
 <h3 class="fn"><a name="disableEventSink"></a>void QAxBase::disableEventSink ()</h3>
 <p>Disables the event sink implementation for this ActiveX container. If you don't intend to listen to the ActiveX control's events use this function to speed up the meta object generation.</p>
-<p>Some ActiveX controls might be unstable when connected to an event sink. To get OLE events you must use standard COM methods to register your own event sink. Use <a href="qaxbase.html#queryInterfacex">queryInterface</a>() to get access to the raw COM object.</p>
+<p>Some ActiveX controls might be unstable when connected to an event sink. To get OLE events you must use standard COM methods to register your own event sink. Use <a href="qaxbase.html#queryInterface">queryInterface</a>() to get access to the raw COM object.</p>
 <p>Note that this function should be called immediately after construction of the object.</p>
 <a name="//apple_ref/cpp/instm/QAxBase/disableMetaObject" />
 <h3 class="fn"><a name="disableMetaObject"></a>void QAxBase::disableMetaObject ()</h3>
 <p>Disables the meta object generation for this ActiveX container. This also disables the event sink and class info generation. If you don't intend to use the Qt meta object implementation call this function to speed up instantiation of the control. You will still be able to call the object through <a href="qaxbase.html#dynamicCall">dynamicCall</a>(), but signals, slots and properties will not be available with <a href="qobject.html">QObject</a> APIs.</p>
-<p>Some ActiveX controls might be unstable when used with OLE automation. Use standard COM methods to use those controls through the COM interfaces provided by <a href="qaxbase.html#queryInterfacex">queryInterface</a>().</p>
+<p>Some ActiveX controls might be unstable when used with OLE automation. Use standard COM methods to use those controls through the COM interfaces provided by <a href="qaxbase.html#queryInterface">queryInterface</a>().</p>
 <p>Note that this function must be called immediately after construction of the object.</p>
 <a name="//apple_ref/cpp/instm/QAxBase/dynamicCall" />
 <h3 class="fn"><a name="dynamicCall"></a><a href="qvariant.html">QVariant</a> QAxBase::dynamicCall ( const char * <i>function</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>var1</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var2</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var3</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var4</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var5</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var6</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var7</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var8</i> = QVariant() )</h3>
@@ -228,7 +229,7 @@
  QString text = activeX-&gt;dynamicCall(&quot;Text&quot;).toString();</pre>
 <p>Note that it is faster to get and set properties using <a href="qobject.html#property">QObject::property</a>() and <a href="qobject.html#setProperty">QObject::setProperty</a>().</p>
 <p>dynamicCall() can also be used to call objects with a <a href="qaxbase.html#disableMetaObject">disabled metaobject</a> wrapper, which can improve performance significantely, esp. when calling many different objects of different types during an automation process. <a href="activeqt.html#activeqt">ActiveQt</a> will then however not validate parameters.</p>
-<p>It is only possible to call functions through dynamicCall() that have parameters or return values of datatypes supported by <a href="qvariant.html">QVariant</a>. See the <a href="qaxbase.html">QAxBase</a> class documentation for a list of supported and unsupported datatypes. If you want to call functions that have unsupported datatypes in the parameter list, use <a href="qaxbase.html#queryInterfacex">queryInterface</a>() to retrieve the appropriate COM interface, and use the function directly.</p>
+<p>It is only possible to call functions through dynamicCall() that have parameters or return values of datatypes supported by <a href="qvariant.html">QVariant</a>. See the <a href="qaxbase.html">QAxBase</a> class documentation for a list of supported and unsupported datatypes. If you want to call functions that have unsupported datatypes in the parameter list, use <a href="qaxbase.html#queryInterface">queryInterface</a>() to retrieve the appropriate COM interface, and use the function directly.</p>
 <pre> IWebBrowser2 *webBrowser = 0;
  activeX-&gt;queryInterface(IID_IWebBrowser2, (void **)&amp;webBrowser);
  if (webBrowser) {
@@ -291,7 +292,7 @@
 <p><b>Warning:</b> Depending on the control implementation this setting might be ignored for some properties.</p>
 <p>See also <a href="qaxbase.html#setPropertyWritable">setPropertyWritable</a>() and <a href="qaxbase.html#propertyChanged">propertyChanged</a>().</p>
 <a name="//apple_ref/cpp/instm/QAxBase/queryInterface" />
-<h3 class="fn"><a name="queryInterfacex"></a>long QAxBase::queryInterface ( const <a href="quuid.html">QUuid</a> &amp; <i>uuid</i>, void ** <i>iface</i> ) const</h3>
+<h3 class="fn"><a name="queryInterface"></a>long QAxBase::queryInterface ( const <a href="quuid.html">QUuid</a> &amp; <i>uuid</i>, void ** <i>iface</i> ) const</h3>
 <p>Requests the interface <i>uuid</i> from the COM object and sets the value of <i>iface</i> to the provided interface, or to 0 if the requested interface could not be provided.</p>
 <p>Returns the result of the QueryInterface implementation of the COM object.</p>
 <p>See also <a href="qaxbase.html#control-prop">control</a>.</p>
@@ -349,6 +350,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -272,6 +272,11 @@
     that were received by the event loop before they are sent to their corresponding
     targets (this might include non-Qt events).
        
+    \note Depending on the device configuration, Tick counters on the
+     Windows CE platform may not be as fine-grained, compared to other platforms.
+     Devices that do not support high-resolution timers default to
+     one-millisecond granularity.
+
     See the chapter 5 in the \l{QTestLib Tutorial} for more benchmarking examples.
 
     \section1 Using QTestLib remotely on Windows CE
@@ -644,7 +649,7 @@
 
     \title Chapter 4: Replaying GUI Events
 
-    In thischapter, we will show how to simulate a GUI event,
+    In this chapter, we will show how to simulate a GUI event,
     and how to store a series of GUI events as well as replay them on
     a widget.
 
@@ -727,7 +732,7 @@
     using QTestLib.
 
     \section1 Writing a Benchmark
-    To crate a benchmark we extend a test function with a QBENCHMARK macro.
+    To create a benchmark we extend a test function with a QBENCHMARK macro.
     A benchmark test function will then typically consist of setup code and 
     a QBENCHMARK macro that contains the code to be measured. This test
     function benchmarks QString::localeAwareCompare().

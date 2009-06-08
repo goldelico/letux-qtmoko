@@ -18,7 +18,7 @@
  ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
- ** This file is part of the example classes of the Qt Toolkit.
+ ** This file is part of the examples of the Qt Toolkit.
  **
  ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
@@ -64,11 +64,13 @@
  class FlowLayout : public QLayout
  {
  public:
-     FlowLayout(QWidget *parent, int margin = -1, int spacing = 0);
-     FlowLayout(int spacing = 0);
+     FlowLayout(QWidget *parent, int margin = -1, int hSpacing = -1, int vSpacing = -1);
+     FlowLayout(int margin = -1, int hSpacing = -1, int vSpacing = -1);
      ~FlowLayout();
 
      void addItem(QLayoutItem *item);
+     int horizontalSpacing() const;
+     int verticalSpacing() const;
      Qt::Orientations expandingDirections() const;
      bool hasHeightForWidth() const;
      int heightForWidth(int) const;
@@ -81,8 +83,11 @@
 
  private:
      int doLayout(const QRect &amp;rect, bool testOnly) const;
+     int smartSpacing(QStyle::PixelMetric pm) const;
 
      QList&lt;QLayoutItem *&gt; itemList;
+     int m_hSpace;
+     int m_vSpace;
  };
 
  #endif</pre>
@@ -90,6 +95,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

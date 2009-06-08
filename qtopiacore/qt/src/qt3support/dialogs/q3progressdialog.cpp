@@ -105,7 +105,7 @@ public:
 
 
 /*!
-  \class Q3ProgressDialog qprogressdialog.h
+  \class Q3ProgressDialog
   \brief The Q3ProgressDialog class provides feedback on the progress of a slow operation.
 
   \compat

@@ -80,7 +80,8 @@ namespace QScript {
 Code::Code():
     optimized(false),
     firstInstruction(0),
-    lastInstruction(0)
+    lastInstruction(0),
+    astPool(0)
 {
 }
 

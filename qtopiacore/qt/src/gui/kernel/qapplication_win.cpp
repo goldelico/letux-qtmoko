@@ -2091,8 +2091,16 @@ LRESULT CALLBACK QtWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
             // This happens when restoring an application after "Show Desktop"
             if (app_do_modal && LOWORD(wParam) == WA_ACTIVE) {
                 QWidget *top = 0;
-                if (!QApplicationPrivate::tryModalHelper(widget, &top) && top && widget != top && top->isVisible())
-                    top->activateWindow();
+                if (!QApplicationPrivate::tryModalHelper(widget, &top) && top && widget != top) {
+                    if (top->isVisible()) {
+                        top->activateWindow();
+                    } else {
+                        // This is the case when native file dialogs are shown
+                        QWidget *p = (top->parentWidget() ? top->parentWidget()->window() : 0);
+                        if (p && p->isVisible())
+                            p->activateWindow();
+                    }
+                }
             }
             break;
 

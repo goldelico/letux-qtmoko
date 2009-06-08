@@ -301,7 +301,6 @@ void QNetworkAccessFtpBackend::ftpDone()
             if (!auth.isNull()) {
                 // try again:
                 newUrl.setUserName(auth.user());
-                setUrl(newUrl);
                 ftp->login(auth.user(), auth.password());
                 return;
             }

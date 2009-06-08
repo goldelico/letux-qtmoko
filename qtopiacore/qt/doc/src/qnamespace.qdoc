@@ -508,11 +508,11 @@
     \value DirectConnection  When emitted, the signal is immediately delivered to the slot.
     \value QueuedConnection  When emitted, the signal is queued until the event loop is
                              able to deliver it to the slot.
-    \value
-    BlockingQueuedConnection Same as QueuedConnection, except that the current thread blocks
+    \value BlockingQueuedConnection
+                             Same as QueuedConnection, except that the current thread blocks
                              until the slot has been delivered. This connection type should
                              only be used for receivers in a different thread. Note that misuse
-                             of this type can lead to dead locks in your application.
+                             of this type can lead to deadlocks in your application.
     \value AutoConnection    If the signal is emitted from the thread
                              in which the receiving object lives, the
                              slot is invoked directly, as with
@@ -1072,8 +1072,9 @@
     \value WA_TranslucentBackground Indicates that the widget should have a
     translucent background, i.e., any non-opaque regions of the widgets will be
     translucent because the widget will have an alpha channel. Setting this
-    flag causes WA_NoSystemBackground to be set. This flag is set or cleared by
-    the widget's author.
+    flag causes WA_NoSystemBackground to be set. On Windows the
+    widget also needs the Qt::FramelessWindowHint window flag to be set.
+    This flag is set or cleared by the widget's author.
 
     \value WA_UnderMouse Indicates that the widget is under the mouse cursor.
     The value is not updated correctly during drag and drop operations. There
@@ -1152,9 +1153,10 @@
     this attribute for the Qt::Dialog and Qt::Sheet window types.
 
     \value WA_X11NetWmWindowTypeDropDownMenu Adds
-    _NET_WM_WINDOW_TYPE_DROPDOWN_MENU to the window's _NET_WM_WINDOW_TYPE X11
-    window property. See http://standards.freedesktop.org/wm-spec/ for more
-    details. This attribute has no effect on non-X11 platforms. \notw Qt
+    _NET_WM_WINDOW_TYPE_DROPDOWN_MENU to the window's
+    _NET_WM_WINDOW_TYPE X11 window property. See
+    http://standards.freedesktop.org/wm-spec/ for more details. This
+    attribute has no effect on non-X11 platforms. \note Qt
     automatically sets this attribute for QMenus added to a QMenuBar.
 
     \value WA_X11NetWmWindowTypePopupMenu Adds _NET_WM_WINDOW_TYPE_POPUP_MENU

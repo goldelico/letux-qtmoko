@@ -104,6 +104,8 @@
 
 QT_BEGIN_NAMESPACE
 
+extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
+
 #define qreal_to_fixed_26_6(f) (int(f * 64))
 #define qt_swap_int(x, y) { int tmp = (x); (x) = (y); (y) = tmp; }
 #define qt_swap_qreal(x, y) { qreal tmp = (x); (x) = (y); (y) = tmp; }
@@ -462,6 +464,8 @@ bool QRasterPaintEngine::begin(QPaintDevice *device)
         d->device = device;
     }
 
+    // Make sure QPaintEngine::paintDevice() returns the proper device.
+    d->pdev = d->device;
 
     Q_ASSERT(d->device->devType() == QInternal::Image
              || d->device->devType() == QInternal::CustomRaster);
@@ -605,7 +609,6 @@ void QRasterPaintEngine::updateMatrix(const QTransform &matrix)
         break;
     }
 
-    extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
     s->flags.tx_noshear = qt_scaleForTransform(s->matrix, &s->txscale);
 
     ensureOutlineMapper();
@@ -1037,7 +1040,7 @@ void QRasterPaintEnginePrivate::drawImage(const QPointF &pt,
     }
 
     // adapt the x parameters
-    int x = pt.x();
+    int x = qRound(pt.x());
     int cx1 = clip.x();
     int cx2 = clip.x() + clip.width();
     if (x < cx1) {
@@ -1056,7 +1059,7 @@ void QRasterPaintEnginePrivate::drawImage(const QPointF &pt,
     // adapt the y paremeters...
     int cy1 = clip.y();
     int cy2 = clip.y() + clip.height();
-    int y = pt.y();
+    int y = qRound(pt.y());
     if (y < cy1) {
         int d = cy1 - y;
         srcBits += srcBPL * d;
@@ -1526,7 +1529,7 @@ void QRasterPaintEngine::drawRects(const QRectF *rects, int rectCount)
             d->initializeRasterizer(&s->brushData);
             for (int i = 0; i < rectCount; ++i) {
                 const QRectF &rect = rects[i].normalized();
-                if (rects[i].isEmpty())
+                if (rect.isEmpty())
                     continue;
                 const QPointF a = s->matrix.map((rect.topLeft() + rect.bottomLeft()) * 0.5f);
                 const QPointF b = s->matrix.map((rect.topRight() + rect.bottomRight()) * 0.5f);
@@ -1697,6 +1700,15 @@ void QRasterPaintEngine::stroke(const QVectorPath &path, const QPen &pen)
         QPaintEngineEx::stroke(path, pen);
 }
 
+static inline QRect toNormalizedFillRect(const QRectF &rect)
+{
+    const int x1 = qRound(rect.x() + aliasedCoordinateDelta);
+    const int y1 = qRound(rect.y() + aliasedCoordinateDelta);
+    const int x2 = qRound(rect.right() + aliasedCoordinateDelta);
+    const int y2 = qRound(rect.bottom() + aliasedCoordinateDelta);
+
+    return QRect(x1, y1, x2 - x1, y2 - y1).normalized();
+}
 
 /*!
     \internal
@@ -1725,10 +1737,9 @@ void QRasterPaintEngine::fill(const QVectorPath &path, const QBrush &brush)
     if (path.shape() == QVectorPath::RectangleHint) {
         if (!s->flags.antialiased && s->matrix.type() <= QTransform::TxScale) {
             const qreal *p = path.points();
-            const QPointF offs(aliasedCoordinateDelta, aliasedCoordinateDelta);
-            QPointF tl = QPointF(p[0], p[1]) * s->matrix + offs;
-            QPointF br = QPointF(p[4], p[5]) * s->matrix + offs;
-            fillRect_normalized(QRectF(tl, br).toRect().normalized(), &s->brushData, d);
+            QPointF tl = QPointF(p[0], p[1]) * s->matrix;
+            QPointF br = QPointF(p[4], p[5]) * s->matrix;
+            fillRect_normalized(toNormalizedFillRect(QRectF(tl, br)), &s->brushData, d);
             return;
         }
         ensureState();
@@ -1789,7 +1800,6 @@ void QRasterPaintEngine::fill(const QVectorPath &path, const QBrush &brush)
     d->rasterize(d->outlineMapper->convertPath(path), blend, &s->brushData, d->rasterBuffer);
 }
 
-
 void QRasterPaintEngine::fillRect(const QRectF &r, QSpanData *data)
 {
     Q_D(QRasterPaintEngine);
@@ -1798,15 +1808,15 @@ void QRasterPaintEngine::fillRect(const QRectF &r, QSpanData *data)
     if (!s->flags.antialiased) {
         uint txop = s->matrix.type();
         if (txop == QTransform::TxNone) {
-            fillRect_normalized(r.toRect().normalized(), data, d);
+            fillRect_normalized(toNormalizedFillRect(r), data, d);
             return;
         } else if (txop == QTransform::TxTranslate) {
-            const QRect rr = r.translated(s->matrix.dx(), s->matrix.dy()).toRect();
-            fillRect_normalized(rr.normalized(), data, d);
+            const QRect rr = toNormalizedFillRect(r.translated(s->matrix.dx(), s->matrix.dy()));
+            fillRect_normalized(rr, data, d);
             return;
         } else if (txop == QTransform::TxScale) {
-            const QRect rr = s->matrix.mapRect(r).toRect();
-            fillRect_normalized(rr.normalized(), data, d);
+            const QRect rr = toNormalizedFillRect(s->matrix.mapRect(r));
+            fillRect_normalized(rr, data, d);
             return;
         }
     }
@@ -1897,7 +1907,6 @@ void QRasterPaintEngine::drawPath(const QPainterPath &path)
         } else {
             Q_ASSERT(s->stroker);
             d->outlineMapper->beginOutline(Qt::WindingFill);
-            extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
             qreal txscale = 1;
             if (s->pen.isCosmetic() || (qt_scaleForTransform(s->matrix, &txscale) && txscale != 1)) {
                 const qreal strokeWidth = d->basicStroker.strokeWidth();
@@ -2094,8 +2103,8 @@ void QRasterPaintEngine::drawPolygon(const QPoint *points, int pointCount, Polyg
     if (mode != PolylineMode) {
         ensureBrush();
         if (s->brushData.blend) {
-
             // Compose polygon fill..,
+            ensureOutlineMapper();
             d->outlineMapper->setCoordinateRounding(s->penData.blend != 0);
             d->outlineMapper->beginOutline(mode == WindingMode ? Qt::WindingFill : Qt::OddEvenFill);
             d->outlineMapper->moveTo(*points);
@@ -2472,7 +2481,8 @@ void QRasterPaintEngine::drawImage(const QPointF &p, const QImage &img)
             return;
         d->image_filler.dx = -pt.x();
         d->image_filler.dy = -pt.y();
-        QRect rr = img.rect().translated(qRound(p.x() + s->matrix.dx()), qRound(p.y() + s->matrix.dy()));
+        QRect rr = img.rect().translated(qRound(pt.x()), qRound(pt.y()));
+
         fillRect_normalized(rr, &d->image_filler, d);
     }
 
@@ -4015,16 +4025,6 @@ QImage QRasterBuffer::colorizeBitmap(const QImage &image, const QColor &color)
 
 QRasterBuffer::~QRasterBuffer()
 {
-#if defined (Q_WS_WIN)
-    if (m_bitmap || m_hdc) {
-        Q_ASSERT(m_hdc);
-        Q_ASSERT(m_bitmap);
-        if (m_null_bitmap)
-            SelectObject(m_hdc, m_null_bitmap);
-        DeleteDC(m_hdc);
-        DeleteObject(m_bitmap);
-    }
-#endif
 }
 
 void QRasterBuffer::init()
@@ -4034,19 +4034,6 @@ void QRasterBuffer::init()
     destColor0 = 0;
     destColor1 = 0;
 }
-
-
-#if defined(Q_WS_WIN)
-void QRasterBuffer::setupHDC(bool clear_type)
-{
-    // ### Falcon...
-    if (!clear_type) {
-        SelectObject(m_hdc, GetStockObject(BLACK_BRUSH));
-        SelectObject(m_hdc, GetStockObject(BLACK_PEN));
-        SetTextColor(m_hdc, RGB(0, 0, 0));
-    }
-}
-#endif
 
 QImage::Format QRasterBuffer::prepare(QImage *image)
 {
@@ -4088,12 +4075,6 @@ void QRasterBuffer::prepare(QCustomRasterPaintDevice *device)
     else
 #endif
         drawHelper = qDrawHelper + format;
-}
-
-void QRasterBuffer::prepareBuffer(int /*width*/, int /*height*/)
-{
-    qFatal("QRasterBuffer::prepareBuffer not implemented on embedded");
-    m_buffer = 0;
 }
 
 class MetricAccessor : public QWidget {

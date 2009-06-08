@@ -58,7 +58,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Action q3action.h
+    \class Q3Action
     \brief The Q3Action class provides an abstract user interface
     action that can appear both in menus and tool bars.
 
@@ -1410,7 +1410,7 @@ void Q3ActionGroupPrivate::update(const Q3ActionGroup* that)
 }
 
 /*!
-    \class Q3ActionGroup q3action.h
+    \class Q3ActionGroup
     \brief The Q3ActionGroup class groups actions together.
 
     \compat

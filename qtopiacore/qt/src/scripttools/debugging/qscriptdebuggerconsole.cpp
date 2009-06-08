@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtScriptTools module of the Qt Toolkit.
+** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -66,7 +66,7 @@ class QScriptDebuggerConsolePrivate
 {
     Q_DECLARE_PUBLIC(QScriptDebuggerConsole)
 public:
-    QScriptDebuggerConsolePrivate();
+    QScriptDebuggerConsolePrivate(QScriptDebuggerConsole*);
     ~QScriptDebuggerConsolePrivate();
 
     void loadScriptedCommands(const QString &scriptsPath,
@@ -89,7 +89,8 @@ public:
     QScriptDebuggerConsole *q_ptr;
 };
 
-QScriptDebuggerConsolePrivate::QScriptDebuggerConsolePrivate()
+QScriptDebuggerConsolePrivate::QScriptDebuggerConsolePrivate(QScriptDebuggerConsole* parent)
+    : q_ptr(parent)
 {
     sessionId = 0;
     currentFrameIndex = 0;
@@ -192,9 +193,8 @@ QScriptDebuggerConsoleCommandJob *QScriptDebuggerConsolePrivate::createJob(
 }
 
 QScriptDebuggerConsole::QScriptDebuggerConsole()
-    : d_ptr(new QScriptDebuggerConsolePrivate)
+    : d_ptr(new QScriptDebuggerConsolePrivate(this))
 {
-    d_ptr->q_ptr = this;
 }
 
 QScriptDebuggerConsole::~QScriptDebuggerConsole()

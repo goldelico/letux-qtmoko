@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/widgets/qtextedit.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/widgets/qtextedit.cpp -->
 <head>
   <title>Qt 4.5: QTextEdit Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -185,10 +185,11 @@
 <li><div class="fn"></div>virtual void <b><a href="qtextedit.html#contextMenuEvent">contextMenuEvent</a></b> ( QContextMenuEvent * <i>event</i> )</li>
 <li><div class="fn"></div>virtual QMimeData * <b><a href="qtextedit.html#createMimeDataFromSelection">createMimeDataFromSelection</a></b> () const</li>
 <li><div class="fn"></div>virtual void <b><a href="qtextedit.html#insertFromMimeData">insertFromMimeData</a></b> ( const QMimeData * <i>source</i> )</li>
+<li><div class="fn"></div>virtual void <b><a href="qtextedit.html#paintEvent">paintEvent</a></b> ( QPaintEvent * <i>event</i> )</li>
 </ul>
 <ul>
 <li><div class="fn"></div>16 protected functions inherited from <a href="qabstractscrollarea.html#protected-functions">QAbstractScrollArea</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
@@ -598,6 +599,10 @@
 <p>If <i>mode</i> is <a href="qtextcursor.html#MoveMode-enum">QTextCursor::KeepAnchor</a>, the cursor selects the text it moves over. This is the same effect that the user achieves when they hold down the Shift key and move the cursor with the cursor keys.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="qtextcursor.html#movePosition">QTextCursor::movePosition</a>().</p>
+<h3 class="fn"><a name="paintEvent"></a>void QTextEdit::paintEvent ( <a href="qpaintevent.html">QPaintEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<p>This event handler can be reimplemented in a subclass to receive paint events passed in <i>event</i>. It is usually unnecessary to reimplement this function in a subclass of <a href="qtextedit.html">QTextEdit</a>.</p>
+<p><b>Warning:</b> The underlying text document must not be modified from within a reimplementation of this function.</p>
+<p>Reimplemented from <a href="qwidget.html#paintEvent">QWidget</a>.</p>
 <h3 class="fn"><a name="paste"></a>void QTextEdit::paste ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
 <p>Pastes the text from the clipboard into the text edit at the current cursor position.</p>
 <p>If there is no text in the clipboard nothing happens.</p>
@@ -701,6 +706,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

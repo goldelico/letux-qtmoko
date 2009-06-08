@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -55,9 +55,9 @@ Expression::Ptr EmptySequence::create(const Expression *const replacementFor,
     Q_ASSERT(replacementFor);
     Q_ASSERT(context);
 
-    EmptySequence *const retval = new EmptySequence();
-    context->addLocation(retval, context->locationFor(replacementFor));
-    return Expression::Ptr(retval);
+    const Expression::Ptr retval(new EmptySequence());
+    context->wrapExpressionWith(replacementFor, retval);
+    return retval;
 }
 
 Item::Iterator::Ptr EmptySequence::evaluateSequence(const DynamicContext::Ptr &) const

@@ -66,7 +66,7 @@ class QScriptClassPropertyIteratorPrivate
 {
     Q_DECLARE_PUBLIC(QScriptClassPropertyIterator)
 public:
-    QScriptClassPropertyIteratorPrivate();
+    QScriptClassPropertyIteratorPrivate(QScriptClassPropertyIterator*);
     virtual ~QScriptClassPropertyIteratorPrivate();
 
     QScriptValue object;

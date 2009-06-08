@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -68,7 +68,7 @@ void MainWindow::on_aboutAction_triggered()
 {
     QMessageBox::about(this, tr("About Style sheet"),
         tr("The <b>Style Sheet</b> example shows how widgets can be styled "
-           "using <a href=\"http://doc.trolltech.com/4.2/stylesheet.html\">Qt "
+           "using <a href=\"http://doc.trolltech.com/4.5/stylesheet.html\">Qt "
            "Style Sheets</a>. Click <b>File|Edit Style Sheet</b> to pop up the "
            "style editor, and either choose an existing style sheet or design "
            "your own."));

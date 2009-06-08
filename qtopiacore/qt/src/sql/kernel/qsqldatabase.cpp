@@ -268,10 +268,8 @@ QSqlDatabase QSqlDatabasePrivate::database(const QString& name, bool open)
     QSqlDatabase db = dict->value(name);
     dict->lock.unlock();
     if (db.isValid() && !db.isOpen() && open) {
-        db.open();
-        if (!db.isOpen())
-            qWarning("QSqlDatabasePrivate::database: unable to open database: %s",
-                     db.lastError().text().toLocal8Bit().data());
+        if (!db.open())
+            qWarning() << "QSqlDatabasePrivate::database: unable to open database:" << db.lastError().text();
 
     }
     return db;

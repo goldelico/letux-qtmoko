@@ -41,7 +41,6 @@ HEADERS += \
     saveformastemplate.h \
     newform.h \
     versiondialog.h \
-    plugindialog.h \
     designer_enums.h \
     appfontdialog.h \
     preferencesdialog.h \
@@ -60,7 +59,6 @@ SOURCES += main.cpp \
     saveformastemplate.cpp \
     newform.cpp \
     versiondialog.cpp \
-    plugindialog.cpp \
     appfontdialog.cpp \
     preferencesdialog.cpp \
     assistantclient.cpp \
@@ -68,8 +66,7 @@ SOURCES += main.cpp \
 
 PRECOMPILED_HEADER=qdesigner_pch.h
 
-FORMS += plugindialog.ui \
-    saveformastemplate.ui \
+FORMS += saveformastemplate.ui \
     preferencesdialog.ui \
     qdesigner_appearanceoptions.ui
 

@@ -133,6 +133,7 @@ QT_BEGIN_NAMESPACE
 */
 
 QScriptEngineAgentPrivate::QScriptEngineAgentPrivate()
+    : engine(0), q_ptr(0)
 {
 }
 

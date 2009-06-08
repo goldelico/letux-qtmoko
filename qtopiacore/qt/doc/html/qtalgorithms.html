@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qalgorithms.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qalgorithms.qdoc -->
 <head>
   <title>Qt 4.5: &lt;QtAlgorithms&gt; - Generic Algorithms</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -315,7 +315,7 @@
 <p>Note that the items in the range must be sorted according to the order specified by the <i>lessThan</i> object.</p>
 <h3 class="fn"><a name="qLowerBound-3"></a>Container::const_iterator qLowerBound ( const Container &amp; <i>container</i>, const T &amp; <i>value</i> )</h3>
 <p>This is an overloaded member function, provided for convenience.</p>
-<p>This is the same as qLowerBound(<i>container</i>.begin(), <i>container</i>.end(), value);</p>
+<p>For read-only iteration over containers, this function is broadly equivalent to qLowerBound(<i>container</i>.begin(), <i>container</i>.end(), value). However, since it returns a const iterator, you cannot use it to modify the container; for example, to insert items.</p>
 <h3 class="fn"><a name="qSort"></a>void qSort ( RandomAccessIterator <i>begin</i>, RandomAccessIterator <i>end</i> )</h3>
 <p>Sorts the items in range [<i>begin</i>, <i>end</i>) in ascending order using the quicksort algorithm.</p>
 <p>Example:</p>
@@ -448,6 +448,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

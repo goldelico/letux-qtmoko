@@ -436,9 +436,7 @@ void QtTreePropertyBrowserPrivate::init(QWidget *parent)
     layout->setMargin(0);
     m_treeWidget = new QtPropertyEditorView(parent);
     m_treeWidget->setEditorPrivate(this);
-    const int indicatorWidth = m_treeWidget->style()->pixelMetric(QStyle::PM_IndicatorWidth, 0, m_treeWidget);
-    QSize iconSize(indicatorWidth, indicatorWidth);
-    m_treeWidget->setIconSize(QSize(indicatorWidth, indicatorWidth));
+    m_treeWidget->setIconSize(QSize(18, 18));
     layout->addWidget(m_treeWidget);
 
     m_treeWidget->setColumnCount(2);
@@ -982,7 +980,9 @@ QColor QtTreePropertyBrowser::calculatedBackgroundColor(QtBrowserItem *item) con
 }
 
 /*!
-    Enables or disables marking properties without value, depending on the value of \a mark.
+    \property QtTreePropertyBrowser::propertiesWithoutValueMarked
+    \brief whether to enable or disable marking properties without value.
+
     When marking is enabled the item's background is rendered in dark color and item's
     foreground is rendered with light color.
 
@@ -1003,11 +1003,6 @@ void QtTreePropertyBrowser::setPropertiesWithoutValueMarked(bool mark)
     d_ptr->m_treeWidget->viewport()->update();
 }
 
-/*!
-    Returns true if marking properties without value is enabled.
-
-    \sa setPropertiesWithoutValueMarked()
-*/
 bool QtTreePropertyBrowser::propertiesWithoutValueMarked() const
 {
     return d_ptr->m_markPropertiesWithoutValue;
@@ -1037,6 +1032,9 @@ void QtTreePropertyBrowser::itemChanged(QtBrowserItem *item)
     d_ptr->propertyChanged(item);
 }
 
+/*!
+    Sets the current item to \a item and opens the relevant editor for it.
+*/
 void QtTreePropertyBrowser::editItem(QtBrowserItem *item)
 {
     d_ptr->editItem(item);

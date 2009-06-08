@@ -189,7 +189,7 @@ void QMutex::lock()
         int spinCount = 0;
         int lastSpinCount = d->lastSpinCount;
 
-        enum { AdditionalSpins = 100, SpinCountPenalizationDivisor = 4 };
+        enum { AdditionalSpins = 20, SpinCountPenalizationDivisor = 4 };
         const int maximumSpinCount = lastSpinCount + AdditionalSpins;
 
         do {
@@ -216,7 +216,6 @@ void QMutex::lock()
                 break;
             }
 
-            QThread::yieldCurrentThread();
             isLocked = d->contenders == 0 && d->contenders.testAndSetAcquire(0, 1);
         } while (!isLocked);
 

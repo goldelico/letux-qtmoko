@@ -56,7 +56,7 @@ public:
 };
 
 /*!
-    \class Q3SqlSelectCursor qsqlselectcursor.h
+    \class Q3SqlSelectCursor
     \brief The Q3SqlSelectCursor class provides browsing of general SQL SELECT statements.
 
     \compat

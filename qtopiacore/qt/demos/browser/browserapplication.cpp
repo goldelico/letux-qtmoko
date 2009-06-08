@@ -59,10 +59,12 @@
 
 #include <QtGui/QDesktopServices>
 #include <QtGui/QFileOpenEvent>
+#include <QtGui/QMessageBox>
 
 #include <QtNetwork/QLocalServer>
 #include <QtNetwork/QLocalSocket>
 #include <QtNetwork/QNetworkProxy>
+#include <QtNetwork/QSslSocket>
 
 #include <QtWebKit/QWebSettings>
 
@@ -118,6 +120,13 @@ BrowserApplication::BrowserApplication(int &argc, char **argv)
             m_localServer->listen(serverName);
         }
     }
+
+#ifndef QT_NO_OPENSSL
+    if (!QSslSocket::supportsSsl()) {
+    QMessageBox::information(0, "Demo Browser",
+                 "This system does not support OpenSSL. SSL websites will not be available.");
+    }
+#endif
 
     QDesktopServices::setUrlHandler(QLatin1String("http"), this, "openUrl");
     QString localSysName = QLocale::system().name();

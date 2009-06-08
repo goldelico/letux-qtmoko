@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qpainter.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qpainter.cpp -->
 <head>
   <title>Qt 4.5: QPainter Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -347,7 +347,7 @@
 <h3>Composition Modes</h3>
 <a name="composition-modes"></a><p>QPainter provides the <a href="qpainter.html#CompositionMode-enum">CompositionMode</a> enum which defines the Porter-Duff rules for digital image compositing; it describes a model for combining the pixels in one image, the source, with the pixels in another image, the destination.</p>
 <p>The two most common forms of composition are <a href="qpainter.html#CompositionMode-enum">Source</a> and <a href="qpainter.html#CompositionMode-enum">SourceOver</a>. <a href="qpainter.html#CompositionMode-enum">Source</a> is used to draw opaque objects onto a paint device. In this mode, each pixel in the source replaces the corresponding pixel in the destination. In <a href="qpainter.html#CompositionMode-enum">SourceOver</a> composition mode, the source object is transparent and is drawn on top of the destination.</p>
-<p>Note that composition transformation operates pixelwise. For that reason, there is a difference between using the grahic primitive itself and its bounding rectangle: The bounding rect contains pixels with alpha == 0 (i.e the pixels surrounding the primitive). These pixels will overwrite the other image's pixels, affectively clearing those, while the primitive only overwrites its own area.</p>
+<p>Note that composition transformation operates pixelwise. For that reason, there is a difference between using the graphic primitive itself and its bounding rectangle: The bounding rect contains pixels with alpha == 0 (i.e the pixels surrounding the primitive). These pixels will overwrite the other image's pixels, affectively clearing those, while the primitive only overwrites its own area.</p>
 <p><table width="100%" align="center" cellpadding="2" cellspacing="1" border="0">
 <tr valign="top" class="odd"><td><img src="images/qpainter-compositiondemo.png" /></td><td><b>Composition Modes Demo</b><p>The <a href="demos-composition.html">Composition Modes</a> demo, available in Qt's demo directory, allows you to experiment with the various composition modes and see the results immediately.</p>
 </td></tr>
@@ -1089,7 +1089,7 @@
 <p>Returns true if clipping has been set; otherwise returns false.</p>
 <p>See also <a href="qpainter.html#setClipping">setClipping</a>() and <a href="qpainter.html#clipping">Clipping</a>.</p>
 <h3 class="fn"><a name="initFrom"></a>void QPainter::initFrom ( const <a href="qwidget.html">QWidget</a> * <i>widget</i> )</h3>
-<p>Initializes the painters pen, background and font to the same as the given <i>widget</i>. Call this function after <a href="qpainter.html#begin">begin</a>() while the painter is active.</p>
+<p>Initializes the painters pen, background and font to the same as the given <i>widget</i>. This function is called automatically when the painter is opened on a <a href="qwidget.html">QWidget</a>.</p>
 <p>See also <a href="qpainter.html#begin">begin</a>() and <a href="qpainter.html#settings">Settings</a>.</p>
 <h3 class="fn"><a name="isActive"></a>bool QPainter::isActive () const</h3>
 <p>Returns true if <a href="qpainter.html#begin">begin</a>() has been called and <a href="qpainter.html#end">end</a>() has not yet been called; otherwise returns false.</p>
@@ -1420,6 +1420,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

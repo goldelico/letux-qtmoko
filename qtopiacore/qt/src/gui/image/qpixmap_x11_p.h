@@ -62,7 +62,7 @@ QT_BEGIN_NAMESPACE
 
 class QX11PaintEngine;
 
-class QX11PixmapData : public QPixmapData
+class Q_GUI_EXPORT QX11PixmapData : public QPixmapData
 {
 public:
     QX11PixmapData(PixelType type);

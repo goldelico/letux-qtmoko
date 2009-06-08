@@ -1719,6 +1719,7 @@ QScriptEnginePrivate::QScriptEnginePrivate()
     m_scriptCounter = 0;
     m_agent = 0;
     m_objectGeneration = 0;
+    m_class_prev_id = QScriptClassInfo::CustomType;
     m_next_object_id = 0;
     m_gc_depth = -1;
 

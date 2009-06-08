@@ -241,7 +241,7 @@ QTextCodec *Qt::codecForHtml(const QByteArray &ba)
 #endif
 
 /*!
-    \class QTextDocument qtextdocument.h
+    \class QTextDocument
     \reentrant
 
     \brief The QTextDocument class holds formatted text that can be
@@ -271,8 +271,10 @@ QTextCodec *Qt::codecForHtml(const QByteArray &ba)
     The layout of a document is determined by the documentLayout();
     you can create your own QAbstractTextDocumentLayout subclass and
     set it using setDocumentLayout() if you want to use your own
-    layout logic. The document's title can be obtained by calling the
-    documentTitle() function.
+    layout logic. The document's title and other meta-information can be
+    obtained by calling the metaInformation() function. For documents that
+    are exposed to users through the QTextEdit class, the document title
+    is also available via the QTextEdit::documentTitle() function.
 
     The toPlainText() and toHtml() convenience functions allow you to retrieve the
     contents of the document as plain text and HTML.

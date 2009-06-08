@@ -923,7 +923,7 @@ int QFontMetrics::lineWidth() const
  *****************************************************************************/
 
 /*!
-    \class QFontMetricsF qfontmetrics.h
+    \class QFontMetricsF
     \reentrant
 
     \brief The QFontMetricsF class provides font metrics information.

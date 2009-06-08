@@ -87,7 +87,7 @@ public:
 
     class Instance: public QScriptObjectData {
     public:
-        Instance() {}
+        Instance() : it(0) {}
         virtual ~Instance();
 
         static Instance *get(const QScriptValueImpl &object,

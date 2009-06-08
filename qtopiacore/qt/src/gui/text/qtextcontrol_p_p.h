@@ -200,7 +200,6 @@ public:
 #ifdef QT_KEYPAD_NAVIGATION
     bool hasEditFocus;
 #endif
-    Qt::LayoutDirection layoutDirection;
     bool isEnabled;
 
     QString highlightedAnchor; // Anchor below cursor

@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 /*!
-    \title Generic Containers
     \group containers
+    \title Generic Containers
     \ingroup architecture
     \ingroup groups
     \keyword container class
@@ -719,7 +719,7 @@
     characters allocated, 15000 of which are occupied.
 
     The values above may seem a bit strange, but here are the guiding
-    priciples:
+    principles:
     \list
     \o QString allocates 4 characters at a time until it reaches size 20.
     \o From 20 to 4084, it advances by doubling the size each time.

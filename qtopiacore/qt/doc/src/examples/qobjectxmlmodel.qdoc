@@ -62,8 +62,8 @@
   In this example, we want to model a QObject tree to look like
   XML. That is easy to do because a QObject tree maps to the XML tree
   structure in a staightforward way. Each QObject node is modeled as
-  an XML element node. But when we want to add the QMetaObject tree to
-  the QObject tree node model, we are trying to add a second tree to
+  an XML element node. However, when we want to add the QMetaObject tree
+  to the QObject tree node model, we are trying to add a second tree to
   the node model. The QMetaObject tree exists \e{behind} the QObject
   tree. Adding the QMetaObject tree to the node model changes the two
   dimensional tree into a three dimensional tree.
@@ -85,8 +85,8 @@
   \section1 Code Walk-Through
 
   The strategy for this example is different from the strategy for the
-  \l{File System Example} {file system example}. In the file system
-  example, the node model class had to actually build a node model,
+  \l{File System Example}{file system example}. In the file system
+  example, the node model class had to actually build a node model
   because the non-XML data to be traversed was the computer's file
   system, a structure stored on disk in a form that the query engine
   couldn't use. The node model class had to build an analog of the
@@ -117,9 +117,9 @@
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.h 2
 
   The constructor sets \c m_baseURI to the QUrl constructed from the
-  \l{QCoreApplication::applicationFilePath()} {file path} of the
+  \l{QCoreApplication::applicationFilePath()}{file path} of the
   application executable.  This is the value returned by
-  \l{QAbstractXmlNodeModel::documentUri()} {documentUri()}. The
+  \l{QAbstractXmlNodeModel::documentUri()}{documentUri()}. The
   constructor sets \c{m_root} to point to the QObject tree for the
   example application. This is the node model that the query engine
   will use. And the constructor calls a local function to build the
@@ -135,8 +135,8 @@
   interface. The query engine passes a QXmlNodeModelIndex to uniquely
   identify a node in the node model. The QXmlNodeModelIndex is
   constructed from a pointer to the QObject that represents the node.
-  \l{QAbstractXmlNodeModel::createIndex()} {createIndex()} creates the
-  QXmlNodeModelIndex, e.g. as in the local \c{root()} function:
+  \l{QAbstractXmlNodeModel::createIndex()}{createIndex()} creates the
+  QXmlNodeModelIndex, as in the local \c{root()} function, for example:
 
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 0
 
@@ -144,9 +144,9 @@
   need to represent attribute nodes. For example, the class name of a
   QObject is an attribute of the QObject, so it should be an attribute
   node in the node model. A QObject's class name is obtained from the
-  QObject (Actually, it's in the QMetaObject, which is obtained from
-  the QObject). This means that a single QObject lgically represents
-  multiple nodes in the node model, the element node and potentially
+  QObject. (Actually, it is in the QMetaObject, which is obtained from
+  the QObject). This means that a single QObject logically represents
+  multiple nodes in the node model: the element node and potentially
   many attribute nodes.
 
   To uniquely identify an attribute node, we need the pointer to the
@@ -163,7 +163,7 @@
   \c{QObjectClassName}, which represent the attribute node types for
   the attributes of a QObject.
 
-  The \l{QAbstractXmlNodeModel::createIndex()} {createIndex()}
+  The \l{QAbstractXmlNodeModel::createIndex()}{createIndex()}
   function called in the \c{root()} snippet above is the overload that
   accepts a \c{void*} pointer and a second parameter,
   \c{additionalData}, with default value 0 (\c{IsQObject}). Wherever
@@ -171,8 +171,8 @@
   {createIndex()} that only passes the QObject pointer, it is creating
   the node index for a QObject element node. To create the node index
   for the class name attribute, for example, the \l{QObject
-  attributes} {attributes()} function uses \c
-  {createIndex(object,QObjectClassName)}.
+  attributes} {attributes()} function uses
+  \c{createIndex(object,QObjectClassName)}.
 
   \target QObject attributes
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 6
@@ -182,10 +182,10 @@
   functions you have to implement in your custom node model class. It
   returns a QVector of \l{QXmlNodeModelIndex} {node indexes} for all
   the attribute nodes for QObject \c{n}. It calls
-  \l{QObject::createIndex()} {createIndex()} in two places. Both calls
-  use the QObject pointer from the current node \c{n} (the element
-  node), and just add a different value for the \e{additional data}
-  parameter. This makes sense because in XML, the attributes of an
+  \l{QAbstractXmlNodeModel::createIndex()} {createIndex()} in two places.
+  Both calls use the QObject pointer from the current node \c{n} (the
+  element node), and just add a different value for the \e{additional data}
+  parameter. This makes sense because, in XML, the attributes of an
   element are part of that element. 
 
   \section3 Traversing The Node Model
@@ -230,19 +230,20 @@
 
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 5
 
-  \c{qObjectSibling()} implements the old one-liner insult: \e{Did
-  your parents have any children that lived?} It is called with \c{n},
-  the index of the current node. If the current node is a child, then
-  it has a parent with children. So get the \l{QObject::parent()}
-  {parent}; get the parent's \l{QObject::children()} {child list},
-  find the current node in the list, and construct the node index
-  for the next or previous child (sibling) and return it.
+  \c{qObjectSibling()} determines whether or not the node has any
+  siblings. It is called with \c{n}, the index of the current node.
+  If the current node is a child, then it has a parent with children
+  (the current node one of these).
+  So, we get the \l{QObject::parent()}{parent}, obtain the parent's
+  \l{QObject::children()} {child list}, find the current node in the
+  list, and construct the node index for the next or previous child
+  (sibling) and return it.
 
   \note In \l{QObject nextFromSimpleAxis} {nextFromSimpleAxis()}, the
   special case of asking for the
   \l{QAbstractXmlNodeModel::PreviousSibling} {PreviousSibling} of the
   root node is discussed in \l{Including The QMetaObject Tree}.
-  
+
   Traversing away from a \c{QObjectClassName} attribute node or a
   \c{QObjectProperty} attribute node might seem a bit confusing at
   first glance. The only move allowed from an attribute node is to the
@@ -272,23 +273,23 @@
 
   The \l{Meta-Object System} {metaobject system} not only enables Qt's
   \l{Signals and Slots} {signals and slots}, it also provides type
-  information that is useful at runtime, e.g. getting and setting
+  information that is useful at run-time; e.g., getting and setting
   properties without knowing the property names at compile time. Each
   QObject has an associated QMetaObject tree which contains all this
   useful type information. Given a QObject, its QMetaObject is
-  obtained with QObject::metaObject(). Then QMetmaObject::superClass()
+  obtained with QObject::metaObject(). Then QMetaObject::superClass()
   can be called repeatedly to get the QMetaObject for each class in the 
   class hierarchy for the original QObject.
 
-  But the QMetaObject hierarchy is a second tree in a plan that exists
-  logically behind the plane of the QObject tree. The QtXmlPatterns
+  However, the QMetaObject hierarchy is a second tree in a plan that
+  exists logically behind the plane of the QObject tree. The QtXmlPatterns
   query engine can only traverse a two dimensional node model that
   represents an XML tree. If we want to include the QMetaObject in the
   same node model that represents the QObject tree, we must find a way
   to flatten the QMetaObject tree into the same plane as the QObject
   tree.
 
-  The node model class declares \l{All MetaObjects} {m_allMetaObjects}
+  The node model class declares \l{All MetaObjects}{m_allMetaObjects}
   as a vector of pointers to QMetaObject:
 
   \target All MetaObjects
@@ -296,16 +297,15 @@
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.h 4
 
   This vector gets populated by the QObjectXmlModel constructor by
-  calling the private function \l{Build All MetaObjects}
-  {allMetaObjects()}:
+  calling the private allMetaObjects() function:
 
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 9
 
   The first half of the function is an example of the standard code
-  pattern for using QtXmlPatters to run an XQuery. First it creates an
+  pattern for using QtXmlPatterns to run an XQuery. First it creates an
   instance of QXmlQuery. Then it \l{QXmlQuery::bindVariable()}{binds}
   the XQuery variable \c{$root} to the root node of the of the node
-  model, i.e. the root of the QObject tree. Then it
+  model; i.e., the root of the QObject tree. Then it
   \l{QXmlQuery::setQuery()} {sets the query} to be an XQuery that
   returns all the QObjects in the node model. Finally, the query is
   evaluated into a \l{QXmlResultItems} {result item list}.
@@ -330,7 +330,7 @@
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 4
 
   But first, revisit the \c{PreviousSibling} case for the
- \c{IsQObject} case:
+  \c{IsQObject} case:
 
   \snippet examples/xmlpatterns/qobjectxmlmodel/qobjectxmlmodel.cpp 10
 
@@ -350,5 +350,4 @@
   query engine will use the \c{MetaObject}, \c{MetaObjectClassName},
   and \c{MetaObjectSuperClass} cases, which are similar to the cases
   for \c{IsQObject}, \c{QObjectProperty}, and \c{QObjectClassName}.  
-
 */

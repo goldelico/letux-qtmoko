@@ -692,7 +692,7 @@ following issues:
        text edit does not need to build the entire document structure at once.
 \endlist
 
-We give an example of the latter technique in the list. We assume that
+We give an example of the latter technique from the list. We assume that
 the text edit is visible.
 
 \snippet doc/src/snippets/code/doc_src_richtext.qdoc 6

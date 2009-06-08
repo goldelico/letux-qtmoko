@@ -68,6 +68,8 @@ Options:
 //! [5]
 
 
+void wrapInFunction()
+{
 //! [6]
 button = new QPushButton("&Quit", this);
 //! [6]
@@ -96,6 +98,7 @@ rbc = new QRadioButton(tr("Enabled", "Color frame"), this);
 //! [11]
 rbh = new QRadioButton(tr("Enabled", "Hue frame"), this);
 //! [11]
+}
 
 
 //! [12]
@@ -165,6 +168,9 @@ QString global_greeting(int greet_type)
 }
 //! [16]
 
+void wrapInFunction()
+{
+
 //! [17]
 QString tr(const char *text, const char *comment, int n);
 //! [17]
@@ -172,4 +178,6 @@ QString tr(const char *text, const char *comment, int n);
 //! [18]
 tr("%n item(s) replaced", "", count);
 //! [18]
+
+}
 

@@ -108,7 +108,7 @@ public:
   The default constructor is the only constructor.
  */
 Tree::Tree()
-    : roo( 0, "" )
+    : roo(0, "")
 {
     priv = new TreePrivate;
 }
@@ -294,7 +294,7 @@ const FunctionNode *Tree::findFunctionNode(const QStringList &parentPath,
                                            int findFlags) const
 {
     const Node *parent = findNode(parentPath, relative, findFlags);
-    if ( parent == 0 || !parent->isInnerNode() ) {
+    if (parent == 0 || !parent->isInnerNode()) {
         return 0;
     } else {
         return ((InnerNode *)parent)->findFunctionNode(clone);
@@ -391,14 +391,14 @@ Atom *Tree::findTarget(const QString &target, const Node *node) const
 void Tree::addBaseClass(ClassNode *subclass, Node::Access access,
                         const QStringList &basePath,
                         const QString &dataTypeWithTemplateArgs,
-                        InnerNode *parent )
+                        InnerNode *parent)
 {
     priv->unresolvedInheritanceMap[subclass].append(
 	    InheritanceBound(access,
                              basePath,
                              dataTypeWithTemplateArgs,
                              parent)
-                                                    );
+                                                   );
 }
 
 
@@ -447,14 +447,14 @@ void Tree::resolveInheritance(NamespaceNode *rootNode)
     if (!rootNode)
         rootNode = root();
 
-    for ( int pass = 0; pass < 2; pass++ ) {
+    for (int pass = 0; pass < 2; pass++) {
         NodeList::ConstIterator c = rootNode->childNodes().begin();
-        while ( c != rootNode->childNodes().end() ) {
-            if ( (*c)->type() == Node::Class )
-                resolveInheritance( pass, (ClassNode *) *c );
-            else if ( (*c)->type() == Node::Namespace ) {
+        while (c != rootNode->childNodes().end()) {
+            if ((*c)->type() == Node::Class)
+                resolveInheritance(pass, (ClassNode *) *c);
+            else if ((*c)->type() == Node::Namespace) {
                 NamespaceNode *ns = static_cast<NamespaceNode*>(*c);
-                resolveInheritance( ns );
+                resolveInheritance(ns);
             }
             ++c;
         }
@@ -514,10 +514,10 @@ void Tree::resolveProperties()
  */
 void Tree::resolveInheritance(int pass, ClassNode *classe)
 {
-    if ( pass == 0 ) {
+    if (pass == 0) {
 	QList<InheritanceBound> bounds = priv->unresolvedInheritanceMap[classe];
 	QList<InheritanceBound>::ConstIterator b = bounds.begin();
-	while ( b != bounds.end() ) {
+	while (b != bounds.end()) {
 	    ClassNode *baseClass = (ClassNode*)findNode((*b).basePath,
                                                         Node::Class);
             if (!baseClass && (*b).parent)
@@ -533,14 +533,14 @@ void Tree::resolveInheritance(int pass, ClassNode *classe)
     }
     else {
 	NodeList::ConstIterator c = classe->childNodes().begin();
-	while ( c != classe->childNodes().end() ) {
-	    if ( (*c)->type() == Node::Function ) {
+	while (c != classe->childNodes().end()) {
+	    if ((*c)->type() == Node::Function) {
 		FunctionNode *func = (FunctionNode *) *c;
-		FunctionNode *from = findVirtualFunctionInBaseClasses( classe, func );
-		if ( from != 0 ) {
-		    if ( func->virtualness() == FunctionNode::NonVirtual )
-			func->setVirtualness( FunctionNode::ImpureVirtual );
-		    func->setReimplementedFrom( from );
+		FunctionNode *from = findVirtualFunctionInBaseClasses(classe, func);
+		if (from != 0) {
+		    if (func->virtualness() == FunctionNode::NonVirtual)
+			func->setVirtualness(FunctionNode::ImpureVirtual);
+		    func->setReimplementedFrom(from);
 		}
 	    }
             else if ((*c)->type() == Node::Property) {
@@ -635,12 +635,12 @@ void Tree::fixInheritance(NamespaceNode *rootNode)
         rootNode = root();
 
     NodeList::ConstIterator c = rootNode->childNodes().begin();
-    while ( c != rootNode->childNodes().end() ) {
-        if ( (*c)->type() == Node::Class )
+    while (c != rootNode->childNodes().end()) {
+        if ((*c)->type() == Node::Class)
             static_cast<ClassNode *>(*c)->fixBaseClasses();
-        else if ( (*c)->type() == Node::Namespace ) {
+        else if ((*c)->type() == Node::Namespace) {
             NamespaceNode *ns = static_cast<NamespaceNode*>(*c);
-            fixInheritance( ns );
+            fixInheritance(ns);
         }
         ++c;
     }
@@ -652,10 +652,10 @@ FunctionNode *Tree::findVirtualFunctionInBaseClasses(ClassNode *classe,
                                                      FunctionNode *clone)
 {
     QList<RelatedClass>::ConstIterator r = classe->baseClasses().begin();
-    while ( r != classe->baseClasses().end() ) {
+    while (r != classe->baseClasses().end()) {
         FunctionNode *func;
         if (((func = findVirtualFunctionInBaseClasses((*r).node, clone)) != 0 ||
-              (func = (*r).node->findFunctionNode(clone)) != 0) ) {
+              (func = (*r).node->findFunctionNode(clone)) != 0)) {
             if (func->virtualness() != FunctionNode::NonVirtual)
                 return func;
         }
@@ -706,6 +706,7 @@ void Tree::readIndexes(const QStringList &indexFiles)
 }
 
 /*!
+  Read the QDomDocument at \a path and get the index from it.
  */
 void Tree::readIndexFile(const QString &path)
 {
@@ -1521,6 +1522,7 @@ void Tree::generateIndexSections(QXmlStreamWriter &writer,
 }
 
 /*!
+  Outputs an index file.
  */
 void Tree::generateIndex(const QString &fileName,
                          const QString &url,

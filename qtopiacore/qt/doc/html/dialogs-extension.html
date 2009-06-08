@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/extension.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/extension.qdoc -->
 <head>
   <title>Qt 4.5: Extension Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -48,7 +48,7 @@
      QWidget *extension;
  };</pre>
 <p>The <tt>FindDialog</tt> widget is the main application widget, and displays the application's search options and controlling buttons.</p>
-<p>In addition to a constructor, we declare the several child widgets: We need a <a href="qlineedit.html">QLineEdit</a> with an associated <a href="qlabel.html">QLabel</a> to let the user type a word to search for, we need several <a href="qcheckbox.html">QCheckBox</a>es to facilitate the search options, and we need three <a href="qpushbutton.html">QPushButton</a>s: the <b>Find</b> button to start a search, the <b>More</b> button to enable an advanced search, and the <b>Close</b> button to exit the application. Finally, we need a <a href="qwidget.html">QWidget</a> representing the application's extension part.</p>
+<p>In addition to a constructor, we declare the several child widgets: We need a <a href="qlineedit.html">QLineEdit</a> with an associated <a href="qlabel.html">QLabel</a> to let the user type a word to search for, we need several <a href="qcheckbox.html">QCheckBox</a>es to facilitate the search options, and we need three <a href="qpushbutton.html">QPushButton</a>s: the <b>Find</b> button to start a search and the <b>More</b> button to enable an advanced search. Finally, we need a <a href="qwidget.html">QWidget</a> representing the application's extension part.</p>
 <a name="finddialog-class-implementation"></a>
 <h2>FindDialog Class Implementation</h2>
 <p>In the constructor we first create the standard child widgets for the simple search: the <a href="qlineedit.html">QLineEdit</a> with the associated <a href="qlabel.html">QLabel</a>, two of the <a href="qcheckbox.html">QCheckBox</a>es and all the <a href="qpushbutton.html">QPushButton</a>s.</p>
@@ -87,7 +87,7 @@
 <p>Now that the extension widget is created, we can connect the <b>More</b> button's <a href="qabstractbutton.html#toggled">toggled()</a> signal to the extension widget's <a href="qwidget.html#visible-prop">setVisible()</a> slot.</p>
 <p>The <a href="qabstractbutton.html#toggled">QAbstractButton::toggled</a>() signal is emitted whenever a checkable button changes its state. The signal's argument is true if the button is checked, or false if the button is unchecked. The <a href="qwidget.html#visible-prop">QWidget::setVisible</a>() slot sets the widget's visible status. If the status is true the widget is shown, otherwise the widget is hidden.</p>
 <p>Since we made the <b>More</b> button checkable when we created it, the connection makes sure that the extension widget is shown depending on the state of <b>More</b> button.</p>
-<p>We also connect the <b>Close</b> button to the <a href="qwidget.html#close">QWidget::close</a>() slot, and we put the checkboxes associated with the advanced search options into a layout we install on the extension widget.</p>
+<p>We also put the check boxes associated with the advanced search options into a layout we install on the extension widget.</p>
 <pre>     QHBoxLayout *topLeftLayout = new QHBoxLayout;
      topLeftLayout-&gt;addWidget(label);
      topLeftLayout-&gt;addWidget(lineEdit);
@@ -106,7 +106,7 @@
      setLayout(mainLayout);
 
      setWindowTitle(tr(&quot;Extension&quot;));</pre>
-<p>Before we create the main layout, we create several child layouts for the widgets: First we allign the <a href="qlabel.html">QLabel</a> ans its buddy, the <a href="qlineedit.html">QLineEdit</a>, using a <a href="qhboxlayout.html">QHBoxLayout</a>. Then we vertically allign the <a href="qlabel.html">QLabel</a> and <a href="qlineedit.html">QLineEdit</a> with the checkboxes associated with the simple search, using a <a href="qvboxlayout.html">QVBoxLayout</a>. We also create a <a href="qvboxlayout.html">QVBoxLayout</a> for the buttons. In the end we lay out the two latter layouts and the extension widget using a <a href="qgridlayout.html">QGridLayout</a>.</p>
+<p>Before we create the main layout, we create several child layouts for the widgets: First we allign the <a href="qlabel.html">QLabel</a> ans its buddy, the <a href="qlineedit.html">QLineEdit</a>, using a <a href="qhboxlayout.html">QHBoxLayout</a>. Then we vertically allign the <a href="qlabel.html">QLabel</a> and <a href="qlineedit.html">QLineEdit</a> with the check boxes associated with the simple search, using a <a href="qvboxlayout.html">QVBoxLayout</a>. We also create a <a href="qvboxlayout.html">QVBoxLayout</a> for the buttons. In the end we lay out the two latter layouts and the extension widget using a <a href="qgridlayout.html">QGridLayout</a>.</p>
 <pre>     extension-&gt;hide();
  }</pre>
 <p>Finally, we hide the extension widget using the <a href="qwidget.html#hide">QWidget::hide</a>() function, making the application only show the simple search options when it starts. When the user wants to access the advanced search options, the dialog only needs to change the visibility of the extension widget. Qt's layout management takes care of the dialog's appearance.</p>
@@ -114,6 +114,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

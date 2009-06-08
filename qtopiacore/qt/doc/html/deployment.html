@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/deployment.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/deployment.qdoc -->
 <head>
   <title>Qt 4.5: Deploying Qt Applications</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -25,16 +25,16 @@
 <p>Static linking results in a stand-alone executable. The advantage is that you will only have a few files to deploy. The disadvantages are that the executables are large and with no flexibility (i.e a new version of the application, or of Qt, will require that the deployment process is repeated), and that you cannot deploy plugins.</p>
 <p>To deploy plugin-based applications, you can use the shared library approach. Shared libraries also provide smaller, more flexible executables. For example, using the shared library approach, the user is able to independently upgrade the Qt library used by the application.</p>
 <p>Another reason why you might want to use the shared library approach, is if you want to use the same Qt libraries for a family of applications. In fact, if you download the binary installation of Qt, you get Qt as a shared library.</p>
-<p>The disadvantage with the shared library approach is that you will get more files to deploy.</p>
+<p>The disadvantage with the shared library approach is that you will get more files to deploy. For more information, see <a href="sharedlibrary.html">Creating Shared Libraries</a>.</p>
 <a name="deploying-qt-s-libraries"></a>
 <h2>Deploying Qt's Libraries</h2>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th colspan="4">Qt's Libraries</th></tr></thead>
 <tr valign="top" class="odd"><td><a href="qtassistant.html">QtAssistant</a></td><td><a href="qaxcontainer.html">QAxContainer</a></td><td><a href="qaxserver.html">QAxServer</a></td><td><a href="qtcore.html">QtCore</a></td></tr>
 <tr valign="top" class="even"><td><a href="qtdbus.html">QtDBus</a></td><td><a href="qtdesigner.html">QtDesigner</a></td><td><a href="qtgui.html">QtGui</a></td><td><a href="qthelp.html">QtHelp</a></td></tr>
-<tr valign="top" class="odd"><td><a href="qtnetwork.html">QtNetwork</a></td><td><a href="qtopengl.html">QtOpenGL</a></td><td><a href="qtscript.html">QtScript</a></td><td><a href="qtsql.html">QtSql</a></td></tr>
-<tr valign="top" class="even"><td><a href="qtsvg.html">QtSvg</a></td><td><a href="qtwebkit.html">QtWebKit</a></td><td><a href="qtxml.html">QtXml</a></td><td><a href="qtxmlpatterns.html">QtXmlPatterns</a></td></tr>
-<tr valign="top" class="odd"><td><a href="phonon-module.html">Phonon</a></td><td><a href="qt3support.html">Qt3Support</a></td></tr>
+<tr valign="top" class="odd"><td><a href="qtnetwork.html">QtNetwork</a></td><td><a href="qtopengl.html">QtOpenGL</a></td><td><a href="qtscript.html">QtScript</a></td><td><a href="qtscripttools.html">QtScriptTools</a></td></tr>
+<tr valign="top" class="even"><td><a href="qtsql.html">QtSql</a></td><td><a href="qtsvg.html">QtSvg</a></td><td><a href="qtwebkit.html">QtWebKit</a></td><td><a href="qtxml.html">QtXml</a></td></tr>
+<tr valign="top" class="odd"><td><a href="qtxmlpatterns.html">QtXmlPatterns</a></td><td><a href="phonon-module.html">Phonon</a></td><td><a href="qt3support.html">Qt3Support</a></td></tr>
 </table></p>
 <p>Since Qt is not a system library, it has to be redistributed along with your application; the minimum is to redistribute the run-time of the libraries used by the application. Using static linking, however, the Qt run-time is compiled into the executable.</p>
 <p>In particular, you will need to deploy Qt plugins, such as JPEG support or SQL drivers. For more information about plugins, see the <a href="plugins-howto.html">How to Create Qt Plugins</a> documentation.</p>
@@ -49,7 +49,7 @@
 <tr valign="top" class="odd"><td><a href="qthelp.html">QtHelp</a></td><td>CLucene</td><td>The version of clucene distributed with Qt is licensed under the GNU LGPL version 2.1 or later. This has implications for developers of closed source applications. Please see <a href="qthelp.html#license-information">the QtHelp module documentation</a> for more information.</td></tr>
 <tr valign="top" class="even"><td><a href="qtnetwork.html">QtNetwork</a></td><td>OpenSSL</td><td>Some configurations of <a href="qtnetwork.html">QtNetwork</a> use OpenSSL at run-time. Deployment of OpenSSL libraries is subject to both licensing and export restrictions. More information can be found in the <a href="ssl.html">Secure Sockets Layer (SSL) Classes</a> documentation.</td></tr>
 <tr valign="top" class="odd"><td><a href="qtwebkit.html">QtWebKit</a></td><td>WebKit</td><td>WebKit is licensed under the GNU LGPL version 2 or later. This has implications for developers of closed source applications. Please see <a href="qtwebkit.html#license-information">the QtWebKit module documentation</a> for more information.</td></tr>
-<tr valign="top" class="even"><td>Phonon</td><td>Phonon</td><td>Phonon relies on the native multimedia engines on different platforms. Phonon itself is licensed under the GNU LGPL version 2. Please see <a href="phonon-module.html#license-information">the Phonon module documentation</a> for more information.</td></tr>
+<tr valign="top" class="even"><td><a href="phonon-module.html">Phonon</a></td><td>Phonon</td><td>Phonon relies on the native multimedia engines on different platforms. Phonon itself is licensed under the GNU LGPL version 2. Please see <a href="phonon-module.html#license-information">the Phonon module documentation</a> for more information on licensing and the <a href="phonon-overview.html#backends">Phonon Overview</a> for details of the backends in use on different platforms.</td></tr>
 </table></p>
 <a name="platform-specific-notes"></a>
 <h2>Platform-Specific Notes</h2>
@@ -67,6 +67,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

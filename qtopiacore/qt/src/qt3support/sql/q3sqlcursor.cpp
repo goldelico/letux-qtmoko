@@ -133,7 +133,7 @@ QString qWhereClause(QSqlRecord* rec, const QString& prefix, const QString& sep,
 }
 
 /*!
-    \class Q3SqlCursor q3sqlcursor.h
+    \class Q3SqlCursor
     \brief The Q3SqlCursor class provides browsing and editing of SQL
     tables and views.
 

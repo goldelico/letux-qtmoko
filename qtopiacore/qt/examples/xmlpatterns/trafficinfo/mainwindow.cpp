@@ -3,7 +3,7 @@
 ** Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -71,7 +71,7 @@ MainWindow::MainWindow()
 
     QTimer *timer = new QTimer(this);
     connect(timer, SIGNAL(timeout()), this, SLOT(updateTimeInformation()));
-    timer->start(1000*60);
+    timer->start(1000*60*5);
 
     const QSettings settings("Qt Software", "trafficinfo");
     m_station = StationInformation(settings.value("stationId", "03012130").toString(),

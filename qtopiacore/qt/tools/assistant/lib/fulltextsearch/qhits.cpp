@@ -9,6 +9,7 @@
 ****************************************************************************/
 
 #include "qhits_p.h"
+#include "qsearchable_p.h"
 
 #include <CLucene.h>
 #include <CLucene/search/SearchHeader.h>

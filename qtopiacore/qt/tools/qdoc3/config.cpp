@@ -155,12 +155,12 @@ int Config::numInstances;
   \brief The Config class contains the configuration variables
   for controlling how qdoc produces documentation.
 
-  Its load() function, reads, parses, and processes qdocconf files.
+  Its load() function, reads, parses, and processes a qdocconf file.
  */
 
 /*!
   The constructor sets the \a programName and initializes all
-  internal state to empty values.
+  internal state variables to empty values.
  */
 Config::Config(const QString& programName)
     : prog(programName)
@@ -202,9 +202,12 @@ Config::~Config()
 
 /*!
   Loads and parses the qdoc configuration file \a fileName.
-  It just calls the other load() function, which is where all
-  the loading, parsing, and processing of the the configuration
-  files is done. 
+  This function calls the other load() function, which does
+  the loading, parsing, and processing of the configuration
+  file.
+
+  Intializes the location variables returned by location()
+  and lastLocation().
  */
 void Config::load(const QString& fileName)
 {
@@ -219,10 +222,12 @@ void Config::load(const QString& fileName)
 }
 
 /*!
-  Joins all the strings in \a values into a single string with
-  the concatenated string separated by ' '. Then insert the
-  single string into the string list map with \a var as the
-  key.
+  Joins all the strings in \a values into a single string with the
+  individual \a values separated by ' '. Then it inserts the result
+  into the string list map with \a var as the key.
+
+  It also inserts the \a values string list into a separate map,
+  also with \a var as the key.
  */
 void Config::setStringList(const QString& var, const QStringList& values)
 {
@@ -365,6 +370,12 @@ QSet<QString> Config::subVars(const QString& var) const
 }
 
 /*!
+  Builds and returns a list of file pathnames for the file
+  type specified by \a filesVar (e.g. "headers" or "sources").
+  The files are found in the directories specified by
+  \a dirsVar, and they are filtered by \a defaultNameFilter
+  if a better filter can't be constructed from \a filesVar.
+  The directories in \a excludedDirs are avoided.
  */
 QStringList Config::getAllFiles(const QString &filesVar,
                                 const QString &dirsVar,

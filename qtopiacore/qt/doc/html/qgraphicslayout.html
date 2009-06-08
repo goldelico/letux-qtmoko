@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/graphicsview/qgraphicslayout.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicslayout.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsLayout Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -102,6 +102,7 @@
 <p>See also <a href="qgraphicslayout.html#count">count</a>() and <a href="qgraphicslayout.html#removeAt">removeAt</a>().</p>
 <h3 class="fn"><a name="removeAt"></a>void QGraphicsLayout::removeAt ( int <i>index</i> )&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
 <p>This pure virtual function must be reimplemented in a subclass of <a href="qgraphicslayout.html">QGraphicsLayout</a> to remove the item at <i>index</i>. The reimplementation can assume that <i>index</i> is valid (i.e&#x2e;, it respects the value of <a href="qgraphicslayout.html#count">count</a>()).</p>
+<p>The implementation must ensure that the <a href="qgraphicslayoutitem.html#parentLayoutItem">parentLayoutItem</a>() of the removed item does not point to this layout, since the item is considered to be removed from the layout hierarchy.</p>
 <p>If the layout is to be reused between applications, we recommend that the layout deletes the item, but the graphics view framework does not depend on this.</p>
 <p>The subclass is free to decide how to store the items.</p>
 <p>See also <a href="qgraphicslayout.html#itemAt">itemAt</a>() and <a href="qgraphicslayout.html#count">count</a>().</p>
@@ -119,6 +120,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

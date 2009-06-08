@@ -496,6 +496,7 @@ static void qt_cleanlooks_draw_gradient(QPainter *painter, const QRect &rect, co
                 break;
             case BottomUp:
                 gradient = new QLinearGradient(x, rect.bottom(), x, rect.top());
+                break;
             case TopDown:
             default:
                 gradient = new QLinearGradient(x, rect.top(), x, rect.bottom());
@@ -530,6 +531,7 @@ static void qt_cleanlooks_draw_buttongradient(QPainter *painter, const QRect &re
                 break;
             case BottomUp:
                 gradient = new QLinearGradient(x, rect.bottom(), x, rect.top());
+                break;
             case TopDown:
             default:
                 gradient = new QLinearGradient(x, rect.top(), x, rect.bottom());
@@ -4259,6 +4261,9 @@ int QCleanlooksStyle::styleHint(StyleHint hint, const QStyleOption *option, cons
 {
     int ret = 0;
     switch (hint) {
+    case SH_ScrollBar_MiddleClickAbsolutePosition:
+        ret = true;
+        break;
     case SH_EtchDisabledText:
         ret = 1;
         break;

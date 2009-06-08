@@ -67,6 +67,8 @@ protected:
     virtual void uninitializeProperty(QtProperty *property);
 };
 
+class QtIntPropertyManagerPrivate;
+
 class QtIntPropertyManager : public QtAbstractPropertyManager
 {
     Q_OBJECT
@@ -94,10 +96,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtIntPropertyManagerPrivate *d_ptr;
+    QtIntPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtIntPropertyManager)
     Q_DISABLE_COPY(QtIntPropertyManager)
 };
+
+class QtBoolPropertyManagerPrivate;
 
 class QtBoolPropertyManager : public QtAbstractPropertyManager
 {
@@ -118,10 +122,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtBoolPropertyManagerPrivate *d_ptr;
+    QtBoolPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtBoolPropertyManager)
     Q_DISABLE_COPY(QtBoolPropertyManager)
 };
+
+class QtDoublePropertyManagerPrivate;
 
 class QtDoublePropertyManager : public QtAbstractPropertyManager
 {
@@ -153,10 +159,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtDoublePropertyManagerPrivate *d_ptr;
+    QtDoublePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtDoublePropertyManager)
     Q_DISABLE_COPY(QtDoublePropertyManager)
 };
+
+class QtStringPropertyManagerPrivate;
 
 class QtStringPropertyManager : public QtAbstractPropertyManager
 {
@@ -179,10 +187,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtStringPropertyManagerPrivate *d_ptr;
+    QtStringPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtStringPropertyManager)
     Q_DISABLE_COPY(QtStringPropertyManager)
 };
+
+class QtDatePropertyManagerPrivate;
 
 class QtDatePropertyManager : public QtAbstractPropertyManager
 {
@@ -208,10 +218,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtDatePropertyManagerPrivate *d_ptr;
+    QtDatePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtDatePropertyManager)
     Q_DISABLE_COPY(QtDatePropertyManager)
 };
+
+class QtTimePropertyManagerPrivate;
 
 class QtTimePropertyManager : public QtAbstractPropertyManager
 {
@@ -231,10 +243,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtTimePropertyManagerPrivate *d_ptr;
+    QtTimePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtTimePropertyManager)
     Q_DISABLE_COPY(QtTimePropertyManager)
 };
+
+class QtDateTimePropertyManagerPrivate;
 
 class QtDateTimePropertyManager : public QtAbstractPropertyManager
 {
@@ -254,10 +268,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtDateTimePropertyManagerPrivate *d_ptr;
+    QtDateTimePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtDateTimePropertyManager)
     Q_DISABLE_COPY(QtDateTimePropertyManager)
 };
+
+class QtKeySequencePropertyManagerPrivate;
 
 class QtKeySequencePropertyManager : public QtAbstractPropertyManager
 {
@@ -277,10 +293,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtKeySequencePropertyManagerPrivate *d_ptr;
+    QtKeySequencePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtKeySequencePropertyManager)
     Q_DISABLE_COPY(QtKeySequencePropertyManager)
 };
+
+class QtCharPropertyManagerPrivate;
 
 class QtCharPropertyManager : public QtAbstractPropertyManager
 {
@@ -300,12 +318,13 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtCharPropertyManagerPrivate *d_ptr;
+    QtCharPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtCharPropertyManager)
     Q_DISABLE_COPY(QtCharPropertyManager)
 };
 
 class QtEnumPropertyManager;
+class QtLocalePropertyManagerPrivate;
 
 class QtLocalePropertyManager : public QtAbstractPropertyManager
 {
@@ -327,12 +346,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtLocalePropertyManagerPrivate *d_ptr;
+    QtLocalePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtLocalePropertyManager)
     Q_DISABLE_COPY(QtLocalePropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotEnumChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtPointPropertyManagerPrivate;
 
 class QtPointPropertyManager : public QtAbstractPropertyManager
 {
@@ -354,12 +375,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtPointPropertyManagerPrivate *d_ptr;
+    QtPointPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtPointPropertyManager)
     Q_DISABLE_COPY(QtPointPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtPointFPropertyManagerPrivate;
 
 class QtPointFPropertyManager : public QtAbstractPropertyManager
 {
@@ -384,12 +407,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtPointFPropertyManagerPrivate *d_ptr;
+    QtPointFPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtPointFPropertyManager)
     Q_DISABLE_COPY(QtPointFPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotDoubleChanged(QtProperty *, double))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtSizePropertyManagerPrivate;
 
 class QtSizePropertyManager : public QtAbstractPropertyManager
 {
@@ -417,12 +442,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtSizePropertyManagerPrivate *d_ptr;
+    QtSizePropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtSizePropertyManager)
     Q_DISABLE_COPY(QtSizePropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtSizeFPropertyManagerPrivate;
 
 class QtSizeFPropertyManager : public QtAbstractPropertyManager
 {
@@ -453,12 +480,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtSizeFPropertyManagerPrivate *d_ptr;
+    QtSizeFPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtSizeFPropertyManager)
     Q_DISABLE_COPY(QtSizeFPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotDoubleChanged(QtProperty *, double))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtRectPropertyManagerPrivate;
 
 class QtRectPropertyManager : public QtAbstractPropertyManager
 {
@@ -483,12 +512,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtRectPropertyManagerPrivate *d_ptr;
+    QtRectPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtRectPropertyManager)
     Q_DISABLE_COPY(QtRectPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtRectFPropertyManagerPrivate;
 
 class QtRectFPropertyManager : public QtAbstractPropertyManager
 {
@@ -516,12 +547,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtRectFPropertyManagerPrivate *d_ptr;
+    QtRectFPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtRectFPropertyManager)
     Q_DISABLE_COPY(QtRectFPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotDoubleChanged(QtProperty *, double))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtEnumPropertyManagerPrivate;
 
 class QtEnumPropertyManager : public QtAbstractPropertyManager
 {
@@ -548,10 +581,12 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtEnumPropertyManagerPrivate *d_ptr;
+    QtEnumPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtEnumPropertyManager)
     Q_DISABLE_COPY(QtEnumPropertyManager)
 };
+
+class QtFlagPropertyManagerPrivate;
 
 class QtFlagPropertyManager : public QtAbstractPropertyManager
 {
@@ -576,12 +611,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtFlagPropertyManagerPrivate *d_ptr;
+    QtFlagPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtFlagPropertyManager)
     Q_DISABLE_COPY(QtFlagPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotBoolChanged(QtProperty *, bool))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtSizePolicyPropertyManagerPrivate;
 
 class QtSizePolicyPropertyManager : public QtAbstractPropertyManager
 {
@@ -604,13 +641,15 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtSizePolicyPropertyManagerPrivate *d_ptr;
+    QtSizePolicyPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtSizePolicyPropertyManager)
     Q_DISABLE_COPY(QtSizePolicyPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotEnumChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtFontPropertyManagerPrivate;
 
 class QtFontPropertyManager : public QtAbstractPropertyManager
 {
@@ -635,7 +674,7 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtFontPropertyManagerPrivate *d_ptr;
+    QtFontPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtFontPropertyManager)
     Q_DISABLE_COPY(QtFontPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
@@ -645,6 +684,8 @@ private:
     Q_PRIVATE_SLOT(d_func(), void slotFontDatabaseChanged())
     Q_PRIVATE_SLOT(d_func(), void slotFontDatabaseDelayedChange())
 };
+
+class QtColorPropertyManagerPrivate;
 
 class QtColorPropertyManager : public QtAbstractPropertyManager
 {
@@ -667,12 +708,14 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtColorPropertyManagerPrivate *d_ptr;
+    QtColorPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtColorPropertyManager)
     Q_DISABLE_COPY(QtColorPropertyManager)
     Q_PRIVATE_SLOT(d_func(), void slotIntChanged(QtProperty *, int))
     Q_PRIVATE_SLOT(d_func(), void slotPropertyDestroyed(QtProperty *))
 };
+
+class QtCursorPropertyManagerPrivate;
 
 class QtCursorPropertyManager : public QtAbstractPropertyManager
 {
@@ -695,7 +738,7 @@ protected:
     virtual void initializeProperty(QtProperty *property);
     virtual void uninitializeProperty(QtProperty *property);
 private:
-    class QtCursorPropertyManagerPrivate *d_ptr;
+    QtCursorPropertyManagerPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtCursorPropertyManager)
     Q_DISABLE_COPY(QtCursorPropertyManager)
 };

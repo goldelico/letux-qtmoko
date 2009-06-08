@@ -61,7 +61,7 @@ public:
 };
 
 /*!
-    \class Q3DataBrowser qdatabrowser.h
+    \class Q3DataBrowser
     \brief The Q3DataBrowser class provides data manipulation and
     navigation for data entry forms.
 

@@ -101,6 +101,7 @@ QT_BEGIN_NAMESPACE
   \internal
 */
 QScriptContextInfoPrivate::QScriptContextInfoPrivate()
+    : q_ptr(0)
 {
     ref = 0;
     functionType = QScriptContextInfo::NativeFunction;
@@ -116,6 +117,7 @@ QScriptContextInfoPrivate::QScriptContextInfoPrivate()
   \internal
 */
 QScriptContextInfoPrivate::QScriptContextInfoPrivate(const QScriptContext *context)
+    : q_ptr(0)
 {
     Q_ASSERT(context);
     ref = 0;

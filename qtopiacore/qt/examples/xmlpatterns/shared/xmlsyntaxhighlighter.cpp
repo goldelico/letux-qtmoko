@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -61,7 +61,7 @@ XmlSyntaxHighlighter::XmlSyntaxHighlighter(QTextDocument *parent)
 
     // attribute content format
     attributeContentFormat.setForeground(Qt::red);
-    rule.pattern = QRegExp("(\"[^\"]*\"|\'\[^\']*\')");
+    rule.pattern = QRegExp("(\"[^\"]*\"|'[^']*')");
     rule.format = attributeContentFormat;
     highlightingRules.append(rule);
 

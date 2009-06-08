@@ -941,8 +941,10 @@ public:
 };
 
 QtResourceEditorDialogPrivate::QtResourceEditorDialogPrivate() :
+    q_ptr(0),
     m_core(0),
     m_resourceModel(0),
+    m_dlgGui(0),
     m_qrcManager(0),
     m_ignoreCurrentChanged(false),
     m_firstQrcFileDialog(true),

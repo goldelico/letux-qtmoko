@@ -183,7 +183,7 @@ void QDirModelPrivate::invalidate()
 }
 
 /*!
-    \class QDirModel qdirmodel.h
+    \class QDirModel
 
     \brief The QDirModel class provides a data model for the local filesystem.
 

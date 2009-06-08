@@ -496,10 +496,8 @@
          g = QLinearGradient(pts.at(0), pts.at(1));
 
      } else if (m_gradientType == Qt::RadialGradientPattern) {
-         QLineF line(pts.at(0), pts.at(1));
-         if (line.length() &gt; 132)
-             line.setLength(132);
-         g = QRadialGradient(line.p1(), qMin(width(), height()) / 3.0, line.p2());
+         g = QRadialGradient(pts.at(0), qMin(width(), height()) / 3.0, pts.at(1));
+
      } else {
          QLineF l(pts.at(0), pts.at(1));
          qreal angle = l.angle(QLineF(0, 0, 1, 0));
@@ -523,6 +521,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

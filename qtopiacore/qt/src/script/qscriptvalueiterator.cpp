@@ -97,6 +97,7 @@ QT_BEGIN_NAMESPACE
   \internal
 */
 QScriptValueIteratorPrivate::QScriptValueIteratorPrivate()
+    : q_ptr(0), it(0)
 {
 }
 

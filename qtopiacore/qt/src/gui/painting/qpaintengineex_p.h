@@ -225,7 +225,7 @@ protected:
 
 inline uint QVectorPath::polygonFlags(QPaintEngine::PolygonDrawMode mode) {
     switch (mode) {
-    case QPaintEngine::ConvexMode: return NonCurvedShapeHint | ConvexPolygonHint | ImplicitClose;
+    case QPaintEngine::ConvexMode: return ConvexPolygonHint | ImplicitClose;
     case QPaintEngine::OddEvenMode: return NonCurvedShapeHint | OddEvenFill | ImplicitClose;
     case QPaintEngine::WindingMode: return NonCurvedShapeHint | WindingFill | ImplicitClose;
     case QPaintEngine::PolylineMode: return NonCurvedShapeHint;

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -96,7 +96,7 @@ Expression::Ptr NodeSortExpression::wrapAround(const Expression::Ptr &operand,
     Q_ASSERT(context);
 
     const Expression::Ptr sort(new NodeSortExpression(operand));
-    context->addLocation(sort.data(), context->locationFor(operand.data()));
+    context->wrapExpressionWith(operand.data(), sort);
     return sort;
 }
 

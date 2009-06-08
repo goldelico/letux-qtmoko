@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 for (int row = 0; row < table->numRows(); row++) {
     for (int col = 0; col < table->numCols(); col++) {
@@ -48,3 +52,6 @@ if (initFromCell || (i && !i->isReplaceable()))
 else
     return ...(create your own editor)
 //! [5]
+
+}
+

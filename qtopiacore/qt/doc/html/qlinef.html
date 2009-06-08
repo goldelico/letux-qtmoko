@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/tools/qline.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qline.cpp -->
 <head>
   <title>Qt 4.5: QLineF Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -43,7 +43,7 @@
 <li><div class="fn"></div>qreal <b><a href="qlinef.html#dy">dy</a></b> () const</li>
 <li><div class="fn"></div>IntersectType <b><a href="qlinef.html#intersect">intersect</a></b> ( const QLineF &amp; <i>line</i>, QPointF * <i>intersectionPoint</i> ) const</li>
 <li><div class="fn"></div>bool <b><a href="qlinef.html#isNull">isNull</a></b> () const</li>
-<li><div class="fn"></div>qreal <b><a href="qlinef.html#lengthx">length</a></b> () const</li>
+<li><div class="fn"></div>qreal <b><a href="qlinef.html#length">length</a></b> () const</li>
 <li><div class="fn"></div>QLineF <b><a href="qlinef.html#normalVector">normalVector</a></b> () const</li>
 <li><div class="fn"></div>QPointF <b><a href="qlinef.html#pointAt">pointAt</a></b> ( qreal <i>t</i> ) const</li>
 <li><div class="fn"></div>void <b><a href="qlinef.html#setP1">setP1</a></b> ( const QPointF &amp; <i>p1</i> )</li>
@@ -69,8 +69,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qlinef.html#operator-lt-lt-122">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QLineF &amp; <i>line</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qlinef.html#operator-gt-gt-68">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QLineF &amp; <i>line</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qlinef.html#operator-lt-lt-8">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QLineF &amp; <i>line</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qlinef.html#operator-gt-gt-5">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QLineF &amp; <i>line</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -81,7 +81,7 @@
 <tr valign="top" class="odd"><td><img src="images/qline-point.png" /></td><td><img src="images/qline-coordinates.png" /></td></tr>
 </table></p>
 <p>The positions of the line's start and end points can be retrieved using the <a href="qlinef.html#p1">p1</a>(), <a href="qlinef.html#x1">x1</a>(), <a href="qlinef.html#y1">y1</a>(), <a href="qlinef.html#p2">p2</a>(), <a href="qlinef.html#x2">x2</a>(), and <a href="qlinef.html#y2">y2</a>() functions. The <a href="qlinef.html#dx">dx</a>() and <a href="qlinef.html#dy">dy</a>() functions return the horizontal and vertical components of the line, respectively.</p>
-<p>The line's length can be retrieved using the <a href="qlinef.html#lengthx">length</a>() function, and altered using the <a href="qlinef.html#setLength">setLength</a>() function. Similarly, <a href="qlinef.html#angle">angle</a>() and <a href="qlinef.html#setAngle">setAngle</a>() are respectively used for retrieving and altering the angle of the line. Use the <a href="qlinef.html#isNull">isNull</a>() function to determine whether the QLineF represents a valid line or a null line.</p>
+<p>The line's length can be retrieved using the <a href="qlinef.html#length">length</a>() function, and altered using the <a href="qlinef.html#setLength">setLength</a>() function. Similarly, <a href="qlinef.html#angle">angle</a>() and <a href="qlinef.html#setAngle">setAngle</a>() are respectively used for retrieving and altering the angle of the line. Use the <a href="qlinef.html#isNull">isNull</a>() function to determine whether the QLineF represents a valid line or a null line.</p>
 <p>The <a href="qlinef.html#intersect">intersect</a>() function determines the <a href="qlinef.html#IntersectType-enum">IntersectType</a> for this line and a given line, while the <a href="qlinef.html#angle">angle</a>() function returns the angle between the lines. In addition, the <a href="qlinef.html#unitVector">unitVector</a>() function returns a line that has the same starting point as this line, but with a length of only 1, while the <a href="qlinef.html#normalVector">normalVector</a>() function returns a line that is perpendicular to this line with the same starting point and length.</p>
 <p>Finally, the line can be translated a given offset using the <a href="qlinef.html#translate">translate</a>() function, and can be traversed using the <a href="qlinef.html#pointAt">pointAt</a>() function.</p>
 <p>See also <a href="qline.html">QLine</a>, <a href="qpolygonf.html">QPolygonF</a>, and <a href="qrectf.html">QRectF</a>.</p>
@@ -159,7 +159,7 @@
 <p>The actual intersection point is extracted to <i>intersectionPoint</i> (if the pointer is valid). If the lines are parallel, the intersection point is undefined.</p>
 <h3 class="fn"><a name="isNull"></a>bool QLineF::isNull () const</h3>
 <p>Returns true if the line is not set up with valid start and end point; otherwise returns false.</p>
-<h3 class="fn"><a name="lengthx"></a><a href="qtglobal.html#qreal-typedef">qreal</a> QLineF::length () const</h3>
+<h3 class="fn"><a name="length"></a><a href="qtglobal.html#qreal-typedef">qreal</a> QLineF::length () const</h3>
 <p>Returns the length of the line.</p>
 <p>See also <a href="qlinef.html#setLength">setLength</a>().</p>
 <h3 class="fn"><a name="normalVector"></a>QLineF QLineF::normalVector () const</h3>
@@ -184,7 +184,7 @@
 <h3 class="fn"><a name="setLength"></a>void QLineF::setLength ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>length</i> )</h3>
 <p>Sets the length of the line to the given <i>length</i>. <a href="qlinef.html">QLineF</a> will move the end point - <a href="qlinef.html#p2">p2</a>() - of the line to give the line its new length.</p>
 <p>If the line is a null line, the length will remain zero regardless of the length specified.</p>
-<p>See also <a href="qlinef.html#lengthx">length</a>() and <a href="qlinef.html#isNull">isNull</a>().</p>
+<p>See also <a href="qlinef.html#length">length</a>() and <a href="qlinef.html#isNull">isNull</a>().</p>
 <h3 class="fn"><a name="setLine"></a>void QLineF::setLine ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x1</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y1</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x2</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y2</i> )</h3>
 <p>Sets this line to the start in <i>x1</i>, <i>y1</i> and end in <i>x2</i>, <i>y2</i>.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -220,16 +220,16 @@
 <p>A line is identical to another line if the start and end points are identical, and the internal order of the points is the same.</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-122"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QLineF &amp; <i>line</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-8"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QLineF &amp; <i>line</i> )</h3>
 <p>Writes the given <i>line</i> to the given <i>stream</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-68"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QLineF &amp; <i>line</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-5"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QLineF &amp; <i>line</i> )</h3>
 <p>Reads a line from the given <i>stream</i> into the given <i>line</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

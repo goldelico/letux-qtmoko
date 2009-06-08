@@ -81,6 +81,7 @@ QT_BEGIN_NAMESPACE
   \internal
 */
 QScriptStringPrivate::QScriptStringPrivate()
+    : nameId(0), engine(0), q_ptr(0)
 {
     ref = 0;
 }

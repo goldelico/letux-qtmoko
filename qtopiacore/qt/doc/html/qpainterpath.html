@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qpainterpath.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qpainterpath.cpp -->
 <head>
   <title>Qt 4.5: QPainterPath Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -66,7 +66,7 @@
 <li><div class="fn"></div>bool <b><a href="qpainterpath.html#intersects">intersects</a></b> ( const QRectF &amp; <i>rectangle</i> ) const</li>
 <li><div class="fn"></div>bool <b><a href="qpainterpath.html#intersects-2">intersects</a></b> ( const QPainterPath &amp; <i>p</i> ) const</li>
 <li><div class="fn"></div>bool <b><a href="qpainterpath.html#isEmpty">isEmpty</a></b> () const</li>
-<li><div class="fn"></div>qreal <b><a href="qpainterpath.html#lengthx">length</a></b> () const</li>
+<li><div class="fn"></div>qreal <b><a href="qpainterpath.html#length">length</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qpainterpath.html#lineTo">lineTo</a></b> ( const QPointF &amp; <i>endPoint</i> )</li>
 <li><div class="fn"></div>void <b><a href="qpainterpath.html#lineTo-2">lineTo</a></b> ( qreal <i>x</i>, qreal <i>y</i> )</li>
 <li><div class="fn"></div>void <b><a href="qpainterpath.html#moveTo">moveTo</a></b> ( const QPointF &amp; <i>point</i> )</li>
@@ -103,8 +103,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qpainterpath.html#operator-lt-lt-145">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QPainterPath &amp; <i>path</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qpainterpath.html#operator-gt-gt-84">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QPainterPath &amp; <i>path</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qpainterpath.html#operator-lt-lt-28">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QPainterPath &amp; <i>path</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qpainterpath.html#operator-gt-gt-14">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QPainterPath &amp; <i>path</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -347,6 +347,7 @@
 <p>Returns true if the given <i>rectangle</i> is inside the path, otherwise returns false.</p>
 <h3 class="fn"><a name="contains-3"></a>bool QPainterPath::contains ( const QPainterPath &amp; <i>p</i> ) const</h3>
 <p>Returns true if the given path <i>p</i> is contained within the current path. Returns false if any edges of the current path and <i>p</i> intersect.</p>
+<p>Set operations on paths will treat the paths as areas. Non-closed paths will be treated as implicitly closed.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qpainterpath.html#intersects">intersects</a>().</p>
 <h3 class="fn"><a name="controlPointRect"></a><a href="qrectf.html">QRectF</a> QPainterPath::controlPointRect () const</h3>
@@ -393,12 +394,13 @@
 <p>See also <a href="qpainterpath.html#contains">contains</a>().</p>
 <h3 class="fn"><a name="intersects-2"></a>bool QPainterPath::intersects ( const QPainterPath &amp; <i>p</i> ) const</h3>
 <p>Returns true if the current path intersects at any point the given path <i>p</i>. Also returns true if the current path contains or is contained by any part of <i>p</i>.</p>
+<p>Set operations on paths will treat the paths as areas. Non-closed paths will be treated as implicitly closed.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qpainterpath.html#contains">contains</a>().</p>
 <h3 class="fn"><a name="isEmpty"></a>bool QPainterPath::isEmpty () const</h3>
 <p>Returns true if either there are no elements in this path, or if the only element is a <a href="qpainterpath.html#ElementType-enum">MoveToElement</a>; otherwise returns false.</p>
 <p>See also <a href="qpainterpath.html#elementCount">elementCount</a>().</p>
-<h3 class="fn"><a name="lengthx"></a><a href="qtglobal.html#qreal-typedef">qreal</a> QPainterPath::length () const</h3>
+<h3 class="fn"><a name="length"></a><a href="qtglobal.html#qreal-typedef">qreal</a> QPainterPath::length () const</h3>
 <p>Returns the length of the current path.</p>
 <h3 class="fn"><a name="lineTo"></a>void QPainterPath::lineTo ( const <a href="qpointf.html">QPointF</a> &amp; <i>endPoint</i> )</h3>
 <p>Adds a straight line from the current position to the given <i>endPoint</i>. After the line is drawn, the current position is updated to be at the end point of the line.</p>
@@ -443,6 +445,7 @@
 <p>Note that similarly to other percent methods, the percentage measurment is not linear with regards to the length, if curves are present in the path. When curves are present the percentage argument is mapped to the t parameter of the Bezier equations.</p>
 <h3 class="fn"><a name="subtracted"></a>QPainterPath QPainterPath::subtracted ( const QPainterPath &amp; <i>p</i> ) const</h3>
 <p>Returns a path which is <i>p</i>'s fill area subtracted from this path's fill area.</p>
+<p>Set operations on paths will treat the paths as areas. Non-closed paths will be treated as implicitly closed.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="toFillPolygon"></a><a href="qpolygonf.html">QPolygonF</a> QPainterPath::toFillPolygon ( const <a href="qtransform.html">QTransform</a> &amp; <i>matrix</i> ) const</h3>
 <p>Converts the path into a polygon using the <a href="qtransform.html">QTransform</a> <i>matrix</i>, and returns the polygon.</p>
@@ -470,6 +473,7 @@
 <p>This is an overloaded member function, provided for convenience.</p>
 <h3 class="fn"><a name="united"></a>QPainterPath QPainterPath::united ( const QPainterPath &amp; <i>p</i> ) const</h3>
 <p>Returns a path which is the union of this path's fill area and <i>p</i>'s fill area.</p>
+<p>Set operations on paths will treat the paths as areas. Non-closed paths will be treated as implicitly closed.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qpainterpath.html#intersected">intersected</a>(), <a href="qpainterpath.html#subtracted">subtracted</a>(), and <a href="qpainterpath-obsolete.html#subtractedInverted">subtractedInverted</a>().</p>
 <h3 class="fn"><a name="operator-not-eq"></a>bool QPainterPath::operator!= ( const QPainterPath &amp; <i>path</i> ) const</h3>
@@ -517,16 +521,16 @@
 <p>See also <a href="qpainterpath.html#united">united</a>(), <a href="qpainterpath.html#operator-7c">operator|</a>(), and <a href="qpainterpath.html#operator-and-eq">operator&amp;=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-145"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QPainterPath &amp; <i>path</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-28"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QPainterPath &amp; <i>path</i> )</h3>
 <p>Writes the given painter <i>path</i> to the given <i>stream</i>, and returns a reference to the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-84"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QPainterPath &amp; <i>path</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-14"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QPainterPath &amp; <i>path</i> )</h3>
 <p>Reads a painter path from the given <i>stream</i> into the specified <i>path</i>, and returns a reference to the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

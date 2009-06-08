@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qprinter.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qprinter.cpp -->
 <head>
   <title>Qt 4.5: QPrinter Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -122,6 +122,7 @@
 <p>The QPrinter class is a paint device that paints on a printer.</p>
 <p>This device represents a series of pages of printed output, and is used in almost exactly the same way as other paint devices such as <a href="qwidget.html">QWidget</a> and <a href="qpixmap.html">QPixmap</a>. A set of additional functions are provided to manage device-specific features, such as orientation and resolution, and to step through the pages in a document as it is generated.</p>
 <p>When printing directly to a printer on Windows or Mac OS X, QPrinter uses the built-in printer drivers. On X11, QPrinter uses the <a href="http://www.cups.org/">Common Unix Printing System (CUPS)</a> or the standard Unix <a href="http://www.ietf.org/rfc/rfc1179.txt#lpr">lpr</a> utility to send PostScript or PDF output to the printer. As an alternative, the <a href="qprinter.html#printProgram">printProgram</a>() function can be used to specify the command or utility to use instead of the system default.</p>
+<p>Note that setting parameters like paper size and resolution on an invalid printer is undefined. You can use <a href="qprinter.html#isValid">QPrinter::isValid</a>() to verify this before changing any parameters.</p>
 <p>QPrinter supports a number of parameters, most of which can be changed by the end user through a <a href="qprintdialog.html">print dialog</a>. In general, QPrinter passes these functions onto the underlying <a href="qprintengine.html">QPrintEngine</a>.</p>
 <p>The most important parameters are:</p>
 <ul>
@@ -334,7 +335,7 @@
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="isValid"></a>bool QPrinter::isValid () const</h3>
 <p>Returns true if the printer currently selected is a valid printer in the system, or a pure PDF/PostScript printer; otherwise returns false.</p>
-<p>To detect other failures check the output of <a href="qpainter.html#begin">QPainter::begin</a>() or QPainter::nextPage().</p>
+<p>To detect other failures check the output of <a href="qpainter.html#begin">QPainter::begin</a>() or <a href="qprinter.html#newPage">QPrinter::newPage</a>().</p>
 <pre>     QPrinter printer;
      printer.setOutputFormat(QPrinter::PdfFormat);
      printer.setOutputFileName(&quot;/foobar/nonwritable.pdf&quot;);
@@ -567,6 +568,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

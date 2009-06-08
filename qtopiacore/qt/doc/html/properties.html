@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/properties.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/properties.qdoc -->
 <head>
   <title>Qt 4.5: Qt's Property System</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -97,16 +97,19 @@
 <p><a href="qobject.html#setProperty">QObject::setProperty</a>() can also be used to add <i>new</i> properties to an instance of a class at runtime. When it is called with a name and a value, if a property with the given name exists in the <a href="qobject.html">QObject</a>, and if the given value is compatible with the property's type, the value is stored in the property, and true is returned. If the value is <i>not</i> compatible with the property's type, the property is <i>not</i> changed, and false is returned. But if the property with the given name doesn't exist in the <a href="qobject.html">QObject</a> (i.e&#x2e;, if it wasn't declared with <a href="qobject.html#Q_PROPERTY">Q_PROPERTY</a>(), a new property with the given name and value is automatically added to the <a href="qobject.html">QObject</a>, but false is still returned. This means that a return of false can't be used to determine whether a particular property was actually set, unless you know in advance that the property already exists in the <a href="qobject.html">QObject</a>.</p>
 <p>Note that <i>dynamic</i> properties are added on a per instance basis, i.e&#x2e;, they are added to <a href="qobject.html">QObject</a>, not <a href="qmetaobject.html">QMetaObject</a>. A property can be removed from an instance by passing the property name and an invalid <a href="qvariant.html">QVariant</a> value to <a href="qobject.html#setProperty">QObject::setProperty</a>(). The default constructor for <a href="qvariant.html">QVariant</a> constructs an invalid <a href="qvariant.html">QVariant</a>.</p>
 <p>Dynamic properties can be queried with <a href="qobject.html#property">QObject::property</a>(), just like properties declared at compile time with <a href="qobject.html#Q_PROPERTY">Q_PROPERTY</a>().</p>
+<a name="properties-and-custom-types"></a>
+<h3>Properties and Custom Types</h3>
+<p>Custom types used by properties need to be registered using the <a href="qmetatype.html#Q_DECLARE_METATYPE">Q_DECLARE_METATYPE</a>() macro so that their values can be stored in <a href="qvariant.html">QVariant</a> objects. This makes them suitable for use with both static properties declared using the <a href="qobject.html#Q_PROPERTY">Q_PROPERTY</a>() macro in class definitions and dynamic properties created at run-time.</p>
 <a name="adding-additional-information-to-a-class"></a>
 <h3>Adding Additional Information to a Class</h3>
 <p>Connected to the property system is an additional macro, <a href="qobject.html#Q_CLASSINFO">Q_CLASSINFO</a>(), that can be used to attach additional <i>name</i>--<i>value</i> pairs to a class's meta-object, for example:</p>
 <pre> Q_CLASSINFO(&quot;Version&quot;, &quot;3.0.0&quot;)</pre>
 <p>Like other meta-data, class information is accessible at run-time through the meta-object; see <a href="qmetaobject.html#classInfo">QMetaObject::classInfo</a>() for details.</p>
-<p>See also <a href="metaobjects.html">Meta-Object System</a> and <a href="signalsandslots.html">Signals and Slots</a>.</p>
+<p>See also <a href="metaobjects.html">Meta-Object System</a>, <a href="signalsandslots.html">Signals and Slots</a>, <a href="qmetatype.html#Q_DECLARE_METATYPE">Q_DECLARE_METATYPE</a>(), <a href="qmetatype.html">QMetaType</a>, and <a href="qvariant.html">QVariant</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

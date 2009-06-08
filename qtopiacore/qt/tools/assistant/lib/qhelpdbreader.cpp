@@ -320,9 +320,13 @@ void QHelpDBReader::linksForKeyword(const QString &keyword, const QStringList &f
         }
     }
 
+    QString title;
     m_query->exec(query);
     while (m_query->next()) {
-        linkMap.insertMulti(m_query->value(0).toString(), buildQUrl(m_query->value(1).toString(),
+        title = m_query->value(0).toString();
+        if (title.isEmpty()) // generate a title + corresponding path
+            title = keyword + QLatin1String(" : ") + m_query->value(3).toString();
+        linkMap.insertMulti(title, buildQUrl(m_query->value(1).toString(),
             m_query->value(2).toString(), m_query->value(3).toString(),
             m_query->value(4).toString()));
     }

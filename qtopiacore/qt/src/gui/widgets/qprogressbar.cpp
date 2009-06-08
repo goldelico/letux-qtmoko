@@ -168,7 +168,7 @@ bool QProgressBarPrivate::repaintRequired() const
 }
 
 /*!
-    \class QProgressBar qprogressbar.h
+    \class QProgressBar
     \brief The QProgressBar widget provides a horizontal or vertical progress bar.
 
     \ingroup basicwidgets

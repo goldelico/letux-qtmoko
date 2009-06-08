@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 using namespace TokenEngine;
 
 CppLexer::CppLexer()
+    : m_buffer(0), m_ptr(0), m_len(0)
 {
     setupScanTable();
 }

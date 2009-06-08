@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/thread/qthread.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/thread/qthread.cpp -->
 <head>
   <title>Qt 4.5: QThread Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -78,7 +78,7 @@
 <h3>Protected Functions</h3>
 <ul>
 <li><div class="fn"></div>int <b><a href="qthread.html#exec">exec</a></b> ()</li>
-<li><div class="fn"></div>virtual void <b><a href="qthread.html#runx">run</a></b> ()</li>
+<li><div class="fn"></div>virtual void <b><a href="qthread.html#run">run</a></b> ()</li>
 </ul>
 <ul>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
@@ -99,7 +99,7 @@
 <hr />
 <h2>Detailed Description</h2>
 <p>The QThread class provides platform-independent threads.</p>
-<p>A QThread represents a separate thread of control within the program; it shares data with all the other threads within the process but executes independently in the way that a separate program does on a multitasking operating system. Instead of starting in <tt>main()</tt>, QThreads begin executing in <a href="qthread.html#runx">run</a>(). By default, <a href="qthread.html#runx">run</a>() starts the event loop by calling <a href="qthread.html#exec">exec</a>() (see below). To create your own threads, subclass QThread and reimplement <a href="qthread.html#runx">run</a>(). For example:</p>
+<p>A QThread represents a separate thread of control within the program; it shares data with all the other threads within the process but executes independently in the way that a separate program does on a multitasking operating system. Instead of starting in <tt>main()</tt>, QThreads begin executing in <a href="qthread.html#run">run</a>(). By default, <a href="qthread.html#run">run</a>() starts the event loop by calling <a href="qthread.html#exec">exec</a>() (see below). To create your own threads, subclass QThread and reimplement <a href="qthread.html#run">run</a>(). For example:</p>
 <pre> class MyThread : public QThread
  {
  public:
@@ -114,7 +114,7 @@
      socket.connectToHost(hostName, portNumber);
      exec();
  }</pre>
-<p>This will create a <a href="qtcpsocket.html">QTcpSocket</a> in the thread and then execute the thread's event loop. Use the <a href="qthread.html#start">start</a>() method to begin execution. Execution ends when you return from <a href="qthread.html#runx">run</a>(), just as an application does when it leaves main(). QThread will notifiy you via a signal when the thread is <a href="qthread.html#started">started</a>(), <a href="qthread.html#finished">finished</a>(), and <a href="qthread.html#terminated">terminated</a>(), or you can use <a href="qthread.html#isFinished">isFinished</a>() and <a href="qthread.html#isRunning">isRunning</a>() to query the state of the thread. Use <a href="qthread.html#wait">wait</a>() to block until the thread has finished execution.</p>
+<p>This will create a <a href="qtcpsocket.html">QTcpSocket</a> in the thread and then execute the thread's event loop. Use the <a href="qthread.html#start">start</a>() method to begin execution. Execution ends when you return from <a href="qthread.html#run">run</a>(), just as an application does when it leaves main(). QThread will notifiy you via a signal when the thread is <a href="qthread.html#started">started</a>(), <a href="qthread.html#finished">finished</a>(), and <a href="qthread.html#terminated">terminated</a>(), or you can use <a href="qthread.html#isFinished">isFinished</a>() and <a href="qthread.html#isRunning">isRunning</a>() to query the state of the thread. Use <a href="qthread.html#wait">wait</a>() to block until the thread has finished execution.</p>
 <p>Each thread gets its own stack from the operating system. The operating system also determines the default size of the stack. You can use <a href="qthread.html#setStackSize">setStackSize</a>() to set a custom stack size.</p>
 <p>Each QThread can have its own event loop. You can start the event loop by calling <a href="qthread.html#exec">exec</a>(); you can stop it by calling <a href="qthread.html#exit">exit</a>() or <a href="qthread.html#quit">quit</a>(). Having an event loop in a thread makes it possible to connect signals from other threads to slots in this thread, using a mechanism called <a href="qt.html#ConnectionType-enum">queued connections</a>. It also makes it possible to use classes that require the event loop, such as <a href="qtimer.html">QTimer</a> and <a href="qtcpsocket.html">QTcpSocket</a>, in the thread. Note, however, that it is not possible to use any widget classes in the thread.</p>
 <p>In extreme cases, you may want to forcibly <a href="qthread.html#terminate">terminate</a>() an executing thread. However, doing so is dangerous and discouraged. Please read the documentation for <a href="qthread.html#terminate">terminate</a>() and <a href="qthread.html#setTerminationEnabled">setTerminationEnabled</a>() for detailed information.</p>
@@ -182,13 +182,14 @@
 <p>Tells the thread's event loop to exit with return code 0 (success). Equivalent to calling QThread::exit(0).</p>
 <p>This function does nothing if the thread does not have an event loop.</p>
 <p>See also <a href="qthread.html#exit">exit</a>() and <a href="qeventloop.html">QEventLoop</a>.</p>
-<h3 class="fn"><a name="runx"></a>void QThread::run ()&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
+<h3 class="fn"><a name="run"></a>void QThread::run ()&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>The starting point for the thread. After calling <a href="qthread.html#start">start</a>(), the newly created thread calls this function. The default implementation simply calls <a href="qthread.html#exec">exec</a>().</p>
 <p>You can reimplemented this function to do other useful work. Returning from this method will end the execution of the thread.</p>
 <p>See also <a href="qthread.html#start">start</a>() and <a href="qthread.html#wait">wait</a>().</p>
 <h3 class="fn"><a name="setPriority"></a>void QThread::setPriority ( <a href="qthread.html#Priority-enum">Priority</a> <i>priority</i> )</h3>
 <p>This function sets the <i>priority</i> for a running thread. If the thread is not running, this function does nothing and returns immediately. Use <a href="qthread.html#start">start</a>() to start a thread with a specific priority.</p>
 <p>The <i>priority</i> argument can be any value in the <tt>QThread::Priority</tt> enum except for <tt>InheritPriorty</tt>.</p>
+<p>The effect of the <i>priority</i> parameter is dependent on the operating system's scheduling policy. In particular, the <i>priority</i> will be ignored on systems that do not support thread priorities (such as on Linux, see http://linux.die.net/man/2/sched_setscheduler for more details).</p>
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qthread.html#Priority-enum">Priority</a>, <a href="qthread.html#priority">priority</a>(), and <a href="qthread.html#start">start</a>().</p>
 <h3 class="fn"><a name="setStackSize"></a>void QThread::setStackSize ( <a href="qtglobal.html#uint-typedef">uint</a> <i>stackSize</i> )</h3>
@@ -207,8 +208,9 @@
 <p>Returns the maximum stack size for the thread (if set with <a href="qthread.html#setStackSize">setStackSize</a>()); otherwise returns zero.</p>
 <p>See also <a href="qthread.html#setStackSize">setStackSize</a>().</p>
 <h3 class="fn"><a name="start"></a>void QThread::start ( <a href="qthread.html#Priority-enum">Priority</a> <i>priority</i> = InheritPriority )&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>Begins execution of the thread by calling <a href="qthread.html#runx">run</a>(), which should be reimplemented in a <a href="qthread.html">QThread</a> subclass to contain your code. The operating system will schedule the thread according to the <i>priority</i> parameter. If the thread is already running, this function does nothing.</p>
-<p>See also <a href="qthread.html#runx">run</a>() and <a href="qthread.html#terminate">terminate</a>().</p>
+<p>Begins execution of the thread by calling <a href="qthread.html#run">run</a>(), which should be reimplemented in a <a href="qthread.html">QThread</a> subclass to contain your code. The operating system will schedule the thread according to the <i>priority</i> parameter. If the thread is already running, this function does nothing.</p>
+<p>The effect of the <i>priority</i> parameter is dependent on the operating system's scheduling policy. In particular, the <i>priority</i> will be ignored on systems that do not support thread priorities (such as on Linux, see http://linux.die.net/man/2/sched_setscheduler for more details).</p>
+<p>See also <a href="qthread.html#run">run</a>() and <a href="qthread.html#terminate">terminate</a>().</p>
 <h3 class="fn"><a name="started"></a>void QThread::started ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the thread starts executing.</p>
 <p>See also <a href="qthread.html#finished">finished</a>() and <a href="qthread.html#terminated">terminated</a>().</p>
@@ -227,8 +229,8 @@
 <h3 class="fn"><a name="wait"></a>bool QThread::wait ( unsigned long <i>time</i> = ULONG_MAX )</h3>
 <p>Blocks the thread until either of these conditions is met:</p>
 <ul>
-<li>The thread associated with this <a href="qthread.html">QThread</a> object has finished execution (i.e&#x2e; when it returns from <a href="qthread.html#runx">run</a>()). This function will return true if the thread has finished. It also returns true if the thread has not been started yet.</li>
-<li><i>time</i> milliseconds has elapsed. If <i>time</i> is ULONG_MAX (the default), then the wait will never timeout (the thread must return from <a href="qthread.html#runx">run</a>()). This function will return false if the wait timed out.</li>
+<li>The thread associated with this <a href="qthread.html">QThread</a> object has finished execution (i.e&#x2e; when it returns from <a href="qthread.html#run">run</a>()). This function will return true if the thread has finished. It also returns true if the thread has not been started yet.</li>
+<li><i>time</i> milliseconds has elapsed. If <i>time</i> is ULONG_MAX (the default), then the wait will never timeout (the thread must return from <a href="qthread.html#run">run</a>()). This function will return false if the wait timed out.</li>
 </ul>
 <p>This provides similar functionality to the POSIX <tt>pthread_join()</tt> function.</p>
 <p>See also <a href="qthread.html#sleep">sleep</a>() and <a href="qthread.html#terminate">terminate</a>().</p>
@@ -238,6 +240,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

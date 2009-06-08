@@ -485,23 +485,7 @@ private:
 class QRasterBuffer
 {
 public:
-#if defined(Q_WS_WIN)
-    QRasterBuffer()
-        : m_hdc(0),
-          m_bitmap(0),
-          m_null_bitmap(0),
-          m_text_buffer(false),
-          m_width(0),
-          m_height(0),
-          m_buffer(0)
-    {
-        init();
-    }
-
-    HDC hdc() const { return m_hdc; }
-#else
     QRasterBuffer() : m_width(0), m_height(0), m_buffer(0) { init(); }
-#endif
 
     ~QRasterBuffer();
 
@@ -514,11 +498,6 @@ public:
 #endif
     void prepare(int w, int h);
     void prepareBuffer(int w, int h);
-
-#ifdef Q_WS_WIN
-    void setupHDC(bool clear_type);
-    inline void setTextBuffer(bool t);
-#endif
 
     void resetBuffer(int val=0);
 
@@ -547,22 +526,12 @@ public:
     QImage colorizeBitmap(const QImage &image, const QColor &color);
 
 private:
-#if defined(Q_WS_WIN)
-    HDC m_hdc;
-    HBITMAP m_bitmap;
-    HBITMAP m_null_bitmap;
-    bool m_text_buffer;
-#endif
     int m_width;
     int m_height;
     int bytes_per_line;
     int bytes_per_pixel;
     uchar *m_buffer;
 };
-
-#ifdef Q_WS_WIN
-inline void QRasterBuffer::setTextBuffer(bool t) { m_text_buffer = t; }
-#endif
 
 inline void QRasterPaintEngine::ensureOutlineMapper() {
     if (d_func()->outlinemapper_xform_dirty)

@@ -48,7 +48,7 @@ QT_BEGIN_NAMESPACE
 using namespace Qt;
 
 /*!
-  \class Q3GridView qgridview.h
+  \class Q3GridView
   \brief The Q3GridView class provides an abstract base for
   fixed-size grids.
 

@@ -64,7 +64,8 @@ QT_FORWARD_DECLARE_CLASS(QMenu)
 - (void)menu:(NSMenu*)menu willHighlightItem:(NSMenuItem*)item;
 - (void)menuWillOpen:(NSMenu*)menu;
 - (void)menuWillClose:(NSMenu*)menu;
-- (BOOL)hasShortcut:(NSMenu *)menu forKey:(NSString *)key forModifiers:(NSUInteger)modifier;
+- (BOOL)hasShortcut:(NSMenu *)menu forKey:(NSString *)key forModifiers:(NSUInteger)modifier
+  whichItem:(NSMenuItem**)outItem;
 - (BOOL)menuHasKeyEquivalent:(NSMenu *)menu forEvent:(NSEvent *)event target:(id *)target action:(SEL *)action;
 @end
 #endif

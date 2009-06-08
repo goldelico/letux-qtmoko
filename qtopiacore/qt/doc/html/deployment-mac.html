@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/deployment.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/deployment.qdoc -->
 <head>
   <title>Qt 4.5: Deploying an Application on Mac OS X</title>
   <link rel="contents" href="deployment.html" />
@@ -142,7 +142,7 @@
          (compatibility version 1.0.0, current version 92.0.0)
  /usr/lib/libSystem.B.dylib
          (compatibility version 1.0.0, current version 88.0.0)</pre>
-<p>For the Qt frameworks, the first line (i.e&#x2e; <tt>path/to/Qt/lib/QtGui.framework/Versions/4.0/QtGui (compatibility version 4.0.0, current version 4.0.1)</tt>) becomes the framework's identification name which is used by the dynamic linker (<tt>dyld</tt>).</p>
+<p>For the Qt frameworks, the first line (i.e&#x2e; <tt>path/to/Qt/lib/QtGui.framework/Versions/4/QtGui (compatibility version 4.0.0, current version 4.0.1)</tt>) becomes the framework's identification name which is used by the dynamic linker (<tt>dyld</tt>).</p>
 <p>But when you are deploying the application, your users may not have the Qt frameworks installed in the specified location. For that reason, you must either provide the frameworks in an agreed upon location, or store the frameworks in the bundle itself. Regardless of which solution you choose, you must make sure that the frameworks return the proper identification name for themselves, and that the application will look for these names. Luckily we can control this with the <tt>install_name_tool</tt> command-line tool.</p>
 <p>The <tt>install_name_tool</tt> works in two modes, <tt>-id</tt> and <tt>-change</tt>. The <tt>-id</tt> mode is for libraries and frameworks, and allows us to specify a new identification name. We use the <tt>-change</tt> mode to change the paths in the application.</p>
 <p>Let's test this out by copying the Qt frameworks into the Plug &amp; Paint bundle. Looking at <tt>otool</tt>'s output for the bundle, we can see that we must copy both the <a href="qtcore.html">QtCore</a> and <a href="qtgui.html">QtGui</a> frameworks into the bundle. We will assume that we are in the directory where we built the bundle.</p>
@@ -294,7 +294,7 @@
 <p>Besides <tt>lipo</tt>, you can also check your binaries with the <tt>file(1)</tt> command line tool or the Finder.</p>
 <a name="the-mac-deployment-tool"></a>
 <h2>The Mac Deployment Tool</h2>
-<a name="macdeploy"></a><p>The Mac deployment tool can be found in QTDIR/bin/macdeploy. It is designed to automate the process of creating a deployable application bundle that contains the Qt libraries as private frameworks.</p>
+<a name="macdeploy"></a><p>The Mac deployment tool can be found in QTDIR/bin/macdeployqt. It is designed to automate the process of creating a deployable application bundle that contains the Qt libraries as private frameworks.</p>
 <p>The mac deployment tool also deploys the Qt plugins, according to the following rules:</p>
 <ul>
 <li>Debug versions of the plugins are not deployed.</li>
@@ -307,6 +307,12 @@
 <li>The accessibility plugin is always deployed.</li>
 <li>Accessibility for <a href="qt3support.html">Qt3Support</a> is deployed if the application uses the <a href="qt3support.html">Qt3Support</a> module.</li>
 </ul>
+<p>macdeployqt supports the following options:</p>
+<ul>
+<li>-no-plugins: Skip plugin deployment</li>
+<li>-dmg : Create a .dmg disk image</li>
+<li>-no-strip : Don't run 'strip' on the binaries</li>
+</ul>
 <p>
 [<a href="deployment.html">Deploying Qt Applications</a>]
 </p>
@@ -314,6 +320,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

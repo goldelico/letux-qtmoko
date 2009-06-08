@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/concurrent/qrunnable.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/concurrent/qrunnable.cpp -->
 <head>
   <title>Qt 4.5: QRunnable Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -25,16 +25,16 @@
 <li><div class="fn"></div><b><a href="qrunnable.html#QRunnable">QRunnable</a></b> ()</li>
 <li><div class="fn"></div>virtual <b><a href="qrunnable.html#dtor.QRunnable">~QRunnable</a></b> ()</li>
 <li><div class="fn"></div>bool <b><a href="qrunnable.html#autoDelete">autoDelete</a></b> () const</li>
-<li><div class="fn"></div>virtual void <b><a href="qrunnable.html#runx">run</a></b> () = 0</li>
+<li><div class="fn"></div>virtual void <b><a href="qrunnable.html#run">run</a></b> () = 0</li>
 <li><div class="fn"></div>void <b><a href="qrunnable.html#setAutoDelete">setAutoDelete</a></b> ( bool <i>autoDelete</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
 <h2>Detailed Description</h2>
 <p>The QRunnable class is the base class for all runnable objects.</p>
-<p>The QRunnable class is an interface for representing a task or piece of code that needs to be executed, represented by your reimplementation of the <a href="qrunnable.html#runx">run</a>() function.</p>
+<p>The QRunnable class is an interface for representing a task or piece of code that needs to be executed, represented by your reimplementation of the <a href="qrunnable.html#run">run</a>() function.</p>
 <p>You can use <a href="qthreadpool.html">QThreadPool</a> to execute your code in a separate thread. <a href="qthreadpool.html">QThreadPool</a> deletes the QRunnable automatically if <a href="qrunnable.html#autoDelete">autoDelete</a>() returns true (the default). Use <a href="qrunnable.html#setAutoDelete">setAutoDelete</a>() to change the auto-deletion flag.</p>
-<p><a href="qthreadpool.html">QThreadPool</a> supports executing the same QRunnable more than once by calling QThreadPool::tryStart(this) from within the <a href="qrunnable.html#runx">run</a>() function. If autoDelete is enabled the QRunnable will be deleted when the last thread exits the run function. Calling <a href="qthreadpool.html#start">QThreadPool::start</a>() multiple times with the same QRunnable when autoDelete is enabled creates a race condition and is not recommended.</p>
+<p><a href="qthreadpool.html">QThreadPool</a> supports executing the same QRunnable more than once by calling QThreadPool::tryStart(this) from within the <a href="qrunnable.html#run">run</a>() function. If autoDelete is enabled the QRunnable will be deleted when the last thread exits the run function. Calling <a href="qthreadpool.html#start">QThreadPool::start</a>() multiple times with the same QRunnable when autoDelete is enabled creates a race condition and is not recommended.</p>
 <p>See also <a href="qthreadpool.html">QThreadPool</a>.</p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -45,19 +45,19 @@
 <p><a href="qrunnable.html">QRunnable</a> virtual destructor.</p>
 <h3 class="fn"><a name="autoDelete"></a>bool QRunnable::autoDelete () const</h3>
 <p>Returns true is auto-deletion is enabled; false otherwise.</p>
-<p>If auto-deletion is enabled, <a href="qthreadpool.html">QThreadPool</a> will automatically delete this runnable after calling <a href="qrunnable.html#runx">run</a>(); otherwise, ownership remains with the application programmer.</p>
+<p>If auto-deletion is enabled, <a href="qthreadpool.html">QThreadPool</a> will automatically delete this runnable after calling <a href="qrunnable.html#run">run</a>(); otherwise, ownership remains with the application programmer.</p>
 <p>See also <a href="qrunnable.html#setAutoDelete">setAutoDelete</a>() and <a href="qthreadpool.html">QThreadPool</a>.</p>
-<h3 class="fn"><a name="runx"></a>void QRunnable::run ()&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
+<h3 class="fn"><a name="run"></a>void QRunnable::run ()&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
 <p>Implement this pure virtual function in your subclass.</p>
 <h3 class="fn"><a name="setAutoDelete"></a>void QRunnable::setAutoDelete ( bool <i>autoDelete</i> )</h3>
 <p>Enables auto-deletion if <i>autoDelete</i> is true; otherwise auto-deletion is disabled.</p>
-<p>If auto-deletion is enabled, <a href="qthreadpool.html">QThreadPool</a> will automatically delete this runnable after calling <a href="qrunnable.html#runx">run</a>(); otherwise, ownership remains with the application programmer.</p>
+<p>If auto-deletion is enabled, <a href="qthreadpool.html">QThreadPool</a> will automatically delete this runnable after calling <a href="qrunnable.html#run">run</a>(); otherwise, ownership remains with the application programmer.</p>
 <p>Note that this flag must be set before calling <a href="qthreadpool.html#start">QThreadPool::start</a>(). Calling this function after <a href="qthreadpool.html#start">QThreadPool::start</a>() results in undefined behavior.</p>
 <p>See also <a href="qrunnable.html#autoDelete">autoDelete</a>() and <a href="qthreadpool.html">QThreadPool</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

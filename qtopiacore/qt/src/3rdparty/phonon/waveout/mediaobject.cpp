@@ -281,6 +281,8 @@ namespace Phonon
 
         bool MediaObject::isSeekable() const
         {
+            if (!m_stream) 
+              return false; 
             return !m_stream->isSequential();
         }
 

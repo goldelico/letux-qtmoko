@@ -170,7 +170,7 @@ void qt_set_null_label_bit(Q3HeaderData *data, int section, bool b)
 }
 
 /*!
-    \class Q3Header q3header.h
+    \class Q3Header
     \brief The Q3Header class provides a header row or column, e.g. for
     tables and listviews.
 

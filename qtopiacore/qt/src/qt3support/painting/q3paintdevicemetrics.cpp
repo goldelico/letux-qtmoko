@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3PaintDeviceMetrics qpaintdevicemetrics.h
+    \class Q3PaintDeviceMetrics
     \brief The Q3PaintDeviceMetrics class provides information about a
     paint device.
 

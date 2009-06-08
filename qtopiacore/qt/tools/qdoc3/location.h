@@ -50,6 +50,8 @@
 
 #include "tr.h"
 
+#define QDOC_QML
+
 QT_BEGIN_NAMESPACE
 
 class Config;

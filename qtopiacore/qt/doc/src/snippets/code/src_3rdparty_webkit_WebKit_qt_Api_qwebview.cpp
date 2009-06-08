@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
     view->page()->history();
 //! [0]
@@ -27,4 +31,5 @@
     view->page()->triggerPageAction(QWebPage::GoForward);
 //! [5]
 
+}
 

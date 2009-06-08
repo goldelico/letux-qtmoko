@@ -313,7 +313,7 @@
     \o This function is not available in Qt Script. Use search() / match() instead.
 
     \row \o String.startsWith()
-    \o This function is not available in Qt Script. Use indexOf() instead.
+    \o This function is not available in Qt Script. Use indexOf() == 0 instead.
 
     \row \o String.upper()
     \o This function is not available in Qt Script. Use toUpperCase() instead.

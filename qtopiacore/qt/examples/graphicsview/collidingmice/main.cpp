@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -82,6 +82,10 @@ int main(int argc, char **argv)
     view.setWindowTitle(QT_TRANSLATE_NOOP(QGraphicsView, "Colliding Mice"));
     view.resize(400, 300);
     view.show();
+
+    QTimer timer;
+    QObject::connect(&timer, SIGNAL(timeout()), &scene, SLOT(advance()));
+    timer.start(1000 / 33);
 
     return app.exec();
 }

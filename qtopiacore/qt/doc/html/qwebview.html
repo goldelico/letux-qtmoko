@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/3rdparty/webkit/WebKit/qt/Api/qwebview.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/3rdparty/webkit/WebKit/qt/Api/qwebview.cpp -->
 <head>
   <title>Qt 4.5: QWebView Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -107,7 +107,7 @@
 <li><div class="fn"></div>virtual QWebView * <b><a href="qwebview.html#createWindow">createWindow</a></b> ( QWebPage::WebWindowType <i>type</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
@@ -261,10 +261,12 @@
 <h3 class="fn"><a name="setContent"></a>void QWebView::setContent ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i>, const <a href="qstring.html">QString</a> &amp; <i>mimeType</i> = QString(), const <a href="qurl.html">QUrl</a> &amp; <i>baseUrl</i> = QUrl() )</h3>
 <p>Sets the content of the web view to the specified content <i>data</i>. If the <i>mimeType</i> argument is empty it is currently assumed that the content is HTML but in future versions we may introduce auto-detection.</p>
 <p>External objects referenced in the content are located relative to <i>baseUrl</i>.</p>
+<p>The <i>data</i> is loaded immediately; external objects are loaded asynchronously.</p>
 <p>See also <a href="qwebview.html#load">load</a>(), <a href="qwebview.html#setHtml">setHtml</a>(), and <a href="qwebframe.html#toHtml">QWebFrame::toHtml</a>().</p>
 <h3 class="fn"><a name="setHtml"></a>void QWebView::setHtml ( const <a href="qstring.html">QString</a> &amp; <i>html</i>, const <a href="qurl.html">QUrl</a> &amp; <i>baseUrl</i> = QUrl() )</h3>
 <p>Sets the content of the web view to the specified <i>html</i>.</p>
 <p>External objects such as stylesheets or images referenced in the HTML document are located relative to <i>baseUrl</i>.</p>
+<p>The <i>html</i> is loaded immediately; external objects are loaded asynchronously.</p>
 <p>When using this method, WebKit assumes that external resources such as JavaScript programs or style sheets are encoded in UTF-8 unless otherwise specified. For example, the encoding of an external script can be specified through the charset attribute of the HTML script tag. Alternatively, the encoding can also be specified by the web server.</p>
 <p>See also <a href="qwebview.html#load">load</a>(), <a href="qwebview.html#setContent">setContent</a>(), and <a href="qwebframe.html#toHtml">QWebFrame::toHtml</a>().</p>
 <h3 class="fn"><a name="setPage"></a>void QWebView::setPage ( <a href="qwebpage.html">QWebPage</a> * <i>page</i> )</h3>
@@ -304,6 +306,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

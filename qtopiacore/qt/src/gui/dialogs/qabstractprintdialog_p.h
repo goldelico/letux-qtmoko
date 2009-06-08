@@ -72,7 +72,7 @@ class QAbstractPrintDialogPrivate : public QDialogPrivate
 
 public:
     QAbstractPrintDialogPrivate()
-        : printer(0), pd(0)
+        : printer(0), pd(0), ownsPrinter(false)
     {
     }
 

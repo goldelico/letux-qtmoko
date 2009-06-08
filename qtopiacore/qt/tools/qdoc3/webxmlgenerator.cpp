@@ -368,6 +368,11 @@ const Atom *WebXMLGenerator::addAtomElements(QXmlStreamWriter &writer,
         writer.writeTextElement("code", trimmedTrailing(plainCode(atom->string())));
         break;
 
+#ifdef QDOC_QML        
+    case Atom::Qml:
+        writer.writeTextElement("qml", trimmedTrailing(plainCode(atom->string())));
+#endif
+        
     case Atom::CodeBad:
         writer.writeTextElement("badcode", trimmedTrailing(plainCode(atom->string())));
         break;

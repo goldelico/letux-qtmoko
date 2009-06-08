@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-  \class Q3MultiLineEdit qmultilineedit.h
+  \class Q3MultiLineEdit
 
   \brief The Q3MultiLineEdit widget is a simple editor for inputting text.
 

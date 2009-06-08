@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/undoframework.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/undoframework.qdoc -->
 <head>
   <title>Qt 4.5: Undo Framework Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -125,6 +125,7 @@
      deleteAction = new QAction(tr(&quot;&amp;Delete Item&quot;), this);
      deleteAction-&gt;setShortcut(tr(&quot;Del&quot;));
      connect(deleteAction, SIGNAL(triggered()), this, SLOT(deleteItem()));
+
      ...
      undoAction = undoStack-&gt;createUndoAction(this, tr(&quot;&amp;Undo&quot;));
      undoAction-&gt;setShortcut(tr(&quot;Ctrl+Z&quot;));
@@ -147,6 +148,7 @@
              this, SLOT(itemMenuAboutToShow()));
      connect(editMenu, SIGNAL(aboutToHide()),
              this, SLOT(itemMenuAboutToHide()));
+
      ...
  }</pre>
 <p>We have to use the <a href="qmenu.html">QMenu</a> <tt>aboutToShow()</tt> and <tt>aboutToHide()</tt> signals since we only want <tt>deleteAction</tt> to be enabled when we have selected an item.</p>
@@ -394,6 +396,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

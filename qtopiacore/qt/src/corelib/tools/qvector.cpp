@@ -401,9 +401,8 @@ int QVectorData::grow(int sizeofTypedData, int size, int sizeofT, bool excessive
 
 /*! \fn void QVector::clear()
 
-    Removes all the elements from the vector.
-
-    Same as resize(0).
+    Removes all the elements from the vector and releases the memory used by
+    the vector.
 */
 
 /*! \fn const T &QVector::at(int i) const
@@ -436,7 +435,8 @@ int QVectorData::grow(int sizeofTypedData, int size, int sizeofT, bool excessive
     Same as at(\a i).
 */
 
-/*! \fn void QVector::append(const T &value)
+/*! 
+    \fn void QVector::append(const T &value)
 
     Inserts \a value at the end of the vector.
 

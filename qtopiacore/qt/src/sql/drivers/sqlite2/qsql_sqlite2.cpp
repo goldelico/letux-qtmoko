@@ -297,6 +297,11 @@ bool QSQLite2Result::reset (const QString& query)
     // we have to fetch one row to find out about
     // the structure of the result set
     d->skippedStatus = d->fetchNext(cache(), 0, true);
+    if (lastError().isValid()) {
+        setSelect(false);
+        setActive(false);
+        return false;
+    }
     setSelect(!d->rInf.isEmpty());
     setActive(true);
     return true;
@@ -537,6 +542,17 @@ QSqlRecord QSQLite2Driver::record(const QString &tbl) const
 QVariant QSQLite2Driver::handle() const
 {
     return qVariantFromValue(d->access);
+}
+
+QString QSQLite2Driver::escapeIdentifier(const QString &identifier, IdentifierType /*type*/) const
+{
+    QString res = identifier;
+    if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('"')) && identifier.right(1) != QString(QLatin1Char('"')) ) {
+        res.replace(QLatin1Char('"'), QLatin1String("\"\""));
+        res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
+        res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    }
+    return res;
 }
 
 QT_END_NAMESPACE

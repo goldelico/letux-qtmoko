@@ -684,9 +684,11 @@ QVariant QSQLiteDriver::handle() const
 QString QSQLiteDriver::escapeIdentifier(const QString &identifier, IdentifierType /*type*/) const
 {
     QString res = identifier;
-    res.replace(QLatin1Char('"'), QLatin1String("\"\""));
-    res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
-    res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('"')) && identifier.right(1) != QString(QLatin1Char('"')) ) {
+        res.replace(QLatin1Char('"'), QLatin1String("\"\""));
+        res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
+        res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    }
     return res;
 }
 

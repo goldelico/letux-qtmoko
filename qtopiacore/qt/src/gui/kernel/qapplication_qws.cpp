@@ -1271,7 +1271,7 @@ void QWSDisplay::Data::waitForQCopResponse()
 #endif
 
 /*!
-    \class QWSDisplay qwsdisplay_qws.h
+    \class QWSDisplay
     \brief The QWSDisplay class provides a display for QWS; it is an internal class.
 
     \internal
@@ -3088,6 +3088,10 @@ bool QApplication::qwsEventFilter(QWSEvent *)
 
     This method is non-portable. It is available \e only in
     Qt for Embedded Linux.
+
+    \note The custom colors will not be used by the default screen
+    driver. To make use of the new colors, implement a custom screen
+    driver, or use QDirectPainter.
 */
 void QApplication::qwsSetCustomColors(QRgb *colorTable, int start, int numColors)
 {

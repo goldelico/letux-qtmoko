@@ -45,6 +45,7 @@ public:
     void handlePaint(QPaintEvent *event);
     void aspectRatioChanged(Phonon::VideoWidget::AspectRatio aspectRatio);
     void scaleModeChanged(Phonon::VideoWidget::ScaleMode scaleMode);
+    void movieSizeChanged(const QSize &movieSize);
     void handleMediaNodeEvent(const MediaNodeEvent *event);
     bool eventFilter(QEvent *);
     bool paintsOnWidget() { return false; }

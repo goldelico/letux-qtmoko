@@ -555,12 +555,15 @@ bool qt_dispatchKeyEventWithCocoa(void * /*NSEvent * */ keyEvent, QWidget *widge
     int keyLength = [keyChars length];
     if (keyLength == 0)
         return false; // Dead Key, nothing to do!
+    bool ignoreText = false;
     Qt::Key qtKey = Qt::Key_unknown;
     if (keyLength == 1) {
         QChar ch([keyChars characterAtIndex:0]);
         if (ch.isLower())
             ch = ch.toUpper();
         qtKey = cocoaKey2QtKey(ch);
+        // Do not set the text for Function-Key Unicodes characters (0xF700–0xF8FF).
+        ignoreText = (ch.unicode() >= 0xF700 && ch.unicode() <= 0xF8FF);
     }
     Qt::KeyboardModifiers keyMods = qt_cocoaModifiers2QtModifiers([event modifierFlags]);
     QString text;
@@ -568,7 +571,7 @@ bool qt_dispatchKeyEventWithCocoa(void * /*NSEvent * */ keyEvent, QWidget *widge
     // To quote from the Carbon port: This is actually wrong--but it is the best that
     // can be done for now because of the Control/Meta mapping issues
     // (we always get text on the Mac)
-    if (!(keyMods & (Qt::ControlModifier | Qt::MetaModifier)))
+    if (!ignoreText && !(keyMods & (Qt::ControlModifier | Qt::MetaModifier)))
         text = QCFString::toQString(reinterpret_cast<CFStringRef>(keyChars));
 
     UInt32 macScanCode = 1;
@@ -1050,6 +1053,31 @@ void *qt_mac_QStringListToNSMutableArrayVoid(const QStringList &list)
         [result addObject:reinterpret_cast<const NSString *>(QCFString::toCFStringRef(list[i]))];
     }
     return result;
+}
+
+void qt_syncCocoaTitleBarButtons(OSWindowRef window, QWidget *widgetForWindow)
+{
+    if (!widgetForWindow)
+        return;
+
+    Qt::WindowFlags flags = widgetForWindow->windowFlags();
+    bool customize = flags & Qt::CustomizeWindowHint;
+
+    NSButton *btn = [window standardWindowButton:NSWindowZoomButton];
+    // BOOL is not an int, so the bitwise AND doesn't work.
+    bool go = uint(customize && !(flags & Qt::WindowMaximizeButtonHint)) == 0;
+    [btn setEnabled:go];
+
+    btn = [window standardWindowButton:NSWindowMiniaturizeButton];
+    go = uint(customize && !(flags & Qt::WindowMinimizeButtonHint)) == 0;
+    [btn setEnabled:go];
+
+    btn = [window standardWindowButton:NSWindowCloseButton];
+    go = uint(customize && !(flags & Qt::WindowSystemMenuHint
+                             || flags & Qt::WindowCloseButtonHint)) == 0;
+    [btn setEnabled:go];
+
+    [window setShowsToolbarButton:uint(flags & Qt::MacWindowToolBarButtonHint) != 0];
 }
 
 // Carbon: Make sure you call QDEndContext on the context when done with it.

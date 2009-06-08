@@ -243,7 +243,7 @@ QVariant QAccessibleAbstractSpinBox::invokeMethodEx(Method method, int child, co
 
 
 /*!
-  \class QAccessibleSpinBox qaccessiblewidget.h
+  \class QAccessibleSpinBox
   \brief The QAccessibleSpinBox class implements the QAccessibleInterface for spinbox widgets.
   \internal
 
@@ -466,7 +466,7 @@ QAccessible::State QAccessibleDoubleSpinBox::state(int child) const
 
 #ifndef QT_NO_SCROLLBAR
 /*!
-  \class QAccessibleScrollBar qaccessiblewidget.h
+  \class QAccessibleScrollBar
   \brief The QAccessibleScrollBar class implements the QAccessibleInterface for scroll bars.
   \internal
 
@@ -626,7 +626,7 @@ QAccessible::State QAccessibleScrollBar::state(int child) const
 
 #ifndef QT_NO_SLIDER
 /*!
-  \class QAccessibleSlider qaccessiblewidget.h
+  \class QAccessibleSlider
   \brief The QAccessibleSlider class implements the QAccessibleInterface for sliders.
   \internal
 

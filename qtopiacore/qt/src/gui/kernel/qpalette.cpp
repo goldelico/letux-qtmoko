@@ -393,7 +393,7 @@ void QPalette::setColorGroup(ColorGroup cg, const QColorGroup &g)
 */
 
 /*!
-    \class QPalette qpalette.h
+    \class QPalette
 
     \brief The QPalette class contains color groups for each widget state.
 

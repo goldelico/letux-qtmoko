@@ -109,7 +109,10 @@
     \snippet examples/richtext/textobject/svgtextobject.cpp 0
 
     \c intrinsicSize() is called by the layout to calculate the size
-    of the text object.
+    of the text object. Notice that we have drawn the SVG image on a
+    QImage. This is because SVG rendering is quite expensive. The
+    example would lag seriously for large images if we drew them
+    with a QSvgRenderer each time.
 
     \snippet examples/richtext/textobject/svgtextobject.cpp 1
 
@@ -155,9 +158,10 @@
 
     \snippet examples/richtext/textobject/window.cpp 2
 
-    We use \l{QTextFormat::}{setProperty()} to store the \c .svg
-    file data in the in the QTextCharFormat. We can retrieve it
-    later with \l{QTextCharFormat::}{property()}.
+    To speed things up, we buffer the SVG image in a QImage.  We use
+    \l{QTextFormat::}{setProperty()} to store the QImage in the in the
+    QTextCharFormat. We can retrieve it later with
+    \l{QTextCharFormat::}{property()}.
 
     We insert the char format in the standard way - using a
     QTextCursor. Notice that we use the special QChar

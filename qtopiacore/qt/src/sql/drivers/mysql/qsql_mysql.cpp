@@ -669,6 +669,7 @@ bool QMYSQLResult::reset (const QString& query)
             MYSQL_FIELD* field = mysql_fetch_field_direct(d->result, i);
             d->fields[i].type = qDecodeMYSQLType(field->type, field->flags);
         }
+        setAt(QSql::BeforeFirstRow);
     }
     setActive(true);
     return isActive();
@@ -1435,8 +1436,10 @@ QString QMYSQLDriver::formatValue(const QSqlField &field, bool trimStrings) cons
 QString QMYSQLDriver::escapeIdentifier(const QString &identifier, IdentifierType) const
 {
     QString res = identifier;
-    res.prepend(QLatin1Char('`')).append(QLatin1Char('`'));
-    res.replace(QLatin1Char('.'), QLatin1String("`.`"));
+    if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('`')) && identifier.right(1) != QString(QLatin1Char('`')) ) {
+        res.prepend(QLatin1Char('`')).append(QLatin1Char('`'));
+        res.replace(QLatin1Char('.'), QLatin1String("`.`"));
+    }
     return res;
 }
 

@@ -596,7 +596,7 @@ int QMetaCallEvent::placeMetaCall(QObject *object)
     and setProperty() to write them.
 
     From Qt 4.3, dynamic properties are supported by
-    \l{Qt Designer's Widget Editing Mode#The PropertyEditor}{Qt Designer},
+    \l{Qt Designer's Widget Editing Mode#The Property Editor}{Qt Designer},
     and both standard Qt widgets and user-created forms can be given dynamic
     properties.
 
@@ -1121,13 +1121,13 @@ bool QObject::event(QEvent *e)
         QThreadData *threadData = d->threadData;
         QAbstractEventDispatcher *eventDispatcher = threadData->eventDispatcher;
         if (eventDispatcher) {
-            // set inThreadChangeEvent to true to tell the dispatcher not to release out timer ids
-            // back to the pool (since the timer ids are moving to a new thread).
-            d->inThreadChangeEvent = true;
             QList<QPair<int, int> > timers = eventDispatcher->registeredTimers(this);
-            d->inThreadChangeEvent = false;
             if (!timers.isEmpty()) {
+                // set inThreadChangeEvent to true to tell the dispatcher not to release out timer ids
+                // back to the pool (since the timer ids are moving to a new thread).
+                d->inThreadChangeEvent = true;
                 eventDispatcher->unregisterTimers(this);
+                d->inThreadChangeEvent = false;
                 QMetaObject::invokeMethod(this, "_q_reregisterTimers", Qt::QueuedConnection,
                                           Q_ARG(void*, (new QList<QPair<int, int> >(timers))));
             }
@@ -2020,34 +2020,86 @@ void QObject::deleteLater()
 /*!
     \fn QString QObject::tr(const char *sourceText, const char *disambiguation, int n)
     \reentrant
-    \since 4.5
 
-    Returns a translated version of \a sourceText, or \a sourceText
-    itself if there is no appropriate translated version.
+    Returns a translated version of \a sourceText, optionally based on a
+    \a disambiguation string and value of \a n for strings containing plurals;
+    otherwise returns \a sourceText itself if no appropriate translated string
+    is available.
 
-    The translation context is QObject.
-    All QObject subclasses using the Q_OBJECT macro automatically have
-    a reimplementation of this function with the subclass name as
+    See the sections below on Disambiguation and Handling Plurals for more
+    information about the optional \a disambiguation and \a n parameters.
+
+    QObject and its subclasses obtain translated strings from any translator
+    objects that have been installed on the application object; see the
+    QTranslator documentation for details about this mechanism.
+
+    A translatable string is referenced by its translation context;
+    this is the name of the QObject subclass whose tr() function is invoked,
+    as in the following example:
+
+    \snippet mainwindows/sdi/mainwindow.cpp implicit tr context
+    \dots
+
+    Here, the context is \c MainWindow because it is the \c MainWindow::tr()
+    function that is invoked. Translation contexts can be given explicitly
+    by fully qualifying the call to tr(); for example:
+
+    \snippet doc/src/snippets/code/src_corelib_kernel_qobject.cpp explicit tr context
+
+    This call obtains the translated text for "Page up" from the \c QScrollBar
     context.
 
-    If the same \a sourceText is used in different roles within the
-    same context, an additional identifying string may be passed in
-    \a disambiguation (0 by default).
+    \section1 Defining Translation Contexts
 
-    While \a disambiguation can also be used to provide additional
-    information to the translator, the proper way to do it is to annotate
-    the tr() calls with comments of the form //: ... or /\c{*}: ... \c{*}/.
+    The translation context for QObject and each QObject subclass is the
+    class name itself. Developers subclassing QObject must use the
+    Q_OBJECT macro in their class definition to override the translation
+    context. This macro sets the context to the name of the subclass.
 
-    Example:
+    If Q_OBJECT is not used in a class definition, the context will be
+    inherited from the base class. For example, since all QObject-based
+    classes in Qt provide a context, a new QWidget subclass defined without
+    a Q_OBJECT macro will use the "QWidget" context if its tr() function
+    is invoked.
+
+    \section1 Translator Comments
+
+    Developers can include information about each translatable string to
+    help translators with the translation process. These are extracted
+    when \l lupdate is used to process the source files. The recommended
+    way to add comments is to annotate the tr() calls in your code with
+    comments of the form:
+
+    \tt{//: ...}
+
+    or
+
+    \tt{/*: ... \starslash}
+
+    Examples:
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qobject.cpp 40
 
-    You can set the encoding for \a sourceText by calling QTextCodec::setCodecForTr().
-    By default \a sourceText is assumed to be in Latin-1 encoding.
+    In these examples, the comments will be associated with the strings
+    passed to tr() in the context of each call.
+
+    \section1 Disambiguation
+
+    If the same \a sourceText is used in different roles within the
+    same context, an additional identifying string may be passed in
+    \a disambiguation (0 by default). In Qt 4.4 and earlier, this was
+    the preferred way to pass comments to translators.
 
     Example:
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qobject.cpp 17
+
+    \section1 Character Encodings
+
+    You can set the encoding for \a sourceText by calling QTextCodec::setCodecForTr().
+    By default \a sourceText is assumed to be in Latin-1 encoding.
+
+    \section1 Handling Plurals
 
     If \a n >= 0, all occurrences of \c %n in the resulting string
     are replaced with a decimal representation of \a n. In addition,
@@ -2069,7 +2121,7 @@ void QObject::deleteLater()
     \row    \o 37   \o "37 message(s) saved" \o "37 message\bold{s} sauvegard\unicode{0xE9}\bold{s}" \o "37 message\bold{s} saved"
     \endtable
 
-    This idiom is more flexible than the traditional approach, i.e.,
+    This idiom is more flexible than the traditional approach; e.g.,
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qobject.cpp 19
 
@@ -2080,8 +2132,8 @@ void QObject::deleteLater()
     See the \l{Qt Linguist Manual} for details.
 
     Instead of \c %n, you can use \c %Ln to produce a localized
-    representation of \a n. The conversion uses the default local,
-    set using QLocal::setDefault(). (If no default locale was
+    representation of \a n. The conversion uses the default locale,
+    set using QLocale::setDefault(). (If no default locale was
     specified, the "C" locale is used.)
 
     \warning This method is reentrant only if all translators are
@@ -2095,7 +2147,6 @@ void QObject::deleteLater()
 /*!
     \fn QString QObject::trUtf8(const char *sourceText, const char *disambiguation, int n)
     \reentrant
-    \since 4.5
 
     Returns a translated version of \a sourceText, or
     QString::fromUtf8(\a sourceText) if there is no appropriate

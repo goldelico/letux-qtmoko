@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 Q3DateEdit *dateEdit = new Q3DateEdit(QDate::currentDate(), this);
 dateEdit->setRange(QDate::currentDate().addDays(-365),
@@ -19,3 +23,6 @@ Q3DateTimeEdit *dateTimeEdit = new Q3DateTimeEdit(QDateTime::currentDateTime(), 
 dateTimeEdit->dateEdit()->setRange(QDateTime::currentDate(),
                                     QDateTime::currentDate().addDays(7));
 //! [2]
+
+}
+

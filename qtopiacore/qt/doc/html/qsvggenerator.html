@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/svg/qsvggenerator.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/svg/qsvggenerator.cpp -->
 <head>
   <title>Qt 4.5: QSvgGenerator Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -73,7 +73,24 @@
 <hr />
 <h2>Detailed Description</h2>
 <p>The QSvgGenerator class provides a paint device that is used to create SVG drawings.</p>
-<p>See also <a href="qsvgrenderer.html">QSvgRenderer</a> and <a href="qsvgwidget.html">QSvgWidget</a>.</p>
+<p>This paint device represents a Scalable Vector Graphics (SVG) drawing. Like <a href="qprinter.html">QPrinter</a>, it is designed as a write-only device that generates output in a specific format.</p>
+<p>To write an SVG file, you first need to configure the output by setting the <a href="qsvggenerator.html#fileName-prop">fileName</a> or <a href="qsvggenerator.html#outputDevice-prop">outputDevice</a> properties. It is usually necessary to specify the size of the drawing by setting the <a href="qsvggenerator.html#size-prop">size</a> property, and in some cases where the drawing will be included in another, the <a href="qsvggenerator.html#viewBox-prop">viewBox</a> property also needs to be set.</p>
+<pre>     QSvgGenerator generator;
+     generator.setFileName(path);
+     generator.setSize(QSize(200, 200));
+     generator.setViewBox(QRect(0, 0, 200, 200));
+     generator.setTitle(tr(&quot;SVG Generator Example Drawing&quot;));
+     generator.setDescription(tr(&quot;An SVG drawing created by the SVG Generator &quot;
+                                 &quot;Example provided with Qt.&quot;));</pre>
+<p>Other meta-data can be specified by setting the <i>title</i>, <i>description</i> and <i>resolution</i> properties.</p>
+<p>As with other <a href="qpaintdevice.html">QPaintDevice</a> subclasses, a <a href="qpainter.html">QPainter</a> object is used to paint onto an instance of this class:</p>
+<pre>     QPainter painter;
+     painter.begin(&amp;generator);
+     ...
+     painter.end();</pre>
+<p>Painting is performed in the same way as for any other paint device. However, it is necessary to use the <a href="qpainter.html#begin">QPainter::begin</a>() and <a href="qpainter.html#end">end()</a> to explicitly begin and end painting on the device.</p>
+<p>The <a href="painting-svggenerator.html">SVG Generator Example</a> shows how the same painting commands can be used for painting a widget and writing an SVG file.</p>
+<p>See also <a href="qsvgrenderer.html">QSvgRenderer</a>, <a href="qsvgwidget.html">QSvgWidget</a>, and <a href="http://www.w3.org/Graphics/SVG/About.html">About SVG</a>.</p>
 <hr />
 <h2>Property Documentation</h2>
 <h3 class="fn"><a name="description-prop"></a>description : <a href="qstring.html">QString</a></h3>
@@ -163,6 +180,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

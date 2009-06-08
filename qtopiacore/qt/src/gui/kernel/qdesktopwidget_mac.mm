@@ -119,7 +119,11 @@ QRect QDesktopWidgetImplementation::availableRect(int screenIndex) const
         screenIndex = appScreen;
 
     NSRect r = [[displays objectAtIndex:screenIndex] visibleFrame];
-    return QRectF(r.origin.x, flipYCoordinate(r.origin.y + r.size.height),
+    NSRect primaryRect = [[displays objectAtIndex:0] frame];
+
+    const int flippedY = - r.origin.y +                // account for position offset and
+              primaryRect.size.height - r.size.height; // height difference.
+    return QRectF(r.origin.x, flippedY,
             r.size.width, r.size.height).toRect();
 }
 
@@ -129,10 +133,11 @@ QRect QDesktopWidgetImplementation::screenRect(int screenIndex) const
         screenIndex = appScreen;
 
     NSRect r = [[displays objectAtIndex:screenIndex] frame];
-    // Do the equivalent of flipYCoordinate() "inline" since that function depends on screenGeometry()
-    // working and that's what we are doing right here.
     NSRect primaryRect = [[displays objectAtIndex:0] frame];
-    return QRectF(r.origin.x, (r.origin.y + r.size.height) - primaryRect.size.height,
+
+    const int flippedY = - r.origin.y +                // account for position offset and
+              primaryRect.size.height - r.size.height; // height difference.
+    return QRectF(r.origin.x, flippedY,
             r.size.width, r.size.height).toRect();
 }
 

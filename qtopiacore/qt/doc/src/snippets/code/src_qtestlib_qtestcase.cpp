@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 QVERIFY(1 + 1 == 2);
 //! [0]
@@ -179,3 +183,6 @@ void MyTestClass::cleanup()
 //! [23]
 QTest::qSleep(250);
 //! [23]
+
+}
+

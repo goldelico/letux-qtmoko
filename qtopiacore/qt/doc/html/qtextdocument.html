@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/text/qtextdocument.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/text/qtextdocument.cpp -->
 <head>
   <title>Qt 4.5: QTextDocument Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -173,7 +173,7 @@
 <p>QTextDocument is a container for structured rich text documents, providing support for styled text and various types of document elements, such as lists, tables, frames, and images. They can be created for use in a <a href="qtextedit.html">QTextEdit</a>, or used independently.</p>
 <p>Each document element is described by an associated format object. Each format object is treated as a unique object by QTextDocuments, and can be passed to <a href="qtextdocument.html#objectForFormat">objectForFormat</a>() to obtain the document element that it is applied to.</p>
 <p>A QTextDocument can be edited programmatically using a <a href="qtextcursor.html">QTextCursor</a>, and its contents can be examined by traversing the document structure. The entire document structure is stored as a hierarchy of document elements beneath the root frame, found with the <a href="qtextdocument.html#rootFrame">rootFrame</a>() function. Alternatively, if you just want to iterate over the textual contents of the document you can use <a href="qtextdocument.html#begin">begin</a>(), <a href="qtextdocument.html#end">end</a>(), and <a href="qtextdocument.html#findBlock">findBlock</a>() to retrieve text blocks that you can examine and iterate over.</p>
-<p>The layout of a document is determined by the <a href="qtextdocument.html#documentLayout">documentLayout</a>(); you can create your own <a href="qabstracttextdocumentlayout.html">QAbstractTextDocumentLayout</a> subclass and set it using <a href="qtextdocument.html#setDocumentLayout">setDocumentLayout</a>() if you want to use your own layout logic. The document's title can be obtained by calling the documentTitle() function.</p>
+<p>The layout of a document is determined by the <a href="qtextdocument.html#documentLayout">documentLayout</a>(); you can create your own <a href="qabstracttextdocumentlayout.html">QAbstractTextDocumentLayout</a> subclass and set it using <a href="qtextdocument.html#setDocumentLayout">setDocumentLayout</a>() if you want to use your own layout logic. The document's title and other meta-information can be obtained by calling the <a href="qtextdocument.html#metaInformation">metaInformation</a>() function. For documents that are exposed to users through the <a href="qtextedit.html">QTextEdit</a> class, the document title is also available via the <a href="qtextedit.html#documentTitle-prop">QTextEdit::documentTitle</a>() function.</p>
 <p>The <a href="qtextdocument.html#toPlainText">toPlainText</a>() and <a href="qtextdocument.html#toHtml">toHtml</a>() convenience functions allow you to retrieve the contents of the document as plain text and HTML. The document's text can be searched using the <a href="qtextdocument.html#find">find</a>() functions.</p>
 <p>Undo/redo of operations performed on the document can be controlled using the <a href="qtextdocument.html#undoRedoEnabled-prop">setUndoRedoEnabled</a>() function. The undo/redo system can be controlled by an editor widget through the <a href="qtextdocument.html#undo">undo</a>() and <a href="qtextdocument.html#redo">redo</a>() slots; the document also provides <a href="qtextdocument.html#contentsChanged">contentsChanged</a>(), <a href="qtextdocument.html#undoAvailable">undoAvailable</a>(), and <a href="qtextdocument.html#redoAvailable">redoAvailable</a>() signals that inform connected editor widgets about the state of the undo/redo system.</p>
 <p>See also <a href="qtextcursor.html">QTextCursor</a>, <a href="qtextedit.html">QTextEdit</a>, and <a href="richtext.html">Rich Text Processing</a>.</p>
@@ -546,6 +546,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

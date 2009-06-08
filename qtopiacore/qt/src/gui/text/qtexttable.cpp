@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class QTextTableCell qtexttable.h
+    \class QTextTableCell
     \reentrant
 
     \brief The QTextTableCell class represents the properties of a
@@ -487,7 +487,7 @@ void QTextTablePrivate::update() const
 
 
 /*!
-    \class QTextTable qtexttable.h
+    \class QTextTable
     \reentrant
 
     \brief The QTextTable class represents a table in a QTextDocument.
@@ -553,7 +553,7 @@ void QTextTablePrivate::update() const
 /*! \internal
  */
 QTextTable::QTextTable(QTextDocument *doc)
-    : QTextFrame(*new QTextTablePrivate, doc)
+    : QTextFrame(*new QTextTablePrivate(doc), doc)
 {
 }
 

@@ -329,11 +329,12 @@ bool qt_get_named_rgb(const char *name, QRgb* rgb)
     if(len > 255)
         return false;
     char name_no_space[256];
-    for(int o = 0, i = 0; i < len; i++) {
+    int pos = 0;
+    for(int i = 0; i < len; i++) {
         if(name[i] != '\t' && name[i] != ' ')
-            name_no_space[o++] = name[i];
+            name_no_space[pos++] = name[i];
     }
-    name_no_space[len] = 0;
+    name_no_space[pos] = 0;
 
     return get_named_rgb(name_no_space, rgb);
 }
@@ -343,12 +344,12 @@ bool qt_get_named_rgb(const QChar *name, int len, QRgb *rgb)
     if(len > 255)
         return false;
     char name_no_space[256];
-    for(int o = 0, i = 0; i < len; i++) {
+    int pos = 0;
+    for(int i = 0; i < len; i++) {
         if(name[i] != QLatin1Char('\t') && name[i] != QLatin1Char(' '))
-            name_no_space[o++] = name[i].toLatin1();
+            name_no_space[pos++] = name[i].toLatin1();
     }
-    name_no_space[len] = 0;
-
+    name_no_space[pos] = 0;
     return get_named_rgb(name_no_space, rgb);
 }
 

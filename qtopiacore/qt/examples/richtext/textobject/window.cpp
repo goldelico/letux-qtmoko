@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include <QtGui>
+#include <QtSvg>
 
 #include "window.h"
 #include "svgtextobject.h"
@@ -68,7 +69,13 @@ void Window::insertTextObject()
 //![2]
     QTextCharFormat svgCharFormat;
     svgCharFormat.setObjectType(SvgTextFormat);
-    svgCharFormat.setProperty(SvgData, svgData);
+    QSvgRenderer renderer(svgData);
+
+    QImage svgBufferImage(renderer.defaultSize(), QImage::Format_ARGB32);
+    QPainter painter(&svgBufferImage);
+    renderer.render(&painter, svgBufferImage.rect());
+
+    svgCharFormat.setProperty(SvgData, svgBufferImage);
 
     QTextCursor cursor = textEdit->textCursor();
     cursor.insertText(QString(QChar::ObjectReplacementCharacter), svgCharFormat);

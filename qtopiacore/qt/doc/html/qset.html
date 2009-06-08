@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qset.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qset.qdoc -->
 <head>
   <title>Qt 4.5: QSet Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -91,8 +91,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-lt-lt-81">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-gt-gt-50">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-lt-lt-162">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-gt-gt-93">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -127,7 +127,7 @@
  foreach (QString value, set)
      qDebug() &lt;&lt; value;</pre>
 <p>Items can be removed from the set using <a href="qset.html#remove">remove</a>(). There is also a <a href="qset.html#clear">clear</a>() function that removes all items.</p>
-<p>QSet's value data type must be an <a href="containers.html#assignable-data-type">assignable data type</a>. You cannot, for example, store a <a href="qwidget.html">QWidget</a> as a value; instead, store a <a href="qwidget.html">QWidget</a> *. In addition, the type must provide <tt>operator==()</tt>, and there must also be a global <a href="qsourcelocation.html#qHash">qHash</a>() function that returns a hash value for an argument of the key's type. See the <a href="qhash.html">QHash</a> documentation for a list of types supported by <a href="qsourcelocation.html#qHash">qHash</a>().</p>
+<p>QSet's value data type must be an <a href="containers.html#assignable-data-type">assignable data type</a>. You cannot, for example, store a <a href="qwidget.html">QWidget</a> as a value; instead, store a <a href="qwidget.html">QWidget</a> *. In addition, the type must provide <tt>operator==()</tt>, and there must also be a global <a href="qhash.html#qHash">qHash</a>() function that returns a hash value for an argument of the key's type. See the <a href="qhash.html">QHash</a> documentation for a list of types supported by <a href="qhash.html#qHash">qHash</a>().</p>
 <p>Internally, QSet uses a hash table to perform lookups. The hash table automatically grows and shrinks to provide fast lookups without wasting memory. You can still control the size of the hash table by calling <a href="qset.html#reserve">reserve</a>(), if you already know approximately how many elements the QSet will contain, but this isn't necessary to obtain good performance. You can also call <a href="qset.html#capacity">capacity</a>() to retrieve the hash table's size.</p>
 <p>See also <a href="qsetiterator.html">QSetIterator</a>, <a href="qmutablesetiterator.html">QMutableSetIterator</a>, <a href="qhash.html">QHash</a>, and <a href="qmap.html">QMap</a>.</p>
 <hr />
@@ -325,11 +325,11 @@
 <p>See also <a href="qset.html#insert">insert</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-81"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-162"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</h3>
 <p>Writes the <i>set</i> to stream <i>out</i>.</p>
 <p>This function requires the value type to implement <tt>operator&lt;&lt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-50"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-93"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</h3>
 <p>Reads a set from stream <i>in</i> into <i>set</i>.</p>
 <p>This function requires the value type to implement <tt>operator&gt;&gt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
@@ -337,6 +337,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

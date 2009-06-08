@@ -51,6 +51,11 @@
     \l{Other Licenses Used in Qt}{code used in Qt} document, these
     libraries are supplied alongside the Qt modules.
 
+    Third Party Software may impose additional restrictions and it is the
+    user's responsibility to ensure that they have met the licensing
+    requirements of the GPL, LGPL, or Qt Commercial license and the relevant
+    license of the Third Party Software they are using.
+
     Run \c{configure -help} to see any options that may be available for
     controlling the use of these libraries.
 

@@ -1078,7 +1078,7 @@ static void delete_d( const Q3Ftp* foo )
  *
  *********************************************************************/
 /*!
-    \class Q3Ftp q3ftp.h
+    \class Q3Ftp
     \brief The Q3Ftp class provides an implementation of the FTP protocol.
 
     \compat
@@ -1857,7 +1857,7 @@ bool Q3Ftp::hasPendingCommands() const
 /*!
     Deletes all pending commands from the list of scheduled commands.
     This does not affect the command that is being executed. If you
-    want to stop this this as well, use abort().
+    want to stop this as well, use abort().
 
     \sa hasPendingCommands() abort()
 */

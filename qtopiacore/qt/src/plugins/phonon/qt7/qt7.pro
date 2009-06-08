@@ -39,6 +39,7 @@ HEADERS += $$PHONON_QUICKTIME_DIR/medianode.h \
 	 	$$PHONON_QUICKTIME_DIR/audiodevice.h \
 	 	$$PHONON_QUICKTIME_DIR/backendinfo.h \
 	 	$$PHONON_QUICKTIME_DIR/audioconnection.h \
+	 	$$PHONON_QUICKTIME_DIR/audiopartoutput.h \
 	   	$$PHONON_QUICKTIME_DIR/videoframe.h \
 	 	$$PHONON_QUICKTIME_DIR/audiosplitter.h \
 	 	$$PHONON_QUICKTIME_DIR/audioeffects.h \

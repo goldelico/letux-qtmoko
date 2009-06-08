@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Button qbutton.h
+    \class Q3Button
     \brief The Q3Button class is a compatibility base class of button
     widgets
 

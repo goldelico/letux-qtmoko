@@ -43,12 +43,11 @@
 #define QDIRECTFBSCREEN_H
 
 #include <QtGui/qscreen_qws.h>
+#include <directfb.h>
 
 QT_BEGIN_HEADER
 
 QT_MODULE(Gui)
-
-#include <directfb.h>
 
 #define Q_DIRECTFB_VERSION ((DIRECTFB_MAJOR_VERSION << 16) | (DIRECTFB_MINOR_VERION << 8) | DIRECTFB_MICRO_VERSION)
 
@@ -77,8 +76,9 @@ public:
     QWSWindowSurface* createSurface(const QString &key) const;
 
     static inline QDirectFBScreen* instance() {
-        Q_ASSERT(QScreen::instance()->classId() == QScreen::DirectFBClass);
-        return static_cast<QDirectFBScreen*>(QScreen::instance());
+        QScreen *inst = QScreen::instance();
+        Q_ASSERT(!inst || inst->classId() == QScreen::DirectFBClass);
+        return static_cast<QDirectFBScreen*>(inst);
     }
 
     IDirectFB* dfb();
@@ -88,16 +88,38 @@ public:
 #endif
 
     // Track surface creation/release so we can release all on exit
-    IDirectFBSurface* createDFBSurface(const DFBSurfaceDescription* desc);
+    enum SurfaceCreationOption {
+        DontTrackSurface = 0,
+        TrackSurface = 1
+    };
+    Q_DECLARE_FLAGS(SurfaceCreationOptions, SurfaceCreationOption);
+    IDirectFBSurface *createDFBSurface(const DFBSurfaceDescription *desc,
+                                       SurfaceCreationOptions options);
+    IDirectFBSurface *createDFBSurface(const QImage &image,
+                                       SurfaceCreationOptions options);
+    IDirectFBSurface *createDFBSurface(const QSize &size,
+                                       QImage::Format format,
+                                       SurfaceCreationOptions options);
+    IDirectFBSurface *copyDFBSurface(IDirectFBSurface *src,
+                                     QImage::Format format,
+                                     SurfaceCreationOptions options);
+    IDirectFBSurface *copyToDFBSurface(const QImage &image,
+                                     QImage::Format format,
+                                     SurfaceCreationOptions options);
     void releaseDFBSurface(IDirectFBSurface* surface);
+
+    bool preferVideoOnly() const;
 
     static int depth(DFBSurfacePixelFormat format);
 
-    static DFBSurfacePixelFormat getSurfacePixelFormat(const QImage &image);
+    static DFBSurfacePixelFormat getSurfacePixelFormat(QImage::Format format);
     static DFBSurfaceDescription getSurfaceDescription(const QImage &image);
     static DFBSurfaceDescription getSurfaceDescription(const uint *buffer,
                                                        int length);
-    static QImage::Format getImageFormat(DFBSurfacePixelFormat  format);
+    static QImage::Format getImageFormat(IDirectFBSurface *surface);
+    static bool initSurfaceDescriptionPixelFormat(DFBSurfaceDescription *description, QImage::Format format);
+    static inline bool isPremultiplied(QImage::Format format);
+    QImage::Format alphaPixmapFormat() const;
 
 #ifndef QT_NO_DIRECTFB_PALETTE
     static void setSurfaceColorTable(IDirectFBSurface *surface,
@@ -111,6 +133,24 @@ private:
 
     QDirectFBScreenPrivate *d_ptr;
 };
+
+Q_DECLARE_OPERATORS_FOR_FLAGS(QDirectFBScreen::SurfaceCreationOptions);
+
+inline bool QDirectFBScreen::isPremultiplied(QImage::Format format)
+{
+    switch (format) {
+    case QImage::Format_ARGB32_Premultiplied:
+    case QImage::Format_ARGB8565_Premultiplied:
+    case QImage::Format_ARGB6666_Premultiplied:
+    case QImage::Format_ARGB8555_Premultiplied:
+    case QImage::Format_ARGB4444_Premultiplied:
+        return true;
+    default:
+        break;
+    }
+    return false;
+}
+
 
 QT_END_HEADER
 

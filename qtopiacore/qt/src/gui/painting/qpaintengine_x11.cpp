@@ -61,6 +61,8 @@
 #include <private/qtextengine_p.h>
 #include <private/qpaintengine_x11_p.h>
 #include <private/qfontengine_x11_p.h>
+#include <private/qwidget_p.h>
+#include <private/qpainterpath_p.h>
 
 #include "qpen.h"
 #include "qcolor.h"
@@ -524,6 +526,18 @@ bool QX11PaintEngine::begin(QPaintDevice *pdev)
                       pdev->width() + 2*BUFFERZONE, pdev->height() + 2*BUFFERZONE);
     d->polygonClipper.setBoundingRect(devClipRect);
 
+    if (isAlienWidget) {
+        // Set system clip for alien widgets painting outside the paint event.
+        // This is not a problem with native windows since the windowing system
+        // will handle the clip.
+        QWidgetPrivate *wd = w->d_func();
+        QRegion widgetClip(wd->clipRect());
+        wd->clipToEffectiveMask(widgetClip);
+        wd->subtractOpaqueSiblings(widgetClip);
+        widgetClip.translate(w->mapTo(w->nativeParentWidget(), QPoint()));
+        setSystemClip(widgetClip);
+    }
+
     QPixmap::x11SetDefaultScreen(d->xinfo->screen());
 
     if (w && w->testAttribute(Qt::WA_PaintUnclipped)) {  // paint direct on device
@@ -569,6 +583,10 @@ bool QX11PaintEngine::end()
         XFreeGC(d->dpy, d->gc);
         d->gc = 0;
     }
+
+    // Restore system clip for alien widgets painting outside the paint event.
+    if (d->pdev->devType() == QInternal::Widget && !static_cast<QWidget *>(d->pdev)->internalWinId())
+        setSystemClip(QRegion());
 
     return true;
 }
@@ -1079,8 +1097,8 @@ void QX11PaintEngine::updateState(const QPaintEngineState &state)
         updateClipRegion_dev(QRegion(clipped_poly_dev.toPolygon(), state.clipPath().fillRule()),
                              state.clipOperation());
     } else if (flags & DirtyClipRegion) {
-        QPainterPath clip_path;
-        clip_path.addRegion(state.clipRegion());
+        extern QPainterPath qt_regionToPath(const QRegion &region);
+        QPainterPath clip_path = qt_regionToPath(state.clipRegion());
         QPolygonF clip_poly_dev(d->matrix.map(clip_path.toFillPolygon()));
         QPolygonF clipped_poly_dev;
         d->clipPolygon_dev(clip_poly_dev, &clipped_poly_dev);
@@ -1462,14 +1480,10 @@ void QX11PaintEngine::drawEllipse(const QRect &rect)
         return;
     }
     d->setupAdaptedOrigin(rect.topLeft());
-    if (d->has_brush) {          // draw filled ellipse
-        if (!d->has_pen) {
-            XFillArc(d->dpy, d->hd, d->gc_brush, x, y, w-1, h-1, 0, 360*64);
+    if (d->has_brush) {             // draw filled ellipse
+        XFillArc(d->dpy, d->hd, d->gc_brush, x, y, w, h, 0, 360*64);
+        if (!d->has_pen)            // make smoother outline
             XDrawArc(d->dpy, d->hd, d->gc_brush, x, y, w-1, h-1, 0, 360*64);
-            return;
-        } else{
-            XFillArc(d->dpy, d->hd, d->gc_brush, x, y, w, h, 0, 360*64);
-        }
     }
     if (d->has_pen)                // draw outline
         XDrawArc(d->dpy, d->hd, d->gc, x, y, w, h, 0, 360*64);
@@ -1743,9 +1757,14 @@ void QX11PaintEngine::drawPath(const QPainterPath &path)
         QPainterPath stroke;
         qreal width = d->cpen.widthF();
         QPolygonF poly;
+        QRectF deviceRect(0, 0, d->pdev->width(), d->pdev->height());
         // necessary to get aliased alphablended primitives to be drawn correctly
         if (d->cpen.isCosmetic() || d->has_scaling_xform) {
-            stroker.setWidth(width == 0 ? 1 : width * d->xform_scale);
+            if (d->cpen.isCosmetic())
+                stroker.setWidth(width == 0 ? 1 : width);
+            else
+                stroker.setWidth(width * d->xform_scale);
+            stroker.d_ptr->stroker.setClipRect(deviceRect);
             stroke = stroker.createStroke(path * d->matrix);
             if (stroke.isEmpty())
                 return;
@@ -1753,6 +1772,7 @@ void QX11PaintEngine::drawPath(const QPainterPath &path)
             d->fillPath(stroke, QX11PaintEnginePrivate::PenGC, false);
         } else {
             stroker.setWidth(width);
+            stroker.d_ptr->stroker.setClipRect(d->matrix.inverted().mapRect(deviceRect));
             stroke = stroker.createStroke(path);
             if (stroke.isEmpty())
                 return;
@@ -2294,7 +2314,7 @@ void QX11PaintEngine::drawFreetype(const QPointF &p, const QTextItemInt &ti)
     if (!ti.glyphs.numGlyphs)
         return;
 
-    QFontEngineFT *ft = static_cast<QFontEngineFT *>(ti.fontEngine);
+    QFontEngineX11FT *ft = static_cast<QFontEngineX11FT *>(ti.fontEngine);
 
     if (!d->cpen.isSolid()) {
         QPaintEngine::drawTextItem(p, ti);
@@ -2332,9 +2352,7 @@ void QX11PaintEngine::drawFreetype(const QPointF &p, const QTextItemInt &ti)
         GlyphSet glyphSet = set->id;
         const QColor &pen = d->cpen.color();
         ::Picture src = X11->getSolidFill(d->scrn, pen);
-        // XRenderPictFormat *maskFormat = XRenderFindStandardFormat(X11->display, ft->xglyph_format);
-        // using a mask format other than 0 causes bitmap/XLFD fonts to garbled
-        XRenderPictFormat *maskFormat = 0;
+        XRenderPictFormat *maskFormat = XRenderFindStandardFormat(X11->display, ft->xglyph_format);
 
         enum { t_min = SHRT_MIN, t_max = SHRT_MAX };
 

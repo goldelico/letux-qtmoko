@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/stardelegate.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/stardelegate.qdoc -->
 <head>
   <title>Qt 4.5: Star Delegate Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -39,12 +39,12 @@
 <a name="stardelegate-class-definition"></a>
 <h2>StarDelegate Class Definition</h2>
 <p>Here's the definition of the <tt>StarDelegate</tt> class:</p>
-<pre> class StarDelegate : public QItemDelegate
+<pre> class StarDelegate : public QStyledItemDelegate
  {
      Q_OBJECT
 
  public:
-     StarDelegate(QWidget *parent = 0) : QItemDelegate(parent) {}
+     StarDelegate(QWidget *parent = 0) : QStyledItemDelegate(parent) {}
 
      void paint(QPainter *painter, const QStyleOptionViewItem &amp;option,
                 const QModelIndex &amp;index) const;
@@ -75,7 +75,7 @@
          starRating.paint(painter, option.rect, option.palette,
                           StarRating::ReadOnly);
      } else {
-         QItemDelegate::paint(painter, option, index);
+         QStyledItemDelegate::paint(painter, option, index);
      }</pre>
 <p>The function is invoked once for each item, represented by a <a href="qmodelindex.html">QModelIndex</a> object from the model. If the data stored in the item is a <tt>StarRating</tt>, we paint it ourselves; otherwise, we let <a href="qitemdelegate.html">QItemDelegate</a> paint it for us. This ensures that the <tt>StarDelegate</tt> can handle the most common data types.</p>
 <p>In the case where the item is a <tt>StarRating</tt>, we draw the background if the item is selected, and we draw the item using <tt>StarRating::paint()</tt>, which we will review later.</p>
@@ -92,7 +92,7 @@
                  this, SLOT(commitAndCloseEditor()));
          return editor;
      } else {
-         return QItemDelegate::createEditor(parent, option, index);
+         return QStyledItemDelegate::createEditor(parent, option, index);
      }
  }</pre>
 <p>If the item is a <tt>StarRating</tt>, we create a <tt>StarEditor</tt> and connect its <tt>editingFinished()</tt> signal to our <tt>commitAndCloseEditor()</tt> slot, so we can update the model when the editor closes.</p>
@@ -113,7 +113,7 @@
          StarEditor *starEditor = qobject_cast&lt;StarEditor *&gt;(editor);
          starEditor-&gt;setStarRating(starRating);
      } else {
-         QItemDelegate::setEditorData(editor, index);
+         QStyledItemDelegate::setEditorData(editor, index);
      }
  }</pre>
 <p>We simply call <tt>setStarRating()</tt> on the editor.</p>
@@ -125,7 +125,7 @@
          StarEditor *starEditor = qobject_cast&lt;StarEditor *&gt;(editor);
          model-&gt;setData(index, qVariantFromValue(starEditor-&gt;starRating()));
      } else {
-         QItemDelegate::setModelData(editor, model, index);
+         QStyledItemDelegate::setModelData(editor, model, index);
      }
  }</pre>
 <p>The <tt>sizeHint()</tt> function returns an item's preferred size:</p>
@@ -136,7 +136,7 @@
          StarRating starRating = qVariantValue&lt;StarRating&gt;(index.data());
          return starRating.sizeHint();
      } else {
-         return QItemDelegate::sizeHint(option, index);
+         return QStyledItemDelegate::sizeHint(option, index);
      }
  }</pre>
 <p>We simply forward the call to <tt>StarRating</tt>.</p>
@@ -362,6 +362,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

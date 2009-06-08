@@ -56,6 +56,7 @@ Tokenizer::scan_fun_ptr Tokenizer::s_scan_table[128 + 1];
 int Tokenizer::s_attr_table[256];
 
 Tokenizer::Tokenizer()
+    : m_buffer(0), m_ptr(0)
 {
     if (!s_initialized)
         setupScanTable();

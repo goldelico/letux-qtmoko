@@ -280,8 +280,12 @@ void QHelpGenerator::cleanupDB()
 
 void QHelpGenerator::writeTree(QDataStream &s, QHelpDataContentItem *item, int depth)
 {
+    QString fReference = QDir::cleanPath(item->reference());
+    if (fReference.startsWith(QLatin1String("./")))
+        fReference = fReference.mid(2);
+
     s << depth;
-    s << item->reference();
+    s << fReference;
     s << item->title();
     foreach (QHelpDataContentItem *i, item->children())
         writeTree(s, i, depth+1);
@@ -518,12 +522,14 @@ bool QHelpGenerator::insertFiles(const QStringList &files, const QString &rootPa
         QByteArray data;
         data = f.readAll();
 
-        if (fi.suffix() == QLatin1String("html") || fi.suffix() == QLatin1String("htm")) {            
-            charSet = QHelpGlobal::charsetFromData(data);                
+        if (fi.suffix() == QLatin1String("html") || fi.suffix() == QLatin1String("htm")) {
+            charSet = QHelpGlobal::charsetFromData(data);
             QTextStream stream(&data);
             stream.setCodec(QTextCodec::codecForName(charSet.toLatin1().constData()));
             title = QHelpGlobal::documentTitle(stream.readAll());
-        }        
+        } else {
+            title = fi.fileName();
+        }
 
         QString fName = QDir::cleanPath(file);
         if (fName.startsWith(QLatin1String("./")))

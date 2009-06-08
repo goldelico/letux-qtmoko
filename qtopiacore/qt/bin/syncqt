@@ -188,6 +188,7 @@ sub classNames {
         while(<F>) {
             my $line = $_;
             chomp $line;
+			chop $line if ($line =~ /\r$/);
             if($line =~ /^\#/) {
                 if($line =~ /\\$/) {
                     while($line = <F>) {

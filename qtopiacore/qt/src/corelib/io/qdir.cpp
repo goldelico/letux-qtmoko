@@ -2232,6 +2232,9 @@ QStringList QDir::nameFiltersFromString(const QString &nameFilter)
 
     \snippet doc/src/snippets/code/src_corelib_io_qdir.cpp 13
 
+    If the file name contains characters that cannot be part of a valid C++ function name 
+    (such as '-'), they have to be replaced by the underscore character ('_').
+
     Note: This macro cannot be used in a namespace. It should be called from
     main(). If that is not possible, the following workaround can be used
     to init the resource \c myapp from the function \c{MyNamespace::myFunction}:

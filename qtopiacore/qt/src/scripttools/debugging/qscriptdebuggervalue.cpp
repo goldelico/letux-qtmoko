@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtScriptTools module of the Qt Toolkit.
+** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -74,6 +74,7 @@ public:
 };
 
 QScriptDebuggerValuePrivate::QScriptDebuggerValuePrivate()
+    : type(QScriptDebuggerValue::NoValue)
 {
     ref = 0;
 }

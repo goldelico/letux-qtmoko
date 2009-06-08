@@ -456,6 +456,7 @@ WriteInitialization::WriteInitialization(Uic *uic, bool activateScripts) :
       m_driver(uic->driver()), m_output(uic->output()), m_option(uic->option()),
       m_indent(m_option.indent + m_option.indent),
       m_dindent(m_indent + m_option.indent),
+      m_stdsetdef(true),
       m_layoutMarginType(TopLevelMargin),
       m_delayedOut(&m_delayedInitialization, QIODevice::WriteOnly),
       m_refreshOut(&m_refreshInitialization, QIODevice::WriteOnly),
@@ -1473,8 +1474,9 @@ void WriteInitialization::writeProperties(const QString &varName,
             if (p->elementStringList()->elementString().size()) {
                 const QStringList lst = p->elementStringList()->elementString();
                 for (int i=0; i<lst.size(); ++i) {
-                    propertyValue += QLatin1String(" << ");
+                    propertyValue += QLatin1String(" << QString::fromUtf8(");
                     propertyValue += fixString(lst.at(i), m_dindent);
+                    propertyValue += QLatin1Char(')');
                 }
             }
             break;

@@ -72,8 +72,8 @@
     \o Input and output devices
     \endlist
 
-    If you're completely new to Qt, please read \l{How to Learn Qt} if you haven't
-    already done so.
+    If you are completely new to Qt, please read \l{How to Learn Qt} if you
+    have not already done so.
 
     The tutorial's source code is located in Qt's \c examples/tutorials/addressbook
     directory.
@@ -90,11 +90,12 @@
     \o \l{tutorials/addressbook/part7}{Additional Features}
     \endlist
 
-    Although this little application doesn't look much like a fully-fledged modern
-    GUI application, it uses many of the basic techniques that are used in more
-    complex applications. After you've worked through it, we recommend checking out
-    the \l{mainwindows/application}{Application} example, which presents a small GUI
-    application, with menus, toolbars, a status bar, and so on.
+    Although this little application does not look much like a fully-fledged
+    modern GUI application, it uses many of the basic techniques that are used
+    in more complex applications. After you have worked through it, we
+    recommend checking out the \l{mainwindows/application}{Application}
+    example, which presents a small GUI application, with menus, toolbars, a
+    status bar, and so on.
 */
 
 /*!
@@ -113,11 +114,6 @@
     screenshot of our expected output.
 
     \image addressbook-tutorial-part1-screenshot.png
-
-    \omit
-    Kavindra: Maybe write something about the philosophy of subclassing
-    widget class to extend or specialize them.
-    \endomit
 
     We require two QLabel objects, \c nameLabel and \c addressLabel, as well
     as two input fields, a QLineEdit object, \c nameLine, and a QTextEdit

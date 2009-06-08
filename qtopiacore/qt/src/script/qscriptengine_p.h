@@ -91,7 +91,7 @@ namespace QScript {
 class ArgumentsObjectData: public QScriptObjectData
 {
 public:
-    ArgumentsObjectData() {}
+    ArgumentsObjectData() : length(0) {}
     virtual ~ArgumentsObjectData() {}
 
 public: // attributes

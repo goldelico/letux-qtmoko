@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/graphicsview/qgraphicsitem.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicsitem.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsItem Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -1088,6 +1088,7 @@
 <p>See also <a href="qgraphicsitem.html#opacity">opacity</a>() and <a href="qgraphicsitem.html#effectiveOpacity">effectiveOpacity</a>().</p>
 <h3 class="fn"><a name="setParentItem"></a>void QGraphicsItem::setParentItem ( QGraphicsItem * <i>parent</i> )</h3>
 <p>Sets this item's parent item to <i>parent</i>. If this item already has a parent, it is first removed from the previous parent. If <i>parent</i> is 0, this item will become a top-level item.</p>
+<p>Note that this implicitly adds this graphics item to the scene of the parent. You should not <a href="qgraphicsscene.html#addItem">add</a> the item to the scene yourself.</p>
 <p>See also <a href="qgraphicsitem.html#parentItem">parentItem</a>() and <a href="qgraphicsitem-obsolete.html#children">children</a>().</p>
 <h3 class="fn"><a name="setPos"></a>void QGraphicsItem::setPos ( const <a href="qpointf.html">QPointF</a> &amp; <i>pos</i> )</h3>
 <p>Sets the position of the item to <i>pos</i>, which is in parent coordinates. For items with no parent, <i>pos</i> is in scene coordinates.</p>
@@ -1245,6 +1246,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

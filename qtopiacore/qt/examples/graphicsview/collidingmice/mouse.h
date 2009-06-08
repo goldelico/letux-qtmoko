@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -43,13 +43,10 @@
 #define MOUSE_H
 
 #include <QGraphicsItem>
-#include <QObject>
 
 //! [0]
-class Mouse : public QObject, public QGraphicsItem
+class Mouse : public QGraphicsItem
 {
-    Q_OBJECT
-
 public:
     Mouse();
 
@@ -59,7 +56,7 @@ public:
                QWidget *widget);
 
 protected:
-    void timerEvent(QTimerEvent *event);
+    void advance(int step);
 
 private:
     qreal angle;

@@ -89,6 +89,9 @@ public:
     QLayoutStyleInfo styleInfo() const;
 
     QGridLayoutEngine engine;
+#ifdef QT_DEBUG    
+    void dump(int indent) const;
+#endif
 };
 
 QLayoutStyleInfo QGraphicsGridLayoutPrivate::styleInfo() const
@@ -580,6 +583,15 @@ void QGraphicsGridLayout::invalidate()
     QGraphicsLayout::invalidate();
 }
 
+#ifdef QT_DEBUG
+void QGraphicsGridLayoutPrivate::dump(int indent) const
+{
+    if (qt_graphicsLayoutDebug()) {
+        engine.dump(indent + 1);
+    }
+}
+#endif
+
 /*!
     Sets the bounding geometry of the grid layout to \a rect.
 */
@@ -595,18 +607,13 @@ void QGraphicsGridLayout::setGeometry(const QRectF &rect)
     if (visualDir == Qt::RightToLeft)
         qSwap(left, right);
     effectiveRect.adjust(+left, +top, -right, -bottom);
-#ifdef QT_DEBUG
-    if (qt_graphicsLayoutDebug()) {
-        static int counter = 0;
-        qDebug() << counter++ << "QGraphicsGridLayout::setGeometry - " << rect;
-        // dump(1);
-    }
-#endif
     d->engine.setGeometries(d->styleInfo(), effectiveRect);
 #ifdef QT_DEBUG
     if (qt_graphicsLayoutDebug()) {
-        qDebug() << "post dump";
-        // dump(1);
+        static int counter = 0;
+        qDebug("==== BEGIN DUMP OF QGraphicsGridLayout (%d)====", counter++);
+        d->dump(1);
+        qDebug("==== END DUMP OF QGraphicsGridLayout ====");
     }
 #endif
 }

@@ -60,23 +60,23 @@ class NamespaceNode;
 
 class PageGenerator : public Generator
 {
-public:
+ public:
     PageGenerator();
     ~PageGenerator();
 
-    virtual void generateTree( const Tree *tree, CodeMarker *marker );
+    virtual void generateTree(const Tree *tree, CodeMarker *marker);
 
-protected:
+ protected:
     virtual QString fileBase(const Node *node);
     virtual QString fileExtension(const Node *node) = 0;
-    QString fileName( const Node *node );
+    QString fileName(const Node *node);
     QString outFileName();
-    void beginSubPage( const Location& location, const QString& fileName );
+    void beginSubPage(const Location& location, const QString& fileName);
     void endSubPage();
-    virtual void generateInnerNode( const InnerNode *node, CodeMarker *marker );
+    virtual void generateInnerNode(const InnerNode *node, CodeMarker *marker);
     QTextStream& out();
 
-private:
+ private:
     QStack<QTextStream *> outStreamStack;
 };
 

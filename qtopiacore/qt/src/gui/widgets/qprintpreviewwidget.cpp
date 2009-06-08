@@ -748,7 +748,7 @@ void QPrintPreviewWidget::setLandscapeOrientation()
 
 /*!
     This is a convenience function and is the same as calling \c
-    {setOrientation(QPrinter::Landscape)}.
+    {setOrientation(QPrinter::Portrait)}.
 */
 void QPrintPreviewWidget::setPortraitOrientation()
 {

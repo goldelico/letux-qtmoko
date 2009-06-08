@@ -12,6 +12,7 @@ QTDIR_build:DESTDIR = $$QT_BUILD_TREE/plugins/gfxdrivers
 #DEFINES += QT_NO_DIRECTFB_PREALLOCATED
 #DEFINES += QT_NO_DIRECTFB_MOUSE
 #DEFINES += QT_NO_DIRECTFB_KEYBOARD
+#DEFINES += QT_DIRECTFB_TIMING
 
 target.path = $$[QT_INSTALL_PLUGINS]/gfxdrivers
 INSTALLS += target
@@ -20,6 +21,7 @@ HEADERS	= \
 	qdirectfbscreen.h \
 	qdirectfbsurface.h \
 	qdirectfbpaintengine.h \
+        qdirectfbpaintdevice.h \
 	qdirectfbpixmap.h \
 	qdirectfbkeyboard.h \
 	qdirectfbmouse.h
@@ -29,6 +31,7 @@ SOURCES	= \
 	qdirectfbscreenplugin.cpp \
 	qdirectfbsurface.cpp \
 	qdirectfbpaintengine.cpp \
+        qdirectfbpaintdevice.cpp \
 	qdirectfbpixmap.cpp \
 	qdirectfbkeyboard.cpp \
 	qdirectfbmouse.cpp

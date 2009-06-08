@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/xml/dom/qdom.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/xml/dom/qdom.cpp -->
 <head>
   <title>Qt 4.5: QDomCharacterData Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -30,7 +30,7 @@
 <li><div class="fn"></div>QString <b><a href="qdomcharacterdata.html#data">data</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qdomcharacterdata.html#deleteData">deleteData</a></b> ( unsigned long <i>offset</i>, unsigned long <i>count</i> )</li>
 <li><div class="fn"></div>void <b><a href="qdomcharacterdata.html#insertData">insertData</a></b> ( unsigned long <i>offset</i>, const QString &amp; <i>arg</i> )</li>
-<li><div class="fn"></div>uint <b><a href="qdomcharacterdata.html#lengthx">length</a></b> () const</li>
+<li><div class="fn"></div>uint <b><a href="qdomcharacterdata.html#length">length</a></b> () const</li>
 <li><div class="fn"></div>QDomNode::NodeType <b><a href="qdomcharacterdata.html#nodeType">nodeType</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qdomcharacterdata.html#replaceData">replaceData</a></b> ( unsigned long <i>offset</i>, unsigned long <i>count</i>, const QString &amp; <i>arg</i> )</li>
 <li><div class="fn"></div>void <b><a href="qdomcharacterdata.html#setData">setData</a></b> ( const QString &amp; <i>v</i> )</li>
@@ -45,7 +45,7 @@
 <h2>Detailed Description</h2>
 <p>The QDomCharacterData class represents a generic string in the DOM.</p>
 <p>Character data as used in XML specifies a generic data string. More specialized versions of this class are <a href="qdomtext.html">QDomText</a>, <a href="qdomcomment.html">QDomComment</a> and <a href="qdomcdatasection.html">QDomCDATASection</a>.</p>
-<p>The data string is set with <a href="qdomcharacterdata.html#setData">setData</a>() and retrieved with <a href="qdomcharacterdata.html#data">data</a>(). You can retrieve a portion of the data string using <a href="qdomcharacterdata.html#substringData">substringData</a>(). Extra data can be appended with <a href="qdomcharacterdata.html#appendData">appendData</a>(), or inserted with <a href="qdomcharacterdata.html#insertData">insertData</a>(). Portions of the data string can be deleted with <a href="qdomcharacterdata.html#deleteData">deleteData</a>() or replaced with <a href="qdomcharacterdata.html#replaceData">replaceData</a>(). The length of the data string is returned by <a href="qdomcharacterdata.html#lengthx">length</a>().</p>
+<p>The data string is set with <a href="qdomcharacterdata.html#setData">setData</a>() and retrieved with <a href="qdomcharacterdata.html#data">data</a>(). You can retrieve a portion of the data string using <a href="qdomcharacterdata.html#substringData">substringData</a>(). Extra data can be appended with <a href="qdomcharacterdata.html#appendData">appendData</a>(), or inserted with <a href="qdomcharacterdata.html#insertData">insertData</a>(). Portions of the data string can be deleted with <a href="qdomcharacterdata.html#deleteData">deleteData</a>() or replaced with <a href="qdomcharacterdata.html#replaceData">replaceData</a>(). The length of the data string is returned by <a href="qdomcharacterdata.html#length">length</a>().</p>
 <p>The node type of the node containing this character data is returned by <a href="qdomcharacterdata.html#nodeType">nodeType</a>().</p>
 <p>See also <a href="qdomtext.html">QDomText</a>, <a href="qdomcomment.html">QDomComment</a>, and <a href="qdomcdatasection.html">QDomCDATASection</a>.</p>
 <hr />
@@ -65,7 +65,7 @@
 <p>Deletes a substring of length <i>count</i> from position <i>offset</i>.</p>
 <h3 class="fn"><a name="insertData"></a>void QDomCharacterData::insertData ( unsigned long <i>offset</i>, const <a href="qstring.html">QString</a> &amp; <i>arg</i> )</h3>
 <p>Inserts the string <i>arg</i> into the stored string at position <i>offset</i>.</p>
-<h3 class="fn"><a name="lengthx"></a><a href="qtglobal.html#uint-typedef">uint</a> QDomCharacterData::length () const</h3>
+<h3 class="fn"><a name="length"></a><a href="qtglobal.html#uint-typedef">uint</a> QDomCharacterData::length () const</h3>
 <p>Returns the length of the stored string.</p>
 <h3 class="fn"><a name="nodeType"></a><a href="qdomnode.html#NodeType-enum">QDomNode::NodeType</a> QDomCharacterData::nodeType () const</h3>
 <p>Returns the type of node this object refers to (i.e&#x2e; <tt>TextNode</tt>, <tt>CDATASectionNode</tt>, <tt>CommentNode</tt> or <tt>CharacterDataNode</tt>). For a <a href="qdomnode.html#isNull">null node</a>, returns <tt>CharacterDataNode</tt>.</p>
@@ -83,6 +83,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/embedded/qscreen_qws.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/embedded/qscreen_qws.cpp -->
 <head>
   <title>Qt 4.5: QScreen Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -49,7 +49,7 @@
 <li><div class="fn"></div>virtual bool <b><a href="qscreen.html#initDevice">initDevice</a></b> () = 0</li>
 <li><div class="fn"></div>virtual bool <b><a href="qscreen.html#isInterlaced">isInterlaced</a></b> () const</li>
 <li><div class="fn"></div>virtual bool <b><a href="qscreen.html#isTransformed">isTransformed</a></b> () const</li>
-<li><div class="fn"></div>int <b><a href="qscreen.html#linestepx">linestep</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qscreen.html#linestep">linestep</a></b> () const</li>
 <li><div class="fn"></div>virtual QSize <b><a href="qscreen.html#mapFromDevice">mapFromDevice</a></b> ( const QSize &amp; <i>size</i> ) const</li>
 <li><div class="fn"></div>virtual QPoint <b><a href="qscreen.html#mapFromDevice-2">mapFromDevice</a></b> ( const QPoint &amp; <i>point</i>, const QSize &amp; <i>screenSize</i> ) const</li>
 <li><div class="fn"></div>virtual QRect <b><a href="qscreen.html#mapFromDevice-3">mapFromDevice</a></b> ( const QRect &amp; <i>rectangle</i>, const QSize &amp; <i>screenSize</i> ) const</li>
@@ -162,7 +162,7 @@
 <tr valign="top" class="odd"><td>Pixmap Alignment</td><td>Use the <a href="qscreen.html#pixmapOffsetAlignment">pixmapOffsetAlignment</a>() function to retrieve the value to which the start address of pixmaps held in the graphics card's memory, should be aligned.<p>Use the <a href="qscreen.html#pixmapLinestepAlignment">pixmapLinestepAlignment</a>() to retrieve the value to which the <i>individual scanlines</i> of pixmaps should be aligned.</p>
 </td></tr>
 <tr valign="top" class="even"><td>Image Display</td><td>The <a href="qscreen.html#isInterlaced">isInterlaced</a>() function tells whether the screen is displaying images progressively, and the <a href="qscreen.html#isTransformed">isTransformed</a>() function whether it is rotated. The <a href="qscreen.html#transformOrientation">transformOrientation</a>() function can be reimplemented to return the current rotation.</td></tr>
-<tr valign="top" class="odd"><td>Scanlines</td><td>Use the <a href="qscreen.html#linestepx">linestep</a>() function to retrieve the length of each scanline of the framebuffer.</td></tr>
+<tr valign="top" class="odd"><td>Scanlines</td><td>Use the <a href="qscreen.html#linestep">linestep</a>() function to retrieve the length of each scanline of the framebuffer.</td></tr>
 <tr valign="top" class="even"><td>Pixel Type</td><td>The <a href="qscreen.html#pixelType">pixelType</a>() function returns the screen's pixel storage format as described by the <a href="qscreen.html#PixelType-enum">PixelType</a> enum.</td></tr>
 </table></p>
 <a name="subclassing-and-initial-values"></a>
@@ -297,11 +297,11 @@
 <h3 class="fn"><a name="isInterlaced"></a>bool QScreen::isInterlaced () const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Returns true if the display is interlaced (i.e&#x2e; is displaying images progressively like a television screen); otherwise returns false.</p>
 <p>If the display is interlaced, the drawing is altered to look better.</p>
-<p>See also <a href="qscreen.html#isTransformed">isTransformed</a>() and <a href="qscreen.html#linestepx">linestep</a>().</p>
+<p>See also <a href="qscreen.html#isTransformed">isTransformed</a>() and <a href="qscreen.html#linestep">linestep</a>().</p>
 <h3 class="fn"><a name="isTransformed"></a>bool QScreen::isTransformed () const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Returns true if the screen is transformed (for instance, rotated 90 degrees); otherwise returns false.</p>
 <p>See also <a href="qscreen.html#transformOrientation">transformOrientation</a>() and <a href="qscreen.html#isInterlaced">isInterlaced</a>().</p>
-<h3 class="fn"><a name="linestepx"></a>int QScreen::linestep () const</h3>
+<h3 class="fn"><a name="linestep"></a>int QScreen::linestep () const</h3>
 <p>Returns the length of each scanline of the framebuffer in bytes.</p>
 <p>See also <a href="qscreen.html#isInterlaced">isInterlaced</a>().</p>
 <h3 class="fn"><a name="mapFromDevice"></a><a href="qsize.html">QSize</a> QScreen::mapFromDevice ( const <a href="qsize.html">QSize</a> &amp; <i>size</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -494,6 +494,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -264,6 +264,7 @@ extern "C" {
                                                   qic->standardFormat(QInputContext::PreeditFormat));
         attrs << QInputMethodEvent::Attribute(QInputMethodEvent::Cursor, cursor, sellen ? 0 : 1, QVariant());
         QInputMethodEvent e(data->text, attrs);
+        data->preeditEmpty = data->text.isEmpty();
 	qic->sendEvent(e);
 
 	return 0;
@@ -286,11 +287,14 @@ void QXIMInputContext::ICData::clear()
     text = QString();
     selectedChars.clear();
     composing = false;
+    preeditEmpty = true;
 }
 
 QXIMInputContext::ICData *QXIMInputContext::icData() const
 {
-    return ximData.value(focusWidget());
+    if (QWidget *w = focusWidget())
+        return ximData.value(w->effectiveWinId());
+    return 0;
 }
 /* The cache here is needed, as X11 leaks a few kb for every
    XFreeFontSet call, so we avoid creating and deletion of fontsets as
@@ -433,7 +437,8 @@ void QXIMInputContext::create_xim()
                 // reinitialize input context after the input method
                 // server (like SCIM) has been launched without
                 // requiring the user to manually switch focus.
-                if (focusWidget->testAttribute(Qt::WA_InputMethodEnabled))
+                if (focusWidget->testAttribute(Qt::WA_InputMethodEnabled)
+                    && focusWidget->testAttribute(Qt::WA_WState_Created))
                     setFocusWidget(focusWidget);
             }
             // following code fragment is not required for immodule
@@ -460,8 +465,8 @@ void QXIMInputContext::create_xim()
 */
 void QXIMInputContext::close_xim()
 {
-    for(QHash<QWidget *, ICData *>::const_iterator i = ximData.constBegin(),
-                                                   e = ximData.constEnd(); i != e; ++i) {
+    for(QHash<WId, ICData *>::const_iterator i = ximData.constBegin(),
+                                             e = ximData.constEnd(); i != e; ++i) {
         ICData *data = i.value();
         if (data->ic)
             XDestroyIC(data->ic);
@@ -525,18 +530,20 @@ void QXIMInputContext::reset()
     if (!w)
         return;
 
-    ICData *data = ximData.value(w);
+    ICData *data = ximData.value(w->effectiveWinId());
     if (!data)
         return;
 
     if (data->ic) {
         char *mb = XmbResetIC(data->ic);
+        QInputMethodEvent e;
         if (mb) {
-            QInputMethodEvent e;
             e.setCommitString(QString::fromLocal8Bit(mb));
-            sendEvent(e);
             XFree(mb);
-
+            data->preeditEmpty = false; // force sending an event
+        }
+        if (!data->preeditEmpty) {
+            sendEvent(e);
             update();
         }
     }
@@ -546,7 +553,7 @@ void QXIMInputContext::reset()
 void QXIMInputContext::widgetDestroyed(QWidget *w)
 {
     QInputContext::widgetDestroyed(w);
-    ICData *data = ximData.take(w);
+    ICData *data = ximData.take(w->effectiveWinId());
     if (!data)
         return;
 
@@ -562,12 +569,14 @@ void QXIMInputContext::mouseHandler(int pos, QMouseEvent *e)
         return;
 
     XIM_DEBUG("QXIMInputContext::mouseHandler pos=%d", pos);
-    ICData *data = ximData.value(focusWidget());
-    if (!data)
-        return;
-    if (pos < 0 || pos > data->text.length())
-        reset();
-    // ##### handle mouse position
+    if (QWidget *w = focusWidget()) {
+        ICData *data = ximData.value(w->effectiveWinId());
+        if (!data)
+            return;
+        if (pos < 0 || pos > data->text.length())
+            reset();
+        // ##### handle mouse position
+    }
 }
 
 bool QXIMInputContext::isComposing() const
@@ -576,7 +585,7 @@ bool QXIMInputContext::isComposing() const
     if (!w)
         return false;
 
-    ICData *data = ximData.value(w);
+    ICData *data = ximData.value(w->effectiveWinId());
     if (!data)
         return false;
     return data->composing;
@@ -594,7 +603,7 @@ void QXIMInputContext::setFocusWidget(QWidget *w)
         reset();
 
     if (oldFocus) {
-        ICData *data = ximData.value(oldFocus);
+        ICData *data = ximData.value(oldFocus->effectiveWinId());
         if (data && data->ic)
             XUnsetICFocus(data->ic);
     }
@@ -604,7 +613,7 @@ void QXIMInputContext::setFocusWidget(QWidget *w)
     if (!w)
         return;
 
-    ICData *data = ximData.value(w);
+    ICData *data = ximData.value(w->effectiveWinId());
     if (!data)
         data = createICData(w);
 
@@ -633,7 +642,7 @@ bool QXIMInputContext::x11FilterEvent(QWidget *keywidget, XEvent *event)
     QWidget *w = focusWidget();
     if (keywidget != w)
         return false;
-    ICData *data = ximData.value(w);
+    ICData *data = ximData.value(w->effectiveWinId());
     if (!data)
         return false;
 
@@ -683,6 +692,7 @@ QXIMInputContext::ICData *QXIMInputContext::createICData(QWidget *w)
 {
     ICData *data = new ICData;
     data->widget = w;
+    data->preeditEmpty = true;
 
     XVaNestedList preedit_attr = 0;
     XIMCallback startcallback, drawcallback, donecallback;
@@ -746,7 +756,7 @@ QXIMInputContext::ICData *QXIMInputContext::createICData(QWidget *w)
         qWarning("Failed to create XIC");
     }
 
-    ximData[w] = data;
+    ximData[w->effectiveWinId()] = data;
     return data;
 }
 
@@ -756,7 +766,7 @@ void QXIMInputContext::update()
     if (!w)
         return;
 
-    ICData *data = ximData.value(w);
+    ICData *data = ximData.value(w->effectiveWinId());
     if (!data || !data->ic)
         return;
 

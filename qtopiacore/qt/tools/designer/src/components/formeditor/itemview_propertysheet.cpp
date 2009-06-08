@@ -51,7 +51,7 @@ QT_BEGIN_NAMESPACE
 namespace qdesigner_internal {
 
 struct Property {
-    Property() : m_sheet(0) {}
+    Property() : m_sheet(0),m_id(-1) {}
     Property(QDesignerPropertySheetExtension *sheet, int id)
         : m_sheet(sheet), m_id(id) {}
     bool operator==(const Property &p) { return m_sheet == p.m_sheet && m_id == p.m_id; }

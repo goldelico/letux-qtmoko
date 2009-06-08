@@ -158,6 +158,8 @@ NSPoint flipPoint(const QPointF &p);
 QStringList qt_mac_NSArrayToQStringList(void *nsarray);
 void *qt_mac_QStringListToNSMutableArrayVoid(const QStringList &list);
 
+void qt_syncCocoaTitleBarButtons(OSWindowRef window, QWidget *widgetForWindow);
+
 #ifdef __OBJC__
 inline NSMutableArray *qt_mac_QStringListToNSMutableArray(const QStringList &qstrlist)
 { return reinterpret_cast<NSMutableArray *>(qt_mac_QStringListToNSMutableArrayVoid(qstrlist)); }

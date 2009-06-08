@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/network/access/qnetworkreply.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/access/qnetworkreply.cpp -->
 <head>
   <title>Qt 4.5: QNetworkReply Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -41,7 +41,7 @@
 <li><div class="fn"></div>QByteArray <b><a href="qnetworkreply.html#rawHeader">rawHeader</a></b> ( const QByteArray &amp; <i>headerName</i> ) const</li>
 <li><div class="fn"></div>QList&lt;QByteArray&gt; <b><a href="qnetworkreply.html#rawHeaderList">rawHeaderList</a></b> () const</li>
 <li><div class="fn"></div>qint64 <b><a href="qnetworkreply.html#readBufferSize">readBufferSize</a></b> () const</li>
-<li><div class="fn"></div>QNetworkRequest <b><a href="qnetworkreply.html#requestx">request</a></b> () const</li>
+<li><div class="fn"></div>QNetworkRequest <b><a href="qnetworkreply.html#request">request</a></b> () const</li>
 <li><div class="fn"></div>virtual void <b><a href="qnetworkreply.html#setReadBufferSize">setReadBufferSize</a></b> ( qint64 <i>size</i> )</li>
 <li><div class="fn"></div>void <b><a href="qnetworkreply.html#setSslConfiguration">setSslConfiguration</a></b> ( const QSslConfiguration &amp; <i>config</i> )</li>
 <li><div class="fn"></div>QSslConfiguration <b><a href="qnetworkreply.html#sslConfiguration">sslConfiguration</a></b> () const</li>
@@ -199,7 +199,7 @@
 <h3 class="fn"><a name="readBufferSize"></a><a href="qtglobal.html#qint64-typedef">qint64</a> QNetworkReply::readBufferSize () const</h3>
 <p>Returns the size of the read buffer, in bytes.</p>
 <p>See also <a href="qnetworkreply.html#setReadBufferSize">setReadBufferSize</a>().</p>
-<h3 class="fn"><a name="requestx"></a><a href="qnetworkrequest.html">QNetworkRequest</a> QNetworkReply::request () const</h3>
+<h3 class="fn"><a name="request"></a><a href="qnetworkrequest.html">QNetworkRequest</a> QNetworkReply::request () const</h3>
 <p>Returns the request that was posted for this reply. In special, note that the URL for the request may be different than that of the reply.</p>
 <p>See also <a href="qnetworkrequest.html#url">QNetworkRequest::url</a>(), <a href="qnetworkreply.html#url">url</a>(), and <a href="qnetworkreply.html#setRequest">setRequest</a>().</p>
 <h3 class="fn"><a name="setAttribute"></a>void QNetworkReply::setAttribute ( <a href="qnetworkrequest.html#Attribute-enum">QNetworkRequest::Attribute</a> <i>code</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>value</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
@@ -226,15 +226,15 @@
 <p>Unlike <a href="qabstractsocket.html#setReadBufferSize">QAbstractSocket::setReadBufferSize</a>(), <a href="qnetworkreply.html">QNetworkReply</a> cannot guarantee precision in the read buffer size. That is, <a href="qiodevice.html#bytesAvailable">bytesAvailable</a>() can return more than <i>size</i>.</p>
 <p>See also <a href="qnetworkreply.html#readBufferSize">readBufferSize</a>().</p>
 <h3 class="fn"><a name="setRequest"></a>void QNetworkReply::setRequest ( const <a href="qnetworkrequest.html">QNetworkRequest</a> &amp; <i>request</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
-<p>Sets the associated request for this object to be <i>request</i>. This value will be returned by <a href="qnetworkreply.html#requestx">request</a>().</p>
+<p>Sets the associated request for this object to be <i>request</i>. This value will be returned by <a href="qnetworkreply.html#request">request</a>().</p>
 <p>Note: the request should be set when this object is created and not changed again.</p>
-<p>See also <a href="qnetworkreply.html#requestx">request</a>() and <a href="qnetworkreply.html#setOperation">setOperation</a>().</p>
+<p>See also <a href="qnetworkreply.html#request">request</a>() and <a href="qnetworkreply.html#setOperation">setOperation</a>().</p>
 <h3 class="fn"><a name="setSslConfiguration"></a>void QNetworkReply::setSslConfiguration ( const <a href="qsslconfiguration.html">QSslConfiguration</a> &amp; <i>config</i> )</h3>
 <p>Sets the SSL configuration for the network connection associated with this request, if possible, to be that of <i>config</i>.</p>
 <p>See also <a href="qnetworkreply.html#sslConfiguration">sslConfiguration</a>().</p>
 <h3 class="fn"><a name="setUrl"></a>void QNetworkReply::setUrl ( const <a href="qurl.html">QUrl</a> &amp; <i>url</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
 <p>Sets the URL being processed to be <i>url</i>. Normally, the URL matches that of the request that was posted, but for a variety of reasons it can be different (for example, a file path being made absolute or canonical).</p>
-<p>See also <a href="qnetworkreply.html#url">url</a>(), <a href="qnetworkreply.html#requestx">request</a>(), and <a href="qnetworkrequest.html#url">QNetworkRequest::url</a>().</p>
+<p>See also <a href="qnetworkreply.html#url">url</a>(), <a href="qnetworkreply.html#request">request</a>(), and <a href="qnetworkrequest.html#url">QNetworkRequest::url</a>().</p>
 <h3 class="fn"><a name="sslConfiguration"></a><a href="qsslconfiguration.html">QSslConfiguration</a> QNetworkReply::sslConfiguration () const</h3>
 <p>Returns the SSL configuration and state associated with this reply, if SSL was used. It will contain the remote server's certificate, its certificate chain leading to the Certificate Authority as well as the encryption ciphers in use.</p>
 <p>The peer's certificate and its certificate chain will be known by the time <a href="qnetworkreply.html#sslErrors">sslErrors</a>() is emitted, if it's emitted.</p>
@@ -252,11 +252,11 @@
 <p>See also <a href="qnetworkreply.html#downloadProgress">downloadProgress</a>().</p>
 <h3 class="fn"><a name="url"></a><a href="qurl.html">QUrl</a> QNetworkReply::url () const</h3>
 <p>Returns the URL of the content downloaded or uploaded. Note that the URL may be different from that of the original request.</p>
-<p>See also <a href="qnetworkreply.html#requestx">request</a>(), <a href="qnetworkreply.html#setUrl">setUrl</a>(), and <a href="qnetworkrequest.html#url">QNetworkRequest::url</a>().</p>
+<p>See also <a href="qnetworkreply.html#request">request</a>(), <a href="qnetworkreply.html#setUrl">setUrl</a>(), and <a href="qnetworkrequest.html#url">QNetworkRequest::url</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

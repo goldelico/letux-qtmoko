@@ -1581,7 +1581,7 @@ void Q3DnsSocket::answer()
 
 
 /*!
-    \class Q3Dns q3dns.h
+    \class Q3Dns
     \brief The Q3Dns class provides asynchronous DNS lookups.
 
     \compat

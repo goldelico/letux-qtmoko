@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/platform-notes.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/platform-notes.qdoc -->
 <head>
   <title>Qt 4.5: Supported Platforms</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -17,10 +17,9 @@
 <p>Qt is supported on a variety of 32-bit and 64-bit platforms, and can usually be built on each platform with GCC, a vendor-supplied compiler, or a third party compiler. Although Qt may be built on a range of platform-compiler combinations, only a subset of these are actively supported by Qt Software.</p>
 <p>A more general overview of the platforms Qt runs on can be found on the <a href="platform-notes-platforms.html">Platform Notes</a> page. Information about the compilers used on each platform can be found on the <a href="compiler-notes.html">Compiler Notes</a> page.</p>
 <ul><li><a href="#most-common-actively-supported-platforms">Most Common Actively Supported Platforms</a></li>
-<ul><li><a href="#actively-supported-platforms">Actively Supported Platforms</a></li>
+<li><a href="#actively-supported-platforms">Actively Supported Platforms</a></li>
 <li><a href="#community-supported-platforms">Community Supported Platforms</a></li>
 <li><a href="#unsupported-platforms">Unsupported Platforms</a></li>
-</ul>
 <li><a href="#supported-features">Supported Features</a></li>
 </ul>
 <a name="most-common-actively-supported-platforms"></a>
@@ -33,7 +32,7 @@
 </table></p>
 <p>Any platform-compiler combinations not listed here should be considered unsupported.</p>
 <a name="actively-supported-platforms"></a>
-<h4>Actively Supported Platforms</h4>
+<h3>Actively Supported Platforms</h3>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>OS</th><th>Architecture</th><th>Makespec</th><th>Compiler version(s)</th></tr></thead>
 <tr valign="top" class="odd"><td>AIX</td><td>PowerPC</td><td>aix-xlc</td><td>xlC 6</td></tr>
@@ -45,24 +44,23 @@
 <tr valign="top" class="odd"><td>Embedded Linux</td><td>ARM</td><td>qws/linux-arm-g++</td><td>GCC 3.4, 4.1, 4.2, 4.3</td></tr>
 <tr valign="top" class="even"><td>Embedded Linux</td><td>Intel 32-bit</td><td>qws/linux-x86-g++</td><td>GCC 3.4, 4.1, 4.2, 4.3</td></tr>
 <tr valign="top" class="odd"><td>Linux</td><td>Intel 32/64-bit</td><td>linux-g++</td><td>GCC 4.1, 4.2, 4.3</td></tr>
-<tr valign="top" class="even"><td>Linux</td><td>Intel 32/64-bit</td><td><a href="known-issues.html">linux-icc (see note)</a></td><td>icc 10.1</td></tr>
-<tr valign="top" class="odd"><td>Linux</td><td>Intel 32-bit</td><td><a href="known-issues.html">linux-icc-32 (see note)</a></td><td>icc 10.1</td></tr>
-<tr valign="top" class="even"><td>Linux</td><td>Intel 64-bit</td><td><a href="known-issues.html">linux-icc-64 (see note)</a></td><td>icc 10.1</td></tr>
+<tr valign="top" class="even"><td>Linux</td><td>Intel 32/64-bit</td><td>linux-icc</td><td>icc 10.1</td></tr>
+<tr valign="top" class="odd"><td>Linux</td><td>Intel 32-bit</td><td>linux-icc-32</td><td>icc 10.1</td></tr>
+<tr valign="top" class="even"><td>Linux</td><td>Intel 64-bit</td><td>linux-icc-64</td><td>icc 10.1</td></tr>
 <tr valign="top" class="odd"><td>Mac OS X</td><td>Intel 32/64-bit, PowerPC</td><td>macx-g++</td><td>GCC 4.0&#x2e;1</td></tr>
 <tr valign="top" class="even"><td>Mac OS X</td><td>Intel 32/64-bit, PowerPC</td><td>macx-g++42</td><td>GCC 4.2</td></tr>
 <tr valign="top" class="odd"><td>Solaris</td><td>SPARC, Intel 32-bit</td><td>solaris-cc*</td><td>Sun CC 5.5</td></tr>
 <tr valign="top" class="even"><td>Solaris</td><td>SPARC, Intel 32-bit</td><td>solaris-g++*</td><td>GCC 3.4&#x2e;2</td></tr>
 <tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-g++</td><td>GCC 3.4&#x2e;2 (MinGW 5.1&#x2e;4)</td></tr>
 <tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-icc</td><td>icc 9.1</td></tr>
-<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc</td><td>Visual C++ 6.0</td></tr>
-<tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2003</td><td>Visual Studio 2003</td></tr>
-<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2005</td><td>Visual Studio 2005</td></tr>
-<tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2008</td><td>Visual Studio 2008</td></tr>
-<tr valign="top" class="odd"><td>Windows CE</td><td>Intel 32-bit, ARMv4i, MIPS</td><td>wince*-msvc2005</td><td>Visual Studio 2005</td></tr>
-<tr valign="top" class="even"><td>Windows CE</td><td>Intel 32-bit, ARMv4i, MIPS</td><td>wince*-msvc2008</td><td>Visual Studio 2008</td></tr>
+<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2003</td><td>Visual Studio 2003</td></tr>
+<tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2005</td><td>Visual Studio 2005</td></tr>
+<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2008</td><td>Visual Studio 2008</td></tr>
+<tr valign="top" class="even"><td>Windows CE</td><td>Intel 32-bit, ARMv4i, MIPS</td><td>wince*-msvc2005</td><td>Visual Studio 2005</td></tr>
+<tr valign="top" class="odd"><td>Windows CE</td><td>Intel 32-bit, ARMv4i, MIPS</td><td>wince*-msvc2008</td><td>Visual Studio 2008</td></tr>
 </table></p>
 <a name="community-supported-platforms"></a>
-<h4>Community Supported Platforms</h4>
+<h3>Community Supported Platforms</h3>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>OS</th><th>Architecture</th><th>Makespec</th><th>Compiler version(s)</th></tr></thead>
 <tr valign="top" class="odd"><td>Mac OS X</td><td>Intel 32-bit, PowerPC</td><td>darwin-g++</td><td>-</td></tr>
@@ -86,14 +84,15 @@
 <tr valign="top" class="odd"><td>Embedded Linux</td><td>MIPS, PowerPC</td><td>qws/linux-g++</td><td>GCC 3.4, 4.1, 4.2, 4.3</td></tr>
 </table></p>
 <a name="unsupported-platforms"></a>
-<h4>Unsupported Platforms</h4>
+<h3>Unsupported Platforms</h3>
 <p>The following platforms were supported in previous releases, either as actively supported or community supported platforms, but are now unsupported.</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>OS</th><th>Architecture</th><th>Makespec</th><th>Compiler version(s)</th></tr></thead>
 <tr valign="top" class="odd"><td>IRIX</td><td>MIPS</td><td>irix-cc*</td><td>MIPS Pro</td></tr>
 <tr valign="top" class="even"><td>IRIX</td><td>MIPS</td><td>irix-g++*</td><td>GCC 3.3</td></tr>
-<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2002</td><td>Visual Studio 2002</td></tr>
-<tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc.net</td><td>Visual Studio 2002</td></tr>
+<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc</td><td>Visual C++ 6.0</td></tr>
+<tr valign="top" class="even"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc2002</td><td>Visual Studio 2002</td></tr>
+<tr valign="top" class="odd"><td>Windows XP/Vista</td><td>Intel 32/64-bit</td><td>win32-msvc.net</td><td>Visual Studio 2002</td></tr>
 </table></p>
 <p>Qt Software's online <a href="http://www.qtsoftware.com/support-services/support/platform-support-policy">Platform Support Policy</a> for Qt describes the level of support you should expect for these platforms.</p>
 <a name="supported-features"></a>
@@ -109,17 +108,16 @@
 <tr valign="top" class="odd"></tr>
 <tr valign="top" class="even"><td>aCC series 3</td><td></td><td></td><td></td><td><b>X</b></td><td><b>X</b></td></tr>
 <tr valign="top" class="odd"><td>aCC series 6</td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td></tr>
-<tr valign="top" class="even"><td>MIPSpro 7.4&#x2e;2m</td><td colspan="5"><i>Unsupported - see the Unsupported Platforms table</i></td></tr>
-<tr valign="top" class="odd"><td>xlC 6</td><td></td><td></td><td></td><td><b>X</b></td><td><b>X</b></td></tr>
-<tr valign="top" class="even"><td><a href="known-issues.html">Intel CC 10 (see note)</a></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td></tr>
-<tr valign="top" class="odd"></tr>
-<tr valign="top" class="even"><td>MSVC 2003</td><td><b>X</b></td><td><b>X</b></td><td></td><td><b>X</b></td><td><b>X</b></td></tr>
-<tr valign="top" class="odd"><td>MSVC 2005 and up</td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td></tr>
+<tr valign="top" class="even"><td>xlC 6</td><td></td><td></td><td></td><td><b>X</b></td><td><b>X</b></td></tr>
+<tr valign="top" class="odd"><td><a href="known-issues.html">Intel CC 10 (see note)</a></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td></tr>
+<tr valign="top" class="even"></tr>
+<tr valign="top" class="odd"><td>MSVC 2003</td><td><b>X</b></td><td><b>X</b></td><td></td><td><b>X</b></td><td><b>X</b></td></tr>
+<tr valign="top" class="even"><td>MSVC 2005 and up</td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td><td><b>X</b></td></tr>
 </table></p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

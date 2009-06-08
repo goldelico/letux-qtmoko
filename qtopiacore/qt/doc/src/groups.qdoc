@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 /*!
-    \title Grouped Classes
     \group groups
+    \title Grouped Classes
     \ingroup classlists
 
     This page provides a way of navigating Qt's classes by grouping
@@ -59,9 +59,9 @@
 
 /*!
     \group advanced
+    \title Advanced Widgets
     \ingroup groups
 
-    \title Advanced Widgets
     \brief Advanced GUI widgets such as tab widgets and progress bars.
 
     These classes provide more complex user interface widgets (controls).
@@ -70,9 +70,9 @@
 
 /*!
     \group abstractwidgets
+    \title Abstract Widget Classes
     \ingroup groups
 
-    \title Abstract Widget Classes
     \brief Abstract widget classes usable through subclassing.
 
     These classes are abstract widgets; they are generally not usable in
@@ -83,10 +83,10 @@
 
 /*!
     \group accessibility
+    \title Accessibility Classes
     \ingroup groups
     \ingroup topics
 
-    \title Accessibility Classes
     \brief Classes that provide support for accessibility.
 
     Accessible applications are able to be used by users who cannot use
@@ -97,9 +97,9 @@
 
 /*!
     \group appearance
+    \title Widget Appearance and Style
     \ingroup groups
 
-    \title Widget Appearance and Style
     \brief Appearance customization with styles, fonts, colors etc.
 
     These classes are used to customize an application's appearance and
@@ -109,9 +109,9 @@
 
 /*!
     \group application
+    \title Main Window and Related Classes
     \ingroup groups
 
-    \title Main Window and Related Classes
     \brief Everything you need for a typical modern main application window,
     including menus, toolbars, workspace, etc.
 
@@ -124,9 +124,9 @@
 
 /*!
     \group basicwidgets
+    \title Basic Widgets
     \ingroup groups
 
-    \title Basic Widgets
     \brief Basic GUI widgets such as buttons, comboboxes and scroll bars.
 
     These basic widgets (controls) are designed for direct use.
@@ -136,8 +136,7 @@
 */
 
 /* \group componentmodel
-
-    \title Component Model
+   \title Component Model
 
     These classes and interfaces form the basis of the \l{Qt Component Model}.
 
@@ -145,9 +144,9 @@
 
 /*!
     \group database
+    \title Database Classes
     \ingroup groups
 
-    \title Database Classes
     \brief Database related classes, e.g. for SQL databases.
 
     These classes provide access to SQL databases.
@@ -156,9 +155,9 @@
 
 /*!
     \group dialogs
+    \title Standard Dialog Classes
     \ingroup groups
 
-    \title Standard Dialog Classes
     \brief Ready-made dialogs for file, font, color selection and more.
 
     These classes are complex widgets, composed of simpler widgets; dialog
@@ -167,9 +166,9 @@
 
 /*!
     \group desktop
+    \title Desktop Environment Classes
     \ingroup groups
 
-    \title Desktop Environment Classes
     \brief Classes for interacting with the user's desktop environment.
 
     These classes provide ways to interact with the user's desktop environment and
@@ -178,9 +177,9 @@
 
 /*!
     \group draganddrop
+    \title Drag And Drop Classes
     \ingroup groups
 
-    \title Drag And Drop Classes
     \brief Classes dealing with drag and drop and mime type encoding and decoding.
 
     These classes deal with drag and drop and the necessary mime type
@@ -190,9 +189,9 @@
 
 /*!
     \group environment
+    \title Environment Classes
     \ingroup groups
 
-    \title Environment Classes
     \brief Classes providing various global services such as event handling,
     access to system settings and internationalization.
 
@@ -203,9 +202,9 @@
 
 /*!
     \group events
+    \title Event Classes
     \ingroup groups
 
-    \title Event Classes
     \brief Classes used to create and handle events.
 
     These classes are used to create and handle events.
@@ -230,9 +229,9 @@
 
 /*!
     \group geomanagement
+    \title Layout Management
     \ingroup groups
 
-    \title Layout Management
     \brief Classes handling automatic resizing and moving of widgets, for
     composing complex dialogs.
 
@@ -242,9 +241,9 @@
 
 /*!
     \group graphicsview-api
+    \title Graphics View Classes
     \ingroup groups
 
-    \title Graphics View Classes
     \brief Classes in the Graphics View framework for interactive applications.
 
     These classes are provided by \l{The Graphics View Framework} for interactive
@@ -257,9 +256,9 @@
 
 /*!
     \group helpsystem
+    \title Help System
     \ingroup groups
 
-    \title Help System
     \brief Classes used to provide online-help for applications.
 
     \keyword help system
@@ -284,9 +283,9 @@
 
 /*!
     \group io
+    \title Input/Output and Networking
     \ingroup groups
 
-    \title Input/Output and Networking
     \brief Classes providing file input and output along with directory and
     network handling.
 
@@ -296,9 +295,9 @@
 
 /*!
     \group misc
+    \title Miscellaneous Classes
     \ingroup groups
 
-    \title Miscellaneous Classes
     \brief Various other useful classes.
 
     These classes are useful classes not fitting into any other category.
@@ -308,9 +307,9 @@
 
 /*!
     \group model-view
+    \title Model/View Classes
     \ingroup groups
 
-    \title Model/View Classes
     \brief Classes that use the model/view design pattern.
 
     These classes use the model/view design pattern in which the
@@ -322,9 +321,9 @@
 
 /*!
     \group multimedia
+    \title Multimedia, Graphics and Printing
     \ingroup groups
 
-    \title Multimedia, Graphics and Printing
     \brief Classes that provide support for graphics (2D, and with OpenGL, 3D),
     image encoding, decoding, and manipulation, sound, animation,
     printing, etc.
@@ -340,9 +339,9 @@
 
 /*!
     \group objectmodel
+    \title Object Model
     \ingroup groups
 
-    \title Object Model
     \brief The Qt GUI toolkit's underlying object model.
 
     These classes form the basis of the \l{Qt Object Model}.
@@ -351,9 +350,9 @@
 
 /*!
     \group organizers
+    \title Organizers
     \ingroup groups
 
-    \title Organizers
     \brief User interface organizers such as splitters, tab bars, button groups, etc.
 
     These classes are used to organize and group GUI primitives into more
@@ -364,9 +363,9 @@
 
 /*!
     \group plugins
+    \title Plugin Classes
     \ingroup groups
 
-    \title Plugin Classes
     \brief Plugin related classes.
 
     These classes deal with shared libraries, (e.g. .so and DLL files),
@@ -380,9 +379,9 @@
 
 /*!
     \group qws
+    \title Qt for Embedded Linux Classes
     \ingroup groups
 
-    \title Qt for Embedded Linux Classes
     \ingroup qt-embedded-linux
     \brief Classes that are specific to Qt for Embedded Linux.
 
@@ -391,10 +390,10 @@
 
 /*!
     \group shared
+    \title Implicitly Shared Classes
     \ingroup architecture
     \ingroup groups
 
-    \title Implicitly Shared Classes
     \brief Classes that use reference counting for fast copying.
 
     \keyword implicit data sharing
@@ -488,9 +487,9 @@
 
 /*!
     \group ssl
+    \title Secure Sockets Layer (SSL) Classes
     \ingroup groups
 
-    \title Secure Sockets Layer (SSL) Classes
     \brief Classes for secure communication over network sockets.
     \keyword SSL
 
@@ -515,10 +514,10 @@
 
 /*!
     \group text
+    \title Text Processing Classes
     \ingroup groups
     \ingroup text-processing
 
-    \title Text Processing Classes
     \brief Classes for text processing. (See also \l{XML Classes}.)
 
     These classes are relevant to text processing. See also the
@@ -528,9 +527,9 @@
 
 /*!
     \group thread
+    \title Threading Classes
     \ingroup groups
 
-    \title Threading Classes
     \brief Classes that provide threading support.
 
     These classes are relevant to threaded applications. See
@@ -541,9 +540,9 @@
 
 /*!
     \group time
+    \title Date and Time Classes
     \ingroup groups
 
-    \title Date and Time Classes
     \brief Classes for handling date and time.
 
     These classes provide system-independent date and time abstractions.
@@ -552,9 +551,9 @@
 
 /*!
     \group tools
+    \title Non-GUI Classes
     \ingroup groups
 
-    \title Non-GUI Classes
     \brief Collection classes such as list, queue, stack and string, along
     with other classes that can be used without needing QApplication.
 
@@ -568,9 +567,9 @@
 
 /*!
     \group xml-tools
+    \title XML Classes
     \ingroup groups
 
-    \title XML Classes
     \brief Classes that support XML, via, for example DOM and SAX.
 
     These classes are relevant to XML users.
@@ -578,10 +577,10 @@
 
 /*!
     \group script
+    \title Scripting Classes
     \ingroup groups
     \ingroup scripting
 
-    \title Scripting Classes
     \brief Qt Script-related classes and overviews.
 
     These classes are relevant to Qt Script users.
@@ -589,10 +588,10 @@
 
 /*!
     \group scripttools
+    \title Script Tools
     \ingroup groups
     \ingroup scripting
 
-    \title Script Tools
     \brief Classes for managing and debugging scripts.
 
     These classes are relevant to developers who are working with Qt Script's

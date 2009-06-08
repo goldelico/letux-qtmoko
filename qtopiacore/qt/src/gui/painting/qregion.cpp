@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qregion.h"
+#include "qpainterpath.h"
 #include "qpolygon.h"
 #include "qbuffer.h"
 #include "qdatastream.h"
@@ -49,7 +50,6 @@
 #include <qdebug.h>
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_WINCE)
-#include "qpainterpath.h"
 #include "qimage.h"
 #include "qbitmap.h"
 #include <stdlib.h>
@@ -65,9 +65,17 @@ QT_BEGIN_NAMESPACE
     \ingroup shared
 
     QRegion is used with QPainter::setClipRegion() to limit the paint
-    area to what needs to be painted. There is also a
-    QWidget::repaint() function that takes a QRegion parameter.
-    QRegion is the best tool for reducing flicker.
+    area to what needs to be painted. There is also a QWidget::repaint()
+    function that takes a QRegion parameter. QRegion is the best tool for
+    minimizing the amount of screen area to be updated by a repaint.
+
+    This class is not suitable for constructing shapes for rendering, especially
+    as outlines. Use QPainterPath to create paths and shapes for use with
+    QPainter.
+
+    QRegion is an \l{implicitly shared} class.
+
+    \section1 Creating and Using Regions
 
     A region can be created from a rectangle, an ellipse, a polygon or
     a bitmap. Complex regions may be created by combining simple
@@ -84,8 +92,6 @@ QT_BEGIN_NAMESPACE
     Example of using complex regions:
     \snippet doc/src/snippets/code/src_gui_painting_qregion.cpp 0
 
-    QRegion is an \l{implicitly shared} class.
-
     \warning Due to window system limitations, the whole coordinate space for a
     region is limited to the points between -32767 and 32767 on Windows
     95/98/ME. You can circumvent this limitation by using a QPainterPath.
@@ -93,7 +99,7 @@ QT_BEGIN_NAMESPACE
     \section1 Additional License Information
 
     On Embedded Linux, Windows CE and X11 platforms, parts of this class rely on
-    code obtained under the following license:
+    code obtained under the following licenses:
 
     \legalese
     Copyright (c) 1987  X Consortium
@@ -120,9 +126,7 @@ QT_BEGIN_NAMESPACE
     in this Software without prior written authorization from the X Consortium.
     \endlegalese
 
-    \raw HTML
-    <hr />
-    \endraw
+    \br
 
     \legalese
     Copyright 1987 by Digital Equipment Corporation, Maynard, Massachusetts.
@@ -921,6 +925,166 @@ QRegion QRegion::intersect(const QRect &r) const
     Only some platforms have these restrictions (Qt for Embedded Linux, X11 and Mac OS X).
     \endomit
 */
+
+namespace {
+
+struct Segment
+{
+    Segment() {}
+    Segment(const QPoint &p)
+        : added(false)
+        , point(p)
+    {
+    }
+
+    int left() const
+    {
+        return qMin(point.x(), next->point.x());
+    }
+
+    int right() const
+    {
+        return qMax(point.x(), next->point.x());
+    }
+
+    bool overlaps(const Segment &other) const
+    {
+        return left() < other.right() && other.left() < right();
+    }
+
+    void connect(Segment &other)
+    {
+        next = &other;
+        other.prev = this;
+
+        horizontal = (point.y() == other.point.y());
+    }
+
+    void merge(Segment &other)
+    {
+        if (right() <= other.right()) {
+            QPoint p = other.point;
+            Segment *oprev = other.prev;
+
+            other.point = point;
+            other.prev = prev;
+            prev->next = &other;
+
+            point = p;
+            prev = oprev;
+            oprev->next = this;
+        } else {
+            Segment *onext = other.next;
+            other.next = next;
+            next->prev = &other;
+
+            next = onext;
+            next->prev = this;
+        }
+    }
+
+    int horizontal : 1;
+    int added : 1;
+
+    QPoint point;
+    Segment *prev;
+    Segment *next;
+};
+
+void mergeSegments(Segment *a, int na, Segment *b, int nb)
+{
+    int i = 0;
+    int j = 0;
+
+    while (i != na && j != nb) {
+        Segment &sa = a[i];
+        Segment &sb = b[j];
+        const int ra = sa.right();
+        const int rb = sb.right();
+        if (sa.overlaps(sb))
+            sa.merge(sb);
+        i += (rb >= ra);
+        j += (ra >= rb);
+    }
+}
+
+void addSegmentsToPath(Segment *segment, QPainterPath &path)
+{
+    Segment *current = segment;
+    path.moveTo(current->point);
+
+    current->added = true;
+
+    Segment *last = current;
+    current = current->next;
+    while (current != segment) {
+        if (current->horizontal != last->horizontal)
+            path.lineTo(current->point);
+        current->added = true;
+        last = current;
+        current = current->next;
+    }
+}
+
+}
+
+Q_AUTOTEST_EXPORT QPainterPath qt_regionToPath(const QRegion &region)
+{
+    QPainterPath result;
+    if (region.numRects() == 1) {
+        result.addRect(region.boundingRect());
+        return result;
+    }
+
+    const QVector<QRect> rects = region.rects();
+
+    QVarLengthArray<Segment> segments;
+    segments.resize(4 * rects.size());
+
+    const QRect *rect = rects.constData();
+    const QRect *end = rect + rects.size();
+
+    int lastRowSegmentCount = 0;
+    Segment *lastRowSegments = 0;
+
+    int lastSegment = 0;
+    int lastY = 0;
+    while (rect != end) {
+        const int y = rect[0].y();
+        int count = 0;
+        while (&rect[count] != end && rect[count].y() == y)
+            ++count;
+
+        for (int i = 0; i < count; ++i) {
+            int offset = lastSegment + i;
+            segments[offset] = Segment(rect[i].topLeft());
+            segments[offset += count] = Segment(rect[i].topRight() + QPoint(1, 0));
+            segments[offset += count] = Segment(rect[i].bottomRight() + QPoint(1, 1));
+            segments[offset += count] = Segment(rect[i].bottomLeft() + QPoint(0, 1));
+
+            offset = lastSegment + i;
+            for (int j = 0; j < 4; ++j)
+                segments[offset + j * count].connect(segments[offset + ((j + 1) % 4) * count]);
+        }
+
+        if (lastRowSegments && lastY == y)
+            mergeSegments(lastRowSegments, lastRowSegmentCount, &segments[lastSegment], count);
+
+        lastRowSegments = &segments[lastSegment + 2 * count];
+        lastRowSegmentCount = count;
+        lastSegment += 4 * count;
+        lastY = y + rect[0].height();
+        rect += count;
+    }
+
+    for (int i = 0; i < lastSegment; ++i) {
+        Segment *segment = &segments[i];
+        if (!segment->added)
+            addSegmentsToPath(segment, result);
+    }
+
+    return result;
+}
 
 #if defined(Q_OS_UNIX) || defined(Q_OS_WINCE)
 

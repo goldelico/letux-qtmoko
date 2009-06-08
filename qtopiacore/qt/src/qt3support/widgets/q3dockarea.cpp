@@ -459,7 +459,7 @@ int Q3DockAreaLayout::widthForHeight(int h) const
 
 
 /*!
-    \class Q3DockArea q3dockarea.h
+    \class Q3DockArea
     \brief The Q3DockArea class manages and lays out Q3DockWindows.
 
     \compat

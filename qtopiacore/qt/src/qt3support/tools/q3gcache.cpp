@@ -673,7 +673,7 @@ void Q3GCache::statistics() const
  *****************************************************************************/
 
 /*!
-  \class Q3GCacheIterator qgcache.h
+  \class Q3GCacheIterator
   \reentrant
   \brief The Q3GCacheIterator class is an internal class for implementing Q3CacheIterator and
   QIntCacheIterator.

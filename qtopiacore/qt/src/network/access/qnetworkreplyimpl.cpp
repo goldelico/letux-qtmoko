@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qnetworkreplyimpl_p.h"
+#include "qnetworkaccessbackend_p.h"
 #include "qnetworkcookie.h"
 #include "qabstractnetworkcache.h"
 #include "QtCore/qcoreapplication.h"

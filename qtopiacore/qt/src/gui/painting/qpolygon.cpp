@@ -822,6 +822,9 @@ bool QPolygon::containsPoint(const QPoint &pt, Qt::FillRule fillRule) const
 
     Returns a polygon which is the union of this polygon and \a r.
 
+    Set operations on polygons, will treat the polygons as areas, and
+    implicitly close the polygon.
+
     \sa intersected(), subtracted()
 */
 
@@ -837,6 +840,9 @@ QPolygon QPolygon::united(const QPolygon &r) const
     \since 4.3
 
     Returns a polygon which is the intersection of this polygon and \a r.
+
+    Set operations on polygons will treat the polygons as
+    areas. Non-closed polygons will be treated as implicitly closed.
 */
 
 QPolygon QPolygon::intersected(const QPolygon &r) const
@@ -851,6 +857,10 @@ QPolygon QPolygon::intersected(const QPolygon &r) const
     \since 4.3
 
     Returns a polygon which is \a r subtracted from this polygon.
+
+    Set operations on polygons will treat the polygons as
+    areas. Non-closed polygons will be treated as implicitly closed.
+
 */
 
 QPolygon QPolygon::subtracted(const QPolygon &r) const
@@ -865,6 +875,9 @@ QPolygon QPolygon::subtracted(const QPolygon &r) const
     \since 4.3
 
     Returns a polygon which is the union of this polygon and \a r.
+
+    Set operations on polygons will treat the polygons as
+    areas. Non-closed polygons will be treated as implicitly closed.
 
     \sa intersected(), subtracted()
 */
@@ -881,6 +894,10 @@ QPolygonF QPolygonF::united(const QPolygonF &r) const
     \since 4.3
 
     Returns a polygon which is the intersection of this polygon and \a r.
+
+    Set operations on polygons will treat the polygons as
+    areas. Non-closed polygons will be treated as implicitly closed.
+
 */
 
 QPolygonF QPolygonF::intersected(const QPolygonF &r) const
@@ -895,6 +912,10 @@ QPolygonF QPolygonF::intersected(const QPolygonF &r) const
     \since 4.3
 
     Returns a polygon which is \a r subtracted from this polygon.
+
+    Set operations on polygons will treat the polygons as
+    areas. Non-closed polygons will be treated as implicitly closed.
+
 */
 
 QPolygonF QPolygonF::subtracted(const QPolygonF &r) const

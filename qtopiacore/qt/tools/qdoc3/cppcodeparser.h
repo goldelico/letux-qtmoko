@@ -62,64 +62,78 @@ class Tokenizer;
 
 class CppCodeParser : public CodeParser
 {
-public:
+ public:
     CppCodeParser();
     ~CppCodeParser();
 
-    virtual void initializeParser( const Config& config );
+    virtual void initializeParser(const Config& config);
     virtual void terminateParser();
     virtual QString language();
     virtual QString headerFileNameFilter();
     virtual QString sourceFileNameFilter();
-    virtual void parseHeaderFile( const Location& location,
-				  const QString& filePath, Tree *tree );
-    virtual void parseSourceFile( const Location& location,
-				  const QString& filePath, Tree *tree );
-    virtual void doneParsingHeaderFiles( Tree *tree );
-    virtual void doneParsingSourceFiles( Tree *tree );
+    virtual void parseHeaderFile(const Location& location,
+                                 const QString& filePath, 
+                                 Tree *tree);
+    virtual void parseSourceFile(const Location& location,
+                                 const QString& filePath, 
+                                 Tree *tree);
+    virtual void doneParsingHeaderFiles(Tree *tree);
+    virtual void doneParsingSourceFiles(Tree *tree);
 
-    const FunctionNode *findFunctionNode(const QString& synopsis, Tree *tree, Node *relative = 0, bool fuzzy = false);
+    const FunctionNode *findFunctionNode(const QString& synopsis, 
+                                         Tree *tree, 
+                                         Node *relative = 0, 
+                                         bool fuzzy = false);
 
-protected:
+ protected:
     virtual QSet<QString> topicCommands();
-    virtual Node *processTopicCommand( const Doc& doc, const QString& command,
-				       const QString& arg );
+    virtual Node *processTopicCommand(const Doc& doc, 
+                                      const QString& command,
+                                      const QString& arg);
     virtual QSet<QString> otherMetaCommands();
-    virtual void processOtherMetaCommand( const Doc& doc,
-					  const QString& command,
-					  const QString& arg, Node *node );
-    void processOtherMetaCommands( const Doc& doc, Node *node );
+    virtual void processOtherMetaCommand(const Doc& doc,
+                                         const QString& command,
+                                         const QString& arg,
+                                         Node *node);
+    void processOtherMetaCommands(const Doc& doc, Node *node);
 
-private:
-    void reset( Tree *tree );
+ private:
+    void reset(Tree *tree);
     void readToken();
     const Location& location();
     QString previousLexeme();
     QString lexeme();
-    bool match( int target );
+    bool match(int target);
     bool matchCompat();
-    bool matchTemplateAngles( CodeChunk *type = 0 );
+    bool matchTemplateAngles(CodeChunk *type = 0);
     bool matchTemplateHeader();
-    bool matchDataType( CodeChunk *type, QString *var = 0 );
-    bool matchParameter( FunctionNode *func );
-    bool matchFunctionDecl( InnerNode *parent, QStringList *parentPathPtr = 0,
-			    FunctionNode **funcPtr = 0, const QString &templateStuff = QString() );
-    bool matchBaseSpecifier( ClassNode *classe, bool isClass );
-    bool matchBaseList( ClassNode *classe, bool isClass );
-    bool matchClassDecl( InnerNode *parent, const QString &templateStuff = QString() );
+    bool matchDataType(CodeChunk *type, QString *var = 0);
+    bool matchParameter(FunctionNode *func);
+    bool matchFunctionDecl(InnerNode *parent, 
+                           QStringList *parentPathPtr = 0,
+                           FunctionNode **funcPtr = 0, 
+                           const QString &templateStuff = QString());
+    bool matchBaseSpecifier(ClassNode *classe, bool isClass);
+    bool matchBaseList(ClassNode *classe, bool isClass);
+    bool matchClassDecl(InnerNode *parent, 
+                        const QString &templateStuff = QString());
     bool matchNamespaceDecl(InnerNode *parent);
     bool matchUsingDecl();
-    bool matchEnumItem( InnerNode *parent, EnumNode *enume );
-    bool matchEnumDecl( InnerNode *parent );
-    bool matchTypedefDecl( InnerNode *parent );
-    bool matchProperty( InnerNode *parent );
-    bool matchDeclList( InnerNode *parent );
+    bool matchEnumItem(InnerNode *parent, EnumNode *enume);
+    bool matchEnumDecl(InnerNode *parent);
+    bool matchTypedefDecl(InnerNode *parent);
+    bool matchProperty(InnerNode *parent);
+    bool matchDeclList(InnerNode *parent);
     bool matchDocsAndStuff();
-    bool makeFunctionNode(const QString &synopsis, QStringList *parentPathPtr,
-			  FunctionNode **funcPtr, InnerNode *root = 0);
+    bool makeFunctionNode(const QString &synopsis, 
+                          QStringList *parentPathPtr,
+			  FunctionNode **funcPtr, 
+                          InnerNode *root = 0);
     void parseQiteratorDotH(const Location &location, const QString &filePath);
-    void instantiateIteratorMacro(const QString &container, const QString &includeFile,
-				  const QString &macroDef, Tree *tree);
+    void instantiateIteratorMacro(const QString &container, 
+                                  const QString &includeFile,
+				  const QString &macroDef, 
+                                  Tree *tree);
     void createExampleFileNodes(FakeNode *fake);
 
     QMap<QString, Node::Type> nodeTypeMap;

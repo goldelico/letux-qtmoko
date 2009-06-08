@@ -1103,6 +1103,8 @@ void QSortFilterProxyModelPrivate::_q_sourceReset()
     // All internal structures are deleted in clear()
     q->reset();
     update_source_sort_column();
+    if (dynamic_sortfilter)
+        sort();
 }
 
 void QSortFilterProxyModelPrivate::_q_sourceLayoutAboutToBeChanged()
@@ -1180,6 +1182,9 @@ void QSortFilterProxyModelPrivate::_q_sourceColumnsInserted(
 {
     Q_Q(const QSortFilterProxyModel);
     source_items_inserted(source_parent, start, end, Qt::Horizontal);
+
+    if (source_parent.isValid())
+        return; //we sort according to the root column only
     if (source_sort_column == -1) {
         //we update the source_sort_column depending on the prox_sort_column
         if (update_source_sort_column())
@@ -1204,6 +1209,9 @@ void QSortFilterProxyModelPrivate::_q_sourceColumnsRemoved(
 {
     Q_Q(const QSortFilterProxyModel);
     source_items_removed(source_parent, start, end, Qt::Horizontal);
+
+    if (source_parent.isValid())
+        return; //we sort according to the root column only
     if (start <= source_sort_column) {
         if (end < source_sort_column)
             source_sort_column -= end - start + 1;
@@ -1489,6 +1497,7 @@ void QSortFilterProxyModel::setSourceModel(QAbstractItemModel *sourceModel)
 
     d->clear_mapping();
     reset();
+    d->update_source_sort_column();
 }
 
 /*!
@@ -1560,6 +1569,10 @@ bool QSortFilterProxyModel::hasChildren(const QModelIndex &parent) const
         return false;
     if (!d->model->hasChildren(source_parent))
         return false;
+
+    if (d->model->canFetchMore(source_parent))
+        return true; //we assume we might have children that can be fetched
+
     QSortFilterProxyModelPrivate::Mapping *m = d->create_mapping(source_parent).value();
     return m->source_rows.count() != 0 && m->source_columns.count() != 0;
 }
@@ -1887,7 +1900,7 @@ QSize QSortFilterProxyModel::span(const QModelIndex &index) const
 void QSortFilterProxyModel::sort(int column, Qt::SortOrder order)
 {
     Q_D(QSortFilterProxyModel);
-    if (d->proxy_sort_column == column && d->sort_order == order)
+    if (d->dynamic_sortfilter && d->proxy_sort_column == column && d->sort_order == order)
         return;
     d->sort_order = order;
     d->proxy_sort_column = column;
@@ -2101,6 +2114,8 @@ void QSortFilterProxyModel::setDynamicSortFilter(bool enable)
 {
     Q_D(QSortFilterProxyModel);
     d->dynamic_sortfilter = enable;
+    if (enable)
+        d->sort();
 }
 
 /*!

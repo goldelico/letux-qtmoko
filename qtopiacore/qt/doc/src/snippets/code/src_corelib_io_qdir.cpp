@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 QDir("/home/user/Documents")
 QDir("C:/Documents and Settings")
@@ -127,3 +131,5 @@ namespace MyNamespace
 //! [15]
 Q_CLEANUP_RESOURCE(myapp);
 //! [15]
+
+}

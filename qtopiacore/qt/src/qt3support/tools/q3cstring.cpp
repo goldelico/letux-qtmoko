@@ -56,7 +56,7 @@ QT_BEGIN_NAMESPACE
  *****************************************************************************/
 
 /*!
-    \class Q3CString q3cstring.h
+    \class Q3CString
     \reentrant
     \brief The Q3CString class provides an abstraction of the classic C
     zero-terminated char array (char *).

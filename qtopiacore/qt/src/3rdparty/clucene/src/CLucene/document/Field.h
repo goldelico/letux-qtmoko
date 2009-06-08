@@ -225,8 +225,7 @@ public:
 	qreal getBoost();
       
 	/** Sets the boost factor hits on this field.  This value will be
-	* multiplied into the score of all hits on this this field of this
-	* document.
+	* multiplied into the score of all hits on this field of this document.
 	*
 	* <p>The boost is multiplied by {@link Document#getBoost()} of the document
 	* containing this field.  If a document has multiple fields with the same

@@ -313,7 +313,7 @@ public:
     bool dynamicTr;
     bool trEnabled;
 
-    FormBuilderPrivate(): loader(0), dynamicTr(false), trEnabled(true) {}
+    FormBuilderPrivate(): loader(0), dynamicTr(false), trEnabled(true), m_trwatch(0) {}
 
     QWidget *defaultCreateWidget(const QString &className, QWidget *parent, const QString &name)
     {

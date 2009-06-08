@@ -81,23 +81,23 @@ QDomDocument QDBusModel::introspect(const QString &path)
 {
     QDomDocument doc;
 
-    QDBusInterface iface(service, path, "org.freedesktop.DBus.Introspectable", c);
+    QDBusInterface iface(service, path, QLatin1String("org.freedesktop.DBus.Introspectable"), c);
     if (!iface.isValid()) {
         QDBusError err(iface.lastError());
-        emit busError(QString("Cannot introspect object %1 at %2:\n  %3 (%4)\n").arg(path).arg(
+        emit busError(QString::fromLatin1("Cannot introspect object %1 at %2:\n  %3 (%4)\n").arg(path).arg(
                       service).arg(err.name()).arg(err.message()));
         return doc;
     }
 
-    QDBusReply<QString> xml = iface.call("Introspect");
+    QDBusReply<QString> xml = iface.call(QLatin1String("Introspect"));
 
     if (!xml.isValid()) {
         QDBusError err(xml.error());
         if (err.isValid()) {
-            emit busError(QString("Call to object %1 at %2:\n  %3 (%4) failed\n").arg(
+            emit busError(QString::fromLatin1("Call to object %1 at %2:\n  %3 (%4) failed\n").arg(
                         path).arg(service).arg(err.name()).arg(err.message()));
         } else {
-            emit busError(QString("Invalid XML received from object %1 at %2\n").arg(
+            emit busError(QString::fromLatin1("Invalid XML received from object %1 at %2\n").arg(
                     path).arg(service));
         }
         return doc;
@@ -116,16 +116,16 @@ void QDBusModel::addMethods(QDBusItem *parent, const QDomElement &iface)
         QDBusItem *item = 0;
         if (child.tagName() == QLatin1String("method")) {
             item = new QDBusItem(QDBusModel::MethodItem,
-                    child.attribute("name"), parent);
-            item->caption = "Method: " + item->name;
+                    child.attribute(QLatin1String("name")), parent);
+            item->caption = QLatin1String("Method: ") + item->name;
         } else if (child.tagName() == QLatin1String("signal")) {
             item = new QDBusItem(QDBusModel::SignalItem,
-                    child.attribute("name"), parent);
-            item->caption = "Signal: " + item->name;
+                    child.attribute(QLatin1String("name")), parent);
+            item->caption = QLatin1String("Signal: ") + item->name;
         } else if (child.tagName() == QLatin1String("property")) {
             item = new QDBusItem(QDBusModel::PropertyItem,
-                    child.attribute("name"), parent);
-            item->caption = "Property: " + item->name;
+                    child.attribute(QLatin1String("name")), parent);
+            item->caption = QLatin1String("Property: ") + item->name;
         } else {
             qDebug() << "addMethods: unknown tag:" << child.tagName();
         }
@@ -148,13 +148,13 @@ void QDBusModel::addPath(QDBusItem *parent)
     while (!child.isNull()) {
         if (child.tagName() == QLatin1String("node")) {
             QDBusItem *item = new QDBusItem(QDBusModel::PathItem,
-                        child.attribute("name") + QLatin1Char('/'), parent);
+                        child.attribute(QLatin1String("name")) + QLatin1Char('/'), parent);
             parent->children.append(item);
 
             addMethods(item, child);
         } else if (child.tagName() == QLatin1String("interface")) {
             QDBusItem *item = new QDBusItem(QDBusModel::InterfaceItem,
-                        child.attribute("name"), parent);
+                        child.attribute(QLatin1String("name")), parent);
             parent->children.append(item);
 
             addMethods(item, child);

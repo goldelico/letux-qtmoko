@@ -504,7 +504,8 @@ static char* readArrayBuffer(QList<QVariant>& list, char *buffer, short curDim,
             case blr_text2: {
                 int o;
                 for (int i = 0; i < numElements[dim]; ++i) {
-                    for(o = 0; o < strLen && buffer[o]!=0; ++o );
+                    for(o = 0; o < strLen && buffer[o]!=0; ++o )
+                        ;
 
                     if (tc)
                         valList.append(tc->toUnicode(buffer, o));
@@ -1268,11 +1269,30 @@ QSqlRecord QIBaseResult::record() const
     for (int i = 0; i < d->sqlda->sqld; ++i) {
         v = d->sqlda->sqlvar[i];
         QSqlField f(QString::fromLatin1(v.aliasname, v.aliasname_length).simplified(),
-                    qIBaseTypeName2(d->sqlda->sqlvar[i].sqltype, v.sqlscale < 0));
-        f.setLength(v.sqllen);
-        f.setPrecision(v.sqlscale);
+                    qIBaseTypeName2(v.sqltype, v.sqlscale < 0));
+        QSqlQuery q(new QIBaseResult(d->db));
+        q.setForwardOnly(true);
+        q.exec(QLatin1String("select b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE, b.RDB$FIELD_LENGTH, a.RDB$NULL_FLAG "
+                "FROM RDB$RELATION_FIELDS a, RDB$FIELDS b "
+                "WHERE b.RDB$FIELD_NAME = a.RDB$FIELD_SOURCE "
+                "AND a.RDB$RELATION_NAME = '") + QString::fromAscii(v.relname, v.relname_length).toUpper() + QLatin1String("' "
+                "AND a.RDB$FIELD_NAME = '") + QString::fromAscii(v.sqlname, v.sqlname_length).toUpper() + QLatin1String("' "));
+        if(q.first()) {
+            if(v.sqlscale < 0) {
+                f.setLength(q.value(0).toInt());
+                f.setPrecision(qAbs(q.value(1).toInt()));
+            } else {
+                f.setLength(q.value(2).toInt());
+                f.setPrecision(0);
+            }
+            f.setRequiredStatus(q.value(3).toBool() ? QSqlField::Required : QSqlField::Optional);
+        }
+        else {
+            f.setLength(0);
+            f.setPrecision(0);
+            f.setRequiredStatus(QSqlField::Unknown);
+        }
         f.setSqlType(v.sqltype);
-        f.setRequiredStatus(QSqlField::Unknown);
         rec.append(f);
     }
     return rec;
@@ -1544,8 +1564,13 @@ QSqlRecord QIBaseDriver::record(const QString& tablename) const
         int type = q.value(1).toInt();
         bool hasScale = q.value(3).toInt() < 0;
         QSqlField f(q.value(0).toString().simplified(), qIBaseTypeName(type, hasScale));
-        f.setLength(q.value(2).toInt());
-        f.setPrecision(q.value(4).toInt());
+        if(hasScale) {
+            f.setLength(q.value(4).toInt());
+            f.setPrecision(qAbs(q.value(3).toInt()));
+        } else {
+            f.setLength(q.value(2).toInt());
+            f.setPrecision(0);
+        }
         f.setRequired(q.value(5).toInt() > 0 ? true : false);
         f.setSqlType(type);
 
@@ -1777,9 +1802,11 @@ void QIBaseDriver::qHandleEventNotification(void *updatedResultBuffer)
 QString QIBaseDriver::escapeIdentifier(const QString &identifier, IdentifierType) const
 {
     QString res = identifier;
-    res.replace(QLatin1Char('"'), QLatin1String("\"\""));
-    res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
-    res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('"')) && identifier.right(1) != QString(QLatin1Char('"')) ) {
+        res.replace(QLatin1Char('"'), QLatin1String("\"\""));
+        res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
+        res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+    }
     return res;
 }
 

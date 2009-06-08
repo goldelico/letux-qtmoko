@@ -81,7 +81,9 @@ QT_BEGIN_NAMESPACE
 //
 // QGLGraphicsSystem
 //
-
+#ifdef Q_WS_WIN
+Q_GUI_EXPORT bool qt_win_owndc_required;
+#endif
 QGLGraphicsSystem::QGLGraphicsSystem()
     : QGraphicsSystem()
 {
@@ -160,7 +162,6 @@ QGLGraphicsSystem::QGLGraphicsSystem()
 #elif defined(Q_WS_WIN)
     QGLWindowSurface::surfaceFormat.setDoubleBuffer(false);
 
-    Q_GUI_EXPORT bool qt_win_owndc_required;
     qt_win_owndc_required = true;
 #endif
 }

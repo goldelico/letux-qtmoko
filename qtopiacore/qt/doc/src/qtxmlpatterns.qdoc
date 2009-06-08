@@ -41,8 +41,8 @@
 
 /*!
     \module QtXmlPatterns
-    \since 4.4
     \title QtXmlPatterns Module
+    \since 4.4
     \contentspage Qt's Modules
     \previouspage QtXml
     \nextpage Phonon Module

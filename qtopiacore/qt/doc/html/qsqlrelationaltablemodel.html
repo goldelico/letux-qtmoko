@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/sql/models/qsqlrelationaltablemodel.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/sql/models/qsqlrelationaltablemodel.cpp -->
 <head>
   <title>Qt 4.5: QSqlRelationalTableModel Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -77,6 +77,7 @@
 <li>The table's primary key may not contain a relation to another table.</li>
 <li>If a relational table contains keys that refer to non-existent rows in the referenced table, the rows containing the invalid keys will not be exposed through the model. The user or the database is responsible for keeping referential integrity.</li>
 <li>If a relation's display column name is also used as a column name in the main table, or if it is used as display column name in more than one relation it will be aliased. The alias is is the relation's table name and display column name joined by an underscore (e.g&#x2e; tablename_columnname). All occurrences of the duplicate display column name are aliased when duplication is detected, but no aliasing is done to the column names in the main table. The aliasing doesn't affect <a href="qsqlrelation.html">QSqlRelation</a>, so <a href="qsqlrelation.html#displayColumn">QSqlRelation::displayColumn</a>() will return the original display column name, but <a href="qsqlrecord.html#fieldName">QSqlRecord::fieldName</a>() will return aliases.</li>
+<li>When using <a href="qsqlrelationaltablemodel.html#setData">setData</a>() the role should always be <a href="qt.html#ItemDataRole-enum">Qt::EditRole</a>, and when using <a href="qabstractitemmodel.html#data">data</a>() the role should always be <a href="qt.html#ItemDataRole-enum">Qt::DisplayRole</a>.</li>
 </ul>
 <p>See also <a href="qsqlrelation.html">QSqlRelation</a>, <a href="qsqlrelationaldelegate.html">QSqlRelationalDelegate</a>, and <a href="sql-relationaltablemodel.html">Relational Table Model Example</a>.</p>
 <hr />
@@ -95,7 +96,7 @@
 <h3 class="fn"><a name="setData"></a>bool QSqlRelationalTableModel::setData ( const <a href="qmodelindex.html">QModelIndex</a> &amp; <i>index</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>value</i>, int <i>role</i> = Qt::EditRole )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Sets the data for the <i>role</i> in the item with the specified <i>index</i> to the <i>value</i> given. Depending on the edit strategy, the value might be applied to the database at once, or it may be cached in the model.</p>
 <p>Returns true if the value could be set, or false on error (for example, if <i>index</i> is out of bounds).</p>
-<p>For relational columns, <i>value</i> must be the index, not the display value.</p>
+<p>For relational columns, <i>value</i> must be the index, not the display value. The index must also exist in the referenced table, otherwise the function returns false.</p>
 <p>Reimplemented from <a href="qabstractitemmodel.html#setData">QAbstractItemModel</a>.</p>
 <p>See also <a href="qsqltablemodel.html#editStrategy">editStrategy</a>(), <a href="qabstractitemmodel.html#data">data</a>(), <a href="qsqltablemodel.html#submit">submit</a>(), and <a href="qsqltablemodel.html#revertRow">revertRow</a>().</p>
 <h3 class="fn"><a name="setRelation"></a>void QSqlRelationalTableModel::setRelation ( int <i>column</i>, const <a href="qsqlrelation.html">QSqlRelation</a> &amp; <i>relation</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -111,6 +112,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

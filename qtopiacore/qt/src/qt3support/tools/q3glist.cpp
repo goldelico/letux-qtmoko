@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-  \class Q3LNode qglist.h
+  \class Q3LNode
   \reentrant
   \brief The Q3LNode class is an internal class for the Q3PtrList template collection.
 
@@ -76,7 +76,7 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-  \class Q3GList qglist.h
+  \class Q3GList
   \reentrant
   \brief The Q3GList class is an internal class for implementing Qt collection classes.
 
@@ -1082,7 +1082,7 @@ Q3LNode* Q3GList::erase( Q3LNode* it )
  *****************************************************************************/
 
 /*!
-  \class Q3GListIterator qglist.h
+  \class Q3GListIterator
   \reentrant
   \brief The Q3GListIterator class is an internal class for implementing Q3PtrListIterator.
 

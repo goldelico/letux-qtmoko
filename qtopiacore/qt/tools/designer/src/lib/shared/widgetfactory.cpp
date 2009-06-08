@@ -275,6 +275,10 @@ QWidget*  WidgetFactory::createCustomWidget(const QString &className, QWidget *p
         if (widgetInfoIndex != -1) {
             if (wdb->item(widgetInfoIndex)->extends().isEmpty()) {
                 const QDesignerMetaObjectInterface *mo = core()->introspection()->metaObject(rc)->superClass();
+                // If we hit on a 'Q3DesignerXXWidget' that claims to be a 'Q3XXWidget', step
+                // over.
+                if (mo && mo->className() == className)
+                    mo = mo->superClass();
                 while (mo != 0) {
                     if (core()->widgetDataBase()->indexOfClassName(mo->className()) != -1) {
                         wdb->item(widgetInfoIndex)->setExtends(mo->className());

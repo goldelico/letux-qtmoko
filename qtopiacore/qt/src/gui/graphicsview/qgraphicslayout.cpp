@@ -405,6 +405,10 @@ void QGraphicsLayout::widgetEvent(QEvent *e)
     reimplementation can assume that \a index is valid (i.e., it
     respects the value of count()).
 
+    The implementation must ensure that the parentLayoutItem() of
+    the removed item does not point to this layout, since the item is
+    considered to be removed from the layout hierarchy.
+
     If the layout is to be reused between applications, we recommend
     that the layout deletes the item, but the graphics view framework
     does not depend on this.

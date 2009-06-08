@@ -41,8 +41,8 @@
 
 /*!
   \module QtScriptTools
-  \since 4.5
   \title QtScriptTools Module
+  \since 4.5
   \contentspage Qt's Modules
   \previouspage QtScript
   \nextpage QtSql

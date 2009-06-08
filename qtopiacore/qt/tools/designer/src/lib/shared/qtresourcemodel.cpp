@@ -121,6 +121,7 @@ private:
 QtResourceModelPrivate::QtResourceModelPrivate() :
     q_ptr(0),
     m_currentResourceSet(0),
+    m_fileWatcher(0),
     m_fileWatcherEnabled(true)
 {
 }

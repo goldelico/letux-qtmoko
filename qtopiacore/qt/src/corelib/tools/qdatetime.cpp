@@ -304,7 +304,7 @@ QDate::QDate(int y, int m, int d)
     Returns true if the date is null; otherwise returns false. A null
     date is invalid.
 
-    \note The behavior of this function is identical to isValid().
+    \note The behavior of this function is equivalent to isValid().
 
     \sa isValid()
 */

@@ -214,8 +214,7 @@ QList<QTextOption::Tab> QTextOption::tabs() const
 
     \value NoWrap       Text is not wrapped at all.
     \value WordWrap     Text is wrapped at word boundaries.
-    \value ManualWrap   Wrapping occurs at a manually specified length from
-                        the start of the line.
+    \value ManualWrap   Same as QTextOption::NoWrap
     \value WrapAnywhere Text can be wrapped at any point on a line, even if
                         it occurs in the middle of a word.
     \value WrapAtWordBoundaryOrAnywhere If possible, wrapping occurs at a word

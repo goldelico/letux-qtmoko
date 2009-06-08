@@ -49,7 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class QKeyMapper QKeyMapper.h
+    \class QKeyMapper
     \since 4.2
     \ingroup application
     \internal

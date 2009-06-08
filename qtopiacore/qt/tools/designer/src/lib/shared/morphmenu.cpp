@@ -311,12 +311,13 @@ bool MorphWidgetCommand::addMorphMacro(QDesignerFormWindowInterface *fw, QWidget
     if (FormWindowBase *fwb = qobject_cast<FormWindowBase*>(fw))
         fwb->emitWidgetRemoved(w);
 
+    const QString newWidgetName = morphCmd->newWidgetName();
     us->push(morphCmd);
 
     // restore buddy using the QByteArray name.
     if (buddyLabel) {
         SetPropertyCommand *buddyCmd = new SetPropertyCommand(fw);
-        buddyCmd->init(buddyLabel, QLatin1String("buddy"), QVariant(morphCmd->newWidgetName().toUtf8()));
+        buddyCmd->init(buddyLabel, QLatin1String("buddy"), QVariant(newWidgetName.toUtf8()));
         us->push(buddyCmd);
     }
     us->endMacro();

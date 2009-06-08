@@ -244,7 +244,7 @@
 
     The most common way to distribute applications is to provide a compressed
     disk image (.dmg file) that the user can mount in Finder. The Mac
-    deployment tool can be used to create the self-contained bundles, and
+    deployment tool (macdeployqt) can be used to create the self-contained bundles, and
     optionally also create a .dmg archive. See the
     \l{Deploying an Application on Mac OS X}{Mac deployment guide} for more
     information about deployment. It is also possible to use an installer

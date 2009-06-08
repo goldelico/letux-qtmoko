@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/opengl/qgl.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/opengl/qgl.cpp -->
 <head>
   <title>Qt 4.5: QGLWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -16,7 +16,6 @@
 </h1>
 <p>The QGLWidget class is a widget for rendering OpenGL graphics. <a href="#details">More...</a></p>
 <pre> #include &lt;QGLWidget&gt;</pre><p>Inherits <a href="qwidget.html">QWidget</a>.</p>
-<p>Inherited by </p>
 <ul>
 <li><a href="qglwidget-members.html">List of all members, including inherited members</a></li>
 <li><a href="qglwidget-obsolete.html">Obsolete members</a></li>
@@ -97,7 +96,7 @@
 <li><div class="fn"></div>void <b><a href="qglwidget.html#setAutoBufferSwap">setAutoBufferSwap</a></b> ( bool <i>on</i> )</li>
 </ul>
 <ul>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
@@ -169,6 +168,7 @@
 <p>QGLWidget provides functions for requesting a new display <a href="qglformat.html">format</a> and you can also create widgets with customized rendering <a href="qglcontext.html">contexts</a>.</p>
 <p>You can also share OpenGL display lists between QGLWidgets (see the documentation of the QGLWidget constructors for details).</p>
 <p>Note that under Windows, the <a href="qglcontext.html">QGLContext</a> belonging to a QGLWidget has to be recreated when the QGLWidget is reparented. This is necessary due to limitations on the Windows platform. This will most likely cause problems for users that have subclassed and installed their own <a href="qglcontext.html">QGLContext</a> on a QGLWidget. It is possible to work around this issue by putting the QGLWidget inside a dummy widget and then reparenting the dummy widget, instead of the QGLWidget. This will side-step the issue altogether, and is what we recommend for users that need this kind of functionality.</p>
+<p>On Mac OS X, when Qt is built with Cocoa support, a QGLWidget can't have any sibling widgets placed ontop of itself. This is due to limitations in the Cocoa API and is not supported by Apple.</p>
 <a name="overlays"></a>
 <h3>Overlays</h3>
 <p>The QGLWidget creates a GL overlay context in addition to the normal context if overlays are supported by the underlying system.</p>
@@ -362,6 +362,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

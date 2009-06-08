@@ -776,6 +776,9 @@ void QSslSocket::setSslConfiguration(const QSslConfiguration &configuration)
     d->configuration.privateKey = configuration.privateKey();
     d->configuration.ciphers = configuration.ciphers();
     d->configuration.caCertificates = configuration.caCertificates();
+    d->configuration.peerVerifyDepth = configuration.peerVerifyDepth();
+    d->configuration.peerVerifyMode = configuration.peerVerifyMode();
+    d->configuration.protocol = configuration.protocol();
 }
 
 /*!

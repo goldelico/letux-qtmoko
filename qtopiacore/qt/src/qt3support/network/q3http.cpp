@@ -339,7 +339,7 @@ void Q3HttpCloseRequest::start( Q3Http *http )
  ****************************************************/
 
 /*!
-    \class Q3HttpHeader q3http.h
+    \class Q3HttpHeader
     \brief The Q3HttpHeader class contains header information for HTTP.
 
     \compat
@@ -672,7 +672,7 @@ void Q3HttpHeader::setContentType( const QString& type )
  ****************************************************/
 
 /*!
-    \class Q3HttpResponseHeader q3http.h
+    \class Q3HttpResponseHeader
     \brief The Q3HttpResponseHeader class contains response header information for HTTP.
 
     \compat
@@ -831,7 +831,7 @@ QString Q3HttpResponseHeader::toString() const
  ****************************************************/
 
 /*!
-    \class Q3HttpRequestHeader q3http.h
+    \class Q3HttpRequestHeader
     \brief The Q3HttpRequestHeader class contains request header information for
     HTTP.
 
@@ -996,7 +996,7 @@ QString Q3HttpRequestHeader::toString() const
  *
  ****************************************************/
 /*!
-    \class Q3Http q3http.h
+    \class Q3Http
     \brief The Q3Http class provides an implementation of the HTTP protocol.
 
     \compat
@@ -1496,7 +1496,7 @@ bool Q3Http::hasPendingRequests() const
 /*!
     Deletes all pending requests from the list of scheduled requests.
     This does not affect the request that is being executed. If
-    you want to stop this this as well, use abort().
+    you want to stop this as well, use abort().
 
     \sa hasPendingRequests() abort()
 */

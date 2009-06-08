@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the ActiveQt Framework of the Qt Toolkit.
+** This file is part of the ActiveQt framework of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:BSD$
 ** You may use this file under the terms of the BSD license as follows:
@@ -793,6 +793,11 @@ QByteArray QAxEventSink::findProperty(DISPID dispID)
     \i \e unsupported
     \i \e unsupported
     \i \e unsupported
+    \row
+    \i VARIANT* (Since Qt 4.5)
+    \i \e unsupported
+    \i \e QVariant&
+    \i \e QVariant&
     \endtable
 
     Supported are also enumerations, and typedefs to supported types.

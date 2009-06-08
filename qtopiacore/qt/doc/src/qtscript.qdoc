@@ -41,8 +41,8 @@
 
 /*!
   \module QtScript
-  \since 4.3
   \title QtScript Module
+  \since 4.3
   \contentspage Qt's Modules
   \previouspage QtOpenGL
   \nextpage QtScriptTools

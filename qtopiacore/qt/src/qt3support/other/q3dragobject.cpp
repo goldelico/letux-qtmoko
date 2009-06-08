@@ -422,7 +422,7 @@ QWidget * Q3DragObject::source()
 
 
 /*!
-    \class Q3DragObject qdragobject.h
+    \class Q3DragObject
 
     \brief The Q3DragObject class encapsulates MIME-based data
     transfer.
@@ -457,7 +457,7 @@ void stripws(QByteArray& s)
 }
 
 /*!
-    \class Q3TextDrag qdragobject.h
+    \class Q3TextDrag
 
     \brief The Q3TextDrag class is a drag and drop object for
     transferring plain and Unicode text.
@@ -747,7 +747,7 @@ bool Q3TextDrag::decode(const QMimeSource* e, QString& str)
 */
 
 /*!
-    \class Q3ImageDrag qdragobject.h
+    \class Q3ImageDrag
 
     \brief The Q3ImageDrag class provides a drag and drop object for
     transferring images.
@@ -934,7 +934,7 @@ bool Q3ImageDrag::decode(const QMimeSource* e, QPixmap& pm)
 
 
 /*!
-    \class Q3StoredDrag qdragobject.h
+    \class Q3StoredDrag
     \brief The Q3StoredDrag class provides a simple stored-value drag object for arbitrary MIME data.
 
     \compat
@@ -1021,7 +1021,7 @@ QByteArray Q3StoredDrag::encodedData(const char* m) const
 
 
 /*!
-    \class Q3UriDrag qdragobject.h
+    \class Q3UriDrag
     \brief The Q3UriDrag class provides a drag object for a list of URI references.
 
     \compat

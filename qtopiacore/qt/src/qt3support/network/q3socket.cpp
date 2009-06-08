@@ -236,7 +236,7 @@ void Q3SocketPrivate::setSocketDevice( Q3Socket *q, Q3SocketDevice *device )
 }
 
 /*!
-    \class Q3Socket q3socket.h
+    \class Q3Socket
     \brief The Q3Socket class provides a buffered TCP connection.
 
     \compat

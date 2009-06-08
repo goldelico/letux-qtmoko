@@ -79,14 +79,25 @@ extern qsreal integerFromString(const char *buf, int size, int radix);
 QScript::Lexer::Lexer(QScriptEnginePrivate *eng)
     : driver(eng),
       yylineno(0),
-      size8(128), size16(128), restrKeyword(false),
-      stackToken(-1), pos(0),
+      done(false),
+      size8(128), size16(128),
+      pos8(0), pos16(0),
+      terminator(false),
+      restrKeyword(false),
+      delimited(false),
+      stackToken(-1),
+      state(Start),
+      pos(0),
       code(0), length(0),
+      yycolumn(0),
+      startlineno(0), startcolumn(0),
       bol(true),
       current(0), next1(0), next2(0), next3(0),
       err(NoError),
+      wantRx(false),
       check_reserved(true),
       parenthesesState(IgnoreParentheses),
+      parenthesesCount(0),
       prohibitAutomaticSemicolon(false)
 {
     // allocate space for read buffers

@@ -43,6 +43,11 @@ void AbstractRenderer::scaleModeChanged(Phonon::VideoWidget::ScaleMode scaleMode
     Q_UNUSED(scaleMode);
 }
 
+void AbstractRenderer::movieSizeChanged(const QSize &size)
+{
+    Q_UNUSED(size);
+}
+
 }
 } //namespace Phonon::Gstreamer
 

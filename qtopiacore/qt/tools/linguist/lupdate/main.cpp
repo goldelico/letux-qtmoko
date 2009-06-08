@@ -73,7 +73,7 @@ static void recursiveFileInfoList(const QDir &dir,
         if (fname != QLatin1String(".") && fname != QLatin1String("..")) {
             if (it->isDir())
                 recursiveFileInfoList(QDir(it->absoluteFilePath()), nameFilters, filter, recursive, fileinfolist);
-            else 
+            else
                 fileinfolist->append(*it);
         }
     }
@@ -84,7 +84,11 @@ static void printUsage()
     printOut(QObject::tr(
         "Usage:\n"
         "    lupdate [options] [project-file]\n"
-        "    lupdate [options] [source-file|path]... -ts ts-files\n"
+        "    lupdate [options] [source-file|path]... -ts ts-files\n\n"
+        "lupdate is part of Qt's Linguist tool chain. It can be used as a\n"
+        "stand-alone tool to create XML based translations files in the .ts\n"
+        "format from translatable messages in C++ and Java source code.\n\n"
+        "lupdate can also merge such messages into existing .ts files.\n\n"
         "Options:\n"
         "    -help  Display this information and exit.\n"
         "    -no-obsolete\n"
@@ -142,6 +146,7 @@ static void updateTsFiles(const Translator &fetchedTor, const QStringList &tsFil
                 *fail = true;
                 continue;
             }
+            tor.resolveDuplicates();
             cd.clearErrors();
             if (!codecForTr.isEmpty() && codecForTr != tor.codecName())
                 qWarning("lupdate warning: Codec for tr() '%s' disagrees with "
@@ -419,21 +424,29 @@ int main(int argc, char **argv)
 
         QStringList tsFiles = tsFileNames;
         if (proFiles.count() > 0) {
-            QString pf = proFiles.takeFirst();
+            QFileInfo pfi(proFiles.takeFirst());
             QHash<QByteArray, QStringList> variables;
 
             ProFileEvaluator visitor;
             visitor.setVerbose(options & Verbose);
 
-            ProFile pro(QFileInfo(pf).absoluteFilePath());
+            ProFile pro(pfi.absoluteFilePath());
             if (!visitor.queryProFile(&pro))
                 return 2;
             if (!visitor.accept(&pro))
                 return 2;
 
             if (visitor.templateType() == ProFileEvaluator::TT_Subdirs) {
-                foreach (const QString &subdir, visitor.values(QLatin1String("SUBDIRS")))
-                    proFiles << (subdir + QLatin1Char('/') + subdir + QLatin1String(".pro"));
+                QDir proDir(pfi.absoluteDir());
+                foreach (const QString &subdir, visitor.values(QLatin1String("SUBDIRS"))) {
+                    QString subPro = QDir::cleanPath(proDir.absoluteFilePath(subdir));
+                    QFileInfo subInfo(subPro);
+                    if (subInfo.isDir())
+                        proFiles << (subPro + QLatin1Char('/')
+                                     + subInfo.fileName() + QLatin1String(".pro"));
+                    else
+                        proFiles << subPro;
+                }
                 continue;
             }
 

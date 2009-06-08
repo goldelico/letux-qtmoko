@@ -16,6 +16,7 @@ HEADERS += \
 # "real" formats readers and writers
 SOURCES += \
     $$PWD/qm.cpp \
+    $$PWD/qph.cpp \
     $$PWD/po.cpp \
     $$PWD/ts.cpp \
     $$PWD/ui.cpp \

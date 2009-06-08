@@ -41,13 +41,20 @@
 
 /*!
     \page known-issues.html
-    \title Known Issues in 4.5.0
+    \title Known Issues in 4.5.1
     \ingroup platform-notes
-    \brief A summary of known issues in Qt 4.5.0 at the time of release.
+    \brief A summary of known issues in Qt 4.5.1 at the time of release.
 
-    An up-to-date list of known issues with Qt 4.5.0 can be found via the
+    An up-to-date list of known issues with Qt 4.5.1 can be found via the
     \l{Task Tracker} on the Qt website which provides additional information
     about known issues and tasks related to Qt.
+
+    \section1 General Issues
+
+    When running Qt applications on Windows or with \c{-graphicssystem raster},
+    any process that triggers a QWidget::update() from within a destructor
+    might result in a crash.
+
 
     \section1 Issues with Third Party Software
 

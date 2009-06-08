@@ -63,6 +63,7 @@ QScriptValueIteratorImpl::QScriptValueIteratorImpl(const QScriptValueImpl &obj)
     m_frontObject = obj;
     m_member.invalidate();
     m_foundMember.invalidate();
+    m_foundForward = false;
     m_object = obj;
     m_searchIndex = 0;
     m_searchClassDataIterator = false;

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/global/qglobal.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/global/qglobal.cpp -->
 <head>
   <title>Qt 4.5: &lt;QtGlobal&gt; - Global Qt Declarations</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -45,7 +45,7 @@
 <a name="Functionsx"></a>
 <h3>Functions</h3>
 <ul>
-<li><div class="fn"></div>T <b><a href="qtglobal.html#qAbsx">qAbs</a></b> ( const T &amp; <i>value</i> )</li>
+<li><div class="fn"></div>T <b><a href="qtglobal.html#qAbs">qAbs</a></b> ( const T &amp; <i>value</i> )</li>
 <li><div class="fn"></div>const T &amp; <b><a href="qtglobal.html#qBound">qBound</a></b> ( const T &amp; <i>min</i>, const T &amp; <i>value</i>, const T &amp; <i>max</i> )</li>
 <li><div class="fn"></div>void <b><a href="qtglobal.html#qCritical">qCritical</a></b> ( const char * <i>msg</i>, ... )</li>
 <li><div class="fn"></div>void <b><a href="qtglobal.html#qDebug">qDebug</a></b> ( const char * <i>msg</i>, ... )</li>
@@ -54,8 +54,8 @@
 <li><div class="fn"></div>bool <b><a href="qtglobal.html#qFuzzyCompare-2">qFuzzyCompare</a></b> ( float <i>p1</i>, float <i>p2</i> )</li>
 <li><div class="fn"></div>QtMsgHandler <b><a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a></b> ( QtMsgHandler <i>handler</i> )</li>
 <li><div class="fn"></div>int <b><a href="qtglobal.html#qMacVersion">qMacVersion</a></b> ()</li>
-<li><div class="fn"></div>const T &amp; <b><a href="qtglobal.html#qMaxx">qMax</a></b> ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</li>
-<li><div class="fn"></div>const T &amp; <b><a href="qtglobal.html#qMinx">qMin</a></b> ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</li>
+<li><div class="fn"></div>const T &amp; <b><a href="qtglobal.html#qMax">qMax</a></b> ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</li>
+<li><div class="fn"></div>const T &amp; <b><a href="qtglobal.html#qMin">qMin</a></b> ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</li>
 <li><div class="fn"></div>qint64 <b><a href="qtglobal.html#qRound64">qRound64</a></b> ( qreal <i>value</i> )</li>
 <li><div class="fn"></div>int <b><a href="qtglobal.html#qRound">qRound</a></b> ( qreal <i>value</i> )</li>
 <li><div class="fn"></div>const char * <b><a href="qtglobal.html#qVersion">qVersion</a></b> ()</li>
@@ -100,6 +100,8 @@
 <li><div class="fn"></div><b><a href="qtglobal.html#Q_CC_WAT">Q_CC_WAT</a></b></li>
 <li><div class="fn"></div>void <b><a href="qtglobal.html#Q_CHECK_PTR">Q_CHECK_PTR</a></b> ( void * <i>pointer</i> )</li>
 <li><div class="fn"></div><b><a href="qtglobal.html#Q_DECLARE_TYPEINFO">Q_DECLARE_TYPEINFO</a></b> (  <i>Type</i>,  <i>Flags</i> )</li>
+<li><div class="fn"></div><b><a href="qtglobal.html#Q_DECL_EXPORT">Q_DECL_EXPORT</a></b></li>
+<li><div class="fn"></div><b><a href="qtglobal.html#Q_DECL_IMPORT">Q_DECL_IMPORT</a></b></li>
 <li><div class="fn"></div><b><a href="qtglobal.html#Q_FOREACH">Q_FOREACH</a></b> (  <i>variable</i>,  <i>container</i> )</li>
 <li><div class="fn"></div><b><a href="qtglobal.html#Q_FOREVER">Q_FOREVER</a></b></li>
 <li><div class="fn"></div>const char * <b><a href="qtglobal.html#Q_FUNC_INFO">Q_FUNC_INFO</a></b> ()</li>
@@ -153,7 +155,7 @@
 <p>Finally, the <a href="qtglobal.html#QtMsgType-enum">QtMsgType</a> definition identifies the various messages that can be generated and sent to a Qt message handler; <a href="qtglobal.html#QtMsgHandler-typedef">QtMsgHandler</a> is a type definition for a pointer to a function with the signature <tt>void myMsgHandler(QtMsgType, const char *)</tt>.</p>
 <a name="functions"></a>
 <h3>Functions</h3>
-<p>The &lt;QtGlobal&gt; header file contains several functions comparing and adjusting an object's value. These functions take a template type as argument: You can retrieve the absolute value of an object using the <a href="qtglobal.html#qAbsx">qAbs</a>() function, and you can bound a given object's value by given minimum and maximum values using the <a href="qtglobal.html#qBound">qBound</a>() function. You can retrieve the minimum and maximum of two given objects using <a href="qtglobal.html#qMinx">qMin</a>() and <a href="qtglobal.html#qMaxx">qMax</a>() respectively. All these functions return a corresponding template type; the template types can be replaced by any other type. For example:</p>
+<p>The &lt;QtGlobal&gt; header file contains several functions comparing and adjusting an object's value. These functions take a template type as argument: You can retrieve the absolute value of an object using the <a href="qtglobal.html#qAbs">qAbs</a>() function, and you can bound a given object's value by given minimum and maximum values using the <a href="qtglobal.html#qBound">qBound</a>() function. You can retrieve the minimum and maximum of two given objects using <a href="qtglobal.html#qMin">qMin</a>() and <a href="qtglobal.html#qMax">qMax</a>() respectively. All these functions return a corresponding template type; the template types can be replaced by any other type. For example:</p>
 <pre> int myValue = 10;
  int minValue = 2;
  int maxValue = 6;
@@ -241,7 +243,7 @@
 <p>Convenience typedef for <tt>unsigned short</tt>.</p>
 <hr />
 <h2>Function Documentation</h2>
-<h3 class="fn"><a name="qAbsx"></a>T qAbs ( const T &amp; <i>value</i> )</h3>
+<h3 class="fn"><a name="qAbs"></a>T qAbs ( const T &amp; <i>value</i> )</h3>
 <p>Returns the absolute value of <i>value</i>. For example:</p>
 <pre> int absoluteValue;
  int myValue = -4;
@@ -256,10 +258,10 @@
 
  int boundedValue = qBound(minValue, myValue, maxValue);
 <span class="comment"> // boundedValue == 6</span></pre>
-<p>See also <a href="qtglobal.html#qMinx">qMin</a>() and <a href="qtglobal.html#qMaxx">qMax</a>().</p>
+<p>See also <a href="qtglobal.html#qMin">qMin</a>() and <a href="qtglobal.html#qMax">qMax</a>().</p>
 <h3 class="fn"><a name="qCritical"></a>void qCritical ( const char * <i>msg</i>, ... )</h3>
 <p>Calls the message handler with the critical message <i>msg</i>. If no message handler has been installed, the message is printed to stderr. Under Windows, the message is sent to the debugger.</p>
-<p>This function takes a format string and a list of arguments, similar to the C printf() function.</p>
+<p>This function takes a format string and a list of arguments, similar to the C printf() function. The format should be a Latin-1 string.</p>
 <p>Example:</p>
 <pre> void load(const QString &amp;fileName)
  {
@@ -275,13 +277,13 @@
 <p>See also <a href="qtglobal.html#qDebug">qDebug</a>(), <a href="qtglobal.html#qWarning">qWarning</a>(), <a href="qtglobal.html#qFatal">qFatal</a>(), <a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a>(), and <a href="debug.html">Debugging Techniques</a>.</p>
 <h3 class="fn"><a name="qDebug"></a>void qDebug ( const char * <i>msg</i>, ... )</h3>
 <p>Calls the message handler with the debug message <i>msg</i>. If no message handler has been installed, the message is printed to stderr. Under Windows, the message is sent to the console, if it is a console application; otherwise, it is sent to the debugger. This function does nothing if <tt>QT_NO_DEBUG_OUTPUT</tt> was defined during compilation.</p>
-<p>If you pass the function a format string and a list of arguments, it works in similar way to the C printf() function.</p>
+<p>If you pass the function a format string and a list of arguments, it works in similar way to the C printf() function. The format should be a Latin-1 string.</p>
 <p>Example:</p>
 <pre> qDebug(&quot;Items in list: %d&quot;, myList.size());</pre>
 <p>If you include <tt>&lt;QtDebug&gt;</tt>, a more convenient syntax is also available:</p>
 <pre> qDebug() &lt;&lt; &quot;Brush:&quot; &lt;&lt; myQBrush &lt;&lt; &quot;Other value:&quot; &lt;&lt; i;</pre>
-<p>This syntax automatically puts a single space between each item, and outputs a newline at the end. It supports many C++ and Qt types.</p>
-<p>To supress the output at runtime, install your own message handler with <a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a>().</p>
+<p>With this syntax, the function returns a <a href="qdebug.html">QDebug</a> object that is configured to use the <a href="qtglobal.html#QtMsgType-enum">QtDebugMsg</a> message type. It automatically puts a single space between each item, and outputs a newline at the end. It supports many C++ and Qt types.</p>
+<p>To suppress the output at run-time, install your own message handler with <a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a>().</p>
 <p>See also <a href="qtglobal.html#qWarning">qWarning</a>(), <a href="qtglobal.html#qCritical">qCritical</a>(), <a href="qtglobal.html#qFatal">qFatal</a>(), <a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a>(), and <a href="debug.html">Debugging Techniques</a>.</p>
 <h3 class="fn"><a name="qFatal"></a>void qFatal ( const char * <i>msg</i>, ... )</h3>
 <p>Calls the message handler with the fatal message <i>msg</i>. If no message handler has been installed, the message is printed to stderr. Under Windows, the message is sent to the debugger.</p>
@@ -298,6 +300,11 @@
 <p>See also <a href="qtglobal.html#qDebug">qDebug</a>(), <a href="qtglobal.html#qCritical">qCritical</a>(), <a href="qtglobal.html#qWarning">qWarning</a>(), <a href="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</a>(), and <a href="debug.html">Debugging Techniques</a>.</p>
 <h3 class="fn"><a name="qFuzzyCompare"></a>bool qFuzzyCompare ( double <i>p1</i>, double <i>p2</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Compares the floating point value <i>p1</i> and <i>p2</i> and returns <tt>true</tt> if they are considered equal, otherwise <tt>false</tt>.</p>
+<p>Note that comparing values where either <i>p1</i> or <i>p2</i> is 0.0 will not work. The solution to this is to compare against values greater than or equal to 1.0&#x2e;</p>
+<pre>         <span class="comment">// Instead of comparing with 0.0</span>
+                 qFuzzyCompare(0.0,1.0e-200); <span class="comment">// This will return false</span>
+         <span class="comment">// Compare adding 1 to both values will fix the problem</span>
+                 qFuzzyCompare(1 + 0.0, 1 + 1.0e-200); <span class="comment">// This will return true</span></pre>
 <p>The two numbers are compared in a relative way, where the exactness is stronger the smaller the numbers are.</p>
 <p><b>Note:</b> This function is <a href="threads.html#thread-safe">thread-safe</a>.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -307,7 +314,7 @@
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="qInstallMsgHandler"></a><a href="qtglobal.html#QtMsgHandler-typedef">QtMsgHandler</a> qInstallMsgHandler ( <a href="qtglobal.html#QtMsgHandler-typedef">QtMsgHandler</a> <i>handler</i> )</h3>
 <p>Installs a Qt message <i>handler</i> which has been defined previously. Returns a pointer to the previous message handler (which may be 0).</p>
-<p>The message handler is a function that prints out debug messages, warnings, critical and fatal error messages. The Qt library (debug version) contains hundreds of warning messages that are printed when internal errors (usually invalid function arguments) occur. If you implement your own message handler, you get total control of these messages.</p>
+<p>The message handler is a function that prints out debug messages, warnings, critical and fatal error messages. The Qt library (debug mode) contains hundreds of warning messages that are printed when internal errors (usually invalid function arguments) occur. Qt built in release mode also contains such warnings unless QT_NO_WARNING_OUTPUT and/or QT_NO_DEBUG_OUTPUT have been set during compilation. If you implement your own message handler, you get total control of these messages.</p>
 <p>The default message handler prints the message to the standard output under X11 or to the debugger under Windows. If it is a fatal message, the application aborts immediately.</p>
 <p>Only one message handler can be defined, since this is usually done on an application-wide basis to control debug output.</p>
 <p>To restore the message handler, call <tt>qInstallMsgHandler(0)</tt>.</p>
@@ -345,22 +352,22 @@
 <h3 class="fn"><a name="qMacVersion"></a>int qMacVersion ()</h3>
 <p>Use <a href="qsysinfo.html#MacintoshVersion-var">QSysInfo::MacintoshVersion</a> instead.</p>
 <p>See also <a href="qsysinfo.html">QSysInfo</a>.</p>
-<h3 class="fn"><a name="qMaxx"></a>const T &amp; qMax ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</h3>
+<h3 class="fn"><a name="qMax"></a>const T &amp; qMax ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</h3>
 <p>Returns the maximum of <i>value1</i> and <i>value2</i>. For example:</p>
 <pre> int myValue = 6;
  int yourValue = 4;
 
  int maxValue = qMax(myValue, yourValue);
 <span class="comment"> // maxValue == myValue</span></pre>
-<p>See also <a href="qtglobal.html#qMinx">qMin</a>() and <a href="qtglobal.html#qBound">qBound</a>().</p>
-<h3 class="fn"><a name="qMinx"></a>const T &amp; qMin ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</h3>
+<p>See also <a href="qtglobal.html#qMin">qMin</a>() and <a href="qtglobal.html#qBound">qBound</a>().</p>
+<h3 class="fn"><a name="qMin"></a>const T &amp; qMin ( const T &amp; <i>value1</i>, const T &amp; <i>value2</i> )</h3>
 <p>Returns the minimum of <i>value1</i> and <i>value2</i>. For example:</p>
 <pre> int myValue = 6;
  int yourValue = 4;
 
  int minValue = qMin(myValue, yourValue);
 <span class="comment"> // minValue == yourValue</span></pre>
-<p>See also <a href="qtglobal.html#qMaxx">qMax</a>() and <a href="qtglobal.html#qBound">qBound</a>().</p>
+<p>See also <a href="qtglobal.html#qMax">qMax</a>() and <a href="qtglobal.html#qBound">qBound</a>().</p>
 <h3 class="fn"><a name="qRound64"></a><a href="qtglobal.html#qint64-typedef">qint64</a> qRound64 ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>value</i> )</h3>
 <p>Rounds <i>value</i> to the nearest 64-bit integer. For example:</p>
 <pre> qreal valueA = 42949672960.3;
@@ -384,7 +391,7 @@
 <p>See also <a href="qtglobal.html#QT_VERSION_STR">QT_VERSION_STR</a>.</p>
 <h3 class="fn"><a name="qWarning"></a>void qWarning ( const char * <i>msg</i>, ... )</h3>
 <p>Calls the message handler with the warning message <i>msg</i>. If no message handler has been installed, the message is printed to stderr. Under Windows, the message is sent to the debugger. This function does nothing if <tt>QT_NO_WARNING_OUTPUT</tt> was defined during compilation; it exits if the environment variable <tt>QT_FATAL_WARNINGS</tt> is defined.</p>
-<p>This function takes a format string and a list of arguments, similar to the C printf() function.</p>
+<p>This function takes a format string and a list of arguments, similar to the C printf() function. The format should be a Latin-1 string.</p>
 <p>Example:</p>
 <pre> void f(int c)
  {
@@ -643,6 +650,12 @@
  };
 
  Q_DECLARE_TYPEINFO(Point2D, Q_MOVABLE_TYPE);</pre>
+<h3 class="fn"><a name="Q_DECL_EXPORT"></a>Q_DECL_EXPORT</h3>
+<p>This macro marks a symbol for shared library export (see <a href="sharedlibrary.html">Creating Shared Libraries</a>).</p>
+<p>See also <a href="qtglobal.html#Q_DECL_IMPORT">Q_DECL_IMPORT</a>.</p>
+<h3 class="fn"><a name="Q_DECL_IMPORT"></a>Q_DECL_IMPORT</h3>
+<p>This macro declares a symbol to be an import from a shared library (see <a href="sharedlibrary.html">Creating Shared Libraries</a>).</p>
+<p>See also <a href="qtglobal.html#Q_DECL_EXPORT">Q_DECL_EXPORT</a>.</p>
 <h3 class="fn"><a name="Q_FOREACH"></a>Q_FOREACH (  <i>variable</i>,  <i>container</i> )</h3>
 <p>Same as foreach(<i>variable</i>, <i>container</i>).</p>
 <p>This macro is available even when <tt>no_keywords</tt> is specified using the <tt>.pro</tt> file's <tt>CONFIG</tt> variable.</p>
@@ -778,6 +791,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

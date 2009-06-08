@@ -43,7 +43,7 @@
 // a.k.a. Junji Takagi, and is included in Qt with the author's permission,
 // and the grateful thanks of the Trolltech team.
 
-/*! \class QSjisCodec qsjiscodec.h
+/*! \class QSjisCodec
     \reentrant
     \internal
 */

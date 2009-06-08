@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/global/qglobal.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/global/qglobal.cpp -->
 <head>
   <title>Qt 4.5: QSysInfo Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -22,7 +22,7 @@
 <h3>Public Types</h3>
 <ul>
 <li><div class="fn"></div>enum <b><a href="qsysinfo.html#Endian-enum">Endian</a></b> { BigEndian, LittleEndian, ByteOrder }</li>
-<li><div class="fn"></div>enum <b><a href="qsysinfo.html#MacVersion-enum">MacVersion</a></b> { MV_9, MV_10_0, MV_10_1, MV_10_2, ..., MV_LEOPARD }</li>
+<li><div class="fn"></div>enum <b><a href="qsysinfo.html#MacVersion-enum">MacVersion</a></b> { MV_9, MV_10_0, MV_10_1, MV_10_2, ..., MV_SNOWLEOPARD }</li>
 <li><div class="fn"></div>enum <b><a href="qsysinfo.html#Sizes-enum">Sizes</a></b> { WordSize }</li>
 <li><div class="fn"></div>enum <b><a href="qsysinfo.html#WinVersion-enum">WinVersion</a></b> { WV_32s, WV_95, WV_98, WV_Me, ..., WV_CE_based }</li>
 </ul>
@@ -65,6 +65,7 @@
 <tr><td valign="top"><tt>QSysInfo::MV_10_3</tt></td><td align="center" valign="top"><tt>0x0005</tt></td><td valign="top">Mac OS X 10.3</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_10_4</tt></td><td align="center" valign="top"><tt>0x0006</tt></td><td valign="top">Mac OS X 10.4</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_10_5</tt></td><td align="center" valign="top"><tt>0x0007</tt></td><td valign="top">Mac OS X 10.5</td></tr>
+<tr><td valign="top"><tt>QSysInfo::MV_10_6</tt></td><td align="center" valign="top"><tt>0x0008</tt></td><td valign="top">Mac OS X 10.6</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_Unknown</tt></td><td align="center" valign="top"><tt>0x0000</tt></td><td valign="top">An unknown and currently unsupported platform</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_CHEETAH</tt></td><td align="center" valign="top"><tt>MV_10_0</tt></td><td valign="top">Apple codename for MV_10_0</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_PUMA</tt></td><td align="center" valign="top"><tt>MV_10_1</tt></td><td valign="top">Apple codename for MV_10_1</td></tr>
@@ -72,6 +73,7 @@
 <tr><td valign="top"><tt>QSysInfo::MV_PANTHER</tt></td><td align="center" valign="top"><tt>MV_10_3</tt></td><td valign="top">Apple codename for MV_10_3</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_TIGER</tt></td><td align="center" valign="top"><tt>MV_10_4</tt></td><td valign="top">Apple codename for MV_10_4</td></tr>
 <tr><td valign="top"><tt>QSysInfo::MV_LEOPARD</tt></td><td align="center" valign="top"><tt>MV_10_5</tt></td><td valign="top">Apple codename for MV_10_5</td></tr>
+<tr><td valign="top"><tt>QSysInfo::MV_SNOWLEOPARD</tt></td><td align="center" valign="top"><tt>MV_10_6</tt></td><td valign="top">Apple codename for MV_10_6</td></tr>
 </table></p>
 <p>See also <a href="qsysinfo.html#WinVersion-enum">WinVersion</a>.</p>
 <h3 class="fn"><a name="Sizes-enum"></a>enum QSysInfo::Sizes</h3>
@@ -98,6 +100,7 @@
 <tr><td valign="top"><tt>QSysInfo::WV_XP</tt></td><td align="center" valign="top"><tt>0x0030</tt></td><td valign="top">Windows XP (operating system version 5.1)</td></tr>
 <tr><td valign="top"><tt>QSysInfo::WV_2003</tt></td><td align="center" valign="top"><tt>0x0040</tt></td><td valign="top">Windows Server 2003, Windows Server 2003 R2, Windows Home Server, Windows XP Professional x64 Edition (operating system version 5.2)</td></tr>
 <tr><td valign="top"><tt>QSysInfo::WV_VISTA</tt></td><td align="center" valign="top"><tt>0x0080</tt></td><td valign="top">Windows Vista, Windows Server 2008 (operating system version 6.0)</td></tr>
+<tr><td valign="top"><tt>QSysInfo::WV_WINDOWS7</tt></td><td align="center" valign="top"><tt>0x0090</tt></td><td valign="top">Windows 7 (operating system version 6.1)</td></tr>
 </table></p>
 <p>Alternatively, you may use the following macros which correspond directly to the Windows operating system version number:</p>
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
@@ -107,6 +110,7 @@
 <tr><td valign="top"><tt>QSysInfo::WV_5_1</tt></td><td align="center" valign="top"><tt>WV_XP</tt></td><td valign="top">Operating system version 5.1, corresponds to Windows XP</td></tr>
 <tr><td valign="top"><tt>QSysInfo::WV_5_2</tt></td><td align="center" valign="top"><tt>WV_2003</tt></td><td valign="top">Operating system version 5.2, corresponds to Windows Server 2003, Windows Server 2003 R2, Windows Home Server, and Windows XP Professional x64 Edition</td></tr>
 <tr><td valign="top"><tt>QSysInfo::WV_6_0</tt></td><td align="center" valign="top"><tt>WV_VISTA</tt></td><td valign="top">Operating system version 6.0, corresponds to Windows Vista and Windows Server 2008</td></tr>
+<tr><td valign="top"><tt>QSysInfo::WV_6_1</tt></td><td align="center" valign="top"><tt>WV_WINDOWS7</tt></td><td valign="top">Operating system version 6.1, corresponds to Windows 7</td></tr>
 </table></p>
 <p>CE-based versions:</p>
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
@@ -139,6 +143,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

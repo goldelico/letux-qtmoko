@@ -119,7 +119,7 @@ void QDBusSignature::check()
     \since 4.2
 
     \brief The QDBusObjectPath class enables the programmer to
-    identify the \c OBJECT_PATH type provided by the D-Bus typesystem.
+    identify the OBJECT_PATH type provided by the D-Bus typesystem.
 
     \sa {The QtDBus type system}
 */
@@ -181,7 +181,7 @@ void QDBusSignature::check()
     \since 4.2
 
     \brief The QDBusSignature class enables the programmer to
-    identify the \c SIGNATURE type provided by the D-Bus typesystem.
+    identify the SIGNATURE type provided by the D-Bus typesystem.
 
     \sa {The QtDBus type system}
 */

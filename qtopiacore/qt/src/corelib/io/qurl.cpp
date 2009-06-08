@@ -185,7 +185,7 @@
 #include "qfileinfo.h"
 #endif
 
-#if defined(Q_OS_WINCE_WM) && _WIN32_WCE==0x501
+#if defined(Q_OS_WINCE_WM)
 #pragma optimize("g", off)
 #endif
 
@@ -5183,6 +5183,7 @@ void QUrl::setEncodedFragment(const QByteArray &fragment)
     QURL_UNSETFLAG(d->stateFlags, QUrlPrivate::Validated | QUrlPrivate::Normalized);
 
     d->encodedFragment = fragment;
+    d->hasFragment = !fragment.isNull();
     d->fragment.clear();
 }
 

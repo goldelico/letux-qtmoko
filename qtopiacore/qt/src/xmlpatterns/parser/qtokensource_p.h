@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -61,7 +61,6 @@
 #include "qorderby_p.h"
 #include "qpath_p.h"
 #include "qquerytransformparser_p.h"
-#include "qtokensource_p.h"
 #include "qvalidate_p.h"
 
 QT_BEGIN_HEADER

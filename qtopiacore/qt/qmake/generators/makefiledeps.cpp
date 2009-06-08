@@ -484,53 +484,59 @@ bool QMakeSourceFileInfo::findDeps(SourceFile *file)
         } else if(file->type == QMakeSourceFileInfo::TYPE_QRC) {
         } else if(file->type == QMakeSourceFileInfo::TYPE_C) {
             for(int beginning=1; x < buffer_len; ++x) {
-                while(x < buffer_len) {
-                    if(*(buffer+x) != ' ' && *(buffer+x) != '\t')
-                        break;
-                    ++x;
-                }
-                if(*(buffer+x) == '/') {
-                    ++x;
-                    if(buffer_len >= x) {
-                        if(*(buffer+x) == '/') { //c++ style comment
-                            for(; x < buffer_len && !qmake_endOfLine(*(buffer + x)); ++x);
-                        } else if(*(buffer+x) == '*') { //c style comment
-                            while(x < buffer_len) {
-                                ++x;
-                                if(*(buffer+x) == '*') {
-                                    if(x < buffer_len-1 && *(buffer + (x+1)) == '/') {
-                                        x += 2;
-                                        break;
+                // whitespace comments and line-endings
+                for(; x < buffer_len; ++x) {
+                    if(*(buffer+x) == ' ' || *(buffer+x) == '\t') {
+                        // keep going
+                    } else if(*(buffer+x) == '/') {
+                        ++x;
+                        if(buffer_len >= x) {
+                            if(*(buffer+x) == '/') { //c++ style comment
+                                for(; x < buffer_len && !qmake_endOfLine(*(buffer + x)); ++x);
+                                beginning = 1;
+                            } else if(*(buffer+x) == '*') { //c style comment
+                                for(++x; x < buffer_len; ++x) {
+                                    if(*(buffer+x) == '*') {
+                                        if(x < buffer_len-1 && *(buffer + (x+1)) == '/') {
+                                            ++x;
+                                            break;
+                                        }
+                                    } else if(qmake_endOfLine(*(buffer+x))) {
+                                        ++line_count;
                                     }
-                                } else if(qmake_endOfLine(*(buffer+x))) {
-                                    ++line_count;
                                 }
                             }
                         }
+                    } else if(qmake_endOfLine(*(buffer+x))) {
+                        ++line_count;
+                        beginning = 1;
+                    } else {
+                        break;
                     }
-                } else if(*(buffer+x) == '\'' || *(buffer+x) == '"') {
-                    beginning = 0;
+                }
+
+                if(x >= buffer_len)
+                    break;
+
+                // preprocessor directive
+                if(beginning && *(buffer+x) == '#')
+                    break;
+
+                // quoted strings
+                if(*(buffer+x) == '\'' || *(buffer+x) == '"') {
                     const char term = *(buffer+(x++));
-                    while(x < buffer_len) {
-                        if(*(buffer+x) == term)
-                            break;
-                        if(*(buffer+x) == '\\') {
-                            x+=2;
-                        } else {
-                            if(qmake_endOfLine(*(buffer+x)))
-                                ++line_count;
+                    for(; x < buffer_len; ++x) {
+                        if(*(buffer+x) == term) {
                             ++x;
+                            break;
+                        } else if(*(buffer+x) == '\\') {
+                            ++x;
+                        } else if(qmake_endOfLine(*(buffer+x))) {
+                            ++line_count;
                         }
                     }
                 }
-                if(qmake_endOfLine(*(buffer+x))) {
-                    ++line_count;
-                    beginning = 1;
-                } else if(beginning && *(buffer+x) == '#') {
-                    break;
-                } else {
-                    beginning = 0;
-                }
+                beginning = 0;
             }
             if(x >= buffer_len)
                 break;
@@ -717,9 +723,8 @@ bool QMakeSourceFileInfo::findMocs(SourceFile *file)
             if(buffer_len >= x) {
                 if(*(buffer + x) == '/') { //c++ style comment
                     for(;x < buffer_len && !qmake_endOfLine(*(buffer + x)); ++x);
-                    ++line_count;
                 } else if(*(buffer + x) == '*') { //c style comment
-                    for(;x < buffer_len; ++x) {
+                    for(++x; x < buffer_len; ++x) {
                         if(*(buffer + x) == 't' || *(buffer + x) == 'q') { //ignore
                             if(buffer_len >= (x + 20) &&
                                !strncmp(buffer + x + 1, "make ignore Q_OBJECT", 20)) {
@@ -736,7 +741,7 @@ bool QMakeSourceFileInfo::findMocs(SourceFile *file)
                             }
                         } else if(*(buffer + x) == '*') {
                             if(buffer_len >= (x+1) && *(buffer + (x+1)) == '/') {
-                                x += 2;
+                                ++x;
                                 break;
                             }
                         } else if(Option::debug_level && qmake_endOfLine(*(buffer + x))) {
@@ -759,6 +764,8 @@ bool QMakeSourceFileInfo::findMocs(SourceFile *file)
                 }
             }
         }
+        if(Option::debug_level && qmake_endOfLine(*(buffer+x)))
+            ++line_count;
         if(((buffer_len > x+2 &&  *(buffer+x+1) == 'Q' && *(buffer+x+2) == '_')
                    ||
             (buffer_len > x+4 &&  *(buffer+x+1) == 'Q' && *(buffer+x+2) == 'O'
@@ -802,8 +809,6 @@ bool QMakeSourceFileInfo::findMocs(SourceFile *file)
                 return true;
             }
         }
-        if(Option::debug_level && qmake_endOfLine(*(buffer+x)))
-            ++line_count;
     }
     return true;
 }

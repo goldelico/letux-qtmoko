@@ -56,6 +56,7 @@
 #include "shared_global_p.h"
 
 #include <QtGui/QLayoutItem>
+#include <QtCore/QObject>
 
 QT_BEGIN_NAMESPACE
 
@@ -74,14 +75,17 @@ namespace qdesigner_internal {
 // factor, it will return the last valid size. The effect is that after
 // breaking a layout on a container within a layout, it just maintains its
 // last size and is not slammed to 0,0. In addition, it can be resized.
+// The class keeps track of the containing layout by tracking widget reparent
+// and destroyed slots as Designer will for example re-create grid layouts to
+// shrink them.
 
-class QDESIGNER_SHARED_EXPORT QDesignerWidgetItem : public QWidgetItemV2 {
+class QDESIGNER_SHARED_EXPORT QDesignerWidgetItem : public QObject, public QWidgetItemV2  {
     Q_DISABLE_COPY(QDesignerWidgetItem)
-
+    Q_OBJECT
 public:
     explicit QDesignerWidgetItem(const QLayout *containingLayout, QWidget *w, Qt::Orientations o = Qt::Horizontal|Qt::Vertical);
 
-    const QLayout *containingLayout() const { return m_containingLayout; }
+    const QLayout *containingLayout() const;
 
     inline QWidget *constWidget() const { return const_cast<QDesignerWidgetItem*>(this)->widget(); }
 
@@ -107,6 +111,11 @@ public:
 
     static bool subjectToStretch(const QLayout *layout, QWidget *w);
 
+    virtual bool eventFilter(QObject * watched, QEvent * event);
+
+private slots:
+    void layoutChanged();
+
 private:
     void expand(QSize *s) const;
     bool subjectToStretch() const;
@@ -114,7 +123,7 @@ private:
     const Qt::Orientations m_orientations;
     mutable QSize m_nonLaidOutMinSize;
     mutable QSize m_nonLaidOutSizeHint;
-    const QLayout *m_containingLayout;
+    mutable const QLayout *m_cachedContainingLayout;
 };
 
 // Helper class that ensures QDesignerWidgetItem is installed while an

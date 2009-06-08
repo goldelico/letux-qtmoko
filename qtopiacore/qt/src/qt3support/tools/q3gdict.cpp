@@ -999,7 +999,7 @@ QDataStream& Q3GDict::write(QDataStream &s) const
  *****************************************************************************/
 
 /*!
-  \class Q3GDictIterator qgdict.h
+  \class Q3GDictIterator
   \reentrant
   \brief The Q3GDictIterator class is an internal class for implementing QDictIterator and QIntDictIterator.
 

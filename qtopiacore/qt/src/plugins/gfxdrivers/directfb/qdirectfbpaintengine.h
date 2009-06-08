@@ -43,15 +43,13 @@
 #define QPAINTENGINE_DIRECTFB_P_H
 
 #include <QtGui/qpaintengine.h>
+#include <private/qpaintengine_raster_p.h>
 
 QT_BEGIN_HEADER
 
 QT_MODULE(Gui)
 
-#include <private/qpaintengine_raster_p.h>
-
 class QDirectFBPaintEnginePrivate;
-class QDirectFBSurface;
 
 class QDirectFBPaintEngine : public QRasterPaintEngine
 {
@@ -65,6 +63,9 @@ public:
 
     void drawRects(const QRect  *rects, int rectCount);
     void drawRects(const QRectF *rects, int rectCount);
+
+    void fillRect(const QRectF &r, const QBrush &brush);
+    void fillRect(const QRectF &r, const QColor &color);
 
     void drawLines(const QLine *line, int lineCount);
     void drawLines(const QLineF *line, int lineCount);
@@ -92,17 +93,19 @@ public:
     void drawPolygon(const QPoint *points, int pointCount, PolygonDrawMode mode);
     void drawTextItem(const QPointF &p, const QTextItem &textItem);
     void fill(const QVectorPath &path, const QBrush &brush);
-    void fillRect(const QRectF &r, const QBrush &brush);
-    void fillRect(const QRectF &r, const QColor &color);
 
-    virtual void clipEnabledChanged() ;
-    virtual void penChanged() ;
-    virtual void brushChanged() ;
-    virtual void opacityChanged() ;
-    virtual void compositionModeChanged() ;
-    virtual void renderHintsChanged() ;
-    virtual void transformChanged() ;
+    virtual void clipEnabledChanged();
+    virtual void penChanged();
+    virtual void brushChanged();
+    virtual void opacityChanged();
+    virtual void compositionModeChanged();
+    virtual void renderHintsChanged();
+    virtual void transformChanged();
 
+    virtual void setState(QPainterState *state);
+
+    virtual void clip(const QVectorPath &path, Qt::ClipOperation op);
+    virtual void clip(const QRect &rect, Qt::ClipOperation op);
 
 };
 

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtScriptTools module of the Qt Toolkit.
+** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -220,7 +220,7 @@ QT_BEGIN_NAMESPACE
     \value StepOutAction Executes the script until the current function returns.
     \value RunToCursorAction Continues execution to the selected line (which contains the cursor) in the CodeWidget.
     \value RunToNewScriptAction Returns control to the script engine until a new script is executed.
-    \value ToggleBreakpointAction Toggles a breakpoint at the selected line in the CodeWidget. 
+    \value ToggleBreakpointAction Toggles a breakpoint at the selected line in the CodeWidget.
     \value ClearDebugOutputAction Clears the contents of the DebugOutputWidget.
     \value ClearErrorLogAction Clears the contents of the ErrorLogWidget.
     \value ClearConsoleAction Clears the contents of the ConsoleWidget.
@@ -519,7 +519,7 @@ QWidget *QScriptEngineDebugger::widget(DebuggerWidget widget) const
 
 /*!
     Returns a pointer to the specified \a action. The actions available
-    are given by the DebuggerAction enum. 
+    are given by the DebuggerAction enum.
 
     With this function, you can add the actions to your own widgets,
     toolbars, and menus. It is also convenient if you, for example,
@@ -690,6 +690,7 @@ QMainWindow *QScriptEngineDebugger::standardWindow() const
 
     QWidget *central = new QWidget();
     QVBoxLayout *vbox = new QVBoxLayout(central);
+    vbox->setMargin(0);
     vbox->addWidget(widget(CodeWidget));
     vbox->addWidget(widget(CodeFinderWidget));
     widget(CodeFinderWidget)->hide();

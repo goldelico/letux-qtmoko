@@ -44,17 +44,16 @@
 
 #include <QtGui/private/qpixmapdata_p.h>
 #include <QtGui/private/qpaintengine_raster_p.h>
+#include "qdirectfbpaintdevice.h"
+#include <directfb.h>
 
 QT_BEGIN_HEADER
 
 QT_MODULE(Gui)
 
-#include <directfb.h>
-
 class QDirectFBPaintEngine;
-class QDirectFBScreen;
 
-class QDirectFBPixmapData : public QPixmapData, QCustomRasterPaintDevice
+class QDirectFBPixmapData : public QPixmapData, public QDirectFBPaintDevice
 {
 public:
     QDirectFBPixmapData(PixelType pixelType);
@@ -72,25 +71,11 @@ public:
     QPaintEngine* paintEngine() const;
     QImage *buffer();
 
-    // Re-implemented from QCustomRasterPaintDevice and QPixmapData
-    int metric(QPaintDevice::PaintDeviceMetric metric) const;
-
-    // Reimplemented from QCustomRasterPaintDevice:
-    void* memory() const;
-    QImage::Format format() const;
-    int bytesPerLine() const;
-    QSize size() const;
-
-
-    // Class-specific methods:
-    IDirectFBSurface* dfbSurface() const { return surface; }
-    void unlockDirectFB();
+    // Pure virtual in QPixmapData, so re-implement here and delegate to QDirectFBPaintDevice
+    int metric(QPaintDevice::PaintDeviceMetric m) const {return QDirectFBPaintDevice::metric(m);}
 
 private:
-    IDirectFBSurface *surface;
     QDirectFBPaintEngine *engine;
-    QImage *image;
-    QDirectFBScreen* screen;
 };
 
 QT_END_HEADER

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -54,11 +54,6 @@ class DragLabel : public QLabel
 {
 public:
     DragLabel(const QString &text, QWidget *parent);
-protected:
-    void mousePressEvent(QMouseEvent *event);
-
-private:
-    QString labelText;
 };
 
 #endif

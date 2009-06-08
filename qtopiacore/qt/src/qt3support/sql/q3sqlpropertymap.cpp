@@ -58,7 +58,7 @@ public:
 };
 
 /*!
-    \class Q3SqlPropertyMap qsqlpropertymap.h
+    \class Q3SqlPropertyMap
     \brief The Q3SqlPropertyMap class is used to map widgets to SQL fields.
 
     \compat

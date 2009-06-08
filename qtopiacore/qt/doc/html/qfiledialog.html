@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/dialogs/qfiledialog.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/dialogs/qfiledialog.cpp -->
 <head>
   <title>Qt 4.5: QFileDialog Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -141,7 +141,7 @@
 <li><div class="fn"></div>5 public slots inherited from <a href="qdialog.html#public-slots">QDialog</a></li>
 <li><div class="fn"></div>19 public slots inherited from <a href="qwidget.html#public-slots">QWidget</a></li>
 <li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 <li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
@@ -214,7 +214,7 @@
 <tr><td valign="top"><tt>QFileDialog::ShowDirsOnly</tt></td><td align="center" valign="top"><tt>0x00000001</tt></td><td valign="top">Only show directories in the file dialog. By default both files and directories are shown. (Valid only in the <a href="qfiledialog.html#FileMode-enum">Directory</a> file mode.)</td></tr>
 <tr><td valign="top"><tt>QFileDialog::DontResolveSymlinks</tt></td><td align="center" valign="top"><tt>0x00000002</tt></td><td valign="top">Don't resolve symlinks in the file dialog. By default symlinks are resolved.</td></tr>
 <tr><td valign="top"><tt>QFileDialog::DontConfirmOverwrite</tt></td><td align="center" valign="top"><tt>0x00000004</tt></td><td valign="top">Don't ask for confirmation if an existing file is selected. By default confirmation is requested.</td></tr>
-<tr><td valign="top"><tt>QFileDialog::DontUseNativeDialog</tt></td><td align="center" valign="top"><tt>0x00000010</tt></td><td valign="top">Don't use the native file dialog. By default on Mac OS X and Windows, the native file dialog is used.</td></tr>
+<tr><td valign="top"><tt>QFileDialog::DontUseNativeDialog</tt></td><td align="center" valign="top"><tt>0x00000010</tt></td><td valign="top">Don't use the native file dialog. By default on Mac OS X and Windows, the native file dialog is used unless you use a subclass of <a href="qfiledialog.html">QFileDialog</a> that contains the <a href="qobject.html#Q_OBJECT">Q_OBJECT</a> macro.</td></tr>
 <tr><td valign="top"><tt>QFileDialog::ReadOnly</tt></td><td align="center" valign="top"><tt>0x00000020</tt></td><td valign="top">Indicates that the model is readonly.</td></tr>
 <tr><td valign="top"><tt>QFileDialog::HideNameFilterDetails</tt></td><td align="center" valign="top"><tt>0x00000040</tt></td><td valign="top">Indicates if the is hidden or not.</td></tr>
 </table></p>
@@ -446,7 +446,8 @@
 <h3 class="fn"><a name="setItemDelegate"></a>void QFileDialog::setItemDelegate ( <a href="qabstractitemdelegate.html">QAbstractItemDelegate</a> * <i>delegate</i> )</h3>
 <p>Sets the item delegate used to render items in the views in the file dialog to the given <i>delegate</i>.</p>
 <p><b>Warning:</b> You should not share the same instance of a delegate between views. Doing so can cause incorrect or unintuitive editing behavior since each view connected to a given delegate may receive the <a href="qabstractitemdelegate.html#closeEditor">closeEditor()</a> signal, and attempt to access, modify or close an editor that has already been closed.</p>
-<p>See also <a href="qfiledialog.html#itemDelegate">itemDelegate</a>().</p>
+<p>Note that the model used is <a href="qfilesystemmodel.html">QFileSystemModel</a>. It has custom item data roles, which is described by the <a href="qfilesystemmodel.html#Roles-enum">Roles</a> enum. You can use a <a href="qfileiconprovider.html">QFileIconProvider</a> if you only want custom icons.</p>
+<p>See also <a href="qfiledialog.html#itemDelegate">itemDelegate</a>(), <a href="qfiledialog.html#setIconProvider">setIconProvider</a>(), and <a href="qfilesystemmodel.html">QFileSystemModel</a>.</p>
 <h3 class="fn"><a name="setLabelText"></a>void QFileDialog::setLabelText ( <a href="qfiledialog.html#DialogLabel-enum">DialogLabel</a> <i>label</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
 <p>Sets the <i>text</i> shown in the filedialog in the specified <i>label</i>.</p>
 <p>See also <a href="qfiledialog.html#labelText">labelText</a>().</p>
@@ -505,6 +506,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

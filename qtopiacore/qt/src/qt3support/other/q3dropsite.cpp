@@ -48,7 +48,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-  \class Q3DropSite qdropsite.h
+  \class Q3DropSite
   \brief The Q3DropSite class provides nothing and does nothing.
 
   \compat

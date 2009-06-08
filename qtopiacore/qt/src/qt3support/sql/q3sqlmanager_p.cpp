@@ -97,7 +97,7 @@ static QSqlIndex indexFromStringList(const QStringList& l, const Q3SqlCursor* cu
 
 
 /*!
-  \class Q3SqlCursorManager qsqlmanager_p.h
+  \class Q3SqlCursorManager
   \brief The Q3SqlCursorManager class manages a database cursor.
 
   \compat
@@ -648,7 +648,7 @@ public:
 };
 
 /*!
-  \class Q3DataManager qsqlmanager_p.h
+  \class Q3DataManager
 
   \brief The Q3DataManager class is an internal class for implementing
   the data-aware widgets.

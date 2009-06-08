@@ -55,7 +55,7 @@ QT_BEGIN_NAMESPACE
 
 
 /*!
-    \class Q3Process q3process.h
+    \class Q3Process
 
     \brief The Q3Process class is used to start external programs and
     to communicate with them.

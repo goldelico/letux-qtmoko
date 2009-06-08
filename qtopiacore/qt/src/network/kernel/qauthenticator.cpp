@@ -52,7 +52,7 @@
 
 QT_BEGIN_NAMESPACE
 
-#include <../3rdparty/des/des.cpp>
+#include "../../3rdparty/des/des.cpp"
 
 static QByteArray qNtlmPhase1();
 static QByteArray qNtlmPhase3(QAuthenticatorPrivate *ctx, const QByteArray& phase2data);
@@ -432,7 +432,11 @@ static QByteArray digestMd5ResponseHelper(
     QByteArray ha1 = hash.result();
     if (alg.toLower() == "md5-sess") {
         hash.reset();
-        hash.addData(ha1);
+        // RFC 2617 contains an error, it was:
+        // hash.addData(ha1);
+        // but according to the errata page at http://www.rfc-editor.org/errata_list.php, ID 1649, it
+        // must be the following line:
+        hash.addData(ha1.toHex());
         hash.addData(":", 1);
         hash.addData(nonce);
         hash.addData(":", 1);

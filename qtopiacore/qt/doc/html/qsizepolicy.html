@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qsizepolicy.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qsizepolicy.qdoc -->
 <head>
   <title>Qt 4.5: QSizePolicy Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -54,20 +54,20 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qsizepolicy.html#operator-lt-lt-138">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QSizePolicy &amp; <i>policy</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qsizepolicy.html#operator-lt-lt-140">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QSizePolicy &amp; <i>policy</i> )</li>
 <li><div class="fn"></div>QDataStream &amp; <b><a href="qsizepolicy.html#operator-gt-gt-79">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QSizePolicy &amp; <i>policy</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
 <h2>Detailed Description</h2>
 <p>The QSizePolicy class is a layout attribute describing horizontal and vertical resizing policy.</p>
-<p>The size policy of a widget is an expression of its willingness to be resized in various ways, and affects how the widget is treated by the <a href="geomanagement.html">layout engine</a>. Widgets that reimplement <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>() return a QSizePolicy that describes the horizontal and vertical resizing policy they prefer when being laid out.</p>
+<p>The size policy of a widget is an expression of its willingness to be resized in various ways, and affects how the widget is treated by the <a href="geomanagement.html">layout engine</a>. Each widget returns a QSizePolicy that describes the horizontal and vertical resizing policy it prefers when being laid out. You can change this for a specific widget by changing its <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a> property.</p>
 <p>QSizePolicy contains two independent <a href="qsizepolicy.html#Policy-enum">QSizePolicy::Policy</a> values and two stretch factors; one describes the widgets's horizontal size policy, and the other describes its vertical size policy. It also contains a flag to indicate whether the height and width of its preferred size are related.</p>
 <p>The horizontal and vertical policies can be set in the constructor, and altered using the <a href="qsizepolicy.html#setHorizontalPolicy">setHorizontalPolicy</a>() and <a href="qsizepolicy.html#setVerticalPolicy">setVerticalPolicy</a>() functions. The stretch factors can be set using the <a href="qsizepolicy.html#setHorizontalStretch">setHorizontalStretch</a>() and <a href="qsizepolicy.html#setVerticalStretch">setVerticalStretch</a>() functions. The flag indicating whether the widget's <a href="qwidget.html#sizeHint-prop">sizeHint()</a> is width-dependent (such as a menu bar or a word-wrapping label) can be set using the <a href="qsizepolicy.html#setHeightForWidth">setHeightForWidth</a>() function.</p>
 <p>The current size policies and stretch factors be retrieved using the <a href="qsizepolicy.html#horizontalPolicy">horizontalPolicy</a>(), <a href="qsizepolicy.html#verticalPolicy">verticalPolicy</a>(), <a href="qsizepolicy.html#horizontalStretch">horizontalStretch</a>() and <a href="qsizepolicy.html#verticalStretch">verticalStretch</a>() functions. Alternatively, use the <a href="qsizepolicy.html#transpose">transpose</a>() function to swap the horizontal and vertical policies and stretches. The <a href="qsizepolicy.html#hasHeightForWidth">hasHeightForWidth</a>() function returns the current status of the flag indicating the size hint dependencies.</p>
 <p>Use the <a href="qsizepolicy.html#expandingDirections">expandingDirections</a>() function to determine whether the associated widget can make use of more space than its <a href="qwidget.html#sizeHint-prop">sizeHint()</a> function indicates, as well as find out in which directions it can expand.</p>
 <p>Finally, the QSizePolicy class provides operators comparing this size policy to a given policy, as well as a <a href="qvariant.html">QVariant</a> operator storing this QSizePolicy as a <a href="qvariant.html">QVariant</a> object.</p>
-<p>See also <a href="qsize.html">QSize</a>, <a href="qwidget.html#sizeHint-prop">QWidget::sizeHint</a>(), <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>(), and <a href="qlayoutitem.html#sizeHint">QLayoutItem::sizeHint</a>().</p>
+<p>See also <a href="qsize.html">QSize</a>, <a href="qwidget.html#sizeHint-prop">QWidget::sizeHint</a>(), <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>, and <a href="qlayoutitem.html#sizeHint">QLayoutItem::sizeHint</a>().</p>
 <hr />
 <h2>Member Type Documentation</h2>
 <h3 class="flags"><a name="ControlType-enum"></a>enum QSizePolicy::ControlType<br />flags QSizePolicy::ControlTypes</h3>
@@ -186,7 +186,7 @@
 <p>See also <a href="qsizepolicy.html#operator-not-eq">operator!=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-138"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QSizePolicy &amp; <i>policy</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-140"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QSizePolicy &amp; <i>policy</i> )</h3>
 <p>Writes the size <i>policy</i> to the data stream <i>stream</i>.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
@@ -198,6 +198,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

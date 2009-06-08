@@ -45,6 +45,7 @@ QT_BEGIN_NAMESPACE
 
 bool qt_resolve_framebufferobject_extensions(QGLContext *ctx)
 {
+#if !defined(QT_OPENGL_ES_2)
     if (glIsRenderbufferEXT != 0)
         return true;
 
@@ -74,6 +75,10 @@ bool qt_resolve_framebufferobject_extensions(QGLContext *ctx)
         (_glGetFramebufferAttachmentParameterivEXT) ctx->getProcAddress(QLatin1String("glGetFramebufferAttachmentParameterivEXT"));
     glGenerateMipmapEXT = (_glGenerateMipmapEXT) ctx->getProcAddress(QLatin1String("glGenerateMipmapEXT"));
     return glIsRenderbufferEXT;
+#else
+    Q_UNUSED(ctx);
+    return true;
+#endif
 }
 
 bool qt_resolve_version_1_3_functions(QGLContext *ctx)

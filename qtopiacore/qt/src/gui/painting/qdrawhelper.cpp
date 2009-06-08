@@ -3414,8 +3414,8 @@ Q_STATIC_TEMPLATE_FUNCTION void blend_untransformed_generic(int count, const QSp
 
     const int image_width = data->texture.width;
     const int image_height = data->texture.height;
-    int xoff = qRound(data->dx);
-    int yoff = qRound(data->dy);
+    int xoff = -qRound(-data->dx);
+    int yoff = -qRound(-data->dy);
 
     while (count--) {
         int x = spans->x;
@@ -3469,8 +3469,8 @@ Q_STATIC_TEMPLATE_FUNCTION void blend_untransformed_argb(int count, const QSpan 
 
     const int image_width = data->texture.width;
     const int image_height = data->texture.height;
-    int xoff = qRound(data->dx);
-    int yoff = qRound(data->dy);
+    int xoff = -qRound(-data->dx);
+    int yoff = -qRound(-data->dy);
 
     while (count--) {
         int x = spans->x;
@@ -4716,8 +4716,8 @@ void QT_FASTCALL blendUntransformed(int count, const QSpan *spans, void *userDat
                             mode == QPainter::CompositionMode_Source;
     const int image_width = data->texture.width;
     const int image_height = data->texture.height;
-    int xoff = qRound(data->dx);
-    int yoff = qRound(data->dy);
+    int xoff = -qRound(-data->dx);
+    int yoff = -qRound(-data->dy);
 
     while (count--) {
         const quint8 coverage = (data->texture.const_alpha * spans->coverage) >> 8;
@@ -4914,8 +4914,8 @@ Q_STATIC_TEMPLATE_FUNCTION void blend_tiled_generic(int count, const QSpan *span
 
     const int image_width = data->texture.width;
     const int image_height = data->texture.height;
-    int xoff = qRound(data->dx) % image_width;
-    int yoff = qRound(data->dy) % image_height;
+    int xoff = -qRound(-data->dx) % image_width;
+    int yoff = -qRound(-data->dy) % image_height;
 
     if (xoff < 0)
         xoff += image_width;
@@ -4972,8 +4972,8 @@ Q_STATIC_TEMPLATE_FUNCTION void blend_tiled_argb(int count, const QSpan *spans, 
 
     int image_width = data->texture.width;
     int image_height = data->texture.height;
-    int xoff = qRound(data->dx) % image_width;
-    int yoff = qRound(data->dy) % image_height;
+    int xoff = -qRound(-data->dx) % image_width;
+    int yoff = -qRound(-data->dy) % image_height;
 
     if (xoff < 0)
         xoff += image_width;
@@ -5029,8 +5029,8 @@ Q_STATIC_TEMPLATE_FUNCTION void blendTiled(int count, const QSpan *spans, void *
                             mode == QPainter::CompositionMode_Source;
     const int image_width = data->texture.width;
     const int image_height = data->texture.height;
-    int xoff = qRound(data->dx) % image_width;
-    int yoff = qRound(data->dy) % image_height;
+    int xoff = -qRound(-data->dx) % image_width;
+    int yoff = -qRound(-data->dy) % image_height;
 
     if (xoff < 0)
         xoff += image_width;
@@ -7329,9 +7329,9 @@ static inline void rgbBlendPixel(quint32 *dst, int coverage, int sr, int sg, int
     dg = qt_pow_rgb_gamma[dg];
     db = qt_pow_rgb_gamma[db];
 
-    int nr = (sr * mr + (255 - mr) * dr) / 255;
-    int ng = (sg * mg + (255 - mg) * dg) / 255;
-    int nb = (sb * mb + (255 - mb) * db) / 255;
+    int nr = qt_div_255((sr - dr) * mr) + dr;
+    int ng = qt_div_255((sg - dg) * mg) + dg;
+    int nb = qt_div_255((sb - db) * mb) + db;
 
     nr = qt_pow_rgb_invgamma[nr];
     ng = qt_pow_rgb_invgamma[ng];

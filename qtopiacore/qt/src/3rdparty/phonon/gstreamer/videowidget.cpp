@@ -203,8 +203,6 @@ QRect VideoWidget::scaleToAspect(QRect srcRect, int w, int h) const
 
 /***
  * Calculates the actual rectangle the movie will be presented with
- *
- * ### This function does currently asume a 1:1 pixel aspect
  **/
 QRect VideoWidget::calculateDrawFrameRect() const
 {
@@ -359,6 +357,9 @@ void VideoWidget::setMovieSize(const QSize &size)
     m_movieSize = size;
     widget()->updateGeometry();
     widget()->update();
+
+    if (m_renderer)
+        m_renderer->movieSizeChanged(m_movieSize);
 }
 
 void VideoWidget::mediaNodeEvent(const MediaNodeEvent *event)

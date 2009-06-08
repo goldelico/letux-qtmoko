@@ -94,7 +94,10 @@ class NodePool;
 class ExceptionHandlerDescriptor
 {
 public:
-    ExceptionHandlerDescriptor() {}
+    ExceptionHandlerDescriptor()
+        : m_startInstruction(0),
+          m_endInstruction(0),
+          m_handlerInstruction(0) {}
 
     ExceptionHandlerDescriptor(
         int startInstruction,

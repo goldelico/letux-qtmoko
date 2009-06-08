@@ -232,9 +232,7 @@
 
     \section1 Windows Vista
 
-    Known issues for Qt on Vista will be listed here.
-
-    As of Qt 4.2.0 no Vista-specific issues are known.
+    At the time Qt 4.5.1 was released, there were no known Vista-specific issues.
 
     \target Windows NT
     \section1 Windows XP, Windows 2000 and Windows NT
@@ -399,12 +397,12 @@
     \row    \o Apple Mac OS X (32-bit) \o gcc 4.0.1
     \row    \o Linux (32 and 64-bit)   \o gcc 4.1, 4.2, 4.3
     \row    \o Microsoft Windows       \o gcc 3.4.2 (MinGW) (32-bit), MSVC 2003, 2005 (32 and 64-bit), 2008,
-                                          \l{Known Issues in 4.5.0}{Intel icc (see note)}
+                                          \l{Known Issues in 4.5.1}{Intel icc (see note)}
     \endtable
 
     Any platform-compiler combinations not listed here should be considered unsupported.
 
-    \section2 Actively Supported Platforms
+    \section1 Actively Supported Platforms
 
     \table
     \header \o OS                \o Architecture        \o Makespec        \o Compiler version(s)
@@ -417,19 +415,15 @@
     \row    \o Embedded Linux    \o ARM                 \o qws/linux-arm-g++ \o GCC 3.4, 4.1, 4.2, 4.3
     \row    \o Embedded Linux    \o Intel 32-bit        \o qws/linux-x86-g++ \o GCC 3.4, 4.1, 4.2, 4.3
     \row    \o Linux             \o Intel 32/64-bit     \o linux-g++       \o GCC 4.1, 4.2, 4.3
-    \row    \o Linux             \o Intel 32/64-bit     \o \l{Known Issues in 4.5.0}{linux-icc (see note)}
-                                                                           \o icc 10.1
-    \row    \o Linux             \o Intel 32-bit        \o \l{Known Issues in 4.5.0}{linux-icc-32 (see note)}
-                                                                           \o icc 10.1
-    \row    \o Linux             \o Intel 64-bit        \o \l{Known Issues in 4.5.0}{linux-icc-64 (see note)}
-                                                                           \o icc 10.1
+    \row    \o Linux             \o Intel 32/64-bit     \o linux-icc       \o icc 10.1
+    \row    \o Linux             \o Intel 32-bit        \o linux-icc-32    \o icc 10.1
+    \row    \o Linux             \o Intel 64-bit        \o linux-icc-64    \o icc 10.1
     \row    \o Mac OS X          \o Intel 32/64-bit, PowerPC \o macx-g++   \o GCC 4.0.1
     \row    \o Mac OS X          \o Intel 32/64-bit, PowerPC \o macx-g++42 \o GCC 4.2
     \row    \o Solaris           \o SPARC, Intel 32-bit \o solaris-cc*     \o Sun CC 5.5
     \row    \o Solaris           \o SPARC, Intel 32-bit \o solaris-g++*    \o GCC 3.4.2
     \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-g++       \o GCC 3.4.2 (MinGW 5.1.4)
     \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-icc       \o icc 9.1
-    \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-msvc      \o Visual C++ 6.0
     \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-msvc2003  \o Visual Studio 2003
     \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-msvc2005  \o Visual Studio 2005
     \row    \o Windows XP/Vista  \o Intel 32/64-bit     \o win32-msvc2008  \o Visual Studio 2008
@@ -439,7 +433,7 @@
                                                         \o wince*-msvc2008 \o Visual Studio 2008
     \endtable
 
-    \section2 Community Supported Platforms
+    \section1 Community Supported Platforms
 
     \table
     \header \o OS                \o Architecture    \o Makespec            \o Compiler version(s)
@@ -464,7 +458,7 @@
     \row    \o Embedded Linux    \o MIPS, PowerPC   \o qws/linux-g++       \o GCC 3.4, 4.1, 4.2, 4.3
     \endtable
 
-    \section2 Unsupported Platforms
+    \section1 Unsupported Platforms
 
     The following platforms were supported in previous releases, either as actively supported
     or community supported platforms, but are now unsupported.
@@ -473,6 +467,7 @@
     \header \o OS                \o Architecture    \o Makespec            \o Compiler version(s)
     \row    \o IRIX              \o MIPS            \o irix-cc*            \o MIPS Pro
     \row    \o IRIX              \o MIPS            \o irix-g++*           \o GCC 3.3
+    \row    \o Windows XP/Vista  \o Intel 32/64-bit \o win32-msvc      \o Visual C++ 6.0
     \row    \o Windows XP/Vista  \o Intel 32/64-bit \o win32-msvc2002      \o Visual Studio 2002
     \row    \o Windows XP/Vista  \o Intel 32/64-bit \o win32-msvc.net      \o Visual Studio 2002
     \endtable
@@ -496,9 +491,8 @@
     \row
     \row    \o aCC series 3     \o            \o             \o          \o \bold{X} \o \bold{X}
     \row    \o aCC series 6     \o \bold{X}   \o \bold{X}    \o \bold{X} \o \bold{X} \o \bold{X}
-    \row    \o MIPSpro 7.4.2m   \o{5,1} \e{Unsupported - see the Unsupported Platforms table}
     \row    \o xlC 6            \o            \o             \o          \o \bold{X} \o \bold{X}
-    \row    \o \l{Known Issues in 4.5.0}{Intel CC 10 (see note)}
+    \row    \o \l{Known Issues in 4.5.1}{Intel CC 10 (see note)}
                                 \o \bold{X}   \o \bold{X}    \o \bold{X} \o \bold{X} \o \bold{X}
     \row
     \row    \o MSVC 2003        \o \bold{X}   \o \bold{X}    \o          \o \bold{X} \o \bold{X}
@@ -602,7 +596,7 @@
 
     \section1 Intel C++ Compiler
 
-    \warning Please see the \l{Known Issues in 4.5.0} page for information
+    \warning Please see the \l{Known Issues in 4.5.1} page for information
     about an issue with this compiler.
 
     \section2 Intel C++ Compiler for Linux
@@ -669,9 +663,9 @@
 
     \section2 Sun Studio
 
-    Qt is tested using Sun Studio 10 (Sun CC 5.5). Go to
-    \l{http://developers.sun.com/prodtech/cc/downloads/patches/index.html}{Sun's website}
-    to download the latest patches for your Sun compiler.
+    Qt is tested using Sun Studio 8 (Sun CC 5.5). Go to
+    \l{Sun Studio Patches} page on Sun's Web site to download
+    the latest patches for your Sun compiler.
 
     \section2 Sun WorkShop 5.0
 

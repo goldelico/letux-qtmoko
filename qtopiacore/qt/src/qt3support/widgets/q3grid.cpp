@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Grid qgrid.h
+    \class Q3Grid
     \brief The Q3Grid widget provides simple geometry management of its children.
 
     \compat

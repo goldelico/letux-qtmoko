@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/designer-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/designer-manual.qdoc -->
 <head>
   <title>Qt 4.5: Creating Custom Widgets for Qt Designer</title>
   <link rel="prev" href="designer-using-custom-widgets.html" />
@@ -23,7 +23,7 @@
 <h1 class="title">Creating Custom Widgets for Qt Designer<br /><span class="subtitle"></span>
 </h1>
 <p><i>Qt Designer</i>'s plugin-based architecture allows user-defined and third party custom widgets to be edited just like you do with standard Qt widgets. All of the custom widget's features are made available to <i>Qt Designer</i>, including widget properties, signals, and slots. Since <i>Qt Designer</i> uses real widgets during the form design process, custom widgets will appear the same as they do when previewed.</p>
-<p align="center"><img src="images/worldtimeclockplugin-example.png" /></p><p>The <a href="qtdesigner.html">QtDesigner</a> module provides you with the ability to create cusom widgets in <i>Qt Designer</i>.</p>
+<p align="center"><img src="images/worldtimeclockplugin-example.png" /></p><p>The <a href="qtdesigner.html">QtDesigner</a> module provides you with the ability to create custom widgets in <i>Qt Designer</i>.</p>
 <a name="getting-started"></a>
 <h2>Getting Started</h2>
 <p>To integrate a custom widget with <i>Qt Designer</i>, you require a suitable description for the widget and an appropriate <tt>.pro</tt> file.</p>
@@ -75,6 +75,9 @@
 <p>To give custom widgets special behavior in <i>Qt Designer</i>, provide an implementation of the initialize() function to configure the widget construction process for <i>Qt Designer</i> specific behavior. This function will be called for the first time before any calls to createWidget() and could perhaps set an internal flag that can be tested later when <i>Qt Designer</i> calls the plugin's createWidget() function.</p>
 <a name="buildingandinstallingtheplugin"></a><a name="building-and-installing-the-plugin"></a>
 <h2>Building and Installing the Plugin</h2>
+<a name="a-simple-plugin"></a>
+<h3>A Simple Plugin</h3>
+<p>The <a href="designer-customwidgetplugin.html">Custom Widget Plugin Example</a> demonstrates a simple <i>Qt Designer</i> plugin.</p>
 <p>The <tt>.pro</tt> file for a plugin must specify the headers and sources for both the custom widget and the plugin interface. Typically, this file only has to specify that the plugin's project is to be built as a library, but with specific plugin support for <i>Qt Designer</i>. This is done with the following declarations:</p>
 <pre> CONFIG      += designer plugin
  TARGET      = $$qtLibraryTarget($$TARGET)
@@ -88,6 +91,21 @@
 <p>The <tt>$[QT_INSTALL_PLUGINS]</tt> variable is a placeholder to the location of the installed Qt plugins. You can configure <i>Qt Designer</i> to look for plugins in other locations by setting the <tt>QT_PLUGIN_PATH</tt> environment variable before running the application.</p>
 <p><b>Note:</b> <i>Qt Designer</i> will look for a <tt>designer</tt> subdirectory in each path supplied.</p>
 <p>See <a href="qcoreapplication.html#libraryPaths">QCoreApplication::libraryPaths</a>() for more information about customizing paths for libraries and plugins with Qt applications.</p>
+<a name="splitting-up-the-plugin"></a>
+<h3>Splitting up the Plugin</h3>
+<p>In a real world scenario, you do not want to have dependencies of the application making use of the custom widgets to the <i>Qt Designer</i> headers and libraries as introduced by the simple approach explained above.</p>
+<p>There are two ways to resolve this:</p>
+<ul>
+<li>Create a <tt>.pri</tt> file that contains the headers sources and sources of the custom widget:<pre> INCLUDEPATH += $$PWD
+ HEADERS += $$PWD/analogclock.h
+ SOURCES += $$PWD/analogclock.cpp</pre>
+<p>This file would then be included by the <tt>.pro</tt> file of the plugin and the application:</p>
+<pre> include(customwidget.pri)</pre>
+<p>Running <tt>qmake -Wall</tt> on the <tt>.pro</tt> files causes a warning to be printed if an included <tt>.pri</tt> file cannot be found.</p>
+</li>
+<li>Create a standalone shared library containing the custom widgets only as described in <a href="sharedlibrary.html">Creating Shared Libraries</a>.<p>This library would then be used by the application as well as by the <i>Qt Designer</i> plugin. Care must be taken to ensure that the plugin can locate the library at run-time.</p>
+</li>
+</ul>
 <a name="related-examples"></a>
 <h2>Related Examples</h2>
 <p>For more information on using custom widgets in <i>Qt Designer</i>, refer to the <a href="designer-customwidgetplugin.html">Custom Widget Plugin</a> and <a href="designer-worldtimeclockplugin.html">World Time Clock Plugin</a> examples for more information about using custom widgets in <i>Qt Designer</i>. Also, you can use the <a href="qdesignercustomwidgetcollectioninterface.html">QDesignerCustomWidgetCollectionInterface</a> class to combine several custom widgets into a single library.</p>
@@ -100,6 +118,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

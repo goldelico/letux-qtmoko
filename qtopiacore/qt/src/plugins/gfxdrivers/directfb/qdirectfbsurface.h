@@ -43,17 +43,26 @@
 #define QDIRECFBWINDOWSURFACE_H
 
 #include "qdirectfbpaintengine.h"
+#include "qdirectfbpaintdevice.h"
+#include "qdirectfbscreen.h"
 
 #include <private/qpaintengine_raster_p.h>
 #include <private/qwindowsurface_qws_p.h>
 #include <directfb.h>
 
-class QDirectFBSurface :
-    public QWSWindowSurface, public QCustomRasterPaintDevice
+#ifdef QT_DIRECTFB_TIMING
+#include <qdatetime.h>
+#endif
+
+QT_BEGIN_HEADER
+
+QT_MODULE(Gui)
+
+class QDirectFBSurface: public QWSWindowSurface, public QDirectFBPaintDevice
 {
 public:
-    QDirectFBSurface();
-    QDirectFBSurface(QWidget *widget);
+    QDirectFBSurface(QDirectFBScreen* scr);
+    QDirectFBSurface(QDirectFBScreen* scr, QWidget *widget);
     ~QDirectFBSurface();
 
     bool isValid() const;
@@ -75,30 +84,27 @@ public:
 
     void flush(QWidget *widget, const QRegion &region, const QPoint &offset);
 
-    IDirectFBSurface* surface() const { return dfbSurface; }
-
     void beginPaint(const QRegion &);
     void endPaint(const QRegion &);
 
     QImage* buffer(const QWidget *widget);
-    void* memory() const;
-    int bytesPerLine() const;
-
-    bool lockDirectFB();
-    void unlockDirectFB();
 
 private:
 #ifndef QT_NO_DIRECTFB_WM
     void createWindow();
     IDirectFBWindow *dfbWindow;
 #endif
-    IDirectFBSurface *dfbSurface;
     QDirectFBPaintEngine *engine;
 
     bool onscreen;
 
     QList<QImage*> bufferImages;
-    QImage *surfaceImage;
+#ifdef QT_DIRECTFB_TIMING
+    int frames;
+    QTime timer;
+#endif
 };
+
+QT_END_HEADER
 
 #endif // QDIRECFBWINDOWSURFACE_H

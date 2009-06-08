@@ -52,7 +52,6 @@
 
     \tableofcontents
 
-
     \section1 Creating a Custom Build Specification
 
     Create a subdirectory in the \c mkspecs folder of the Qt directory.
@@ -85,10 +84,10 @@
 
     \snippet doc/src/snippets/code/doc_src_wince-customization.qdoc 1
 
-    \bold{Note:} \l{qmake} uses this information to build a valid Visual
-    Studio project file. You need to ensure that they are identical to the
-    configuration of the custom SDK, otherwise you might not be able to
-    compile or debug your project with Visual Studio.
+    \note \l{qmake} uses this information to build a valid Visual Studio
+    project file. You need to ensure that they are identical to the
+    configuration of the custom SDK, otherwise you might not be able to compile
+    or debug your project with Visual Studio.
 
     Additionally, most Windows CE SDKs use extra compiler options. These
     can be specified by expanding the \c DEFINES value.
@@ -106,6 +105,28 @@
     the following lines, within the subdirectory.
 
     \snippet doc/src/snippets/code/doc_src_wince-customization.qdoc 8
+
+
+    \section1 Cross-compilation Environment for a Custom SDK
+
+    Qt for Windows CE supports a convenience script, \c{setcepaths.bat}, that
+    prepares the environment in a command prompt for cross-compilation.
+    However, on custom SDKs, the \c checksdk tool is provided to identify the
+    environment, so Qt compiles successfully.
+
+    \c checksdk is generated during the \c configure step and allows for the
+    following options:
+
+    \list
+        \o  \c list: Returns a list of available Windows CE SDKs. (This list
+            may contain one or more SDKs not supported on Qt for Windows CE,
+            e.g., Pocket PC 2003.)
+        \o  \c sdk: The parameter to specify an SDK. Returns a setup of
+            environment variables that must be set to cross-compile Qt.
+        \o  \c script: Stores your setup in a \c{.bat} file. This simplifies
+            the process of switching environments when you load a command
+            prompt in future.
+    \endlist
 
 
     \section1 Compiling Qt for a Custom SDK
@@ -184,29 +205,30 @@
     different directory.
 
     To make sure that the shadow build compiles correctly it is important
-    that:
+    that you following these guidelines:
+
     \list
-    \o The original Qt source package is untouched (configure has never been
-        run in the source tree directory).
+    \o The original Qt source package must be left untouched - configure must
+    never have been run in the source tree directory.
 
-    \o The shadow build directory is on the same level as the Qt source
-        package.
-
-    If the Qt package is in \c{C:\Qt\4.5.0} the shadow build directory
+    \o The shadow build directory must be on the same level as the Qt source
+        package.\br
+    If the Qt package is in \c{C:\Qt\4.5.1} the shadow build directory
     could be \c{C:\Qt\shadowbuild}. A shadow build from a directory like
     \c{C:\shadowbuild} will not compile.
-
-    \o The \c{\bin} directory of the shadow build directory is added to the
+    \o Avoid using "release" and "debug" in the path to the shadow build
+    directory. (This is an internal limitation of the build system.)
+    \o The \c{\bin} directory of the shadow build directory must be added to the
     \c PATH environment variable.
-    \o Perl is installed on your system. (\l{ActivePerl} is a popular
+    \o Perl has been installed on your system. (\l{ActivePerl} is a popular
     distribution of Perl on Windows.)
     \endlist
 
-    So lets assume you have installed Qt in \c{C:\Qt\4.5.0} and you want
-    to create a shadow build in \c{C:\Qt\mobile5-release-shared}:
+    So lets assume you have installed Qt in \c{C:\Qt\4.5.1} and you want
+    to create a shadow build in \c{C:\Qt\mobile5-shadow}:
 
     \list
-    \o First add \c{C:\Qt\mobile5-release-shared\bin} to the \c PATH variable.
+    \o First add \c{C:\Qt\mobile5-shadow\bin} to the \c PATH variable.
 
     \snippet doc/src/snippets/code/doc_src_wince-customization.qdoc 3
 
@@ -237,6 +259,6 @@
     \snippet doc/src/snippets/code/doc_src_wince-customization.qdoc 7
 
     \o That's all. You have successfully created a shadow build of Qt in
-    \c{C:\Qt\mobile5-release-shared}.
+    \c{C:\Qt\mobile5-shadow}.
     \endlist
 */

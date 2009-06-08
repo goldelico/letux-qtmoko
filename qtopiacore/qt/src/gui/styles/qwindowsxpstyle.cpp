@@ -2843,7 +2843,7 @@ void QWindowsXPStyle::drawComplexControl(ComplexControl cc, const QStyleOptionCo
                         XPThemeData theme(widget, p, QLatin1String("TOOLBAR"));
                         theme.partId = TP_SPLITBUTTON;
                         theme.rect = button;
-                        if (!bflags & State_Enabled)
+                        if (!(bflags & State_Enabled))
                             stateId = TS_DISABLED;
                         else if (bflags & State_Sunken)
                             stateId = TS_PRESSED;

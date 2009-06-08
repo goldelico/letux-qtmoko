@@ -43,6 +43,7 @@
   pagegenerator.cpp
 */
 
+#include <QtCore>
 #include <qfile.h>
 #include <qfileinfo.h>
 
@@ -51,19 +52,29 @@
 
 QT_BEGIN_NAMESPACE
 
+/*!
+  Nothing to do in the constructor.
+ */
 PageGenerator::PageGenerator()
 {
+    // nothing.
 }
 
+/*!
+  The destructor 
+ */
 PageGenerator::~PageGenerator()
 {
-    while ( !outStreamStack.isEmpty() )
+    while (!outStreamStack.isEmpty())
 	endSubPage();
 }
 
-void PageGenerator::generateTree( const Tree *tree, CodeMarker *marker )
+/*!
+  This function is recursive.
+ */
+void PageGenerator::generateTree(const Tree *tree, CodeMarker *marker)
 {
-    generateInnerNode( tree->root(), marker );
+    generateInnerNode(tree->root(), marker);
 }
 
 QString PageGenerator::fileBase(const Node *node)
@@ -125,7 +136,7 @@ QString PageGenerator::fileBase(const Node *node)
     return res;
 }
 
-QString PageGenerator::fileName( const Node *node )
+QString PageGenerator::fileName(const Node *node)
 {
     if (!node->url().isEmpty())
         return node->url();
@@ -141,13 +152,13 @@ QString PageGenerator::outFileName()
     return QFileInfo(static_cast<QFile *>(out().device())->fileName()).fileName();
 }
 
-void PageGenerator::beginSubPage( const Location& location,
-				  const QString& fileName )
+void PageGenerator::beginSubPage(const Location& location,
+                                 const QString& fileName)
 {
-    QFile *outFile = new QFile( outputDir() + "/" + fileName );
-    if ( !outFile->open(QFile::WriteOnly) )
-	location.fatal( tr("Cannot open output file '%1'")
-			.arg(outFile->fileName()) );
+    QFile *outFile = new QFile(outputDir() + "/" + fileName);
+    if (!outFile->open(QFile::WriteOnly))
+	location.fatal(tr("Cannot open output file '%1'")
+			.arg(outFile->fileName()));
     QTextStream *out = new QTextStream(outFile);
     out->setCodec("ISO-8859-1");
     outStreamStack.push(out);
@@ -165,8 +176,11 @@ QTextStream &PageGenerator::out()
     return *outStreamStack.top();
 }
 
-void PageGenerator::generateInnerNode( const InnerNode *node,
-				       CodeMarker *marker )
+/*!
+  Recursive writing of html files from the root \a node.
+ */
+void PageGenerator::generateInnerNode(const InnerNode *node,
+                                      CodeMarker *marker)
 {
     if (!node->url().isNull())
         return;
@@ -177,20 +191,27 @@ void PageGenerator::generateInnerNode( const InnerNode *node,
             return;
     }
 
-    if ( node->parent() != 0 ) {
-	beginSubPage( node->location(), fileName(node) );
-	if ( node->type() == Node::Namespace || node->type() == Node::Class) {
+    if (node->parent() != 0) {
+	beginSubPage(node->location(), fileName(node));
+	if (node->type() == Node::Namespace || node->type() == Node::Class) {
 	    generateClassLikeNode(node, marker);
-	} else if ( node->type() == Node::Fake ) {
+	}
+        else if (node->type() == Node::Fake) {
+            const FakeNode* fakeNode = static_cast<const FakeNode *>(node);
+#ifdef QDOC_QML            
+            if (fakeNode->subType() == FakeNode::QmlClass) {
+                //qDebug() << "FILENAME:" << fileName(node);
+            }
+#endif            
 	    generateFakeNode(static_cast<const FakeNode *>(node), marker);
 	}
 	endSubPage();
     }
 
     NodeList::ConstIterator c = node->childNodes().begin();
-    while ( c != node->childNodes().end() ) {
+    while (c != node->childNodes().end()) {
 	if ((*c)->isInnerNode() && (*c)->access() != Node::Private)
-	    generateInnerNode( (const InnerNode *) *c, marker );
+	    generateInnerNode((const InnerNode *) *c, marker);
 	++c;
     }
 }

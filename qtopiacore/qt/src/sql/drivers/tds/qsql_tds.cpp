@@ -718,22 +718,21 @@ QStringList QTDSDriver::tables(QSql::TableType type) const
     if (!isOpen())
         return list;
 
-    QString typeFilter;
+    QStringList typeFilter;
 
     if (type & QSql::Tables)
-        typeFilter += QLatin1String("type='U' or ");
+        typeFilter += QLatin1String("type='U'");
     if (type & QSql::SystemTables)
-        typeFilter += QLatin1String("type='S' or ");
+        typeFilter += QLatin1String("type='S'");
     if (type & QSql::Views)
-        typeFilter += QLatin1String("type='V' or ");
+        typeFilter += QLatin1String("type='V'");
 
     if (typeFilter.isEmpty())
         return list;
-    typeFilter.chop(4);
 
     QSqlQuery t(createResult());
     t.setForwardOnly(true);
-    t.exec(QLatin1String("select name from sysobjects where ") + typeFilter);
+    t.exec(QLatin1String("select name from sysobjects where ") + typeFilter.join(QLatin1String(" or ")));
     while (t.next())
         list.append(t.value(0).toString().simplified());
 

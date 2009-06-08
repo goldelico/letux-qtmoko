@@ -353,6 +353,7 @@ private:
     bool frameBufferLittleEndian() const;
     friend class QVNCScreen;
     friend class QLinuxFbScreen;
+    friend class QVFbScreen;
     friend class QProxyScreen;
 #endif
     friend void qt_solidFill_setup(QScreen*, const QColor&, const QRegion&);

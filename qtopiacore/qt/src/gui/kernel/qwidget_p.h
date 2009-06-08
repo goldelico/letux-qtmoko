@@ -354,8 +354,6 @@ public:
     void setWindowIcon_sys(bool forceReset = false);
     void setWindowOpacity_sys(qreal opacity);
 
-    void focusInputContext();
-
     void adjustQuitOnCloseAttribute();
 
 #if defined(Q_WS_X11)
@@ -441,6 +439,7 @@ public:
     void finishCreateWindow_sys_Carbon(OSWindowRef windowRef);
 #else
     void finishCreateWindow_sys_Cocoa(void * /*NSWindow * */ windowRef);
+    void syncCocoaMask();
     void finishCocoaMaskSetup();
 #endif
     void determineWindowClass();

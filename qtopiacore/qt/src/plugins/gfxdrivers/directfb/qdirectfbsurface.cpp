@@ -50,28 +50,36 @@
 
 //#define QT_DIRECTFB_DEBUG_SURFACES 1
 
-QDirectFBSurface::QDirectFBSurface()
-    : QCustomRasterPaintDevice(0)
+QDirectFBSurface::QDirectFBSurface(QDirectFBScreen* scr)
+    : QDirectFBPaintDevice(scr)
 #ifndef QT_NO_DIRECTFB_WM
     , dfbWindow(0)
 #endif
-    , dfbSurface(0), engine(0), surfaceImage(0)
+    , engine(0)
 {
     setSurfaceFlags(Opaque | Buffered);
+#ifdef QT_DIRECTFB_TIMING
+    frames = 0;
+    timer.start();
+#endif
 }
 
-QDirectFBSurface::QDirectFBSurface(QWidget *widget)
-    : QWSWindowSurface(widget), QCustomRasterPaintDevice(widget)
+QDirectFBSurface::QDirectFBSurface(QDirectFBScreen* scr, QWidget *widget)
+    : QWSWindowSurface(widget), QDirectFBPaintDevice(scr)
 #ifndef QT_NO_DIRECTFB_WM
     , dfbWindow(0)
 #endif
-    , dfbSurface(0), engine(0), surfaceImage(0)
+    , engine(0)
 {
     onscreen = widget->testAttribute(Qt::WA_PaintOnScreen);
     if (onscreen)
         setSurfaceFlags(Opaque | RegionReserved);
     else
         setSurfaceFlags(Opaque | Buffered);
+#ifdef QT_DIRECTFB_TIMING
+    frames = 0;
+    timer.start();
+#endif
 }
 
 QDirectFBSurface::~QDirectFBSurface()
@@ -86,7 +94,7 @@ bool QDirectFBSurface::isValid() const
 #ifndef QT_NO_DIRECTFB_WM
 void QDirectFBSurface::createWindow()
 {
-    IDirectFBDisplayLayer *layer = QDirectFBScreen::instance()->dfbDisplayLayer();
+    IDirectFBDisplayLayer *layer = screen->dfbDisplayLayer();
     if (!layer)
         qFatal("QDirectFBWindowSurface: Unable to get primary display layer!");
 
@@ -111,7 +119,6 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
     if (rect.isNull()) {
 #ifndef QT_NO_DIRECTFB_WM
         if (dfbWindow) {
-            dfbWindow->Destroy(dfbWindow);
             dfbWindow->Release(dfbWindow);
             dfbWindow = 0;
         }
@@ -125,23 +132,24 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
         DFBResult result = DFB_OK;
 
         // If we're in a resize, the surface shouldn't be locked
-        Q_ASSERT( (surfaceImage == 0) || (isResize == false));
+        Q_ASSERT( (lockedImage == 0) || (isResize == false));
 
-        IDirectFBSurface *s = QDirectFBScreen::instance()->dfbSurface();
-        if (onscreen && s) {
+        if (onscreen) {
             if (dfbSurface)
                 dfbSurface->Release(dfbSurface);
 
             DFBRectangle r = { rect.x(), rect.y(),
                                rect.width(), rect.height() };
-            result = s->GetSubSurface(s, &r, &dfbSurface);
+            IDirectFBSurface *primarySurface = screen->dfbSurface();
+            Q_ASSERT(primarySurface);
+            result = primarySurface->GetSubSurface(primarySurface, &r, &dfbSurface);
         } else {
 #ifdef QT_NO_DIRECTFB_WM
             if (isResize) {
                 if (dfbSurface)
                     dfbSurface->Release(dfbSurface);
 
-                IDirectFB *dfb = QDirectFBScreen::instance()->dfb();
+                IDirectFB *dfb = screen->dfb();
                 if (!dfb) {
                     qFatal("QDirectFBWindowSurface::setGeometry(): "
                            "Unable to get DirectFB handle!");
@@ -153,9 +161,9 @@ void QDirectFBSurface::setGeometry(const QRect &rect, const QRegion &mask)
                                                                DSDESC_PIXELFORMAT);
                 description.width = rect.width();
                 description.height = rect.height();
-                description.pixelformat = DSPF_ARGB;
-
-                result = dfb->CreateSurface(dfb, &description, &dfbSurface);
+                QDirectFBScreen::initSurfaceDescriptionPixelFormat(&description,
+                                                                   QDirectFBScreen::instance()->pixelFormat());
+                dfbSurface = QDirectFBScreen::instance()->createDFBSurface(&description, false);
             } else {
                 Q_ASSERT(dfbSurface);
             }
@@ -307,7 +315,6 @@ inline bool isWidgetOpaque(const QWidget *w)
 
     return false;
 }
-
 void QDirectFBSurface::flush(QWidget *widget, const QRegion &region,
                              const QPoint &offset)
 {
@@ -332,35 +339,35 @@ void QDirectFBSurface::flush(QWidget *widget, const QRegion &region,
             dfbWindow->SetOpacity(dfbWindow, winOpacity);
     }
 #endif
-
-    // XXX: have to call the base function first as the decoration is
-    // currently painted there
-    QWSWindowSurface::flush(widget, region, offset);
-
 #ifndef QT_NO_DIRECTFB_WM
-    const QRect br = region.boundingRect().translated(painterOffset());
-    DFBRegion r = { br.topLeft().x(), br.topLeft().y(),
-                    br.bottomRight().x(), br.bottomRight().y() };
-
-    dfbSurface->Flip(dfbSurface, &r, DSFLIP_NONE);
+    if (region.numRects() > 1) {
+        const QVector<QRect> rects = region.rects();
+        for (int i=0; i<rects.size(); ++i) {
+            const QRect &r = rects.at(i);
+            const DFBRegion dfbReg = { r.x() + offset.x(), r.y() + offset.y(),
+                                       r.x() + r.width() + offset.x(),
+                                       r.y() + r.height() + offset.y() };
+            dfbSurface->Flip(dfbSurface, &dfbReg, DSFLIP_ONSYNC);
+        }
+    } else {
+        const QRect r = region.boundingRect();
+        const DFBRegion dfbReg = { r.x() + offset.x(), r.y() + offset.y(),
+                                   r.x() + r.width() + offset.x(),
+                                   r.y() + r.height() + offset.y() };
+        dfbSurface->Flip(dfbSurface, &dfbReg, DSFLIP_ONSYNC);
+    }
+#endif
+#ifdef QT_DIRECTFB_TIMING
+    enum { Secs = 3 };
+    ++frames;
+    if (timer.elapsed() >= Secs * 1000) {
+        qDebug("%d fps", int(double(frames) / double(Secs)));
+        frames = 0;
+        timer.restart();
+    }
 #endif
 }
 
-void* QDirectFBSurface::memory() const
-{
-    if (!surfaceImage)
-        const_cast<QDirectFBSurface*>(this)->lockDirectFB();
-
-    return surfaceImage ? surfaceImage->bits() : 0;
-}
-
-int QDirectFBSurface::bytesPerLine() const
-{
-    if (!surfaceImage)
-        const_cast<QDirectFBSurface*>(this)->lockDirectFB();
-
-    return surfaceImage ? surfaceImage->bytesPerLine() : 0;
-}
 
 void QDirectFBSurface::beginPaint(const QRegion &)
 {
@@ -382,70 +389,22 @@ void QDirectFBSurface::endPaint(const QRegion &)
     unlockDirectFB();
 }
 
-bool QDirectFBSurface::lockDirectFB()
-{
-    if (surfaceImage) // already locked
-        return true;
-
-    void *mem;
-    int stride;
-
-
-    // When a DirectFB surface is locked, the address of it's memory is written to mem
-    DFBResult result = dfbSurface->Lock(dfbSurface, DSLF_WRITE, &mem, &stride);
-    if (result != DFB_OK) {
-        DirectFBError("QDirectFBPixmapData::buffer()", result);
-        return false;
-    }
-
-    int w, h;
-    dfbSurface->GetSize(dfbSurface, &w, &h);
-
-    DFBSurfacePixelFormat format;
-    dfbSurface->GetPixelFormat(dfbSurface, &format);
-
-    // Wrap the pointer to the surface's memory into a new QImage
-    surfaceImage = new QImage(static_cast<uchar*>(mem), w, h, stride,
-                              QDirectFBScreen::getImageFormat(format));
-
-#ifdef QT_DIRECTFB_DEBUG_SURFACES
-    qDebug("QDirectFBSurface::lockDirectFB() this=%p dfbSurface=%p, mem=%p, surfaceImage=%p",
-                this, dfbSurface, mem, surfaceImage);
-#endif
-
-    return true;
-}
-
-void QDirectFBSurface::unlockDirectFB()
-{
-    if (!surfaceImage)
-        return;
-
-#ifdef QT_DIRECTFB_DEBUG_SURFACES
-    qDebug("QDirectFBSurface::unlockDirectFB() this=%p, dfbSurface=%p, surfaceImage=%p",
-                this, dfbSurface, surfaceImage);
-#endif
-
-    dfbSurface->Unlock(dfbSurface);
-    delete surfaceImage;
-    surfaceImage = 0;
-}
 
 QImage* QDirectFBSurface::buffer(const QWidget *widget)
 {
-    if (!surfaceImage)
+    if (!lockedImage)
         return 0;
 
     const QRect rect = QRect(offset(widget), widget->size())
-                       & surfaceImage->rect();
+                       & lockedImage->rect();
     if (rect.isEmpty())
         return 0;
 
-    QImage *img = new QImage(surfaceImage->scanLine(rect.y())
-                             + rect.x() * (surfaceImage->depth() / 8),
+    QImage *img = new QImage(lockedImage->scanLine(rect.y())
+                             + rect.x() * (lockedImage->depth() / 8),
                              rect.width(), rect.height(),
-                             surfaceImage->bytesPerLine(),
-                             surfaceImage->format());
+                             lockedImage->bytesPerLine(),
+                             lockedImage->format());
     bufferImages.append(img);
 
 #ifdef QT_DIRECTFB_DEBUG_SURFACES

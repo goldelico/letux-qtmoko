@@ -75,6 +75,7 @@
 //#define QT_RASTER_PAINTENGINE
 
 #include <private/qt_mac_p.h>
+#include <private/qeventdispatcher_mac_p.h>
 
 #include "qapplication.h"
 #include "qapplication_p.h"
@@ -288,12 +289,13 @@ bool qt_mac_can_clickThrough(const QWidget *w)
 
 bool qt_mac_is_macsheet(const QWidget *w)
 {
-    if (w && (w->windowType() == Qt::Sheet || w->windowModality() == Qt::WindowModal)) {
-        return (w->parentWidget() && w->parentWidget()->window()->windowType() != Qt::Desktop
-                && w->parentWidget()->window()->isVisible());
-    } else {
+    if (!w)
         return false;
-    }
+
+    Qt::WindowModality modality = w->windowModality();
+    if (modality == Qt::ApplicationModal)
+        return false;
+    return w->parentWidget() && (modality == Qt::WindowModal || w->windowType() == Qt::Sheet);
 }
 
 bool qt_mac_is_macdrawer(const QWidget *w)
@@ -463,7 +465,18 @@ Q_GUI_EXPORT OSWindowRef qt_mac_window_for(const QWidget *w)
     if (hiview){
         OSWindowRef window = qt_mac_window_for(hiview);
         if (!window && qt_isGenuineQWidget(hiview)) {
-            w->window()->d_func()->createWindow_sys();
+            QWidget *myWindow = w->window();
+            // This is a workaround for NSToolbar. When a widget is hidden
+            // by clicking the toolbar button, Cocoa reparents the widgets
+            // to another window (but Qt doesn't know about it).
+            // When we start showing them, it reparents back,
+            // but at this point it's window is nil, but the window it's being brought
+            // into (the Qt one) is for sure created.
+            // This stops the hierarchy moving under our feet.
+            if (myWindow != w && qt_mac_window_for(qt_mac_nativeview_for(myWindow)))
+                return qt_mac_window_for(qt_mac_nativeview_for(myWindow));
+
+            myWindow->d_func()->createWindow_sys();
             // Reget the hiview since the "create window could potentially move the view (I guess).
             hiview = qt_mac_nativeview_for(w);
             window = qt_mac_window_for(hiview);
@@ -624,6 +637,22 @@ void QWidgetPrivate::macUpdateIsOpaque()
 static OSWindowRef qt_mac_create_window(QWidget *widget, WindowClass wclass,
                                         NSUInteger wattr, const QRect &crect)
 {
+    // Determine if we need to add in our "custom window" attribute. Cocoa is rather clever
+    // in deciding if we need the maximize button or not (i.e., it's resizeable, so you
+    // must need a maximize button). So, the only buttons we have control over are the
+    // close and minimize buttons. If someone wants to customize and NOT have the maximize
+    // button, then we have to do our hack. We only do it for these cases because otherwise
+    // the window looks different when activated. This "QtMacCustomizeWindow" attribute is
+    // intruding on a public space and WILL BREAK in the future.
+    // One can hope that there is a more public API available by that time.
+    Qt::WindowFlags flags = widget ? widget->windowFlags() : Qt::WindowFlags(0);
+    if ((flags & Qt::CustomizeWindowHint)) {
+        if ((flags & (Qt::WindowCloseButtonHint | Qt::WindowSystemMenuHint
+                      | Qt::WindowMinimizeButtonHint | Qt::WindowTitleHint))
+            && !(flags & Qt::WindowMaximizeButtonHint))
+            wattr |= QtMacCustomizeWindow;
+    }
+
     // If we haven't created the desktop widget, you have to pass the rectangle
     // in "cocoa coordinates" (i.e., top points to the lower left coordinate).
     // Otherwise, we do the conversion for you. Since we are the only ones that
@@ -677,23 +706,7 @@ static OSWindowRef qt_mac_create_window(QWidget *widget, WindowClass wclass,
         window = [[QT_MANGLE_NAMESPACE(QCocoaWindow) alloc] QT_MANGLE_NAMESPACE(qt_initWithQWidget):widget contentRect:geo styleMask:wattr];
         break;
     }
-    if (widget) {
-	Qt::WindowFlags flags = widget->windowFlags();
-	bool customize = flags & Qt::CustomizeWindowHint;
-
-	NSButton *btn = [window standardWindowButton:NSWindowZoomButton];
-        // BOOL is not an int, so the bitwise AND doesn't work.
-	[btn setHidden:uint(customize && !(flags & Qt::WindowMaximizeButtonHint)) != 0];
-
-	btn = [window standardWindowButton:NSWindowMiniaturizeButton];
-	[btn setHidden:uint(customize && !(flags & Qt::WindowMinimizeButtonHint)) != 0];
-
-	btn = [window standardWindowButton:NSWindowCloseButton];
-	[btn setHidden:uint(customize && !(flags & Qt::WindowSystemMenuHint
-					   || flags & Qt::WindowCloseButtonHint)) != 0];
-
-        [window setShowsToolbarButton:uint(flags & Qt::MacWindowToolBarButtonHint) != 0];
-    }
+    qt_syncCocoaTitleBarButtons(window, widget);
     return window;
 }
 #else
@@ -764,12 +777,21 @@ OSStatus QWidgetPrivate::qt_window_event(EventHandlerCallRef er, EventRef event,
             handled_event = false;
 #if MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4
         } else if(ekind == kEventWindowGetClickModality) {
-            handled_event = false;
-            if(QWidget *blocker = qt_mac_modal_blocked(widget)) {
-                if(!qt_mac_is_macsheet(blocker) || blocker->parentWidget() != widget) {
+            // Carbon will send us kEventWindowGetClickModality before every
+            // mouse press / release event. By returning 'true', we tell Carbon
+            // that we would like the event target to receive the mouse event even
+            // if the target is modally shaddowed. In Qt, this makes sense when we
+            // e.g. have a popup showing, as the popup will grab the event
+            // and perhaps use it to close itself.
+            // By also setting the current modal window back into the event, we
+            // help Carbon determining which window is supposed to be raised.
+            handled_event = qApp->activePopupWidget() ? true : false;
+            QWidget *top = 0;
+            if (!QApplicationPrivate::tryModalHelper(widget, &top) && top && top != widget){
+                if(!qt_mac_is_macsheet(top) || top->parentWidget() != widget) {
                     handled_event = true;
-                    WindowPtr blockerWindowRef = qt_mac_window_for(blocker);
-                    SetEventParameter(event, kEventParamModalWindow, typeWindowRef, sizeof(blockerWindowRef), &blockerWindowRef);
+                    WindowPtr topWindowRef = qt_mac_window_for(top);
+                    SetEventParameter(event, kEventParamModalWindow, typeWindowRef, sizeof(topWindowRef), &topWindowRef);
                     HIModalClickResult clickResult = kHIModalClickIsModal;
                     SetEventParameter(event, kEventParamModalClickResult, typeModalClickResult, sizeof(clickResult), &clickResult);
                 }
@@ -1875,8 +1897,6 @@ void QWidgetPrivate::determineWindowClass()
                 && wclass != kSheetWindowClass && wclass != kPlainWindowClass
                 && !framelessWindow && wclass != kDrawerWindowClass
                 && wclass != kHelpWindowClass) {
-            if (flags & Qt::WindowMaximizeButtonHint)
-                wattr |= kWindowFullZoomAttribute;
             if (flags & Qt::WindowMinimizeButtonHint)
                 wattr |= NSMiniaturizableWindowMask;
             if (flags & Qt::WindowSystemMenuHint || flags & Qt::WindowCloseButtonHint)
@@ -2141,6 +2161,7 @@ void QWidgetPrivate::finishCreateWindow_sys_Carbon(OSWindowRef windowRef)
     setWindowFilePath_helper(extra->topextra->filePath);
     setWindowModified_sys(q->isWindowModified());
     updateFrameStrut();
+    qt_mac_update_sizer(q);
 }
 #else  // QT_MAC_USE_COCOA
 void QWidgetPrivate::finishCreateWindow_sys_Cocoa(void * /*NSWindow * */ voidWindowRef)
@@ -2166,7 +2187,6 @@ void QWidgetPrivate::finishCreateWindow_sys_Cocoa(void * /*NSWindow * */ voidWin
     Q_UNUSED(parentWidget);
     Q_UNUSED(dialog);
 
-    // May need to do something the equivalent to ReshapeCustomWindow from Carbon here stuff, currently seems OK.
     data.fstrut_dirty = true; // when we create a toplevel widget, the frame strut should be dirty
     OSViewRef nsview = (OSViewRef)data.winid;
     OSViewRef window_contentview = qt_mac_get_contentview_for(windowRef);
@@ -2221,8 +2241,9 @@ void QWidgetPrivate::finishCreateWindow_sys_Cocoa(void * /*NSWindow * */ voidWin
     setWindowIconText_helper(extra->topextra->iconText);
     setWindowModified_sys(q->isWindowModified());
     updateFrameStrut();
-    finishCocoaMaskSetup();
+    syncCocoaMask();
     macUpdateIsOpaque();
+    qt_mac_update_sizer(q);
 }
 
 #endif // QT_MAC_USE_COCOA
@@ -2346,6 +2367,15 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool destroyO
                                         styleMask:topData()->wattr];
                     data.crect.setSize(QSize(newRect.size.width, newRect.size.height));
 #endif
+                    // Constrain to minimums and maximums we've set
+                    if (extra->minw > 0)
+                        data.crect.setWidth(qMax(extra->minw, data.crect.width()));
+                    if (extra->minh > 0)
+                        data.crect.setHeight(qMax(extra->minh, data.crect.height()));
+                    if (extra->maxw > 0)
+                        data.crect.setWidth(qMin(extra->maxw, data.crect.width()));
+                    if (extra->maxh > 0)
+                        data.crect.setHeight(qMin(extra->maxh, data.crect.height()));
                 }
                 if (!wasMoved && !q->testAttribute(Qt::WA_DontShowOnScreen))
                     data.crect.moveTopLeft(QPoint(screenGeo.width()/4,
@@ -2493,6 +2523,8 @@ void QWidgetPrivate::create_sys(WId window, bool initializeWindow, bool destroyO
     }
 
     updateIsOpaque();
+    if (q->hasFocus())
+        setFocus_sys();
     if (!topLevel && initializeWindow)
         setWSGeometry();
 
@@ -2609,7 +2641,15 @@ void QWidgetPrivate::transferChildren()
 #ifndef QT_MAC_USE_COCOA
                     HIViewAddSubview(qt_mac_nativeview_for(q), qt_mac_nativeview_for(w));
 #else
+                    // New NSWindows get an extra reference when drops are
+                    // registered (at least in 10.5) which means that we may
+                    // access the window later and get a crash (becasue our
+                    // widget is dead). Work around this be having the drop
+                    // site disabled until it is part of the new hierarchy.
+                    bool oldRegistered = w->testAttribute(Qt::WA_DropSiteRegistered);
+                    w->setAttribute(Qt::WA_DropSiteRegistered, false);
                     [qt_mac_nativeview_for(q) addSubview:qt_mac_nativeview_for(w)];
+                    w->setAttribute(Qt::WA_DropSiteRegistered, oldRegistered);
 #endif
                 }
             }
@@ -3154,7 +3194,7 @@ void QWidgetPrivate::show_sys()
             NSRect windowFrame = [windowRef frame];
             NSPoint parentCenter = NSMakePoint(CGRectGetMidX(parentFrame), CGRectGetMidY(parentFrame));
             [windowRef setFrameTopLeftPoint:NSMakePoint(parentCenter.x - (windowFrame.size.width / 2),
-                                                        parentCenter.y - (windowFrame.size.height / 2))];
+                                                        (parentCenter.y + (windowFrame.size.height / 2)))];
 #endif
         } else {
 #ifndef QT_MAC_USE_COCOA
@@ -3219,12 +3259,20 @@ void QWidgetPrivate::show_sys()
 #endif
         } else if (!q->testAttribute(Qt::WA_ShowWithoutActivating)) {
             qt_event_request_activate(q);
+#ifdef QT_MAC_USE_COCOA
+            if (q->windowModality() == Qt::ApplicationModal) {
+                // We call 'activeModalSession' early to force creation of q's modal
+                // session. This seems neccessary for child dialogs to pop to front:
+                QEventDispatcherMacPrivate::activeModalSession();
+            }
+#endif
         }
     } else if(topData()->embedded || !q->parentWidget() || q->parentWidget()->isVisible()) {
 #ifndef QT_MAC_USE_COCOA
         HIViewSetVisible(qt_mac_nativeview_for(q), true);
 #else
         [qt_mac_nativeview_for(q) setHidden:NO];
+
 #endif
     }
 
@@ -3236,6 +3284,20 @@ void QWidgetPrivate::show_sys()
 
     qt_event_request_window_change(q);
 }
+
+
+QPoint qt_mac_nativeMapFromParent(const QWidget *child, const QPoint &pt)
+{
+#ifndef QT_MAC_USE_COCOA
+    CGPoint nativePoint = CGPointMake(pt.x(), pt.y());
+    HIViewConvertPoint(&nativePoint, qt_mac_nativeview_for(child->parentWidget()),
+                       qt_mac_nativeview_for(child));
+#else
+    NSPoint nativePoint = [qt_mac_nativeview_for(child) convertPoint:NSMakePoint(pt.x(), pt.y()) fromView:qt_mac_nativeview_for(child->parentWidget())];
+#endif
+    return QPoint(nativePoint.x, nativePoint.y);
+}
+
 
 void QWidgetPrivate::hide_sys()
 {
@@ -3518,7 +3580,10 @@ void QWidgetPrivate::raise_sys()
 #if QT_MAC_USE_COCOA
     QMacCocoaAutoReleasePool pool;
     if (isRealWindow()) {
-        [qt_mac_window_for(q) orderFront:qt_mac_window_for(q)];
+        // Calling orderFront shows the window on Cocoa too.
+        if (!q->testAttribute(Qt::WA_DontShowOnScreen)) {
+            [qt_mac_window_for(q) orderFront:qt_mac_window_for(q)];
+        }
         if (qt_mac_raise_process) { //we get to be the active process now
             ProcessSerialNumber psn;
             GetCurrentProcess(&psn);
@@ -4075,31 +4140,47 @@ void QWidgetPrivate::updateMaximizeButton_sys()
     Q_Q(QWidget);
     if (q->data->window_flags & Qt::CustomizeWindowHint)
         return;
-#ifndef QT_MAC_USE_COCOA
+
     OSWindowRef window = qt_mac_window_for(q);
     QTLWExtra * tlwExtra = topData();
+#ifdef QT_MAC_USE_COCOA
+    QMacCocoaAutoReleasePool pool;
+    NSButton *maximizeButton = [window standardWindowButton:NSWindowZoomButton];
+#endif
     if (extra->maxw && extra->maxh
         && extra->maxw == extra->minw
         && extra->maxh == extra->minh) {
         // The window has a fixed size, so gray out the maximize button:
-
         if (!tlwExtra->savedWindowAttributesFromMaximized) {
+#ifndef QT_MAC_USE_COCOA
             GetWindowAttributes(window,
                                 (WindowAttributes*)&extra->topextra->savedWindowAttributesFromMaximized);
 
+#else
+            tlwExtra->savedWindowAttributesFromMaximized = (![maximizeButton isHidden] && [maximizeButton isEnabled]);
+#endif
         }
+#ifndef QT_MAC_USE_COCOA
         ChangeWindowAttributes(window, kWindowNoAttributes, kWindowFullZoomAttribute);
+#else
+       [maximizeButton setEnabled:NO];
+#endif
+
+
     } else {
         if (tlwExtra->savedWindowAttributesFromMaximized) {
+#ifndef QT_MAC_USE_COCOA
             ChangeWindowAttributes(window,
                                    extra->topextra->savedWindowAttributesFromMaximized,
                                    kWindowNoAttributes);
+#else
+            [maximizeButton setEnabled:YES];
+#endif
             tlwExtra->savedWindowAttributesFromMaximized = 0;
         }
     }
-#else
-    // ### Make this work with Cocoa
-#endif
+
+
 }
 
 void QWidgetPrivate::scroll_sys(int dx, int dy)
@@ -4374,10 +4455,9 @@ void QWidgetPrivate::registerDropSite(bool on)
 
 void QWidgetPrivate::setMask_sys(const QRegion &region)
 {
-    Q_Q(QWidget);
-
     Q_UNUSED(region);
 #ifndef QT_MAC_USE_COCOA
+    Q_Q(QWidget);
     if (q->isWindow())
         ReshapeCustomWindow(qt_mac_window_for(q));
     else
@@ -4385,20 +4465,11 @@ void QWidgetPrivate::setMask_sys(const QRegion &region)
 #else
     if (extra->mask.isEmpty()) {
         extra->maskBits = QImage();
+        finishCocoaMaskSetup();
     } else {
-        extra->maskBits = QImage(q->size(), QImage::Format_Mono);
-        extra->maskBits.fill(QColor(Qt::color1).rgba());
-        extra->maskBits.setNumColors(2);
-        extra->maskBits.setColor(0, QColor(Qt::color0).rgba());
-        extra->maskBits.setColor(1, QColor(Qt::color1).rgba());
-        QPainter painter(&extra->maskBits);
-        painter.setBrush(Qt::color1);
-        painter.setPen(Qt::NoPen);
-        painter.drawRects(extra->mask.rects());
-        painter.end();
+        syncCocoaMask();
     }
 
-    finishCocoaMaskSetup();
 #endif
 }
 
@@ -4432,6 +4503,27 @@ void QWidgetPrivate::setWindowOpacity_sys(qreal level)
 }
 
 #ifdef QT_MAC_USE_COCOA
+void QWidgetPrivate::syncCocoaMask()
+{
+    Q_Q(QWidget);
+    if (!q->testAttribute(Qt::WA_WState_Created) || !extra)
+        return;
+
+    if (extra->hasMask && extra->maskBits.size() != q->size()) {
+        extra->maskBits = QImage(q->size(), QImage::Format_Mono);
+        extra->maskBits.fill(QColor(Qt::color1).rgba());
+        extra->maskBits.setNumColors(2);
+        extra->maskBits.setColor(0, QColor(Qt::color0).rgba());
+        extra->maskBits.setColor(1, QColor(Qt::color1).rgba());
+        QPainter painter(&extra->maskBits);
+        painter.setBrush(Qt::color1);
+        painter.setPen(Qt::NoPen);
+        painter.drawRects(extra->mask.rects());
+        painter.end();
+        finishCocoaMaskSetup();
+    }
+}
+
 void QWidgetPrivate::finishCocoaMaskSetup()
 {
     Q_Q(QWidget);
@@ -4514,12 +4606,15 @@ void QWidgetPrivate::setModal_sys()
     OSWindowRef windowRef = qt_mac_window_for(q);
 
 #ifdef QT_MAC_USE_COCOA
-    bool windowIsSheet = [windowRef styleMask] & NSDocModalWindowMask;
+    bool alreadySheet = [windowRef styleMask] & NSDocModalWindowMask;
 
-    if (q->windowModality() == Qt::WindowModal){
+    if (windowParent && q->windowModality() == Qt::WindowModal){
         // Window should be window-modal, which implies a sheet.
-        if (!windowIsSheet)
+        if (!alreadySheet) {
+            // NB: the following call will call setModal_sys recursivly:
             recreateMacWindow();
+            windowRef = qt_mac_window_for(q);
+        }
         if ([windowRef isKindOfClass:[NSPanel class]]){
             // If the primary window of the sheet parent is a child of a modal dialog,
             // the sheet parent should not be modally shaddowed.
@@ -4532,7 +4627,7 @@ void QWidgetPrivate::setModal_sys()
         }
     } else {
         // Window shold not be window-modal, and as such, not a sheet.
-        if (windowIsSheet){
+        if (alreadySheet){
             // NB: the following call will call setModal_sys recursivly:
             recreateMacWindow();
             windowRef = qt_mac_window_for(q);
@@ -4547,6 +4642,7 @@ void QWidgetPrivate::setModal_sys()
             if ([windowRef isKindOfClass:[NSPanel class]])
                 [static_cast<NSPanel *>(windowRef) setWorksWhenModal:YES];
         } else {
+            // INVARIANT: q should not be modal.
             NSInteger winLevel = -1;
             if (q->windowType() == Qt::Popup) {
                 winLevel = NSPopUpMenuWindowLevel;
@@ -4557,8 +4653,9 @@ void QWidgetPrivate::setModal_sys()
                 }
             } else if (q->windowType() == Qt::Tool) {
                 winLevel = NSFloatingWindowLevel;
+            } else if (q->windowType() == Qt::Dialog) {
+                winLevel = NSModalPanelWindowLevel;
             }
-
 
             // StayOnTop window should appear above Tool windows.
             if (data.window_flags & Qt::WindowStaysOnTopHint)
@@ -4607,7 +4704,8 @@ void QWidgetPrivate::setModal_sys()
                     SetWindowGroup(windowRef, group);
             }
             // Popups are usually handled "special" and are never modal.
-            if (q->windowType() != Qt::Popup)
+            Qt::WindowType winType = q->windowType();
+            if (winType != Qt::Popup && winType != Qt::ToolTip)
                 SetWindowModality(windowRef, kWindowModalityAppModal, 0);
         }
     } else if (windowRef) {

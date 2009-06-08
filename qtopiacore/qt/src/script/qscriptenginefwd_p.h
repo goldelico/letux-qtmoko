@@ -118,6 +118,15 @@ class MemoryPool;
 class IdTable
 {
 public:
+    inline IdTable()
+        : id_constructor(0), id_false(0), id_null(0),
+          id_object(0), id_pointer(0), id_prototype(0),
+          id_arguments(0), id_this(0), id_toString(0),
+          id_true(0), id_undefined(0), id_valueOf(0),
+          id_length(0), id_callee(0), id___proto__(0),
+          id___qt_sender__(0)
+    {}
+
     QScriptNameIdImpl *id_constructor;
     QScriptNameIdImpl *id_false;
     QScriptNameIdImpl *id_null;

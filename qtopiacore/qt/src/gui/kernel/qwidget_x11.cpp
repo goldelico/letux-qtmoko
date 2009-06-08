@@ -312,19 +312,32 @@ void qt_x11_enforce_cursor(QWidget * w, bool force)
     while (!w->internalWinId() && w->parentWidget() && !w->isWindow() && !w->testAttribute(Qt::WA_SetCursor))
         w = w->parentWidget();
 
+    QWidget *nativeParent = w;
+    if (!w->internalWinId())
+        nativeParent = w->nativeParentWidget();
+    // This does the same as effectiveWinId(), but since it is possible
+    // to not have a native parent widget due to a special hack in
+    // qwidget for reparenting widgets to a different X11 screen,
+    // added additional check to make sure native parent widget exists.
+    if (!nativeParent || !nativeParent->internalWinId())
+        return;
+    WId winid = nativeParent->internalWinId();
+
     if (w->isWindow() || w->testAttribute(Qt::WA_SetCursor)) {
+#ifndef QT_NO_CURSOR
         QCursor *oc = QApplication::overrideCursor();
         if (oc) {
-            XDefineCursor(X11->display, w->effectiveWinId(), oc->handle());
+            XDefineCursor(X11->display, winid, oc->handle());
         } else if (w->isEnabled()) {
-            XDefineCursor(X11->display, w->effectiveWinId(), w->cursor().handle());
+            XDefineCursor(X11->display, winid, w->cursor().handle());
         } else {
             // enforce the windows behavior of clearing the cursor on
             // disabled widgets
-            XDefineCursor(X11->display, w->effectiveWinId(), XNone);
+            XDefineCursor(X11->display, winid, XNone);
         }
+#endif
     } else {
-        XDefineCursor(X11->display, w->effectiveWinId(), XNone);
+        XDefineCursor(X11->display, winid, XNone);
     }
 }
 
@@ -885,7 +898,7 @@ void QWidgetPrivate::x11UpdateIsOpaque()
         bool visible = q->isVisible();
         if (visible)
             q->hide();
-        q->setParent(q->parentWidget(), q->windowFlags() & ~Qt::WindowType_Mask);
+        q->setParent(q->parentWidget(), q->windowFlags());
         q->move(pos);
         if (visible)
             q->show();
@@ -965,12 +978,22 @@ void QWidgetPrivate::setParent_sys(QWidget *parent, Qt::WindowFlags f)
 #ifdef ALIEN_DEBUG
     qDebug() << "QWidgetPrivate::setParent_sys START" << q << "parent:" << parent;
 #endif
+    QX11Info old_xinfo = xinfo;
+    if (parent && parent->windowType() == Qt::Desktop) {
+        // make sure the widget is created on the same screen as the
+        // programmer specified desktop widget
+        xinfo = parent->d_func()->xinfo;
+        parent = 0;
+    }
+
     QTLWExtra *topData = maybeTopData();
     bool wasCreated = q->testAttribute(Qt::WA_WState_Created);
     if (q->isVisible() && q->parentWidget() && parent != q->parentWidget())
         q->parentWidget()->d_func()->invalidateBuffer(q->geometry());
     extern void qPRCreate(const QWidget *, Window);
+#ifndef QT_NO_CURSOR
     QCursor oldcurs;
+#endif
 
     // dnd unregister (we will register again below)
     if (q->testAttribute(Qt::WA_DropSiteRegistered))
@@ -1001,7 +1024,8 @@ void QWidgetPrivate::setParent_sys(QWidget *parent, Qt::WindowFlags f)
     // destroyed when emitting the child remove event below. See QWorkspace.
     if (wasCreated && old_winid) {
         XUnmapWindow(X11->display, old_winid);
-        XReparentWindow(X11->display, old_winid, RootWindow(X11->display, xinfo.screen()), 0, 0);
+        if (!old_xinfo.screen() != xinfo.screen())
+            XReparentWindow(X11->display, old_winid, RootWindow(X11->display, xinfo.screen()), 0, 0);
     }
     if (topData) {
         topData->parentWinId = 0;
@@ -1041,7 +1065,11 @@ void QWidgetPrivate::setParent_sys(QWidget *parent, Qt::WindowFlags f)
                 if (xinfo.screen() != w->d_func()->xinfo.screen()) {
                     // ### force setParent() to not shortcut out (because
                     // ### we're setting the parent to the current parent)
+                    // ### setParent will add child back to the list
+                    // ### of children so we need to make sure the
+                    // ### widget won't be added twice.
                     w->d_func()->parent = 0;
+                    this->children.removeOne(w);
                     w->setParent(q);
                 } else if (!w->isWindow()) {
                     w->d_func()->invalidateBuffer(w->rect());
@@ -1193,6 +1221,7 @@ void QWidgetPrivate::updateSystemBackground()
                              QColormap::instance(xinfo.screen()).pixel(brush.color()));
 }
 
+#ifndef QT_NO_CURSOR
 void QWidgetPrivate::setCursor_sys(const QCursor &)
 {
     Q_Q(QWidget);
@@ -1206,6 +1235,7 @@ void QWidgetPrivate::unsetCursor_sys()
     qt_x11_enforce_cursor(q);
     XFlush(X11->display);
 }
+#endif
 
 static XTextProperty*
 qstring_to_xtp(const QString& s)
@@ -1403,6 +1433,7 @@ void QWidget::grabMouse()
 }
 
 
+#ifndef QT_NO_CURSOR
 void QWidget::grabMouse(const QCursor &cursor)
 {
     if (!qt_nograb()) {
@@ -1431,6 +1462,7 @@ void QWidget::grabMouse(const QCursor &cursor)
         QWidgetPrivate::mouseGrabber = this;
     }
 }
+#endif
 
 
 void QWidget::releaseMouse()
@@ -1484,7 +1516,6 @@ void QWidget::activateWindow()
             X11->userTime = X11->time;
         qt_net_update_user_time(tlw, X11->userTime);
         XSetInputFocus(X11->display, tlw->internalWinId(), XRevertToParent, X11->time);
-        d->focusInputContext();
     }
 }
 

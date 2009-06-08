@@ -42,13 +42,13 @@
 // Most of the cp949 code was originally written by Joon-Kyu Park, and is included 
 // in Qt with the author's permission and the grateful thanks of the Trolltech team.
 
-/*! \class QEucKrCodec qeuckrcodec.h
+/*! \class QEucKrCodec
     \reentrant
     \internal
 */
 
 /*!
-    \class QCP949Codec qeuckrcodec.h
+    \class QCP949Codec
     \internal
     \brief The QCP949Codec class handles encoding and decoding of text in CP949 encoding.
 

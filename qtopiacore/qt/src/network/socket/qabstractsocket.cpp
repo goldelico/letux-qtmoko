@@ -2269,6 +2269,7 @@ void QAbstractSocket::disconnectFromHostImplementation()
         }
     }
 
+    SocketState previousState = d->state;
     d->resetSocketLayer();
     d->state = UnconnectedState;
     emit stateChanged(d->state);
@@ -2277,7 +2278,9 @@ void QAbstractSocket::disconnectFromHostImplementation()
 #ifdef QT3_SUPPORT
     emit delayedCloseFinished(); // compat signal
 #endif
-    emit disconnected();
+    // only emit disconnected if we were connected before
+    if (previousState == ConnectedState || previousState == ClosingState)
+        emit disconnected();
 
     d->localPort = 0;
     d->peerPort = 0;

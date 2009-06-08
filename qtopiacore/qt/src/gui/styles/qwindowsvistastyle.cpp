@@ -759,7 +759,7 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                 if (vopt->backgroundBrush.style() != Qt::NoBrush) {
                     QPointF oldBO = painter->brushOrigin();
                     painter->setBrushOrigin(vopt->rect.topLeft());
-                    painter->fillRect(vopt->rect, qvariant_cast<QBrush>(vopt->backgroundBrush));
+                    painter->fillRect(vopt->rect, vopt->backgroundBrush);
                 }
 
                 if (hover || selected) {
@@ -801,12 +801,20 @@ void QWindowsVistaStyle::drawPrimitive(PrimitiveElement element, const QStyleOpt
                         if (vopt->viewItemPosition == QStyleOptionViewItemV4::OnlyOne
                             || vopt->viewItemPosition == QStyleOptionViewItemV4::Invalid)
                             painter->drawPixmap(pixmapRect.topLeft(), pixmap);
-                        else if (reverse ? rightSection : leftSection)
-                            painter->drawPixmap(pixmapRect, pixmap, srcRect.adjusted(0, 0, -frame, 0));
-                        else if (reverse ? leftSection : rightSection)
-                            painter->drawPixmap(pixmapRect, pixmap,
-                                                srcRect.adjusted(frame, 0, 0, 0));
-                        else if (vopt->viewItemPosition == QStyleOptionViewItemV4::Middle)
+                        else if (reverse ? rightSection : leftSection){
+                            painter->drawPixmap(QRect(pixmapRect.topLeft(), 
+                                                QSize(frame, pixmapRect.height())), pixmap, 
+                                                QRect(QPoint(0, 0), QSize(frame, pixmapRect.height())));
+                            painter->drawPixmap(pixmapRect.adjusted(frame, 0, 0, 0), 
+                                                pixmap, srcRect.adjusted(frame, 0, -frame, 0));
+                        } else if (reverse ? leftSection : rightSection) {
+                            painter->drawPixmap(QRect(pixmapRect.topRight() - QPoint(frame - 1, 0), 
+                                                QSize(frame, pixmapRect.height())), pixmap, 
+                                                QRect(QPoint(pixmapRect.width() - frame, 0), 
+                                                QSize(frame, pixmapRect.height())));
+                            painter->drawPixmap(pixmapRect.adjusted(0, 0, -frame, 0), 
+                                                pixmap, srcRect.adjusted(frame, 0, -frame, 0));
+                        } else if (vopt->viewItemPosition == QStyleOptionViewItemV4::Middle)
                             painter->drawPixmap(pixmapRect, pixmap,
                                                 srcRect.adjusted(frame, 0, -frame, 0));
                     } else {

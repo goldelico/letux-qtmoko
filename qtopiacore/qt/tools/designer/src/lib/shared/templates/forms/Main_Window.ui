@@ -4,9 +4,6 @@
  <exportmacro></exportmacro>
  <class>MainWindow</class>
  <widget class="QMainWindow" name="MainWindow" >
-  <property name="objectName" >
-   <string notr="true" >MainWindow</string>
-  </property>
   <property name="geometry" >
    <rect>
     <x>0</x>

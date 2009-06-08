@@ -386,7 +386,7 @@ int QEvent::registerEventType(int hint)
 }
 
 /*!
-    \class QTimerEvent qcoreevent.h
+    \class QTimerEvent
     \brief The QTimerEvent class contains parameters that describe a
     timer event.
 

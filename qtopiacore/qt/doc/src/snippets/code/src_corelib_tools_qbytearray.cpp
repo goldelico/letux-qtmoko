@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 QByteArray ba("Hello");
 //! [0]
@@ -355,3 +359,6 @@ text.data();            // returns "Qt is great!"
 QByteArray text = QByteArray::fromHex("517420697320677265617421");
 text.data();            // returns "Qt is great!"
 //! [45]
+
+}
+

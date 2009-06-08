@@ -75,6 +75,8 @@ namespace QScript {
             InternalRange       = 0x0000ff00  // Not user-accessible (read as 0, don't change on write)
         };
 
+        inline Member() : m_nameId(0), m_id(0), m_flags(0) {}
+
         inline void resetFlags(uint flags);
         inline void setFlags(uint flags);
         inline void unsetFlags(uint flags);

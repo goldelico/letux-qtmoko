@@ -46,6 +46,7 @@
 
 #include <metadatabase_p.h>
 #include <ui4_p.h>
+#include <qdesigner_formwindowcommand_p.h>
 
 #include <QtDesigner/QDesignerFormWindowInterface>
 #include <QtDesigner/QDesignerFormEditorInterface>
@@ -231,6 +232,50 @@ void SetMemberCommand::undo()
     emit m_editor->connectionChanged(m_con);
 }
 
+// Command to modify a connection
+class ModifyConnectionCommand : public QDesignerFormWindowCommand
+{
+public:
+    explicit ModifyConnectionCommand(QDesignerFormWindowInterface *form,
+                                     SignalSlotConnection *conn,
+                                     const QString &newSignal,
+                                     const QString &newSlot);
+    virtual void redo();
+    virtual void undo();
+
+private:
+    SignalSlotConnection *m_conn;
+    const QString m_oldSignal;
+    const QString m_oldSlot;
+    const QString m_newSignal;
+    const QString m_newSlot;
+};
+
+ModifyConnectionCommand::ModifyConnectionCommand(QDesignerFormWindowInterface *form,
+                                                 SignalSlotConnection *conn,
+                                                 const QString &newSignal,
+                                                 const QString &newSlot) :
+    QDesignerFormWindowCommand(QCoreApplication::translate("Command", "Change signal-slot connection"), form),
+    m_conn(conn),
+    m_oldSignal(conn->signal()),
+    m_oldSlot(conn->slot()),
+    m_newSignal(newSignal),
+    m_newSlot(newSlot)
+{
+}
+
+void ModifyConnectionCommand::redo()
+{
+    m_conn->setSignal(m_newSignal);
+    m_conn->setSlot(m_newSlot);
+}
+
+void ModifyConnectionCommand::undo()
+{
+    m_conn->setSignal(m_oldSignal);
+    m_conn->setSlot(m_oldSlot);
+}
+
 /*******************************************************************************
 ** SignalSlotEditor
 */
@@ -245,7 +290,6 @@ SignalSlotEditor::SignalSlotEditor(QDesignerFormWindowInterface *form_window, QW
 void SignalSlotEditor::modifyConnection(Connection *con)
 {
     SignalSlotConnection *sigslot_con = static_cast<SignalSlotConnection*>(con);
-
     ConnectDialog dialog(m_form_window,
                          sigslot_con->widget(EndPoint::Source),
                          sigslot_con->widget(EndPoint::Target),
@@ -255,8 +299,12 @@ void SignalSlotEditor::modifyConnection(Connection *con)
     dialog.setShowAllSignalsSlots(m_showAllSignalsSlots);
 
     if (dialog.exec() == QDialog::Accepted) {
-        sigslot_con->setSignal(dialog.signal());
-        sigslot_con->setSlot(dialog.slot());
+        const QString newSignal = dialog.signal();
+        const QString newSlot = dialog.slot();
+        if (sigslot_con->signal() != newSignal || sigslot_con->slot() != newSlot) {
+            ModifyConnectionCommand *cmd = new ModifyConnectionCommand(m_form_window, sigslot_con, newSignal, newSlot);
+            m_form_window->commandHistory()->push(cmd);
+        }
     }
 
     m_showAllSignalsSlots = dialog.showAllSignalsSlots();

@@ -53,7 +53,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3EditorFactory qeditorfactory.h
+    \class Q3EditorFactory
     \brief The Q3EditorFactory class is used to create editor widgets
     for QVariant data types.
 

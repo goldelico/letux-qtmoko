@@ -46,13 +46,27 @@
 #include <QtCore/QString>
 #include <QtCore/QStringList>
 
-static int usage(const QStringList & /*args*/)
+static int usage(const QStringList &args)
 {
-    qDebug() <<
-        "\nUsage:\n"
+    Q_UNUSED(args);
+
+    QString loaders;
+    QString savers;
+    QString line = QString(QLatin1String("    %1 - %2\n"));
+    foreach (Translator::FileFormat format, Translator::registeredFileFormats()) {
+        loaders += line.arg(format.extension, -5).arg(format.description);
+        if (format.fileType != Translator::FileFormat::SourceCode)
+            savers += line.arg(format.extension, -5).arg(format.description);
+    }
+
+    qWarning("%s", qPrintable(QString(QLatin1String("\nUsage:\n"
         "    lconvert [options] <infile> [<infile>...]\n\n"
-        "If multiple input files are specified, translations from later files\n"
-        "take precedence.\n\n"
+        "lconvert is part of Qt's Linguist tool chain. It can be used as a\n"
+        "stand-alone tool to convert translation data files from one of the\n"
+        "following input formats\n\n%1\n"
+        "to one of the following output formats\n\n%2\n"
+        "If multiple input files are specified the translations are merged with\n"
+        "translations from later files taking precedence.\n\n"
         "Options:\n"
         "    -h\n"
         "    --help  Display this information and exit.\n\n"
@@ -67,7 +81,6 @@ static int usage(const QStringList & /*args*/)
         "    -if <informat>\n"
         "    --input-format <format>\n"
         "           Specify input format for subsequent <infile>s.\n"
-        "           Available formats are 'ts', 'po' and 'xlf'.\n"
         "           The format is auto-detected from the file name and defaults to 'ts'.\n\n"
         "    -of <outformat>\n"
         "    --output-format <outformat>\n"
@@ -96,7 +109,7 @@ static int usage(const QStringList & /*args*/)
         "    0 on success\n"
         "    1 on command line parse failures\n"
         "    2 on read failures\n"
-        "    3 on write failures\n";
+        "    3 on write failures\n")).arg(loaders).arg(savers)));
     return 1;
 }
 
@@ -197,6 +210,7 @@ int main(int argc, char *argv[])
         qWarning() << qPrintable(cd.error());
         return 2;
     }
+    Translator::reportDuplicates(tr.resolveDuplicates(), inFiles[0].name, verbose);
 
     for (int i = 1; i < inFiles.size(); ++i) {
         Translator tr2;
@@ -204,6 +218,7 @@ int main(int argc, char *argv[])
             qWarning() << qPrintable(cd.error());
             return 2;
         }
+        Translator::reportDuplicates(tr2.resolveDuplicates(), inFiles[i].name, verbose);
         for (int j = 0; j < tr2.messageCount(); ++j)
             tr.replaceSorted(tr2.message(j));
     }

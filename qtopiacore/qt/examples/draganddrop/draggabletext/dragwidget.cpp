@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -61,6 +61,7 @@ DragWidget::DragWidget(QWidget *parent)
             DragLabel *wordLabel = new DragLabel(word, this);
             wordLabel->move(x, y);
             wordLabel->show();
+            wordLabel->setAttribute(Qt::WA_DeleteOnClose);
             x += wordLabel->width() + 2;
             if (x >= 195) {
                 x = 5;
@@ -111,11 +112,12 @@ void DragWidget::dropEvent(QDropEvent *event)
             DragLabel *newLabel = new DragLabel(piece, this);
             newLabel->move(position - hotSpot);
             newLabel->show();
+            newLabel->setAttribute(Qt::WA_DeleteOnClose);
 
             position += QPoint(newLabel->width(), 0);
         }
 
-        if (children().contains(event->source())) {
+        if (event->source() == this) {
             event->setDropAction(Qt::MoveAction);
             event->accept();
         } else {
@@ -124,4 +126,39 @@ void DragWidget::dropEvent(QDropEvent *event)
     } else {
         event->ignore();
     }
+    foreach (QObject *child, children()) {
+        if (child->inherits("QWidget")) {
+            QWidget *widget = static_cast<QWidget *>(child);
+            if (!widget->isVisible())
+                widget->deleteLater();
+        }
+    }
+}
+
+void DragWidget::mousePressEvent(QMouseEvent *event)
+{
+    QLabel *child = static_cast<QLabel*>(childAt(event->pos()));
+    if (!child)
+        return;
+
+    QPoint hotSpot = event->pos() - child->pos();
+
+    QMimeData *mimeData = new QMimeData;
+    mimeData->setText(child->text());
+    mimeData->setData("application/x-hotspot",
+                      QByteArray::number(hotSpot.x())
+                      + " " + QByteArray::number(hotSpot.y()));
+
+    QPixmap pixmap(child->size());
+    child->render(&pixmap);
+
+    QDrag *drag = new QDrag(this);
+    drag->setMimeData(mimeData);
+    drag->setPixmap(pixmap);
+    drag->setHotSpot(hotSpot);
+
+    Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
+
+    if (dropAction == Qt::MoveAction)
+        child->close();
 }

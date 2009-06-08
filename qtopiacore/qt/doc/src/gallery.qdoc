@@ -41,8 +41,8 @@
 
 /*!
   \group gallery
-  \ingroup topics
   \title Qt Widget Gallery
+  \ingroup topics
   \brief Qt widgets shown in different styles on various platforms.
 
   Qt's support for widget styles and themes enables your application to fit in
@@ -58,38 +58,18 @@
   <tr>
   <td align="center">
   \endraw
-  \image plastique-treeview.png Plastique Style Widget Gallery
+  \image plastique-tabwidget.png Plastique Style Widget Gallery
 
-  \bold{\l{gallery-plastique.html}{Plastique Style Widget Gallery}}
+  \bold{\l{Plastique Style Widget Gallery}}
 
   The Plastique style is provided by QPlastiqueStyle.
   \raw HTML
   </td>
   <td align="center">
   \endraw
-  \image cleanlooks-tabwidget.png Cleanlooks Style Widget Gallery
-
-  \bold{\l{gallery-cleanlooks.html}{Cleanlooks Style Widget Gallery}}
-
-  The Cleanlooks style is provided by QCleanlooksStyle.
-  \raw HTML
-  </td>
-  </tr>
-  <tr>
-  <td align="center">
-  \endraw
-  \image windowsvista-tabwidget.png Windows Vista Style Widget Gallery
-
-  \bold{\l{gallery-windowsvista.html}{Windows Vista Style Widget Gallery}}
-
-  The Windows Vista style is provided by QWindowsVistaStyle.
-  \raw HTML
-  </td>
-  <td align="center">
-  \endraw
   \image windowsxp-tabwidget.png Windows XP Style Widget Gallery
 
-  \bold{\l{gallery-windowsxp.html}{Windows XP Style Widget Gallery}}
+  \bold{\l{Windows XP Style Widget Gallery}}
 
   The Windows XP style is provided by QWindowsXPStyle.
   \raw HTML
@@ -98,20 +78,40 @@
   <tr>
   <td align="center">
   \endraw
-  \image macintosh-tabwidget.png Macintosh Style Widget Gallery
+  \image gtk-tabwidget.png GTK Style Widget Gallery
 
-  \bold{\l{gallery-macintosh.html}{Macintosh Style Widget Gallery}}
+  \bold{\l{GTK Style Widget Gallery}}
 
-  The Macintosh style is provided by QMacStyle.
+  The GTK style is provided by QGtkStyle.
   \raw HTML
   </td>
   <td align="center">
   \endraw
-  \image windows-tableview.png Windows Style Widget Gallery
+  \image macintosh-tabwidget.png Macintosh Style Widget Gallery
 
-  \bold{\l{gallery-windows.html}{Windows Style Widget Gallery}}
+  \bold{\l{Macintosh Style Widget Gallery}}
 
-  The Windows style is provided by QWindowsStyle.
+  The Macintosh style is provided by QMacStyle.
+  \raw HTML
+  </td>
+  </tr>
+  <tr>
+  <td align="center">
+  \endraw
+  \image cleanlooks-tabwidget.png Cleanlooks Style Widget Gallery
+
+  \bold{\l{Cleanlooks Style Widget Gallery}}
+
+  The Cleanlooks style is provided by QCleanlooksStyle.
+  \raw HTML
+  </td>
+  <td align="center">
+  \endraw
+  \image windowsvista-tabwidget.png Windows Vista Style Widget Gallery
+
+  \bold{\l{Windows Vista Style Widget Gallery}}
+
+  The Windows Vista style is provided by QWindowsVistaStyle.
   \raw HTML
   </td>
   </tr>
@@ -120,19 +120,31 @@
   \endraw
   \image motif-tabwidget.png Motif Style Widget Gallery
 
-  \bold{\l{gallery-motif.html}{Motif Style Widget Gallery}}
+  \bold{\l{Motif Style Widget Gallery}}
 
   The Motif style is provided by QMotifStyle.
   \raw HTML
   </td>
   <td align="center">
   \endraw
-  \image cde-treeview.png CDE Style Widget Gallery
+  \image windows-tabwidget.png Windows Style Widget Gallery
 
-  \bold{\l{gallery-cde.html}{CDE Style Widget Gallery}}
+  \bold{\l{Windows Style Widget Gallery}}
+
+  The Windows style is provided by QWindowsStyle.
+  \raw HTML
+  </td>
+  </tr>
+  <tr>
+  <td align="center">
+  \endraw
+  \image cde-tabwidget.png CDE Style Widget Gallery
+
+  \bold{\l{CDE Style Widget Gallery}}
 
   The Common Desktop Environment style is provided by QCDEStyle.
   \raw HTML
+  </td>
   </tr>
   </table>
   \endraw

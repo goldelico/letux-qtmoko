@@ -105,6 +105,7 @@ qint64 QBenchmarkValgrindUtils::extractResult(const QString &fileName)
     QFile file(fileName);
     const bool openOk = file.open(QIODevice::ReadOnly | QIODevice::Text);
     Q_ASSERT(openOk);
+    Q_UNUSED(openOk);
 
     qint64 val = -1;
     bool valSeen = false;
@@ -141,6 +142,7 @@ QString QBenchmarkValgrindUtils::getNewestFileName()
     foreach (QFileInfo fileInfo, fiList) {
         const int index = rx.indexIn(fileInfo.fileName());
         Q_ASSERT(index == 0);
+        Q_UNUSED(index);
         bool ok;
         const int suffix = rx.cap(1).toInt(&ok);
         Q_ASSERT(ok);
@@ -171,6 +173,7 @@ void QBenchmarkValgrindUtils::cleanup()
     foreach (QFileInfo fileInfo, fiList) {
         const bool removeOk = QFile::remove(fileInfo.fileName());
         Q_ASSERT(removeOk);
+        Q_UNUSED(removeOk);
     }
 }
 

@@ -352,7 +352,7 @@ void QColumnView::scrollTo(const QModelIndex &index, ScrollHint hint)
 QModelIndex QColumnView::moveCursor(CursorAction cursorAction, Qt::KeyboardModifiers modifiers)
 {
     // the child views which have focus get to deal with this first and if
-    // they don't accept it then it comes up this this view and we only grip left/right
+    // they don't accept it then it comes up this view and we only grip left/right
     Q_UNUSED(modifiers);
     if (!model())
         return QModelIndex();

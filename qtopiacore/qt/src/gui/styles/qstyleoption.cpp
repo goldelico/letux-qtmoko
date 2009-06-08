@@ -3428,7 +3428,7 @@ QStyleOptionQ3ListView::QStyleOptionQ3ListView(int version)
 /*!
     \class QStyleOptionQ3DockWindow
     \brief The QStyleOptionQ3DockWindow class is used to describe the
-    parameters for drawing various parts of a \l Q3DockWindow.
+    parameters for drawing various parts of a Q3DockWindow.
 
     This class is used for drawing the old Q3DockWindow and its
     parts. \bold {It is not recommended for new classes}.

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -49,30 +49,4 @@ DragLabel::DragLabel(const QString &text, QWidget *parent)
     setAutoFillBackground(true);
     setFrameShape(QFrame::Panel);
     setFrameShadow(QFrame::Raised);
-}
-
-void DragLabel::mousePressEvent(QMouseEvent *event)
-{
-    QPoint hotSpot = event->pos();
-
-    QMimeData *mimeData = new QMimeData;
-    mimeData->setText(text());
-    mimeData->setData("application/x-hotspot",
-                      QByteArray::number(hotSpot.x())
-                      + " " + QByteArray::number(hotSpot.y()));
-
-    QPixmap pixmap(size());
-    render(&pixmap);
-
-    QDrag *drag = new QDrag(this);
-    drag->setMimeData(mimeData);
-    drag->setPixmap(pixmap);
-    drag->setHotSpot(hotSpot);
-
-    Qt::DropAction dropAction = drag->exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
-
-    if (dropAction == Qt::MoveAction) {
-        close();
-        update();
-    }
 }

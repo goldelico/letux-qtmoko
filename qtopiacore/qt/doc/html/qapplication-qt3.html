@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/kernel/qapplication.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qapplication.cpp -->
 <head>
   <title>Qt 4.5: Qt 3 Support Members for QApplication</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -79,7 +79,7 @@
 <p>See also <a href="qapplication-qt3.html#hasGlobalMouseTracking">hasGlobalMouseTracking</a>().</p>
 <h3 class="fn"><a name="setMainWidget"></a>void QApplication::setMainWidget ( <a href="qwidget.html">QWidget</a> * <i>mainWidget</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Sets the application's main widget to <i>mainWidget</i>.</p>
-<p>In most respects the main widget is like any other widget, except that if it is closed, the application exits. Note that <a href="qapplication.html">QApplication</a> does <i>not</i> take ownership of the <i>mainWidget</i>, so if you create your main widget on the heap you must delete it yourself.</p>
+<p>In most respects the main widget is like any other widget, except that if it is closed, the application exits. <a href="qapplication.html">QApplication</a> does <i>not</i> take ownership of the <i>mainWidget</i>, so if you create your main widget on the heap you must delete it yourself.</p>
 <p>You need not have a main widget; connecting <a href="qapplication.html#lastWindowClosed">lastWindowClosed</a>() to <a href="qcoreapplication.html#quit">quit</a>() is an alternative.</p>
 <p>For X11, this function also resizes and moves the main widget according to the <i>-geometry</i> command-line option, so you should set the default geometry (using <a href="qwidget.html#geometry-prop">QWidget::setGeometry</a>()) before calling setMainWidget().</p>
 <p>See also <a href="qapplication-qt3.html#mainWidget">mainWidget</a>(), <a href="qapplication.html#exec">exec</a>(), and <a href="qcoreapplication.html#quit">quit</a>().</p>
@@ -124,6 +124,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

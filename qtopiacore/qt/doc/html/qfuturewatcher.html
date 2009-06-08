@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/concurrent/qfuturewatcher.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/concurrent/qfuturewatcher.cpp -->
 <head>
   <title>Qt 4.5: QFutureWatcher Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -97,7 +97,7 @@
 <span class="comment"> // Start the computation.</span>
  QFuture&lt;int&gt; future = QtConcurrent::run(...);
  watcher.setFuture(future);</pre>
-<p>Be aware that not all asynchronous computations can be canceled or paused. For example, the future returned by <a href="qtconcurrentrun.html#runx">QtConcurrent::run</a>() cannot be canceled; but the future returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
+<p>Be aware that not all asynchronous computations can be canceled or paused. For example, the future returned by <a href="qtconcurrentrun.html#run">QtConcurrent::run</a>() cannot be canceled; but the future returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
 <p>QFutureWatcher&lt;void&gt; is specialized to not contain any of the result fetching functions. Any <a href="qfuture.html">QFuture</a>&lt;T&gt; can be watched by a QFutureWatcher&lt;void&gt; as well. This is useful if only status or progress information is needed; not the actual result data.</p>
 <p>See also <a href="qfuture.html">QFuture</a> and <a href="threads.html#qtconcurrent-intro">Qt Concurrent</a>.</p>
 <hr />
@@ -109,7 +109,7 @@
 <h3 class="fn"><a name="cancel"></a>void QFutureWatcher::cancel ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
 <p>Cancels the asynchronous computation represented by the <a href="qfuturewatcher.html#future">future</a>(). Note that the cancelation is asynchronous. Use <a href="qfuturewatcher.html#waitForFinished">waitForFinished</a>() after calling cancel() when you need synchronous cancelation.</p>
 <p>Currently available results may still be accessed on a canceled <a href="qfuture.html">QFuture</a>, but new results will <i>not</i> become available after calling this function. Also, this <a href="qfuturewatcher.html">QFutureWatcher</a> will not deliver progress and result ready signals once canceled. This includes the <a href="qfuturewatcher.html#progressValueChanged">progressValueChanged</a>(), <a href="qfuturewatcher.html#progressRangeChanged">progressRangeChanged</a>(), <a href="qfuturewatcher.html#progressTextChanged">progressTextChanged</a>(), <a href="qfuturewatcher.html#resultReadyAt">resultReadyAt</a>(), and <a href="qfuturewatcher.html#resultsReadyAt">resultsReadyAt</a>() signals.</p>
-<p>Be aware that not all asynchronous computations can be canceled. For example, the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentrun.html#runx">QtConcurrent::run</a>() cannot be canceled; but the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
+<p>Be aware that not all asynchronous computations can be canceled. For example, the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentrun.html#run">QtConcurrent::run</a>() cannot be canceled; but the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
 <h3 class="fn"><a name="canceled"></a>void QFutureWatcher::canceled ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted if the watched future is canceled.</p>
 <h3 class="fn"><a name="finished"></a>void QFutureWatcher::finished ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -175,7 +175,7 @@
 <h3 class="fn"><a name="setPaused"></a>void QFutureWatcher::setPaused ( bool <i>paused</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
 <p>If <i>paused</i> is true, this function pauses the asynchronous computation represented by the <a href="qfuturewatcher.html#future">future</a>(). If the computation is already paused, this function does nothing. This <a href="qfuturewatcher.html">QFutureWatcher</a> will stop delivering progress and result ready signals while the future is paused. Signal delivery will continue once the computation is resumed.</p>
 <p>If <i>paused</i> is false, this function resumes the asynchronous computation. If the computation was not previously paused, this function does nothing.</p>
-<p>Be aware that not all computations can be paused. For example, the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentrun.html#runx">QtConcurrent::run</a>() cannot be paused; but the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
+<p>Be aware that not all computations can be paused. For example, the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentrun.html#run">QtConcurrent::run</a>() cannot be paused; but the <a href="qfuture.html">QFuture</a> returned by <a href="qtconcurrentmap.html#mappedReduced">QtConcurrent::mappedReduced</a>() can.</p>
 <p>See also <a href="qfuturewatcher.html#paused">paused</a>(), <a href="qfuturewatcher.html#pause">pause</a>(), <a href="qfuturewatcher.html#resume">resume</a>(), and <a href="qfuturewatcher.html#togglePaused">togglePaused</a>().</p>
 <h3 class="fn"><a name="setPendingResultsLimit"></a>void QFutureWatcher::setPendingResultsLimit ( int <i>limit</i> )</h3>
 <p>The setPendingResultsLimit() provides throttling control. When the number of pending <a href="qfuturewatcher.html#resultReadyAt">resultReadyAt</a>() or <a href="qfuturewatcher.html#resultsReadyAt">resultsReadyAt</a>() signals exceeds the <i>limit</i>, the computation represented by the future will be throttled automatically. The computation will resume once the number of pending signals drops below the <i>limit</i>.</p>
@@ -190,6 +190,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

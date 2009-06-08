@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/dialogs/qprogressdialog.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/dialogs/qprogressdialog.cpp -->
 <head>
   <title>Qt 4.5: QProgressDialog Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -108,7 +108,7 @@
 <ul>
 <li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
 <li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 </ul>
@@ -249,7 +249,7 @@
 <h3 class="fn"><a name="QProgressDialog-2"></a>QProgressDialog::QProgressDialog ( const <a href="qstring.html">QString</a> &amp; <i>labelText</i>, const <a href="qstring.html">QString</a> &amp; <i>cancelButtonText</i>, int <i>minimum</i>, int <i>maximum</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i> = 0, <a href="qt.html#WindowType-enum">Qt::WindowFlags</a> <i>f</i> = 0 )</h3>
 <p>Constructs a progress dialog.</p>
 <p>The <i>labelText</i> is the text used to remind the user what is progressing.</p>
-<p>The <i>cancelButtonText</i> is the text to display on the cancel button, or 0 if no cancel button is to be shown.</p>
+<p>The <i>cancelButtonText</i> is the text to display on the cancel button. If QString() is passed then no cancel button is shown.</p>
 <p>The <i>minimum</i> and <i>maximum</i> is the number of steps in the operation for which this progress dialog shows progress. For example, if the operation is to examine 50 files, this value minimum value would be 0, and the maximum would be 50. Before examining the first file, call setValue(0). As each file is processed call setValue(1), setValue(2), etc., finally calling setValue(50) after examining the last file.</p>
 <p>The <i>parent</i> argument is the dialog's parent widget. The parent, <i>parent</i>, and widget flags, <i>f</i>, are passed to the <a href="qdialog.html#QDialog">QDialog::QDialog</a>() constructor.</p>
 <p>See also <a href="qprogressdialog.html#labelText-prop">setLabelText</a>(), <a href="qprogressdialog.html#setLabel">setLabel</a>(), <a href="qprogressdialog.html#setCancelButtonText">setCancelButtonText</a>(), <a href="qprogressdialog.html#setCancelButton">setCancelButton</a>(), <a href="qprogressdialog.html#minimum-prop">setMinimum</a>(), and <a href="qprogressdialog.html#maximum-prop">setMaximum</a>().</p>
@@ -274,10 +274,10 @@
 <h3 class="fn"><a name="setBar"></a>void QProgressDialog::setBar ( <a href="qprogressbar.html">QProgressBar</a> * <i>bar</i> )</h3>
 <p>Sets the progress bar widget to <i>bar</i>. The progress dialog resizes to fit. The progress dialog takes ownership of the progress <i>bar</i> which will be deleted when necessary, so do not use a progress bar allocated on the stack.</p>
 <h3 class="fn"><a name="setCancelButton"></a>void QProgressDialog::setCancelButton ( <a href="qpushbutton.html">QPushButton</a> * <i>cancelButton</i> )</h3>
-<p>Sets the cancel button to the push button, <i>cancelButton</i>. The progress dialog takes ownership of this button which will be deleted when necessary, so do not pass the address of an object that is on the stack, i.e&#x2e; use new() to create the button.</p>
+<p>Sets the cancel button to the push button, <i>cancelButton</i>. The progress dialog takes ownership of this button which will be deleted when necessary, so do not pass the address of an object that is on the stack, i.e&#x2e; use new() to create the button. If 0 is passed then no cancel button will be shown.</p>
 <p>See also <a href="qprogressdialog.html#setCancelButtonText">setCancelButtonText</a>().</p>
 <h3 class="fn"><a name="setCancelButtonText"></a>void QProgressDialog::setCancelButtonText ( const <a href="qstring.html">QString</a> &amp; <i>cancelButtonText</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>Sets the cancel button's text to <i>cancelButtonText</i>.</p>
+<p>Sets the cancel button's text to <i>cancelButtonText</i>. If the text is set to QString() then it will cause the cancel button to be hidden and deleted.</p>
 <p>See also <a href="qprogressdialog.html#setCancelButton">setCancelButton</a>().</p>
 <h3 class="fn"><a name="setLabel"></a>void QProgressDialog::setLabel ( <a href="qlabel.html">QLabel</a> * <i>label</i> )</h3>
 <p>Sets the label to <i>label</i>. The progress dialog resizes to fit. The label becomes owned by the progress dialog and will be deleted when necessary, so do not pass the address of an object on the stack.</p>
@@ -294,6 +294,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

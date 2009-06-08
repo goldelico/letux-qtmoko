@@ -1772,11 +1772,14 @@ QString QHttpNetworkConnectionPrivate::errorDetail(QNetworkReply::NetworkError e
 
 void QHttpNetworkConnectionPrivate::removeReply(QHttpNetworkReply *reply)
 {
+    Q_Q(QHttpNetworkConnection);
+
     // remove the from active list.
     for (int i = 0; i < channelCount; ++i) {
         if (channels[i].reply == reply) {
             channels[i].reply = 0;
             closeChannel(i);
+            QMetaObject::invokeMethod(q, "_q_startNextRequest", Qt::QueuedConnection);
             return;
         }
     }
@@ -1786,6 +1789,7 @@ void QHttpNetworkConnectionPrivate::removeReply(QHttpNetworkReply *reply)
             HttpMessagePair messagePair = highPriorityQueue.at(j);
             if (messagePair.second == reply) {
                 highPriorityQueue.removeAt(j);
+                QMetaObject::invokeMethod(q, "_q_startNextRequest", Qt::QueuedConnection);
                 return;
             }
         }
@@ -1796,6 +1800,7 @@ void QHttpNetworkConnectionPrivate::removeReply(QHttpNetworkReply *reply)
             HttpMessagePair messagePair = lowPriorityQueue.at(j);
             if (messagePair.second == reply) {
                 lowPriorityQueue.removeAt(j);
+                QMetaObject::invokeMethod(q, "_q_startNextRequest", Qt::QueuedConnection);
                 return;
             }
         }

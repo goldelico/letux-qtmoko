@@ -1,163 +1,9 @@
 <!DOCTYPE DCF>
 <DCF ref="index.html" icon="qt.png" imagedir="../../gif" title="Qt Reference Documentation">
 <section ref="classes.html" title="Classes">
-    <section ref="phonon-gstreamer-phononsrc.html" title="_PhononSrc Class Reference">
-        <keyword ref="phonon-gstreamer-phononsrc.html">_PhononSrc</keyword>
-        <section ref="phonon-gstreamer-phononsrc-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-phononsrcclass.html" title="_PhononSrcClass Class Reference">
-        <keyword ref="phonon-gstreamer-phononsrcclass.html">_PhononSrcClass</keyword>
-        <section ref="phonon-gstreamer-phononsrcclass-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-abstractrenderer.html" title="AbstractRenderer Class Reference">
-        <keyword ref="phonon-gstreamer-abstractrenderer.html">AbstractRenderer</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#aspectRatioChanged">aspectRatioChanged</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#eventFilter">eventFilter</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#handleMediaNodeEvent">handleMediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#handlePaint">handlePaint</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#paintsOnWidget">paintsOnWidget</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#scaleModeChanged">scaleModeChanged</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html#videoSink">videoSink</keyword>
-        <section ref="phonon-gstreamer-abstractrenderer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-abstractvideorenderer.html" title="AbstractVideoRenderer Class Reference">
-        <keyword ref="phonon-ds9-abstractvideorenderer.html">AbstractVideoRenderer</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#applyMixerSettings">applyMixerSettings</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#getFilter">getFilter</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#internalNotifyResize">internalNotifyResize</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#isActive">isActive</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#isNative">isNative</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#notifyResize">notifyResize</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#repaintCurrentFrame">repaintCurrentFrame</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#setActive">setActive</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#sizeHint">sizeHint</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#snapshot">snapshot</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html#videoSize">videoSize</keyword>
-        <section ref="phonon-ds9-abstractvideorenderer-members.html" title="List of all members"/>
-    </section>
     <section ref="qinputmethodevent-attribute.html" title="Attribute Class Reference">
         <keyword ref="qinputmethodevent-attribute.html">Attribute</keyword>
         <section ref="qinputmethodevent-attribute-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audioconnection.html" title="AudioConnection Class Reference">
-        <keyword ref="phonon-qt7-audioconnection.html">AudioConnection</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#connect">connect</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#disconnect">disconnect</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#freeMemoryAllocations">freeMemoryAllocations</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#invalidate">invalidate</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#isBetween">isBetween</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#isSinkOnly">isSinkOnly</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#isValid">isValid</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html#updateStreamSpecification">updateStreamSpecification</keyword>
-        <section ref="phonon-qt7-audioconnection-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-audiodevice.html" title="AudioDevice Class Reference">
-        <keyword ref="phonon-gstreamer-audiodevice.html">AudioDevice</keyword>
-        <section ref="phonon-gstreamer-audiodevice-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiodevice.html" title="AudioDevice Class Reference">
-        <keyword ref="phonon-qt7-audiodevice.html">AudioDevice</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#Scope-enum">Scope</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#currentDevice">currentDevice</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#defaultDevice">defaultDevice</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#defaultSystemDevice">defaultSystemDevice</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#deviceName">deviceName</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#deviceNameElseDeviceSourceName">deviceNameElseDeviceSourceName</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#deviceSourceName">deviceSourceName</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#deviceSourceNameElseDeviceName">deviceSourceNameElseDeviceName</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#deviceUID">deviceUID</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#devices">devices</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html#setDevice">setDevice</keyword>
-        <section ref="phonon-qt7-audiodevice-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-audioeffect.html" title="AudioEffect Class Reference">
-        <keyword ref="phonon-gstreamer-audioeffect.html">AudioEffect</keyword>
-        <keyword ref="phonon-gstreamer-audioeffect.html#audioElement">audioElement</keyword>
-        <keyword ref="phonon-gstreamer-audioeffect.html#createEffectBin">createEffectBin</keyword>
-        <section ref="phonon-gstreamer-audioeffect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audioeffect.html" title="AudioEffect Class Reference">
-        <keyword ref="phonon-qt7-audioeffect.html">AudioEffect</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#description">description</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#effectList">effectList</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#name">name</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#parameters">parameters</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html#setParameterValue">setParameterValue</keyword>
-        <section ref="phonon-qt7-audioeffect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audioeffectaudionode.html" title="AudioEffectAudioNode Class Reference">
-        <keyword ref="phonon-qt7-audioeffectaudionode.html">AudioEffectAudioNode</keyword>
-        <keyword ref="phonon-qt7-audioeffectaudionode.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <keyword ref="phonon-qt7-audioeffectaudionode.html#initializeAudioUnit">initializeAudioUnit</keyword>
-        <keyword ref="phonon-qt7-audioeffectaudionode.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-qt7-audioeffectaudionode.html#setParameterValue">setParameterValue</keyword>
-        <section ref="phonon-qt7-audioeffectaudionode-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiograph.html" title="AudioGraph Class Reference">
-        <keyword ref="phonon-qt7-audiograph.html">AudioGraph</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#audioGraphRef">audioGraphRef</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#graphCannotPlay">graphCannotPlay</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#isRunning">isRunning</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#notify">notify</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#openAndInit">openAndInit</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#prepare">prepare</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#rebuildGraph">rebuildGraph</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#rebuildGraphIfNeeded">rebuildGraphIfNeeded</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#root">root</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#setPaused">setPaused</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#setStatusCannotPlay">setStatusCannotPlay</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#start">start</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#startAllOverFromScratch">startAllOverFromScratch</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#stop">stop</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#tryStartGraph">tryStartGraph</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#update">update</keyword>
-        <keyword ref="phonon-qt7-audiograph.html#updateStreamSpecifications">updateStreamSpecifications</keyword>
-        <section ref="phonon-qt7-audiograph-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiomixer.html" title="AudioMixer Class Reference">
-        <keyword ref="phonon-qt7-audiomixer.html">AudioMixer</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#event">event</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#fadeCurve">fadeCurve</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#fadeTo">fadeTo</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#parameters">parameters</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#setFadeCurve">setFadeCurve</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#setParameterValue">setParameterValue</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#updateFade">updateFade</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html#volume">volume</keyword>
-        <section ref="phonon-qt7-audiomixer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiomixeraudionode.html" title="AudioMixerAudioNode Class Reference">
-        <keyword ref="phonon-qt7-audiomixeraudionode.html">AudioMixerAudioNode</keyword>
-        <keyword ref="phonon-qt7-audiomixeraudionode.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <keyword ref="phonon-qt7-audiomixeraudionode.html#initializeAudioUnit">initializeAudioUnit</keyword>
-        <keyword ref="phonon-qt7-audiomixeraudionode.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-qt7-audiomixeraudionode.html#volume">volume</keyword>
-        <section ref="phonon-qt7-audiomixeraudionode-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audionode.html" title="AudioNode Class Reference">
-        <keyword ref="phonon-qt7-audionode.html">AudioNode</keyword>
-        <keyword ref="phonon-qt7-audionode.html#ConnectionSide-enum">ConnectionSide</keyword>
-        <keyword ref="phonon-qt7-audionode.html#createAndConnectAUNodes">createAndConnectAUNodes</keyword>
-        <keyword ref="phonon-qt7-audionode.html#createAudioUnits">createAudioUnits</keyword>
-        <keyword ref="phonon-qt7-audionode.html#fillInStreamSpecification">fillInStreamSpecification</keyword>
-        <keyword ref="phonon-qt7-audionode.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <keyword ref="phonon-qt7-audionode.html#getInputAUNode">getInputAUNode</keyword>
-        <keyword ref="phonon-qt7-audionode.html#getOutputAUNode">getOutputAUNode</keyword>
-        <keyword ref="phonon-qt7-audionode.html#getTimeInSamples">getTimeInSamples</keyword>
-        <keyword ref="phonon-qt7-audionode.html#initializeAudioUnit">initializeAudioUnit</keyword>
-        <keyword ref="phonon-qt7-audionode.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-audionode.html#notify">notify</keyword>
-        <keyword ref="phonon-qt7-audionode.html#setGraph">setGraph</keyword>
-        <keyword ref="phonon-qt7-audionode.html#setStreamSpecification">setStreamSpecification</keyword>
-        <section ref="phonon-qt7-audionode-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audionodesplitter.html" title="AudioNodeSplitter Class Reference">
-        <keyword ref="phonon-qt7-audionodesplitter.html">AudioNodeSplitter</keyword>
-        <keyword ref="phonon-qt7-audionodesplitter.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <section ref="phonon-qt7-audionodesplitter-members.html" title="List of all members"/>
     </section>
     <section ref="phonon-audiooutput.html" title="AudioOutput Class Reference">
         <keyword ref="phonon-audiooutput.html">AudioOutput</keyword>
@@ -178,140 +24,12 @@
         <keyword ref="phonon-audiooutput.html#volumeChanged">volumeChanged</keyword>
         <section ref="phonon-audiooutput-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-audiooutput.html" title="AudioOutput Class Reference">
-        <keyword ref="phonon-ds9-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#audioDeviceFailed">audioDeviceFailed</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#outputDevice">outputDevice</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#setCrossFadingProgress">setCrossFadingProgress</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#setOutputDevice">setOutputDevice</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#volume">volume</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html#volumeChanged">volumeChanged</keyword>
-        <section ref="phonon-ds9-audiooutput-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-audiooutput.html" title="AudioOutput Class Reference">
-        <keyword ref="phonon-gstreamer-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#audioDeviceFailed">audioDeviceFailed</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#audioElement">audioElement</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#outputDevice">outputDevice</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#setOutputDevice">setOutputDevice</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#volume">volume</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html#volumeChanged">volumeChanged</keyword>
-        <section ref="phonon-gstreamer-audiooutput-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiooutput.html" title="AudioOutput Class Reference">
-        <keyword ref="phonon-qt7-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#audioDeviceFailed">audioDeviceFailed</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#outputDevice">outputDevice</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#setOutputDevice">setOutputDevice</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#volume">volume</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html#volumeChanged">volumeChanged</keyword>
-        <section ref="phonon-qt7-audiooutput-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-waveout-audiooutput.html" title="AudioOutput Class Reference">
-        <keyword ref="phonon-waveout-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#audioDeviceFailed">audioDeviceFailed</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#outputDevice">outputDevice</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#setCrossFadingProgress">setCrossFadingProgress</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#setOutputDevice">setOutputDevice</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#volume">volume</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html#volumeChanged">volumeChanged</keyword>
-        <section ref="phonon-waveout-audiooutput-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiooutputaudiopart.html" title="AudioOutputAudioPart Class Reference">
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html">AudioOutputAudioPart</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#audioDeviceFailed">audioDeviceFailed</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#initializeAudioUnit">initializeAudioUnit</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#volume">volume</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html#volumeChanged">volumeChanged</keyword>
-        <section ref="phonon-qt7-audiooutputaudiopart-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiopartoutput.html" title="AudioPartOutput Class Reference">
-        <keyword ref="phonon-qt7-audiopartoutput.html">AudioPartOutput</keyword>
-        <section ref="phonon-qt7-audiopartoutput-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-audiosplitter.html" title="AudioSplitter Class Reference">
-        <keyword ref="phonon-qt7-audiosplitter.html">AudioSplitter</keyword>
-        <section ref="phonon-qt7-audiosplitter-members.html" title="List of all members"/>
-    </section>
     <section ref="qiconenginev2-availablesizesargument.html" title="AvailableSizesArgument Class Reference">
         <keyword ref="qiconenginev2-availablesizesargument.html">AvailableSizesArgument</keyword>
         <keyword ref="qiconenginev2-availablesizesargument.html#mode-var">mode</keyword>
         <keyword ref="qiconenginev2-availablesizesargument.html#sizes-var">sizes</keyword>
         <keyword ref="qiconenginev2-availablesizesargument.html#state-var">state</keyword>
         <section ref="qiconenginev2-availablesizesargument-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-backend.html" title="Backend Class Reference">
-        <keyword ref="phonon-ds9-backend.html">Backend</keyword>
-        <keyword ref="phonon-ds9-backend.html#availableMimeTypes">availableMimeTypes</keyword>
-        <keyword ref="phonon-ds9-backend.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-ds9-backend.html#createObject">createObject</keyword>
-        <keyword ref="phonon-ds9-backend.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-ds9-backend.html#endConnectionChange">endConnectionChange</keyword>
-        <keyword ref="phonon-ds9-backend.html#getAudioOutputFilter">getAudioOutputFilter</keyword>
-        <keyword ref="phonon-ds9-backend.html#objectDescriptionChanged">objectDescriptionChanged</keyword>
-        <keyword ref="phonon-ds9-backend.html#objectDescriptionIndexes">objectDescriptionIndexes</keyword>
-        <keyword ref="phonon-ds9-backend.html#objectDescriptionProperties">objectDescriptionProperties</keyword>
-        <keyword ref="phonon-ds9-backend.html#startConnectionChange">startConnectionChange</keyword>
-        <keyword ref="phonon-ds9-backend.html#supportsVideo">supportsVideo</keyword>
-        <section ref="phonon-ds9-backend-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-backend.html" title="Backend Class Reference">
-        <keyword ref="phonon-gstreamer-backend.html">Backend</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#DebugLevel-enum">DebugLevel</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#addBusWatcher">addBusWatcher</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#availableMimeTypes">availableMimeTypes</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#checkDependencies">checkDependencies</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#createObject">createObject</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#debugLevel">debugLevel</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#deviceManager">deviceManager</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#effectManager">effectManager</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#endConnectionChange">endConnectionChange</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#isValid">isValid</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#logMessage">logMessage</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#objectDescriptionChanged">objectDescriptionChanged</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#objectDescriptionIndexes">objectDescriptionIndexes</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#objectDescriptionProperties">objectDescriptionProperties</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#removeBusWatcher">removeBusWatcher</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#startConnectionChange">startConnectionChange</keyword>
-        <keyword ref="phonon-gstreamer-backend.html#supportsVideo">supportsVideo</keyword>
-        <section ref="phonon-gstreamer-backend-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-backend.html" title="Backend Class Reference">
-        <keyword ref="phonon-qt7-backend.html">Backend</keyword>
-        <keyword ref="phonon-qt7-backend.html#availableMimeTypes">availableMimeTypes</keyword>
-        <keyword ref="phonon-qt7-backend.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-qt7-backend.html#createObject">createObject</keyword>
-        <keyword ref="phonon-qt7-backend.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-qt7-backend.html#endConnectionChange">endConnectionChange</keyword>
-        <keyword ref="phonon-qt7-backend.html#objectDescriptionChanged">objectDescriptionChanged</keyword>
-        <keyword ref="phonon-qt7-backend.html#objectDescriptionIndexes">objectDescriptionIndexes</keyword>
-        <keyword ref="phonon-qt7-backend.html#objectDescriptionProperties">objectDescriptionProperties</keyword>
-        <keyword ref="phonon-qt7-backend.html#startConnectionChange">startConnectionChange</keyword>
-        <section ref="phonon-qt7-backend-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-waveout-backend.html" title="Backend Class Reference">
-        <keyword ref="phonon-waveout-backend.html">Backend</keyword>
-        <keyword ref="phonon-waveout-backend.html#availableMimeTypes">availableMimeTypes</keyword>
-        <keyword ref="phonon-waveout-backend.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-waveout-backend.html#createObject">createObject</keyword>
-        <keyword ref="phonon-waveout-backend.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-waveout-backend.html#endConnectionChange">endConnectionChange</keyword>
-        <keyword ref="phonon-waveout-backend.html#objectDescriptionChanged">objectDescriptionChanged</keyword>
-        <keyword ref="phonon-waveout-backend.html#objectDescriptionIndexes">objectDescriptionIndexes</keyword>
-        <keyword ref="phonon-waveout-backend.html#objectDescriptionProperties">objectDescriptionProperties</keyword>
-        <keyword ref="phonon-waveout-backend.html#startConnectionChange">startConnectionChange</keyword>
-        <keyword ref="phonon-waveout-backend.html#supportsVideo">supportsVideo</keyword>
-        <section ref="phonon-waveout-backend-members.html" title="List of all members"/>
     </section>
     <section ref="phonon-backendcapabilities.html" title="BackendCapabilities Namespace Reference">
         <keyword ref="phonon-backendcapabilities.html">BackendCapabilities</keyword>
@@ -322,26 +40,6 @@
         <keyword ref="phonon-backendcapabilities.html#isMimeTypeAvailable">isMimeTypeAvailable</keyword>
         <keyword ref="phonon-backendcapabilities.html#notifier">notifier</keyword>
     </section>
-    <section ref="phonon-qt7-backendinfo.html" title="BackendInfo Class Reference">
-        <keyword ref="phonon-qt7-backendinfo.html">BackendInfo</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#Scope-enum">Scope</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#coreAudioCodecs">coreAudioCodecs</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#coreAudioFileTypes">coreAudioFileTypes</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#isQuickTimeVersionAvailable">isQuickTimeVersionAvailable</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#quickTimeCompressionFormats">quickTimeCompressionFormats</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#quickTimeMimeTypes">quickTimeMimeTypes</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html#quickTimeVersionString">quickTimeVersionString</keyword>
-        <section ref="phonon-qt7-backendinfo-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-backendnode.html" title="BackendNode Class Reference">
-        <keyword ref="phonon-ds9-backendnode.html">BackendNode</keyword>
-        <keyword ref="phonon-ds9-backendnode.html#connected">connected</keyword>
-        <keyword ref="phonon-ds9-backendnode.html#filter">filter</keyword>
-        <keyword ref="phonon-ds9-backendnode.html#mediaObjectx">mediaObject</keyword>
-        <keyword ref="phonon-ds9-backendnode.html#pins">pins</keyword>
-        <keyword ref="phonon-ds9-backendnode.html#setMediaObject">setMediaObject</keyword>
-        <section ref="phonon-ds9-backendnode-members.html" title="List of all members"/>
-    </section>
     <section ref="qwebpage-choosemultiplefilesextensionoption.html" title="ChooseMultipleFilesExtensionOption Class Reference">
         <keyword ref="qwebpage-choosemultiplefilesextensionoption.html">ChooseMultipleFilesExtensionOption</keyword>
         <section ref="qwebpage-choosemultiplefilesextensionoption-members.html" title="List of all members"/>
@@ -349,16 +47,6 @@
     <section ref="qwebpage-choosemultiplefilesextensionreturn.html" title="ChooseMultipleFilesExtensionReturn Class Reference">
         <keyword ref="qwebpage-choosemultiplefilesextensionreturn.html">ChooseMultipleFilesExtensionReturn</keyword>
         <section ref="qwebpage-choosemultiplefilesextensionreturn-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-compointer.html" title="ComPointer Class Reference">
-        <keyword ref="phonon-ds9-compointer.html">ComPointer</keyword>
-        <keyword ref="phonon-ds9-compointer.html#pparam">pparam</keyword>
-        <keyword ref="phonon-ds9-compointer.html#operator-T--2a">operator T *</keyword>
-        <keyword ref="phonon-ds9-compointer.html#operator-not-eq">operator!=</keyword>
-        <keyword ref="phonon-ds9-compointer.html#operator--gt">operator-&gt;</keyword>
-        <keyword ref="phonon-ds9-compointer.html#operator-eq">operator=</keyword>
-        <keyword ref="phonon-ds9-compointer.html#operator-eq-eq">operator==</keyword>
-        <section ref="phonon-ds9-compointer-members.html" title="List of all members"/>
     </section>
     <section ref="qfuture-const-iterator.html" title="const_iterator Class Reference">
         <keyword ref="qfuture-const-iterator.html">const_iterator</keyword>
@@ -470,58 +158,6 @@
         <keyword ref="qlocale-data.html">Data</keyword>
         <section ref="qlocale-data-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-gstreamer-devicemanager.html" title="DeviceManager Class Reference">
-        <keyword ref="phonon-gstreamer-devicemanager.html">DeviceManager</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#audioOutputDevices">audioOutputDevices</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#createAudioSink">createAudioSink</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#createGNOMEAudioSink">createGNOMEAudioSink</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#createVideoRenderer">createVideoRenderer</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#deviceAdded">deviceAdded</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#deviceDescription">deviceDescription</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#deviceId">deviceId</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#deviceRemoved">deviceRemoved</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#requestPad">requestPad</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html#updateDeviceList">updateDeviceList</keyword>
-        <section ref="phonon-gstreamer-devicemanager-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9.html" title="DS9 Namespace Reference">
-        <keyword ref="phonon-ds9.html">DS9</keyword>
-        <keyword ref="phonon-ds9-abstractvideorenderer.html">AbstractVideoRenderer</keyword>
-        <keyword ref="phonon-ds9-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-ds9-backend.html">Backend</keyword>
-        <keyword ref="phonon-ds9-backendnode.html">BackendNode</keyword>
-        <keyword ref="phonon-ds9-compointer.html">ComPointer</keyword>
-        <keyword ref="phonon-ds9-effect.html">Effect</keyword>
-        <keyword ref="phonon-ds9-fakesource.html">FakeSource</keyword>
-        <keyword ref="phonon-ds9-iodevicereader.html">IODeviceReader</keyword>
-        <keyword ref="phonon-ds9-ititleinterface.html">ITitleInterface</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html">MediaGraph</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-ds9-qammediatype.html">QAMMediaType</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html">QAsyncReader</keyword>
-        <keyword ref="phonon-ds9-qaudiocdplayer.html">QAudioCDPlayer</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html">QBaseFilter</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html">QMemInputPin</keyword>
-        <keyword ref="phonon-ds9-qpin.html">QPin</keyword>
-        <keyword ref="phonon-ds9-qwinwaitcondition.html">QWinWaitCondition</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html">VideoRendererSoft</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html">VideoRendererVMR9</keyword>
-        <keyword ref="phonon-ds9-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html">VolumeEffect</keyword>
-        <keyword ref="phonon-ds9-workerthread.html">WorkerThread</keyword>
-        <keyword ref="phonon-ds9.html#Filter-typedef">Filter</keyword>
-        <keyword ref="phonon-ds9.html#Graph-typedef">Graph</keyword>
-        <keyword ref="phonon-ds9.html#InputPin-typedef">InputPin</keyword>
-        <keyword ref="phonon-ds9.html#ObjectDescriptionType-typedef">ObjectDescriptionType</keyword>
-        <keyword ref="phonon-ds9.html#OutputPin-typedef">OutputPin</keyword>
-    </section>
-    <section ref="phonon-ds9-effect.html" title="Effect Class Reference">
-        <keyword ref="phonon-ds9-effect.html">Effect</keyword>
-        <keyword ref="phonon-ds9-effect.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-ds9-effect.html#parameters">parameters</keyword>
-        <keyword ref="phonon-ds9-effect.html#setParameterValue">setParameterValue</keyword>
-        <section ref="phonon-ds9-effect-members.html" title="List of all members"/>
-    </section>
     <section ref="phonon-effect.html" title="Effect Class Reference">
         <keyword ref="phonon-effect.html">Effect</keyword>
         <keyword ref="phonon-effect.html#description">description</keyword>
@@ -529,30 +165,6 @@
         <keyword ref="phonon-effect.html#parameters">parameters</keyword>
         <keyword ref="phonon-effect.html#setParameterValue">setParameterValue</keyword>
         <section ref="phonon-effect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-effect.html" title="Effect Class Reference">
-        <keyword ref="phonon-gstreamer-effect.html">Effect</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#createEffectBin">createEffectBin</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#init">init</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#parameters">parameters</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#setParameterValue">setParameterValue</keyword>
-        <keyword ref="phonon-gstreamer-effect.html#setupEffectParams">setupEffectParams</keyword>
-        <section ref="phonon-gstreamer-effect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-effectinfo.html" title="EffectInfo Class Reference">
-        <keyword ref="phonon-gstreamer-effectinfo.html">EffectInfo</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html#addProperty">addProperty</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html#author">author</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html#description">description</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html#name">name</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html#properties">properties</keyword>
-        <section ref="phonon-gstreamer-effectinfo-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-effectmanager.html" title="EffectManager Class Reference">
-        <keyword ref="phonon-gstreamer-effectmanager.html">EffectManager</keyword>
-        <keyword ref="phonon-gstreamer-effectmanager.html#audioEffects">audioEffects</keyword>
-        <section ref="phonon-gstreamer-effectmanager-members.html" title="List of all members"/>
     </section>
     <section ref="phonon-effectparameter.html" title="EffectParameter Class Reference">
         <keyword ref="phonon-effectparameter.html">EffectParameter</keyword>
@@ -619,14 +231,6 @@
         <keyword ref="qtextedit-extraselection.html#format-var">format</keyword>
         <section ref="qtextedit-extraselection-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-fakesource.html" title="FakeSource Class Reference">
-        <keyword ref="phonon-ds9-fakesource.html">FakeSource</keyword>
-        <keyword ref="phonon-ds9-fakesource.html#addAvailableAudioPin">addAvailableAudioPin</keyword>
-        <keyword ref="phonon-ds9-fakesource.html#addAvailableVideoPin">addAvailableVideoPin</keyword>
-        <keyword ref="phonon-ds9-fakesource.html#removeAvailableAudioPin">removeAvailableAudioPin</keyword>
-        <keyword ref="phonon-ds9-fakesource.html#removeAvailableVideoPin">removeAvailableVideoPin</keyword>
-        <section ref="phonon-ds9-fakesource-members.html" title="List of all members"/>
-    </section>
     <section ref="qabstractfontengine-fixedpoint.html" title="FixedPoint Class Reference">
         <keyword ref="qabstractfontengine-fixedpoint.html">FixedPoint</keyword>
         <keyword ref="qabstractfontengine-fixedpoint.html#x-var">x</keyword>
@@ -640,26 +244,6 @@
         <keyword ref="qtextlayout-formatrange.html#start-var">start</keyword>
         <section ref="qtextlayout-formatrange-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-gstreamer-glrenderer.html" title="GLRenderer Class Reference">
-        <keyword ref="phonon-gstreamer-glrenderer.html">GLRenderer</keyword>
-        <keyword ref="phonon-gstreamer-glrenderer.html#eventFilter">eventFilter</keyword>
-        <keyword ref="phonon-gstreamer-glrenderer.html#handleMediaNodeEvent">handleMediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-glrenderer.html#paintsOnWidget">paintsOnWidget</keyword>
-        <section ref="phonon-gstreamer-glrenderer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-glrenderwidgetimplementation.html" title="GLRenderWidgetImplementation Class Reference">
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html">GLRenderWidgetImplementation</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#clearFrame">clearFrame</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#createVideoSink">createVideoSink</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#currentFrame">currentFrame</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#drawFrameRect">drawFrameRect</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#frameIsSet">frameIsSet</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#hasYUVSupport">hasYUVSupport</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#paintEvent">paintEvent</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#setNextFrame">setNextFrame</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html#updateTexture">updateTexture</keyword>
-        <section ref="phonon-gstreamer-glrenderwidgetimplementation-members.html" title="List of all members"/>
-    </section>
     <section ref="qabstractfontengine-glyphmetrics.html" title="GlyphMetrics Class Reference">
         <keyword ref="qabstractfontengine-glyphmetrics.html">GlyphMetrics</keyword>
         <keyword ref="qabstractfontengine-glyphmetrics.html#advance-var">advance</keyword>
@@ -668,52 +252,6 @@
         <keyword ref="qabstractfontengine-glyphmetrics.html#x-var">x</keyword>
         <keyword ref="qabstractfontengine-glyphmetrics.html#y-var">y</keyword>
         <section ref="qabstractfontengine-glyphmetrics-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-gsthelper.html" title="GstHelper Class Reference">
-        <keyword ref="phonon-gstreamer-gsthelper.html">GstHelper</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html#createPluggablePlaybin">createPluggablePlaybin</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html#extractProperties">extractProperties</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html#name">name</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html#property">property</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html#setProperty">setProperty</keyword>
-        <section ref="phonon-gstreamer-gsthelper-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer.html" title="Gstreamer Namespace Reference">
-        <keyword ref="phonon-gstreamer.html">Gstreamer</keyword>
-        <keyword ref="phonon-gstreamer-abstractrenderer.html">AbstractRenderer</keyword>
-        <keyword ref="phonon-gstreamer-audiodevice.html">AudioDevice</keyword>
-        <keyword ref="phonon-gstreamer-audioeffect.html">AudioEffect</keyword>
-        <keyword ref="phonon-gstreamer-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-gstreamer-backend.html">Backend</keyword>
-        <keyword ref="phonon-gstreamer-devicemanager.html">DeviceManager</keyword>
-        <keyword ref="phonon-gstreamer-effect.html">Effect</keyword>
-        <keyword ref="phonon-gstreamer-effectinfo.html">EffectInfo</keyword>
-        <keyword ref="phonon-gstreamer-effectmanager.html">EffectManager</keyword>
-        <keyword ref="phonon-gstreamer-glrenderwidgetimplementation.html">GLRenderWidgetImplementation</keyword>
-        <keyword ref="phonon-gstreamer-glrenderer.html">GLRenderer</keyword>
-        <keyword ref="phonon-gstreamer-gsthelper.html">GstHelper</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html">MediaNode</keyword>
-        <keyword ref="phonon-gstreamer-medianodeevent.html">MediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-gstreamer-message.html">Message</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html">QWidgetVideoSink</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkbase.html">QWidgetVideoSinkBase</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkclass.html">QWidgetVideoSinkClass</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html">StreamReader</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html">VolumeFaderEffect</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html">WidgetRenderer</keyword>
-        <keyword ref="phonon-gstreamer-phononsrc.html">_PhononSrc</keyword>
-        <keyword ref="phonon-gstreamer-phononsrcclass.html">_PhononSrcClass</keyword>
-        <keyword ref="phonon-gstreamer.html#VideoFormat-enum">VideoFormat</keyword>
-        <keyword ref="phonon-gstreamer.html#get_type_RGB">get_type_RGB</keyword>
-        <keyword ref="phonon-gstreamer.html#get_type_YUV">get_type_YUV</keyword>
-        <keyword ref="phonon-gstreamer.html#phonon_src_get_type">phonon_src_get_type</keyword>
-    </section>
-    <section ref="phonon-ds9-iodevicereader.html" title="IODeviceReader Class Reference">
-        <keyword ref="phonon-ds9-iodevicereader.html">IODeviceReader</keyword>
-        <keyword ref="phonon-ds9-iodevicereader.html#Stopx">Stop</keyword>
-        <section ref="phonon-ds9-iodevicereader-members.html" title="List of all members"/>
     </section>
     <section ref="qhash-iterator.html" title="iterator Class Reference">
         <keyword ref="qhash-iterator.html">iterator</keyword>
@@ -820,11 +358,6 @@
         <keyword ref="qtextframe-iterator.html#operator-eq-eq">operator==</keyword>
         <section ref="qtextframe-iterator-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-ititleinterface.html" title="ITitleInterface Class Reference">
-        <keyword ref="phonon-ds9-ititleinterface.html">ITitleInterface</keyword>
-        <keyword ref="phonon-ds9-ititleinterface.html#titles">titles</keyword>
-        <section ref="phonon-ds9-ititleinterface-members.html" title="List of all members"/>
-    </section>
     <section ref="qwsserver-keyboardfilter.html" title="KeyboardFilter Class Reference">
         <keyword ref="qwsserver-keyboardfilter.html">KeyboardFilter</keyword>
         <keyword ref="qwsserver-keyboardfilter.html#filter">filter</keyword>
@@ -867,235 +400,12 @@
         <keyword ref="phonon-mediacontroller.html#titleChanged">titleChanged</keyword>
         <section ref="phonon-mediacontroller-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-mediagraph.html" title="MediaGraph Class Reference">
-        <keyword ref="phonon-ds9-mediagraph.html">MediaGraph</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#absoluteCurrentTime">absoluteCurrentTime</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#absoluteSeek">absoluteSeek</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#absoluteTotalTime">absoluteTotalTime</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#cleanup">cleanup</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#ensureStopped">ensureStopped</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#finishLoading">finishLoading</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#finishSeeking">finishSeeking</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#getAllFilters">getAllFilters</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#grabFilter">grabFilter</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#grabNode">grabNode</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#graph">graph</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#index">index</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#isLoading">isLoading</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#isStopping">isStopping</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#loadSource">loadSource</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#mediaSource">mediaSource</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#metadatax">metadata</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#pause">pause</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#play">play</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#realSource">realSource</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#renderResult">renderResult</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#setStopPosition">setStopPosition</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#stop">stop</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#stopPosition">stopPosition</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#switchFilters">switchFilters</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#syncGetRealState">syncGetRealState</keyword>
-        <keyword ref="phonon-ds9-mediagraph.html#titles">titles</keyword>
-        <section ref="phonon-ds9-mediagraph-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-medianode.html" title="MediaNode Class Reference">
-        <keyword ref="phonon-gstreamer-medianode.html">MediaNode</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#NodeDescriptionEnum-enum">NodeDescriptionEnum</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#NodeDescriptionEnum-enum">NodeDescription</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#audioElement">audioElement</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#backendx">backend</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#breakGraph">breakGraph</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#buildGraph">buildGraph</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#connectNode">connectNode</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#connectToFakeSink">connectToFakeSink</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#description">description</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#disconnectNode">disconnectNode</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#isValid">isValid</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#link">link</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#linkMediaNodeList">linkMediaNodeList</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#name">name</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#notify">notify</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#releaseFakeSinkIfConnected">releaseFakeSinkIfConnected</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#root">root</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#setRoot">setRoot</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#unlink">unlink</keyword>
-        <keyword ref="phonon-gstreamer-medianode.html#videoElement">videoElement</keyword>
-        <section ref="phonon-gstreamer-medianode-members.html" title="List of all members"/>
-    </section>
     <section ref="phonon-medianode.html" title="MediaNode Class Reference">
         <keyword ref="phonon-medianode.html">MediaNode</keyword>
         <keyword ref="phonon-medianode.html#inputPaths">inputPaths</keyword>
         <keyword ref="phonon-medianode.html#isValid">isValid</keyword>
         <keyword ref="phonon-medianode.html#outputPaths">outputPaths</keyword>
         <section ref="phonon-medianode-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-medianode.html" title="MediaNode Class Reference">
-        <keyword ref="phonon-qt7-medianode.html">MediaNode</keyword>
-        <keyword ref="phonon-qt7-medianode.html#NodeDescriptionEnum-enum">NodeDescriptionEnum</keyword>
-        <keyword ref="phonon-qt7-medianode.html#NodeDescriptionEnum-enum">NodeDescription</keyword>
-        <keyword ref="phonon-qt7-medianode.html#availableAudioInputBus">availableAudioInputBus</keyword>
-        <keyword ref="phonon-qt7-medianode.html#availableAudioOutputBus">availableAudioOutputBus</keyword>
-        <keyword ref="phonon-qt7-medianode.html#connectToSink">connectToSink</keyword>
-        <keyword ref="phonon-qt7-medianode.html#disconnectToSink">disconnectToSink</keyword>
-        <keyword ref="phonon-qt7-medianode.html#getAudioConnectionToSink">getAudioConnectionToSink</keyword>
-        <keyword ref="phonon-qt7-medianode.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-medianode.html#notify">notify</keyword>
-        <keyword ref="phonon-qt7-medianode.html#sendEventToSinks">sendEventToSinks</keyword>
-        <keyword ref="phonon-qt7-medianode.html#setAudioNode">setAudioNode</keyword>
-        <keyword ref="phonon-qt7-medianode.html#updateVideo">updateVideo</keyword>
-        <section ref="phonon-qt7-medianode-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-medianodeconnection.html" title="MediaNodeConnection Class Reference">
-        <keyword ref="phonon-qt7-medianodeconnection.html">MediaNodeConnection</keyword>
-    </section>
-    <section ref="phonon-gstreamer-medianodeevent.html" title="MediaNodeEvent Class Reference">
-        <keyword ref="phonon-gstreamer-medianodeevent.html">MediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-medianodeevent.html#Type-enum">Type</keyword>
-        <keyword ref="phonon-gstreamer-medianodeevent.html#data">data</keyword>
-        <keyword ref="phonon-gstreamer-medianodeevent.html#type">type</keyword>
-        <section ref="phonon-gstreamer-medianodeevent-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-medianodeevent.html" title="MediaNodeEvent Class Reference">
-        <keyword ref="phonon-qt7-medianodeevent.html">MediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-medianodeevent.html#Type-enum">Type</keyword>
-        <keyword ref="phonon-qt7-medianodeevent.html#data">data</keyword>
-        <keyword ref="phonon-qt7-medianodeevent.html#type">type</keyword>
-        <section ref="phonon-qt7-medianodeevent-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-medianodevideopart.html" title="MediaNodeVideoPart Class Reference">
-        <keyword ref="phonon-qt7-medianodevideopart.html">MediaNodeVideoPart</keyword>
-        <keyword ref="phonon-qt7-medianodevideopart.html#updateVideo">updateVideo</keyword>
-        <section ref="phonon-qt7-medianodevideopart-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-mediaobject.html" title="MediaObject Class Reference">
-        <keyword ref="phonon-ds9-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#aboutToFinish">aboutToFinish</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#angleChanged">angleChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#availableAnglesChanged">availableAnglesChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#availableChaptersChanged">availableChaptersChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#availableTitlesChanged">availableTitlesChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#bufferStatus">bufferStatus</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#catchComError">catchComError</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#chapterChanged">chapterChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#connectNodes">connectNodes</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#currentGraph">currentGraph</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#currentSourceChanged">currentSourceChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#disconnectNodes">disconnectNodes</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#ensureStopped">ensureStopped</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#errorString">errorString</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#errorType">errorType</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#finished">finished</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#grabNode">grabNode</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#hasInterface">hasInterface</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#hasVideoChanged">hasVideoChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#interfaceCall">interfaceCall</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#loadingFinished">loadingFinished</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#metaDataChanged">metaDataChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#pause">pause</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#play">play</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#prefinishMark">prefinishMark</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#prefinishMarkReached">prefinishMarkReached</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#remainingTime">remainingTime</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#seek">seek</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#seekableChanged">seekableChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#seekingFinished">seekingFinished</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setNextSource">setNextSource</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setPrefinishMark">setPrefinishMark</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setSource">setSource</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setState">setState</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setTickInterval">setTickInterval</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#setTransitionTime">setTransitionTime</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#source">source</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#state">state</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#stateChanged">stateChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#stop">stop</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#switchFilters">switchFilters</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#tick">tick</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#tickInterval">tickInterval</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#timerEvent">timerEvent</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#titleChanged">titleChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#totalTime">totalTime</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#totalTimeChanged">totalTimeChanged</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#transitionTime">transitionTime</keyword>
-        <keyword ref="phonon-ds9-mediaobject.html#workerThreadx">workerThread</keyword>
-        <section ref="phonon-ds9-mediaobject-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-mediaobject.html" title="MediaObject Class Reference">
-        <keyword ref="phonon-gstreamer-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#aboutToFinish">aboutToFinish</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#addMissingCodecName">addMissingCodecName</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#audioAvailable">audioAvailable</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#audioElement">audioElement</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#audioGraphx">audioGraph</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#beginLoad">beginLoad</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#bufferStatus">bufferStatus</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#capsHandler">capsHandler</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#cb_newpad">cb_newpad</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#cb_no_more_pads">cb_no_more_pads</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#cb_unknown_type">cb_unknown_type</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#changeState">changeState</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#connectAudio">connectAudio</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#connectVideo">connectVideo</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#createPipefromStream">createPipefromStream</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#createPipefromURL">createPipefromURL</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#currentSourceChanged">currentSourceChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#errorString">errorString</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#errorType">errorType</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#finished">finished</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#handleBusMessage">handleBusMessage</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#handleEndOfStream">handleEndOfStream</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#hasInterface">hasInterface</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#hasVideoChanged">hasVideoChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#interfaceCall">interfaceCall</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#invalidateGraph">invalidateGraph</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#isLoading">isLoading</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#loadingComplete">loadingComplete</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#metaData">metaData</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#metaDataChanged">metaDataChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#newPadAvailable">newPadAvailable</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#pause">pause</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#pipeline">pipeline</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#play">play</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#prefinishMark">prefinishMark</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#prefinishMarkReached">prefinishMarkReached</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#remainingTime">remainingTime</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#resumeState">resumeState</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#saveState">saveState</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#seek">seek</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#seekableChanged">seekableChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setError">setError</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setMetaData">setMetaData</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setNextSource">setNextSource</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setPrefinishMark">setPrefinishMark</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setSource">setSource</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setState">setState</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setTickInterval">setTickInterval</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#setTransitionTime">setTransitionTime</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#source">source</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#state">state</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#stateChanged">stateChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#stop">stop</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#tick">tick</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#tickInterval">tickInterval</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#totalTime">totalTime</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#totalTimeChanged">totalTimeChanged</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#transitionTime">transitionTime</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#url">url</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#videoAvailable">videoAvailable</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#videoElement">videoElement</keyword>
-        <keyword ref="phonon-gstreamer-mediaobject.html#videoGraph">videoGraph</keyword>
-        <section ref="phonon-gstreamer-mediaobject-members.html" title="List of all members"/>
     </section>
     <section ref="phonon-mediaobject.html" title="MediaObject Class Reference">
         <keyword ref="phonon-mediaobject.html">MediaObject</keyword>
@@ -1138,115 +448,6 @@
         <keyword ref="phonon-mediaobject.html#totalTimeChanged">totalTimeChanged</keyword>
         <section ref="phonon-mediaobject-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-qt7-mediaobject.html" title="MediaObject Class Reference">
-        <keyword ref="phonon-qt7-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#aboutToFinish">aboutToFinish</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#audioPlayer">audioPlayer</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#availableAudioStreams">availableAudioStreams</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#availableSubtitleStreams">availableSubtitleStreams</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#availableVideoStreams">availableVideoStreams</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#bufferStatus">bufferStatus</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#currentAudioStream">currentAudioStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#currentSourceChanged">currentSourceChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#currentSubtitleStream">currentSubtitleStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#currentVideoStream">currentVideoStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#errorString">errorString</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#errorType">errorType</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#event">event</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#finished">finished</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#hasInterface">hasInterface</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#hasVideoChanged">hasVideoChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#interfaceCall">interfaceCall</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#metaDataChanged">metaDataChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#pause">pause</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#play">play</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#prefinishMark">prefinishMark</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#prefinishMarkReached">prefinishMarkReached</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#seek">seek</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#seekableChanged">seekableChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setAudioDeviceOnMovie">setAudioDeviceOnMovie</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setCurrentAudioStream">setCurrentAudioStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setCurrentSubtitleStream">setCurrentSubtitleStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setCurrentVideoStream">setCurrentVideoStream</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setNextSource">setNextSource</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setPrefinishMark">setPrefinishMark</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setSource">setSource</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setTickInterval">setTickInterval</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setTransitionTime">setTransitionTime</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#setVolumeOnMovie">setVolumeOnMovie</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#source">source</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#state">state</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#stateChanged">stateChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#stop">stop</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#tick">tick</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#tickInterval">tickInterval</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#totalTime">totalTime</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#totalTimeChanged">totalTimeChanged</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#transitionTime">transitionTime</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#videoOutputCount">videoOutputCount</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html#videoPlayer">videoPlayer</keyword>
-        <section ref="phonon-qt7-mediaobject-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-waveout-mediaobject.html" title="MediaObject Class Reference">
-        <keyword ref="phonon-waveout-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#aboutToFinish">aboutToFinish</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#bufferStatus">bufferStatus</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#currentSourceChanged">currentSourceChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#errorString">errorString</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#errorType">errorType</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#finished">finished</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#hasVideoChanged">hasVideoChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#metaDataChanged">metaDataChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#outOfData">outOfData</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#pause">pause</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#play">play</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#prefinishMark">prefinishMark</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#prefinishMarkReached">prefinishMarkReached</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#remainingTime">remainingTime</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#seek">seek</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#seekableChanged">seekableChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setAudioOutput">setAudioOutput</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setNextSource">setNextSource</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setPrefinishMark">setPrefinishMark</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setSource">setSource</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setTickInterval">setTickInterval</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#setTransitionTime">setTransitionTime</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#source">source</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#state">state</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#stateChanged">stateChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#stop">stop</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#tick">tick</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#tickInterval">tickInterval</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#totalTime">totalTime</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#totalTimeChanged">totalTimeChanged</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html#transitionTime">transitionTime</keyword>
-        <section ref="phonon-waveout-mediaobject-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-mediaobjectaudionode.html" title="MediaObjectAudioNode Class Reference">
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html">MediaObjectAudioNode</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#applyCurve">applyCurve</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#cancelCrossFade">cancelCrossFade</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#createAndConnectAUNodes">createAndConnectAUNodes</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#createAudioUnits">createAudioUnits</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#fillInStreamSpecification">fillInStreamSpecification</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#getOutputAUNode">getOutputAUNode</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#isCrossFading">isCrossFading</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#setGraph">setGraph</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#setMute">setMute</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#setStreamSpecification">setStreamSpecification</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#startCrossFade">startCrossFade</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#updateCrossFade">updateCrossFade</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html#updateVolume">updateVolume</keyword>
-        <section ref="phonon-qt7-mediaobjectaudionode-members.html" title="List of all members"/>
-    </section>
     <section ref="phonon-mediasource.html" title="MediaSource Class Reference">
         <keyword ref="phonon-mediasource.html">MediaSource</keyword>
         <keyword ref="phonon-mediasource.html#Type-enum">Type</keyword>
@@ -1265,12 +466,6 @@
         <keyword ref="phonon-mediasource.html#operator-eq">operator=</keyword>
         <keyword ref="phonon-mediasource.html#operator-eq-eq">operator==</keyword>
         <section ref="phonon-mediasource-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-message.html" title="Message Class Reference">
-        <keyword ref="phonon-gstreamer-message.html">Message</keyword>
-        <keyword ref="phonon-gstreamer-message.html#rawMessage">rawMessage</keyword>
-        <keyword ref="phonon-gstreamer-message.html#source">source</keyword>
-        <section ref="phonon-gstreamer-message-members.html" title="List of all members"/>
     </section>
     <section ref="qwebpluginfactory-mimetype.html" title="MimeType Class Reference">
         <keyword ref="qwebpluginfactory-mimetype.html">MimeType</keyword>
@@ -1332,10 +527,6 @@
     <section ref="phonon.html" title="Phonon Namespace Reference">
         <keyword ref="phonon.html">Phonon</keyword>
         <keyword ref="phonon-backendcapabilities.html">BackendCapabilities</keyword>
-        <keyword ref="phonon-ds9.html">DS9</keyword>
-        <keyword ref="phonon-gstreamer.html">Gstreamer</keyword>
-        <keyword ref="phonon-qt7.html">QT7</keyword>
-        <keyword ref="phonon-waveout.html">WaveOut</keyword>
         <keyword ref="phonon-audiooutput.html">AudioOutput</keyword>
         <keyword ref="phonon-effect.html">Effect</keyword>
         <keyword ref="phonon-effectparameter.html">EffectParameter</keyword>
@@ -1395,26 +586,6 @@
         <keyword ref="phonon-path.html#createPath">createPath</keyword>
         <keyword ref="phonon.html#createPlayer">createPlayer</keyword>
         <keyword ref="phonon.html#phononVersion">phononVersion</keyword>
-    </section>
-    <section ref="phonon-qt7-phononautoreleasepool.html" title="PhononAutoReleasePool Class Reference">
-        <keyword ref="phonon-qt7-phononautoreleasepool.html">PhononAutoReleasePool</keyword>
-        <section ref="phonon-qt7-phononautoreleasepool-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-phononcfstring.html" title="PhononCFString Class Reference">
-        <keyword ref="phonon-qt7-phononcfstring.html">PhononCFString</keyword>
-        <keyword ref="phonon-qt7-phononcfstring.html#toCFStringRef">toCFStringRef</keyword>
-        <keyword ref="phonon-qt7-phononcfstring.html#toQString">toQString</keyword>
-        <keyword ref="phonon-qt7-phononcfstring.html#operator-CFStringRef">operator CFStringRef</keyword>
-        <keyword ref="phonon-qt7-phononcfstring.html#operator-QString">operator QString</keyword>
-        <section ref="phonon-qt7-phononcfstring-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-phononcftype.html" title="PhononCFType Class Reference">
-        <keyword ref="phonon-qt7-phononcftype.html">PhononCFType</keyword>
-        <keyword ref="phonon-qt7-phononcftype.html#constructFromGet">constructFromGet</keyword>
-        <keyword ref="phonon-qt7-phononcftype.html#operator-T">operator T</keyword>
-        <keyword ref="phonon-qt7-phononcftype.html#operator-and">operator&amp;</keyword>
-        <keyword ref="phonon-qt7-phononcftype.html#operator-eq">operator=</keyword>
-        <section ref="phonon-qt7-phononcftype-members.html" title="List of all members"/>
     </section>
     <section ref="qwebpluginfactory-plugin.html" title="Plugin Class Reference">
         <keyword ref="qwebpluginfactory-plugin.html">Plugin</keyword>
@@ -1926,7 +1097,7 @@
     <section ref="qabstractmessagehandler.html" title="QAbstractMessageHandler Class Reference">
         <keyword ref="qabstractmessagehandler.html">QAbstractMessageHandler</keyword>
         <keyword ref="qabstractmessagehandler.html#handleMessage">handleMessage</keyword>
-        <keyword ref="qabstractmessagehandler.html#messagex">message</keyword>
+        <keyword ref="qabstractmessagehandler.html#message">message</keyword>
         <section ref="qabstractmessagehandler-members.html" title="List of all members"/>
     </section>
     <section ref="qabstractnetworkcache.html" title="QAbstractNetworkCache Class Reference">
@@ -2634,10 +1805,6 @@
         <section ref="qactiongroup-members.html" title="List of all members"/>
         <section ref="qactiongroup-qt3.html" title="Qt 3 support members"/>
     </section>
-    <section ref="phonon-ds9-qammediatype.html" title="QAMMediaType Class Reference">
-        <keyword ref="phonon-ds9-qammediatype.html">QAMMediaType</keyword>
-        <section ref="phonon-ds9-qammediatype-members.html" title="List of all members"/>
-    </section>
     <section ref="qapplication.html" title="QApplication Class Reference">
         <keyword ref="qapplication.html">QApplication</keyword>
         <keyword ref="qapplication.html#ColorSpec-enum">ColorSpec</keyword>
@@ -2756,21 +1923,6 @@
         <keyword ref="qassistantclient.html#showPage">showPage</keyword>
         <section ref="qassistantclient-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-qasyncreader.html" title="QAsyncReader Class Reference">
-        <keyword ref="phonon-ds9-qasyncreader.html">QAsyncReader</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#BeginFlush">BeginFlush</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#EndFlush">EndFlush</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#Length">Length</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#QueryInterface">QueryInterface</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#Request">Request</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#RequestAllocator">RequestAllocator</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#STDMETHODIMP_">STDMETHODIMP_</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#SyncRead">SyncRead</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#SyncReadAligned">SyncReadAligned</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#WaitForNext">WaitForNext</keyword>
-        <keyword ref="phonon-ds9-qasyncreader.html#read">read</keyword>
-        <section ref="phonon-ds9-qasyncreader-members.html" title="List of all members"/>
-    </section>
     <section ref="qatomicint.html" title="QAtomicInt Class Reference">
         <keyword ref="qatomicint.html">QAtomicInt</keyword>
         <keyword ref="qatomicint.html#deref">deref</keyword>
@@ -2858,11 +2010,6 @@
         <keyword ref="qatomicpointer.html#Q_ATOMIC_POINTER_TEST_AND_SET_IS_WAIT_FREE">Q_ATOMIC_POINTER_TEST_AND_SET_IS_WAIT_FREE</keyword>
         <section ref="qatomicpointer-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-qaudiocdplayer.html" title="QAudioCDPlayer Class Reference">
-        <keyword ref="phonon-ds9-qaudiocdplayer.html">QAudioCDPlayer</keyword>
-        <keyword ref="phonon-ds9-qaudiocdplayer.html#QueryInterface">QueryInterface</keyword>
-        <section ref="phonon-ds9-qaudiocdplayer-members.html" title="List of all members"/>
-    </section>
     <section ref="qauthenticator.html" title="QAuthenticator Class Reference">
         <keyword ref="qauthenticator.html">QAuthenticator</keyword>
         <keyword ref="qauthenticator.html#isNull">isNull</keyword>
@@ -2875,62 +2022,6 @@
         <keyword ref="qauthenticator.html#operator-eq">operator=</keyword>
         <keyword ref="qauthenticator.html#operator-eq-eq">operator==</keyword>
         <section ref="qauthenticator-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-qbasefilter.html" title="QBaseFilter Class Reference">
-        <keyword ref="phonon-ds9-qbasefilter.html">QBaseFilter</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#CanSeekBackward">CanSeekBackward</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#CanSeekForward">CanSeekForward</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#CheckCapabilities">CheckCapabilities</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#ConvertTimeFormat">ConvertTimeFormat</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#EnumPins">EnumPins</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#FindPin">FindPin</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetAvailable">GetAvailable</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetCapabilities">GetCapabilities</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetClassID">GetClassID</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetCurrentPosition">GetCurrentPosition</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetDuration">GetDuration</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetIDsOfNames">GetIDsOfNames</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetPositions">GetPositions</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetPreroll">GetPreroll</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetRate">GetRate</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetState">GetState</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetStopPosition">GetStopPosition</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetSyncSource">GetSyncSource</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetTimeFormat">GetTimeFormat</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetTypeInfo">GetTypeInfo</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#GetTypeInfoCount">GetTypeInfoCount</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#Invoke">Invoke</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#IsFormatSupported">IsFormatSupported</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#IsUsingTimeFormat">IsUsingTimeFormat</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#JoinFilterGraph">JoinFilterGraph</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#Pausex">Pause</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#QueryFilterInfo">QueryFilterInfo</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#QueryInterface">QueryInterface</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#QueryPreferredFormat">QueryPreferredFormat</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#QueryVendorInfo">QueryVendorInfo</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#Run">Run</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#STDMETHODIMP_">STDMETHODIMP_</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#SetPositions">SetPositions</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#SetRate">SetRate</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#SetSyncSource">SetSyncSource</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#SetTimeFormat">SetTimeFormat</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#Stopx">Stop</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#addPin">addPin</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#get_CurrentPosition">get_CurrentPosition</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#get_Duration">get_Duration</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#get_PrerollTime">get_PrerollTime</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#get_Rate">get_Rate</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#get_StopTime">get_StopTime</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#graph">graph</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#pins">pins</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#processSample">processSample</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#put_CurrentPosition">put_CurrentPosition</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#put_PrerollTime">put_PrerollTime</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#put_Rate">put_Rate</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#put_StopTime">put_StopTime</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#removePin">removePin</keyword>
-        <keyword ref="phonon-ds9-qbasefilter.html#state">state</keyword>
-        <section ref="phonon-ds9-qbasefilter-members.html" title="List of all members"/>
     </section>
     <section ref="qbasictimer.html" title="QBasicTimer Class Reference">
         <keyword ref="qbasictimer.html">QBasicTimer</keyword>
@@ -3086,7 +2177,7 @@
         <keyword ref="qbytearray.html#lastIndexOf">lastIndexOf</keyword>
         <keyword ref="qbytearray.html#left">left</keyword>
         <keyword ref="qbytearray.html#leftJustified">leftJustified</keyword>
-        <keyword ref="qbytearray.html#lengthx">length</keyword>
+        <keyword ref="qbytearray.html#length">length</keyword>
         <keyword ref="qbytearray.html#mid">mid</keyword>
         <keyword ref="qbytearray.html#number">number</keyword>
         <keyword ref="qbytearray.html#prepend">prepend</keyword>
@@ -3147,6 +2238,7 @@
         <keyword ref="qbytearray.html#qstrnicmp">qstrnicmp</keyword>
         <keyword ref="qbytearray.html#qstrnlen">qstrnlen</keyword>
         <keyword ref="qbytearray.html#qvsnprintf">qvsnprintf</keyword>
+        <keyword ref="qbytearray.html#operator-2b">operator+</keyword>
         <keyword ref="qbytearray.html#QT_NO_CAST_FROM_BYTEARRAY">QT_NO_CAST_FROM_BYTEARRAY</keyword>
         <section ref="qbytearray-members.html" title="List of all members"/>
         <section ref="qbytearray-qt3.html" title="Qt 3 support members"/>
@@ -3383,6 +2475,10 @@
         <keyword ref="qchar.html#toUpper">toUpper</keyword>
         <keyword ref="qchar.html#unicode">unicode</keyword>
         <keyword ref="qchar.html#unicodeVersion">unicodeVersion</keyword>
+        <keyword ref="qchar.html#operator-lt">operator&lt;</keyword>
+        <keyword ref="qchar.html#operator-lt-eq">operator&lt;=</keyword>
+        <keyword ref="qchar.html#operator-gt">operator&gt;</keyword>
+        <keyword ref="qchar.html#operator-gt-eq">operator&gt;=</keyword>
         <section ref="qchar-members.html" title="List of all members"/>
         <section ref="qchar-qt3.html" title="Qt 3 support members"/>
     </section>
@@ -3770,7 +2866,7 @@
         <keyword ref="qcopchannel.html#channel">channel</keyword>
         <keyword ref="qcopchannel.html#flush">flush</keyword>
         <keyword ref="qcopchannel.html#isRegistered">isRegistered</keyword>
-        <keyword ref="qcopchannel.html#receivex">receive</keyword>
+        <keyword ref="qcopchannel.html#receive">receive</keyword>
         <keyword ref="qcopchannel.html#received">received</keyword>
         <keyword ref="qcopchannel.html#send">send</keyword>
         <section ref="qcopchannel-members.html" title="List of all members"/>
@@ -4231,7 +3327,7 @@
         <keyword ref="qdbuscontext.html#calledFromDBus">calledFromDBus</keyword>
         <keyword ref="qdbuscontext.html#connection">connection</keyword>
         <keyword ref="qdbuscontext.html#isDelayedReply">isDelayedReply</keyword>
-        <keyword ref="qdbuscontext.html#messagex">message</keyword>
+        <keyword ref="qdbuscontext.html#message">message</keyword>
         <keyword ref="qdbuscontext.html#sendErrorReply">sendErrorReply</keyword>
         <keyword ref="qdbuscontext.html#setDelayedReply">setDelayedReply</keyword>
         <section ref="qdbuscontext-members.html" title="List of all members"/>
@@ -4263,7 +3359,7 @@
         <keyword ref="qdbuserror.html#ErrorType-enum">QDBusError::UnknownMethod</keyword>
         <keyword ref="qdbuserror.html#errorString">errorString</keyword>
         <keyword ref="qdbuserror.html#isValid">isValid</keyword>
-        <keyword ref="qdbuserror.html#messagex">message</keyword>
+        <keyword ref="qdbuserror.html#message">message</keyword>
         <keyword ref="qdbuserror.html#name">name</keyword>
         <keyword ref="qdbuserror.html#type">type</keyword>
         <section ref="qdbuserror-members.html" title="List of all members"/>
@@ -4365,6 +3461,15 @@
         <keyword ref="qdbusvariant.html#setVariant">setVariant</keyword>
         <keyword ref="qdbusvariant.html#variant">variant</keyword>
         <section ref="qdbusvariant-members.html" title="List of all members"/>
+    </section>
+    <section ref="qdebug.html" title="QDebug Class Reference">
+        <keyword ref="qdebug.html">QDebug</keyword>
+        <keyword ref="qdebug.html#maybeSpace">maybeSpace</keyword>
+        <keyword ref="qdebug.html#nospace">nospace</keyword>
+        <keyword ref="qdebug.html#space">space</keyword>
+        <keyword ref="qdebug.html#operator-lt-lt">operator&lt;&lt;</keyword>
+        <keyword ref="qdebug.html#operator-eq">operator=</keyword>
+        <section ref="qdebug-members.html" title="List of all members"/>
     </section>
     <section ref="qdecoration.html" title="QDecoration Class Reference">
         <keyword ref="qdecoration.html">QDecoration</keyword>
@@ -4924,7 +4029,7 @@
         <keyword ref="qdirectpainter.html#flush">flush</keyword>
         <keyword ref="qdirectpainter.html#frameBuffer">frameBuffer</keyword>
         <keyword ref="qdirectpainter.html#geometry">geometry</keyword>
-        <keyword ref="qdirectpainter.html#linestepx">linestep</keyword>
+        <keyword ref="qdirectpainter.html#linestep">linestep</keyword>
         <keyword ref="qdirectpainter.html#lock">lock</keyword>
         <keyword ref="qdirectpainter.html#lower">lower</keyword>
         <keyword ref="qdirectpainter.html#raise">raise</keyword>
@@ -5056,7 +4161,7 @@
         <keyword ref="qdomcharacterdata.html#data">data</keyword>
         <keyword ref="qdomcharacterdata.html#deleteData">deleteData</keyword>
         <keyword ref="qdomcharacterdata.html#insertData">insertData</keyword>
-        <keyword ref="qdomcharacterdata.html#lengthx">length</keyword>
+        <keyword ref="qdomcharacterdata.html#length">length</keyword>
         <keyword ref="qdomcharacterdata.html#nodeType">nodeType</keyword>
         <keyword ref="qdomcharacterdata.html#replaceData">replaceData</keyword>
         <keyword ref="qdomcharacterdata.html#setData">setData</keyword>
@@ -5177,7 +4282,7 @@
         <keyword ref="qdomnamednodemap.html#count">count</keyword>
         <keyword ref="qdomnamednodemap.html#isEmpty">isEmpty</keyword>
         <keyword ref="qdomnamednodemap.html#item">item</keyword>
-        <keyword ref="qdomnamednodemap.html#lengthx">length</keyword>
+        <keyword ref="qdomnamednodemap.html#length">length</keyword>
         <keyword ref="qdomnamednodemap.html#namedItem">namedItem</keyword>
         <keyword ref="qdomnamednodemap.html#namedItemNS">namedItemNS</keyword>
         <keyword ref="qdomnamednodemap.html#removeNamedItem">removeNamedItem</keyword>
@@ -5283,7 +4388,7 @@
         <keyword ref="qdomnodelist.html#count">count</keyword>
         <keyword ref="qdomnodelist.html#isEmpty">isEmpty</keyword>
         <keyword ref="qdomnodelist.html#item">item</keyword>
-        <keyword ref="qdomnodelist.html#lengthx">length</keyword>
+        <keyword ref="qdomnodelist.html#length">length</keyword>
         <keyword ref="qdomnodelist.html#size">size</keyword>
         <keyword ref="qdomnodelist.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qdomnodelist.html#operator-eq">operator=</keyword>
@@ -7105,21 +6210,21 @@
     </section>
     <section ref="qgraphicslinearlayout.html" title="QGraphicsLinearLayout Class Reference">
         <keyword ref="qgraphicslinearlayout.html">QGraphicsLinearLayout</keyword>
-        <keyword ref="qgraphicslinearlayout.html#orientation-prop">orientation</keyword>
-        <keyword ref="qgraphicslinearlayout.html#orientation-prop">setOrientation</keyword>
-        <keyword ref="qgraphicslinearlayout.html#spacing-prop">spacing</keyword>
-        <keyword ref="qgraphicslinearlayout.html#spacing-prop">setSpacing</keyword>
         <keyword ref="qgraphicslinearlayout.html#addItem">addItem</keyword>
         <keyword ref="qgraphicslinearlayout.html#addStretch">addStretch</keyword>
         <keyword ref="qgraphicslinearlayout.html#alignment">alignment</keyword>
         <keyword ref="qgraphicslinearlayout.html#insertItem">insertItem</keyword>
         <keyword ref="qgraphicslinearlayout.html#insertStretch">insertStretch</keyword>
         <keyword ref="qgraphicslinearlayout.html#itemSpacing">itemSpacing</keyword>
+        <keyword ref="qgraphicslinearlayout.html#orientation">orientation</keyword>
         <keyword ref="qgraphicslinearlayout.html#removeAt">removeAt</keyword>
         <keyword ref="qgraphicslinearlayout.html#removeItem">removeItem</keyword>
         <keyword ref="qgraphicslinearlayout.html#setAlignment">setAlignment</keyword>
         <keyword ref="qgraphicslinearlayout.html#setItemSpacing">setItemSpacing</keyword>
+        <keyword ref="qgraphicslinearlayout.html#setOrientation">setOrientation</keyword>
+        <keyword ref="qgraphicslinearlayout.html#setSpacing">setSpacing</keyword>
         <keyword ref="qgraphicslinearlayout.html#setStretchFactor">setStretchFactor</keyword>
+        <keyword ref="qgraphicslinearlayout.html#spacing">spacing</keyword>
         <keyword ref="qgraphicslinearlayout.html#stretchFactor">stretchFactor</keyword>
         <section ref="qgraphicslinearlayout-members.html" title="List of all members"/>
     </section>
@@ -7660,6 +6765,7 @@
         <keyword ref="qhash.html#operator-eq">operator=</keyword>
         <keyword ref="qhash.html#operator-eq-eq">operator==</keyword>
         <keyword ref="qhash.html#operator-5b-5d">operator[]</keyword>
+        <keyword ref="qhash.html#qHash">qHash</keyword>
         <section ref="qhash-members.html" title="List of all members"/>
     </section>
     <section ref="qhashiterator.html" title="QHashIterator Class Reference">
@@ -7717,7 +6823,7 @@
         <keyword ref="qheaderview.html#isClickable">isClickable</keyword>
         <keyword ref="qheaderview.html#isMovable">isMovable</keyword>
         <keyword ref="qheaderview.html#isSectionHidden">isSectionHidden</keyword>
-        <keyword ref="qheaderview.html#lengthx">length</keyword>
+        <keyword ref="qheaderview.html#length">length</keyword>
         <keyword ref="qheaderview.html#logicalIndex">logicalIndex</keyword>
         <keyword ref="qheaderview.html#logicalIndexAt">logicalIndexAt</keyword>
         <keyword ref="qheaderview.html#moveSection">moveSection</keyword>
@@ -8019,7 +7125,7 @@
         <keyword ref="qhttp.html#read">read</keyword>
         <keyword ref="qhttp.html#readAll">readAll</keyword>
         <keyword ref="qhttp.html#readyRead">readyRead</keyword>
-        <keyword ref="qhttp.html#requestx">request</keyword>
+        <keyword ref="qhttp.html#request">request</keyword>
         <keyword ref="qhttp.html#requestFinished">requestFinished</keyword>
         <keyword ref="qhttp.html#requestStarted">requestStarted</keyword>
         <keyword ref="qhttp.html#responseHeaderReceived">responseHeaderReceived</keyword>
@@ -8099,8 +7205,6 @@
         <keyword ref="qicon.html#pixmap">pixmap</keyword>
         <keyword ref="qicon.html#operator-QVariant">operator QVariant</keyword>
         <keyword ref="qicon.html#operator-eq">operator=</keyword>
-        <keyword ref="qicon.html#operator-lt-lt">operator&lt;&lt;</keyword>
-        <keyword ref="qicon.html#operator-gt-gt">operator&gt;&gt;</keyword>
         <section ref="qicon-members.html" title="List of all members"/>
         <section ref="qicon-obsolete.html" title="Obsolete members"/>
         <section ref="qicon-qt3.html" title="Qt 3 support members"/>
@@ -8236,6 +7340,7 @@
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::Gamma</keyword>
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::ScaledSize</keyword>
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::SubType</keyword>
+        <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::ImageFormat</keyword>
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::ClipRect</keyword>
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::Description</keyword>
         <keyword ref="qimageiohandler.html#ImageOption-enum">QImageIOHandler::CompressionRatio</keyword>
@@ -9083,7 +8188,7 @@
         <keyword ref="qlinef.html#fromPolar">fromPolar</keyword>
         <keyword ref="qlinef.html#intersect">intersect</keyword>
         <keyword ref="qlinef.html#isNull">isNull</keyword>
-        <keyword ref="qlinef.html#lengthx">length</keyword>
+        <keyword ref="qlinef.html#length">length</keyword>
         <keyword ref="qlinef.html#normalVector">normalVector</keyword>
         <keyword ref="qlinef.html#pointAt">pointAt</keyword>
         <keyword ref="qlinef.html#setP1">setP1</keyword>
@@ -9202,7 +8307,7 @@
         <keyword ref="qlist.html#isEmpty">isEmpty</keyword>
         <keyword ref="qlist.html#last">last</keyword>
         <keyword ref="qlist.html#lastIndexOf">lastIndexOf</keyword>
-        <keyword ref="qlist.html#lengthx">length</keyword>
+        <keyword ref="qlist.html#length">length</keyword>
         <keyword ref="qlist.html#mid">mid</keyword>
         <keyword ref="qlist.html#move">move</keyword>
         <keyword ref="qlist.html#pop_back">pop_back</keyword>
@@ -10073,7 +9178,6 @@
         <keyword ref="qmatrix.html#operator-2a-eq">operator*=</keyword>
         <keyword ref="qmatrix.html#operator-eq">operator=</keyword>
         <keyword ref="qmatrix.html#operator-eq-eq">operator==</keyword>
-        <keyword ref="qmatrix.html#operator-2a">operator*</keyword>
         <section ref="qmatrix-members.html" title="List of all members"/>
         <section ref="qmatrix-qt3.html" title="Qt 3 support members"/>
     </section>
@@ -10142,26 +9246,6 @@
         <keyword ref="qmdisubwindow.html#widget">widget</keyword>
         <keyword ref="qmdisubwindow.html#windowStateChanged">windowStateChanged</keyword>
         <section ref="qmdisubwindow-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-qmeminputpin.html" title="QMemInputPin Class Reference">
-        <keyword ref="phonon-ds9-qmeminputpin.html">QMemInputPin</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#BeginFlush">BeginFlush</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#EndFlush">EndFlush</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#EndOfStream">EndOfStream</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#GetAllocator">GetAllocator</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#GetAllocatorRequirements">GetAllocatorRequirements</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#NewSegment">NewSegment</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#NotifyAllocator">NotifyAllocator</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#QueryInterface">QueryInterface</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#Receive">Receive</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#ReceiveCanBlock">ReceiveCanBlock</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#ReceiveConnection">ReceiveConnection</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#ReceiveMultiple">ReceiveMultiple</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#STDMETHODIMP_">STDMETHODIMP_</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#addOutput">addOutput</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#outputs">outputs</keyword>
-        <keyword ref="phonon-ds9-qmeminputpin.html#removeOutput">removeOutput</keyword>
-        <section ref="phonon-ds9-qmeminputpin-members.html" title="List of all members"/>
     </section>
     <section ref="qmenu.html" title="QMenu Class Reference">
         <keyword ref="qmenu.html">QMenu</keyword>
@@ -10353,7 +9437,7 @@
         <keyword ref="qmetamethod.html#MethodType-enum">QMetaMethod::Signal</keyword>
         <keyword ref="qmetamethod.html#MethodType-enum">QMetaMethod::Slot</keyword>
         <keyword ref="qmetamethod.html#access">access</keyword>
-        <keyword ref="qmetamethod.html#invokex">invoke</keyword>
+        <keyword ref="qmetamethod.html#invoke">invoke</keyword>
         <keyword ref="qmetamethod.html#methodType">methodType</keyword>
         <keyword ref="qmetamethod.html#parameterNames">parameterNames</keyword>
         <keyword ref="qmetamethod.html#parameterTypes">parameterTypes</keyword>
@@ -11036,7 +10120,7 @@
         <keyword ref="qnetworkreply.html#rawHeader">rawHeader</keyword>
         <keyword ref="qnetworkreply.html#rawHeaderList">rawHeaderList</keyword>
         <keyword ref="qnetworkreply.html#readBufferSize">readBufferSize</keyword>
-        <keyword ref="qnetworkreply.html#requestx">request</keyword>
+        <keyword ref="qnetworkreply.html#request">request</keyword>
         <keyword ref="qnetworkreply.html#setAttribute">setAttribute</keyword>
         <keyword ref="qnetworkreply.html#setError">setError</keyword>
         <keyword ref="qnetworkreply.html#setHeader">setHeader</keyword>
@@ -11488,7 +10572,7 @@
         <keyword ref="qpainterpath.html#intersected">intersected</keyword>
         <keyword ref="qpainterpath.html#intersects">intersects</keyword>
         <keyword ref="qpainterpath.html#isEmpty">isEmpty</keyword>
-        <keyword ref="qpainterpath.html#lengthx">length</keyword>
+        <keyword ref="qpainterpath.html#length">length</keyword>
         <keyword ref="qpainterpath.html#lineTo">lineTo</keyword>
         <keyword ref="qpainterpath.html#moveTo">moveTo</keyword>
         <keyword ref="qpainterpath.html#percentAtLength">percentAtLength</keyword>
@@ -11724,41 +10808,6 @@
         <keyword ref="qpictureio.html#status">status</keyword>
         <keyword ref="qpictureio.html#write">write</keyword>
         <section ref="qpictureio-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-qpin.html" title="QPin Class Reference">
-        <keyword ref="phonon-ds9-qpin.html">QPin</keyword>
-        <keyword ref="phonon-ds9-qpin.html#BeginFlush">BeginFlush</keyword>
-        <keyword ref="phonon-ds9-qpin.html#Connectx">Connect</keyword>
-        <keyword ref="phonon-ds9-qpin.html#ConnectedTo">ConnectedTo</keyword>
-        <keyword ref="phonon-ds9-qpin.html#ConnectionMediaType">ConnectionMediaType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#Disconnectx">Disconnect</keyword>
-        <keyword ref="phonon-ds9-qpin.html#EndFlush">EndFlush</keyword>
-        <keyword ref="phonon-ds9-qpin.html#EndOfStream">EndOfStream</keyword>
-        <keyword ref="phonon-ds9-qpin.html#EnumMediaTypes">EnumMediaTypes</keyword>
-        <keyword ref="phonon-ds9-qpin.html#NewSegment">NewSegment</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryAccept">QueryAccept</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryDirection">QueryDirection</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryId">QueryId</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryInterface">QueryInterface</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryInternalConnections">QueryInternalConnections</keyword>
-        <keyword ref="phonon-ds9-qpin.html#QueryPinInfo">QueryPinInfo</keyword>
-        <keyword ref="phonon-ds9-qpin.html#ReceiveConnection">ReceiveConnection</keyword>
-        <keyword ref="phonon-ds9-qpin.html#STDMETHODIMP_">STDMETHODIMP_</keyword>
-        <keyword ref="phonon-ds9-qpin.html#connected">connected</keyword>
-        <keyword ref="phonon-ds9-qpin.html#connectedType">connectedType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#copyMediaType">copyMediaType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#createDefaultMemoryAllocator">createDefaultMemoryAllocator</keyword>
-        <keyword ref="phonon-ds9-qpin.html#direction">direction</keyword>
-        <keyword ref="phonon-ds9-qpin.html#filterState">filterState</keyword>
-        <keyword ref="phonon-ds9-qpin.html#freeMediaType">freeMediaType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#isFlushing">isFlushing</keyword>
-        <keyword ref="phonon-ds9-qpin.html#mediaTypes">mediaTypes</keyword>
-        <keyword ref="phonon-ds9-qpin.html#memoryAllocator">memoryAllocator</keyword>
-        <keyword ref="phonon-ds9-qpin.html#setAcceptedMediaType">setAcceptedMediaType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#setConnected">setConnected</keyword>
-        <keyword ref="phonon-ds9-qpin.html#setConnectedType">setConnectedType</keyword>
-        <keyword ref="phonon-ds9-qpin.html#setMemoryAllocator">setMemoryAllocator</keyword>
-        <section ref="phonon-ds9-qpin-members.html" title="List of all members"/>
     </section>
     <section ref="qpixmap.html" title="QPixmap Class Reference">
         <keyword ref="qpixmap.html">QPixmap</keyword>
@@ -12749,7 +11798,7 @@
     <section ref="qrunnable.html" title="QRunnable Class Reference">
         <keyword ref="qrunnable.html">QRunnable</keyword>
         <keyword ref="qrunnable.html#autoDelete">autoDelete</keyword>
-        <keyword ref="qrunnable.html#runx">run</keyword>
+        <keyword ref="qrunnable.html#run">run</keyword>
         <keyword ref="qrunnable.html#setAutoDelete">setAutoDelete</keyword>
         <section ref="qrunnable-members.html" title="List of all members"/>
     </section>
@@ -12787,7 +11836,7 @@
         <keyword ref="qscreen.html#instance">instance</keyword>
         <keyword ref="qscreen.html#isInterlaced">isInterlaced</keyword>
         <keyword ref="qscreen.html#isTransformed">isTransformed</keyword>
-        <keyword ref="qscreen.html#linestepx">linestep</keyword>
+        <keyword ref="qscreen.html#linestep">linestep</keyword>
         <keyword ref="qscreen.html#mapFromDevice">mapFromDevice</keyword>
         <keyword ref="qscreen.html#mapToDevice">mapToDevice</keyword>
         <keyword ref="qscreen.html#numCols">numCols</keyword>
@@ -13690,7 +12739,6 @@
         <keyword ref="qsourcelocation.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qsourcelocation.html#operator-eq">operator=</keyword>
         <keyword ref="qsourcelocation.html#operator-eq-eq">operator==</keyword>
-        <keyword ref="qsourcelocation.html#qHash">qHash</keyword>
         <section ref="qsourcelocation-members.html" title="List of all members"/>
     </section>
     <section ref="qspaceritem.html" title="QSpacerItem Class Reference">
@@ -13950,7 +12998,7 @@
         <keyword ref="qsqlfield.html#isNull">isNull</keyword>
         <keyword ref="qsqlfield.html#isReadOnly">isReadOnly</keyword>
         <keyword ref="qsqlfield.html#isValid">isValid</keyword>
-        <keyword ref="qsqlfield.html#lengthx">length</keyword>
+        <keyword ref="qsqlfield.html#length">length</keyword>
         <keyword ref="qsqlfield.html#name">name</keyword>
         <keyword ref="qsqlfield.html#precision">precision</keyword>
         <keyword ref="qsqlfield.html#requiredStatus">requiredStatus</keyword>
@@ -14325,7 +13373,7 @@
         <keyword ref="qsslkey.html#clear">clear</keyword>
         <keyword ref="qsslkey.html#handle">handle</keyword>
         <keyword ref="qsslkey.html#isNull">isNull</keyword>
-        <keyword ref="qsslkey.html#lengthx">length</keyword>
+        <keyword ref="qsslkey.html#length">length</keyword>
         <keyword ref="qsslkey.html#toDer">toDer</keyword>
         <keyword ref="qsslkey.html#toPem">toPem</keyword>
         <keyword ref="qsslkey.html#type">type</keyword>
@@ -14641,7 +13689,7 @@
         <keyword ref="qstring.html#left">left</keyword>
         <keyword ref="qstring.html#leftJustified">leftJustified</keyword>
         <keyword ref="qstring.html#leftRef">leftRef</keyword>
-        <keyword ref="qstring.html#lengthx">length</keyword>
+        <keyword ref="qstring.html#length">length</keyword>
         <keyword ref="qstring.html#localeAwareCompare">localeAwareCompare</keyword>
         <keyword ref="qstring.html#mid">mid</keyword>
         <keyword ref="qstring.html#midRef">midRef</keyword>
@@ -14703,11 +13751,6 @@
         <keyword ref="qstring.html#operator-gt">operator&gt;</keyword>
         <keyword ref="qstring.html#operator-gt-eq">operator&gt;=</keyword>
         <keyword ref="qstring.html#operator-5b-5d">operator[]</keyword>
-        <keyword ref="qstring.html#operator-2b">operator+</keyword>
-        <keyword ref="qstring.html#operator-lt">operator&lt;</keyword>
-        <keyword ref="qstring.html#operator-lt-eq">operator&lt;=</keyword>
-        <keyword ref="qstring.html#operator-gt">operator&gt;</keyword>
-        <keyword ref="qstring.html#operator-gt-eq">operator&gt;=</keyword>
         <keyword ref="qstring.html#QT_NO_CAST_FROM_ASCII">QT_NO_CAST_FROM_ASCII</keyword>
         <keyword ref="qstring.html#QT_NO_CAST_TO_ASCII">QT_NO_CAST_TO_ASCII</keyword>
         <section ref="qstring-members.html" title="List of all members"/>
@@ -14763,7 +13806,7 @@
         <keyword ref="qstringref.html#data">data</keyword>
         <keyword ref="qstringref.html#isEmpty">isEmpty</keyword>
         <keyword ref="qstringref.html#isNull">isNull</keyword>
-        <keyword ref="qstringref.html#lengthx">length</keyword>
+        <keyword ref="qstringref.html#length">length</keyword>
         <keyword ref="qstringref.html#localeAwareCompare">localeAwareCompare</keyword>
         <keyword ref="qstringref.html#position">position</keyword>
         <keyword ref="qstringref.html#size">size</keyword>
@@ -16075,15 +15118,19 @@
         <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_LEOPARD</keyword>
         <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_10_5</keyword>
         <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_Unknown</keyword>
+        <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_10_6</keyword>
         <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_TIGER</keyword>
+        <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_SNOWLEOPARD</keyword>
         <keyword ref="qsysinfo.html#MacVersion-enum">QSysInfo::MV_PANTHER</keyword>
         <keyword ref="qsysinfo.html#Sizes-enum">Sizes</keyword>
         <keyword ref="qsysinfo.html#Sizes-enum">QSysInfo::WordSize</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">WinVersion</keyword>
+        <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_WINDOWS7</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_98</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_NT_based</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_XP</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_6_0</keyword>
+        <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_6_1</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_CE_5</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_DOS_based</keyword>
         <keyword ref="qsysinfo.html#WinVersion-enum">QSysInfo::WV_CE_6</keyword>
@@ -17073,46 +16120,6 @@
         <keyword ref="qt.html#mightBeRichText">mightBeRichText</keyword>
         <section ref="qt-qt3.html" title="Qt 3 support members"/>
     </section>
-    <section ref="phonon-qt7.html" title="QT7 Namespace Reference">
-        <keyword ref="phonon-qt7.html">QT7</keyword>
-        <keyword ref="phonon-qt7-audioconnection.html">AudioConnection</keyword>
-        <keyword ref="phonon-qt7-audiodevice.html">AudioDevice</keyword>
-        <keyword ref="phonon-qt7-audioeffect.html">AudioEffect</keyword>
-        <keyword ref="phonon-qt7-audioeffectaudionode.html">AudioEffectAudioNode</keyword>
-        <keyword ref="phonon-qt7-audiograph.html">AudioGraph</keyword>
-        <keyword ref="phonon-qt7-audiomixer.html">AudioMixer</keyword>
-        <keyword ref="phonon-qt7-audiomixeraudionode.html">AudioMixerAudioNode</keyword>
-        <keyword ref="phonon-qt7-audionode.html">AudioNode</keyword>
-        <keyword ref="phonon-qt7-audionodesplitter.html">AudioNodeSplitter</keyword>
-        <keyword ref="phonon-qt7-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-qt7-audiooutputaudiopart.html">AudioOutputAudioPart</keyword>
-        <keyword ref="phonon-qt7-audiopartoutput.html">AudioPartOutput</keyword>
-        <keyword ref="phonon-qt7-audiosplitter.html">AudioSplitter</keyword>
-        <keyword ref="phonon-qt7-backend.html">Backend</keyword>
-        <keyword ref="phonon-qt7-backendinfo.html">BackendInfo</keyword>
-        <keyword ref="phonon-qt7-medianode.html">MediaNode</keyword>
-        <keyword ref="phonon-qt7-medianodeconnection.html">MediaNodeConnection</keyword>
-        <keyword ref="phonon-qt7-medianodeevent.html">MediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-medianodevideopart.html">MediaNodeVideoPart</keyword>
-        <keyword ref="phonon-qt7-mediaobject.html">MediaObject</keyword>
-        <keyword ref="phonon-qt7-mediaobjectaudionode.html">MediaObjectAudioNode</keyword>
-        <keyword ref="phonon-qt7-phononautoreleasepool.html">PhononAutoReleasePool</keyword>
-        <keyword ref="phonon-qt7-phononcfstring.html">PhononCFString</keyword>
-        <keyword ref="phonon-qt7-phononcftype.html">PhononCFType</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html">QuickTimeAudioPlayer</keyword>
-        <keyword ref="phonon-qt7-quicktimemetadata.html">QuickTimeMetaData</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html">QuickTimeStreamReader</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html">QuickTimeVideoPlayer</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html">VideoEffect</keyword>
-        <keyword ref="phonon-qt7-videoframe.html">VideoFrame</keyword>
-        <keyword ref="phonon-qt7-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-qt7.html#gClearError">gClearError</keyword>
-        <keyword ref="phonon-qt7.html#gGetErrorString">gGetErrorString</keyword>
-        <keyword ref="phonon-qt7.html#gGetErrorType">gGetErrorType</keyword>
-        <keyword ref="phonon-qt7.html#gSetErrorLocation">gSetErrorLocation</keyword>
-        <keyword ref="phonon-qt7.html#gSetErrorString">gSetErrorString</keyword>
-        <keyword ref="phonon-qt7.html#gSetErrorType">gSetErrorType</keyword>
-    </section>
     <section ref="qtabbar.html" title="QTabBar Class Reference">
         <keyword ref="qtabbar.html">QTabBar</keyword>
         <keyword ref="qtabbar.html#ButtonPosition-enum">ButtonPosition</keyword>
@@ -17494,7 +16501,7 @@
         <keyword ref="qtconcurrentmap.html#map">map</keyword>
         <keyword ref="qtconcurrentmap.html#mapped">mapped</keyword>
         <keyword ref="qtconcurrentmap.html#mappedReduced">mappedReduced</keyword>
-        <keyword ref="qtconcurrentrun.html#runx">run</keyword>
+        <keyword ref="qtconcurrentrun.html#run">run</keyword>
     </section>
     <section ref="qtcpserver.html" title="QTcpServer Class Reference">
         <keyword ref="qtcpserver.html">QTcpServer</keyword>
@@ -17620,7 +16627,7 @@
         <keyword ref="qtextblock.html#isValid">isValid</keyword>
         <keyword ref="qtextblock.html#isVisible">isVisible</keyword>
         <keyword ref="qtextblock.html#layout">layout</keyword>
-        <keyword ref="qtextblock.html#lengthx">length</keyword>
+        <keyword ref="qtextblock.html#length">length</keyword>
         <keyword ref="qtextblock.html#lineCount">lineCount</keyword>
         <keyword ref="qtextblock.html#next">next</keyword>
         <keyword ref="qtextblock.html#position">position</keyword>
@@ -18145,6 +17152,7 @@
         <keyword ref="qtextedit.html#loadResource">loadResource</keyword>
         <keyword ref="qtextedit.html#mergeCurrentCharFormat">mergeCurrentCharFormat</keyword>
         <keyword ref="qtextedit.html#moveCursor">moveCursor</keyword>
+        <keyword ref="qtextedit.html#paintEvent">paintEvent</keyword>
         <keyword ref="qtextedit.html#paste">paste</keyword>
         <keyword ref="qtextedit.html#print">print</keyword>
         <keyword ref="qtextedit.html#redo">redo</keyword>
@@ -18332,7 +17340,7 @@
         <keyword ref="qtextfragment.html#charFormatIndex">charFormatIndex</keyword>
         <keyword ref="qtextfragment.html#contains">contains</keyword>
         <keyword ref="qtextfragment.html#isValid">isValid</keyword>
-        <keyword ref="qtextfragment.html#lengthx">length</keyword>
+        <keyword ref="qtextfragment.html#length">length</keyword>
         <keyword ref="qtextfragment.html#position">position</keyword>
         <keyword ref="qtextfragment.html#text">text</keyword>
         <keyword ref="qtextfragment.html#operator-not-eq">operator!=</keyword>
@@ -18805,7 +17813,7 @@
         <keyword ref="qthread.html#msleep">msleep</keyword>
         <keyword ref="qthread.html#priority">priority</keyword>
         <keyword ref="qthread.html#quit">quit</keyword>
-        <keyword ref="qthread.html#runx">run</keyword>
+        <keyword ref="qthread.html#run">run</keyword>
         <keyword ref="qthread.html#setPriority">setPriority</keyword>
         <keyword ref="qthread.html#setStackSize">setStackSize</keyword>
         <keyword ref="qthread.html#setTerminationEnabled">setTerminationEnabled</keyword>
@@ -19106,6 +18114,7 @@
         <keyword ref="qtransform.html#operator-2f-eq">operator/=</keyword>
         <keyword ref="qtransform.html#operator-eq">operator=</keyword>
         <keyword ref="qtransform.html#operator-eq-eq">operator==</keyword>
+        <keyword ref="qtransform.html#operator-2a">operator*</keyword>
         <section ref="qtransform-members.html" title="List of all members"/>
     </section>
     <section ref="qtranslator.html" title="QTranslator Class Reference">
@@ -19369,104 +18378,6 @@
         <keyword ref="qudpsocket.html#readDatagram">readDatagram</keyword>
         <keyword ref="qudpsocket.html#writeDatagram">writeDatagram</keyword>
         <section ref="qudpsocket-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-quicktimeaudioplayer.html" title="QuickTimeAudioPlayer Class Reference">
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html">QuickTimeAudioPlayer</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#State-enum">State</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#audioEnabled">audioEnabled</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#currentTimeString">currentTimeString</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#enableAudio">enableAudio</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#fillInStreamSpecification">fillInStreamSpecification</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#flush">flush</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#getAudioNodeDescription">getAudioNodeDescription</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#hasAudio">hasAudio</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#initializeAudioUnit">initializeAudioUnit</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#isPlaying">isPlaying</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#pause">pause</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#play">play</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#regularTaskFrequency">regularTaskFrequency</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#scheduleAudioToGraph">scheduleAudioToGraph</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#seek">seek</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#setVideoPlayer">setVideoPlayer</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#soundPlayerIsAwailable">soundPlayerIsAwailable</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#unsetVideoPlayer">unsetVideoPlayer</keyword>
-        <keyword ref="phonon-qt7-quicktimeaudioplayer.html#videoPlayer">videoPlayer</keyword>
-        <section ref="phonon-qt7-quicktimeaudioplayer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-quicktimemetadata.html" title="QuickTimeMetaData Class Reference">
-        <keyword ref="phonon-qt7-quicktimemetadata.html">QuickTimeMetaData</keyword>
-        <keyword ref="phonon-qt7-quicktimemetadata.html#metaData">metaData</keyword>
-        <keyword ref="phonon-qt7-quicktimemetadata.html#setVideo">setVideo</keyword>
-        <section ref="phonon-qt7-quicktimemetadata-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-quicktimestreamreader.html" title="QuickTimeStreamReader Class Reference">
-        <keyword ref="phonon-qt7-quicktimestreamreader.html">QuickTimeStreamReader</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#currentBufferSize">currentBufferSize</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#currentPos">currentPos</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#endOfData">endOfData</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#movieRef">movieRef</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#pointerToData">pointerToData</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#readAllData">readAllData</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#readData">readData</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#setCurrentPos">setCurrentPos</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#setStreamSeekable">setStreamSeekable</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#setStreamSize">setStreamSize</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#streamSeekable">streamSeekable</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#streamSize">streamSize</keyword>
-        <keyword ref="phonon-qt7-quicktimestreamreader.html#writeData">writeData</keyword>
-        <section ref="phonon-qt7-quicktimestreamreader-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-quicktimevideoplayer.html" title="QuickTimeVideoPlayer Class Reference">
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html">QuickTimeVideoPlayer</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#StateEnum-enum">StateEnum</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#StateEnum-enum">State</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#audioEnabled">audioEnabled</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#canPlayMedia">canPlayMedia</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentFrameAsCIImage">currentFrameAsCIImage</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentFrameAsCVTexture">currentFrameAsCVTexture</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentFrameAsGLTexture">currentFrameAsGLTexture</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentFrameAsQImage">currentFrameAsQImage</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentTime">currentTime</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#currentTimeString">currentTimeString</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#duration">duration</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#enableAudio">enableAudio</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#hasAudio">hasAudio</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#hasMovie">hasMovie</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#hasVideo">hasVideo</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#isDrmAuthorized">isDrmAuthorized</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#isDrmProtected">isDrmProtected</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#isPlaying">isPlaying</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#isSeekable">isSeekable</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#mediaSource">mediaSource</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#pause">pause</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#percentageLoaded">percentageLoaded</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#play">play</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#playbackRate">playbackRate</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#preRollMovie">preRollMovie</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#prefferedPlaybackRate">prefferedPlaybackRate</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#primaryRenderingCIImage">primaryRenderingCIImage</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#qtMovie">qtMovie</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#seek">seek</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setAudioDevice">setAudioDevice</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setColors">setColors</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setMasterVolume">setMasterVolume</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setMediaSource">setMediaSource</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setMute">setMute</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setPlaybackRate">setPlaybackRate</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setPrimaryRenderingCIImage">setPrimaryRenderingCIImage</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setPrimaryRenderingTarget">setPrimaryRenderingTarget</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setRelativeVolume">setRelativeVolume</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#state">state</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#timeLoaded">timeLoaded</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#timeScale">timeScale</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#timeToString">timeToString</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#unsetVideo">unsetVideo</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#videoFrameChanged">videoFrameChanged</keyword>
-        <keyword ref="phonon-qt7-quicktimevideoplayer.html#videoRect">videoRect</keyword>
-        <section ref="phonon-qt7-quicktimevideoplayer-members.html" title="List of all members"/>
     </section>
     <section ref="quiloader.html" title="QUiLoader Class Reference">
         <keyword ref="quiloader.html">QUiLoader</keyword>
@@ -19856,6 +18767,8 @@
         <keyword ref="qvariant.html#qVariantSetValue">qVariantSetValue</keyword>
         <keyword ref="qvariant.html#qVariantValue">qVariantValue</keyword>
         <keyword ref="qvariant.html#qvariant_cast">qvariant_cast</keyword>
+        <keyword ref="qvariant.html#operator-not-eq">operator!=</keyword>
+        <keyword ref="qvariant.html#operator-eq-eq">operator==</keyword>
         <section ref="qvariant-members.html" title="List of all members"/>
         <section ref="qvariant-qt3.html" title="Qt 3 support members"/>
     </section>
@@ -20612,7 +19525,6 @@
         <keyword ref="qwidget.html#removeAction">removeAction</keyword>
         <keyword ref="qwidget.html#render">render</keyword>
         <keyword ref="qwidget.html#repaint">repaint</keyword>
-        <keyword ref="qwidget.html#resetInputContext">resetInputContext</keyword>
         <keyword ref="qwidget.html#resizeEvent">resizeEvent</keyword>
         <keyword ref="qwidget.html#restoreGeometry">restoreGeometry</keyword>
         <keyword ref="qwidget.html#saveGeometry">saveGeometry</keyword>
@@ -20690,27 +19602,6 @@
         <keyword ref="qwidgetitem.html#widget">widget</keyword>
         <section ref="qwidgetitem-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-gstreamer-qwidgetvideosink.html" title="QWidgetVideoSink Class Reference">
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html">QWidgetVideoSink</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#base_init">base_init</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#change_state">change_state</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#get_caps">get_caps</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#instance_init">instance_init</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#render">render</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosink.html#set_caps">set_caps</keyword>
-        <section ref="phonon-gstreamer-qwidgetvideosink-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-qwidgetvideosinkbase.html" title="QWidgetVideoSinkBase Class Reference">
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkbase.html">QWidgetVideoSinkBase</keyword>
-        <section ref="phonon-gstreamer-qwidgetvideosinkbase-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-qwidgetvideosinkclass.html" title="QWidgetVideoSinkClass Class Reference">
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkclass.html">QWidgetVideoSinkClass</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkclass.html#class_init">class_init</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkclass.html#get_name">get_name</keyword>
-        <keyword ref="phonon-gstreamer-qwidgetvideosinkclass.html#get_type">get_type</keyword>
-        <section ref="phonon-gstreamer-qwidgetvideosinkclass-members.html" title="List of all members"/>
-    </section>
     <section ref="qwindowsstyle.html" title="QWindowsStyle Class Reference">
         <keyword ref="qwindowsstyle.html">QWindowsStyle</keyword>
         <section ref="qwindowsstyle-members.html" title="List of all members"/>
@@ -20727,14 +19618,6 @@
     <section ref="qwindowsxpstyle.html" title="QWindowsXPStyle Class Reference">
         <keyword ref="qwindowsxpstyle.html">QWindowsXPStyle</keyword>
         <section ref="qwindowsxpstyle-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-qwinwaitcondition.html" title="QWinWaitCondition Class Reference">
-        <keyword ref="phonon-ds9-qwinwaitcondition.html">QWinWaitCondition</keyword>
-        <keyword ref="phonon-ds9-qwinwaitcondition.html#reset">reset</keyword>
-        <keyword ref="phonon-ds9-qwinwaitcondition.html#set">set</keyword>
-        <keyword ref="phonon-ds9-qwinwaitcondition.html#operator-HANDLE">operator HANDLE</keyword>
-        <keyword ref="phonon-ds9-qwinwaitcondition.html#operator-HEVENT">operator HEVENT</keyword>
-        <section ref="phonon-ds9-qwinwaitcondition-members.html" title="List of all members"/>
     </section>
     <section ref="qwizard.html" title="QWizard Class Reference">
         <keyword ref="qwizard.html">QWizard</keyword>
@@ -21142,7 +20025,7 @@
         <keyword ref="qxmlattributes.html#clear">clear</keyword>
         <keyword ref="qxmlattributes.html#count">count</keyword>
         <keyword ref="qxmlattributes.html#index">index</keyword>
-        <keyword ref="qxmlattributes.html#lengthx">length</keyword>
+        <keyword ref="qxmlattributes.html#length">length</keyword>
         <keyword ref="qxmlattributes.html#localName">localName</keyword>
         <keyword ref="qxmlattributes.html#qName">qName</keyword>
         <keyword ref="qxmlattributes.html#type">type</keyword>
@@ -21305,7 +20188,7 @@
         <keyword ref="qxmlparseexception.html">QXmlParseException</keyword>
         <keyword ref="qxmlparseexception.html#columnNumber">columnNumber</keyword>
         <keyword ref="qxmlparseexception.html#lineNumber">lineNumber</keyword>
-        <keyword ref="qxmlparseexception.html#messagex">message</keyword>
+        <keyword ref="qxmlparseexception.html#message">message</keyword>
         <keyword ref="qxmlparseexception.html#publicId">publicId</keyword>
         <keyword ref="qxmlparseexception.html#systemId">systemId</keyword>
         <section ref="qxmlparseexception-members.html" title="List of all members"/>
@@ -22798,7 +21681,7 @@
         <keyword ref="q3http.html#readAll">readAll</keyword>
         <keyword ref="q3http.html#readBlock">readBlock</keyword>
         <keyword ref="q3http.html#readyRead">readyRead</keyword>
-        <keyword ref="q3http.html#requestx">request</keyword>
+        <keyword ref="q3http.html#request">request</keyword>
         <keyword ref="q3http.html#requestFinished">requestFinished</keyword>
         <keyword ref="q3http.html#requestStarted">requestStarted</keyword>
         <keyword ref="q3http.html#responseHeaderReceived">responseHeaderReceived</keyword>
@@ -23998,7 +22881,7 @@
         <keyword ref="q3rangecontrol.html#addPage">addPage</keyword>
         <keyword ref="q3rangecontrol.html#bound">bound</keyword>
         <keyword ref="q3rangecontrol.html#directSetValue">directSetValue</keyword>
-        <keyword ref="q3rangecontrol.html#lineStep">lineStep</keyword>
+        <keyword ref="q3rangecontrol.html#lineStepx">lineStep</keyword>
         <keyword ref="q3rangecontrol.html#maxValue">maxValue</keyword>
         <keyword ref="q3rangecontrol.html#minValue">minValue</keyword>
         <keyword ref="q3rangecontrol.html#pageStep">pageStep</keyword>
@@ -24318,7 +23201,7 @@
         <keyword ref="q3sqlfieldinfo.html#isGenerated">isGenerated</keyword>
         <keyword ref="q3sqlfieldinfo.html#isRequired">isRequired</keyword>
         <keyword ref="q3sqlfieldinfo.html#isTrim">isTrim</keyword>
-        <keyword ref="q3sqlfieldinfo.html#lengthx">length</keyword>
+        <keyword ref="q3sqlfieldinfo.html#length">length</keyword>
         <keyword ref="q3sqlfieldinfo.html#name">name</keyword>
         <keyword ref="q3sqlfieldinfo.html#precision">precision</keyword>
         <keyword ref="q3sqlfieldinfo.html#setCalculated">setCalculated</keyword>
@@ -25233,7 +24116,7 @@
         <keyword ref="phonon-seekslider.html#tracking-prop">tracking</keyword>
         <keyword ref="phonon-seekslider.html#tracking-prop">hasTracking</keyword>
         <keyword ref="phonon-seekslider.html#tracking-prop">setTracking</keyword>
-        <keyword ref="phonon-seekslider.html#mediaObjectx">mediaObject</keyword>
+        <keyword ref="phonon-seekslider.html#mediaObject">mediaObject</keyword>
         <keyword ref="phonon-seekslider.html#setMediaObject">setMediaObject</keyword>
         <section ref="phonon-seekslider-members.html" title="List of all members"/>
     </section>
@@ -25242,20 +24125,6 @@
         <keyword ref="qabstracttextdocumentlayout-selection.html#cursor-var">cursor</keyword>
         <keyword ref="qabstracttextdocumentlayout-selection.html#format-var">format</keyword>
         <section ref="qabstracttextdocumentlayout-selection-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-streamreader.html" title="StreamReader Class Reference">
-        <keyword ref="phonon-gstreamer-streamreader.html">StreamReader</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#currentBufferSize">currentBufferSize</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#currentPos">currentPos</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#endOfData">endOfData</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#read">read</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#setCurrentPos">setCurrentPos</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#setStreamSeekable">setStreamSeekable</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#setStreamSize">setStreamSize</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#streamSeekable">streamSeekable</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#streamSize">streamSize</keyword>
-        <keyword ref="phonon-gstreamer-streamreader.html#writeData">writeData</keyword>
-        <section ref="phonon-gstreamer-streamreader-members.html" title="List of all members"/>
     </section>
     <section ref="qtextoption-tab.html" title="Tab Class Reference">
         <keyword ref="qtextoption-tab.html">Tab</keyword>
@@ -25274,38 +24143,6 @@
         <keyword ref="qabstractfileengine-unmapextensionoption.html">UnMapExtensionOption</keyword>
         <section ref="qabstractfileengine-unmapextensionoption-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-qt7-videoeffect.html" title="VideoEffect Class Reference">
-        <keyword ref="phonon-qt7-videoeffect.html">VideoEffect</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html#parameterValue">parameterValue</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html#parameters">parameters</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html#setParameterValue">setParameterValue</keyword>
-        <keyword ref="phonon-qt7-videoeffect.html#updateVideo">updateVideo</keyword>
-        <section ref="phonon-qt7-videoeffect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-videoframe.html" title="VideoFrame Class Reference">
-        <keyword ref="phonon-qt7-videoframe.html">VideoFrame</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#QRectToCGRect">QRectToCGRect</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#applyCoreImageFilter">applyCoreImageFilter</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#cachedCIImage">cachedCIImage</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#cachedCVTexture">cachedCVTexture</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#drawCIImage">drawCIImage</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#drawCVTexture">drawCVTexture</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#drawGLTexture">drawGLTexture</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#drawQImage">drawQImage</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#frameRect">frameRect</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#glTextureRef">glTextureRef</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#hasColorAdjustments">hasColorAdjustments</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#isEmpty">isEmpty</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#release">release</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#retain">retain</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#setBackgroundFrame">setBackgroundFrame</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#setBaseOpacity">setBaseOpacity</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#setColors">setColors</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#videoPlayer">videoPlayer</keyword>
-        <keyword ref="phonon-qt7-videoframe.html#operator-eq">operator=</keyword>
-        <section ref="phonon-qt7-videoframe-members.html" title="List of all members"/>
-    </section>
     <section ref="phonon-videoplayer.html" title="VideoPlayer Class Reference">
         <keyword ref="phonon-videoplayer.html">VideoPlayer</keyword>
         <keyword ref="phonon-videoplayer.html#audioOutputx">audioOutput</keyword>
@@ -25314,7 +24151,7 @@
         <keyword ref="phonon-videoplayer.html#isPaused">isPaused</keyword>
         <keyword ref="phonon-videoplayer.html#isPlaying">isPlaying</keyword>
         <keyword ref="phonon-videoplayer.html#load">load</keyword>
-        <keyword ref="phonon-videoplayer.html#mediaObjectx">mediaObject</keyword>
+        <keyword ref="phonon-videoplayer.html#mediaObject">mediaObject</keyword>
         <keyword ref="phonon-videoplayer.html#pause">pause</keyword>
         <keyword ref="phonon-videoplayer.html#play">play</keyword>
         <keyword ref="phonon-videoplayer.html#seek">seek</keyword>
@@ -25324,99 +24161,6 @@
         <keyword ref="phonon-videoplayer.html#videoWidgetx">videoWidget</keyword>
         <keyword ref="phonon-videoplayer.html#volume">volume</keyword>
         <section ref="phonon-videoplayer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-videorenderersoft.html" title="VideoRendererSoft Class Reference">
-        <keyword ref="phonon-ds9-videorenderersoft.html">VideoRendererSoft</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#applyMixerSettings">applyMixerSettings</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#event">event</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#isNative">isNative</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#notifyResize">notifyResize</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#repaintCurrentFrame">repaintCurrentFrame</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#setSnapshot">setSnapshot</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#snapshot">snapshot</keyword>
-        <keyword ref="phonon-ds9-videorenderersoft.html#videoSize">videoSize</keyword>
-        <section ref="phonon-ds9-videorenderersoft-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-videorenderervmr9.html" title="VideoRendererVMR9 Class Reference">
-        <keyword ref="phonon-ds9-videorenderervmr9.html">VideoRendererVMR9</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#applyMixerSettings">applyMixerSettings</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#isNative">isNative</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#notifyResize">notifyResize</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#repaintCurrentFrame">repaintCurrentFrame</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#snapshot">snapshot</keyword>
-        <keyword ref="phonon-ds9-videorenderervmr9.html#videoSize">videoSize</keyword>
-        <section ref="phonon-ds9-videorenderervmr9-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-videowidget.html" title="VideoWidget Class Reference">
-        <keyword ref="phonon-ds9-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#applyMixerSettings">applyMixerSettings</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#aspectRatio">aspectRatio</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#brightness">brightness</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#connected">connected</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#contrast">contrast</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#hue">hue</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#notifyVideoLoaded">notifyVideoLoaded</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#performSoftRendering">performSoftRendering</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#saturation">saturation</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#scaleMode">scaleMode</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setAspectRatio">setAspectRatio</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setBrightness">setBrightness</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setContrast">setContrast</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setCurrentGraph">setCurrentGraph</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setHue">setHue</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setSaturation">setSaturation</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#setScaleMode">setScaleMode</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#switchRendering">switchRendering</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#updateVideoSize">updateVideoSize</keyword>
-        <keyword ref="phonon-ds9-videowidget.html#widget">widget</keyword>
-        <section ref="phonon-ds9-videowidget-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-videowidget.html" title="VideoWidget Class Reference">
-        <keyword ref="phonon-gstreamer-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#aspectRatio">aspectRatio</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#brightness">brightness</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#calculateDrawFrameRect">calculateDrawFrameRect</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#contrast">contrast</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#event">event</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#hue">hue</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#movieSize">movieSize</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#paintEvent">paintEvent</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#saturation">saturation</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#scaleMode">scaleMode</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#scaleToAspect">scaleToAspect</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setAspectRatio">setAspectRatio</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setBrightness">setBrightness</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setContrast">setContrast</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setHue">setHue</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setMovieSize">setMovieSize</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setSaturation">setSaturation</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setScaleMode">setScaleMode</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setVisible">setVisible</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#setupVideoBin">setupVideoBin</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#sizeHint">sizeHint</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#videoElement">videoElement</keyword>
-        <keyword ref="phonon-gstreamer-videowidget.html#widget">widget</keyword>
-        <section ref="phonon-gstreamer-videowidget-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-qt7-videowidget.html" title="VideoWidget Class Reference">
-        <keyword ref="phonon-qt7-videowidget.html">VideoWidget</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#aspectRatio">aspectRatio</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#brightness">brightness</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#contrast">contrast</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#hue">hue</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#mediaNodeEvent">mediaNodeEvent</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#saturation">saturation</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#scaleMode">scaleMode</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setAspectRatio">setAspectRatio</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setBrightness">setBrightness</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setContrast">setContrast</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setHue">setHue</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setSaturation">setSaturation</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#setScaleMode">setScaleMode</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#updateVideo">updateVideo</keyword>
-        <keyword ref="phonon-qt7-videowidget.html#widget">widget</keyword>
-        <section ref="phonon-qt7-videowidget-members.html" title="List of all members"/>
     </section>
     <section ref="phonon-videowidget.html" title="VideoWidget Class Reference">
         <keyword ref="phonon-videowidget.html">VideoWidget</keyword>
@@ -25447,28 +24191,6 @@
         <keyword ref="phonon-videowidget.html#exitFullScreen">exitFullScreen</keyword>
         <section ref="phonon-videowidget-members.html" title="List of all members"/>
     </section>
-    <section ref="phonon-ds9-volumeeffect.html" title="VolumeEffect Class Reference">
-        <keyword ref="phonon-ds9-volumeeffect.html">VolumeEffect</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html#fadeCurve">fadeCurve</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html#fadeTo">fadeTo</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html#setFadeCurve">setFadeCurve</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-ds9-volumeeffect.html#volume">volume</keyword>
-        <section ref="phonon-ds9-volumeeffect-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-gstreamer-volumefadereffect.html" title="VolumeFaderEffect Class Reference">
-        <keyword ref="phonon-gstreamer-volumefadereffect.html">VolumeFaderEffect</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#audioElement">audioElement</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#createEffectBin">createEffectBin</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#event">event</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#fadeCurve">fadeCurve</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#fadeTo">fadeTo</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#setFadeCurve">setFadeCurve</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#setVolume">setVolume</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#updateFade">updateFade</keyword>
-        <keyword ref="phonon-gstreamer-volumefadereffect.html#volume">volume</keyword>
-        <section ref="phonon-gstreamer-volumefadereffect-members.html" title="List of all members"/>
-    </section>
     <section ref="phonon-volumeslider.html" title="VolumeSlider Class Reference">
         <keyword ref="phonon-volumeslider.html">VolumeSlider</keyword>
         <keyword ref="phonon-volumeslider.html#iconSize-prop">iconSize</keyword>
@@ -25490,40 +24212,6 @@
         <keyword ref="phonon-volumeslider.html#audioOutputx">audioOutput</keyword>
         <keyword ref="phonon-volumeslider.html#setAudioOutput">setAudioOutput</keyword>
         <section ref="phonon-volumeslider-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-waveout.html" title="WaveOut Namespace Reference">
-        <keyword ref="phonon-waveout.html">WaveOut</keyword>
-        <keyword ref="phonon-waveout-audiooutput.html">AudioOutput</keyword>
-        <keyword ref="phonon-waveout-backend.html">Backend</keyword>
-        <keyword ref="phonon-waveout-mediaobject.html">MediaObject</keyword>
-    </section>
-    <section ref="phonon-gstreamer-widgetrenderer.html" title="WidgetRenderer Class Reference">
-        <keyword ref="phonon-gstreamer-widgetrenderer.html">WidgetRenderer</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#clearFrame">clearFrame</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#currentFrame">currentFrame</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#drawFrameRect">drawFrameRect</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#eventFilter">eventFilter</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#frameIsSet">frameIsSet</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#handleMediaNodeEvent">handleMediaNodeEvent</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#handlePaint">handlePaint</keyword>
-        <keyword ref="phonon-gstreamer-widgetrenderer.html#setNextFrame">setNextFrame</keyword>
-        <section ref="phonon-gstreamer-widgetrenderer-members.html" title="List of all members"/>
-    </section>
-    <section ref="phonon-ds9-workerthread.html" title="WorkerThread Class Reference">
-        <keyword ref="phonon-ds9-workerthread.html">WorkerThread</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#abortCurrentRender">abortCurrentRender</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#addFilterToRender">addFilterToRender</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#addSeekRequest">addSeekRequest</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#addStateChangeRequest">addStateChangeRequest</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#addUrlToRender">addUrlToRender</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#asyncRenderFinished">asyncRenderFinished</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#asyncSeekingFinished">asyncSeekingFinished</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#eventReady">eventReady</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#replaceGraphForEventManagement">replaceGraphForEventManagement</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#runx">run</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#signalStop">signalStop</keyword>
-        <keyword ref="phonon-ds9-workerthread.html#stateReady">stateReady</keyword>
-        <section ref="phonon-ds9-workerthread-members.html" title="List of all members"/>
     </section>
 </section>
 <section ref="overviews.html" title="Overviews">
@@ -25580,7 +24268,7 @@
     </section>
     <section ref="qtconcurrentrun.html" title="&lt;QtConcurrentRun&gt; - Asynchronous Run">
         <keyword ref="qtconcurrentrun.html">&lt;QtConcurrentRun&gt; - Asynchronous Run</keyword>
-        <keyword ref="qtconcurrentrun.html#runx">run</keyword>
+        <keyword ref="qtconcurrentrun.html#run">run</keyword>
     </section>
     <section ref="qtendian.html" title="&lt;QtEndian&gt; - Endian Conversion Functions">
         <keyword ref="qtendian.html">&lt;QtEndian&gt; - Endian Conversion Functions</keyword>
@@ -25614,7 +24302,7 @@
         <keyword ref="qtglobal.html#uint-typedef">uint</keyword>
         <keyword ref="qtglobal.html#ulong-typedef">ulong</keyword>
         <keyword ref="qtglobal.html#ushort-typedef">ushort</keyword>
-        <keyword ref="qtglobal.html#qAbsx">qAbs</keyword>
+        <keyword ref="qtglobal.html#qAbs">qAbs</keyword>
         <keyword ref="qtglobal.html#qBound">qBound</keyword>
         <keyword ref="qtglobal.html#qCritical">qCritical</keyword>
         <keyword ref="qtglobal.html#qDebug">qDebug</keyword>
@@ -25623,8 +24311,8 @@
         <keyword ref="qtglobal.html#qFuzzyCompare-2">qFuzzyCompare</keyword>
         <keyword ref="qtglobal.html#qInstallMsgHandler">qInstallMsgHandler</keyword>
         <keyword ref="qtglobal.html#qMacVersion">qMacVersion</keyword>
-        <keyword ref="qtglobal.html#qMaxx">qMax</keyword>
-        <keyword ref="qtglobal.html#qMinx">qMin</keyword>
+        <keyword ref="qtglobal.html#qMax">qMax</keyword>
+        <keyword ref="qtglobal.html#qMin">qMin</keyword>
         <keyword ref="qtglobal.html#qRound64">qRound64</keyword>
         <keyword ref="qtglobal.html#qRound">qRound</keyword>
         <keyword ref="qtglobal.html#qVersion">qVersion</keyword>
@@ -25665,6 +24353,8 @@
         <keyword ref="qtglobal.html#Q_CC_WAT">Q_CC_WAT</keyword>
         <keyword ref="qtglobal.html#Q_CHECK_PTR">Q_CHECK_PTR</keyword>
         <keyword ref="qtglobal.html#Q_DECLARE_TYPEINFO">Q_DECLARE_TYPEINFO</keyword>
+        <keyword ref="qtglobal.html#Q_DECL_EXPORT">Q_DECL_EXPORT</keyword>
+        <keyword ref="qtglobal.html#Q_DECL_IMPORT">Q_DECL_IMPORT</keyword>
         <keyword ref="qtglobal.html#Q_FOREACH">Q_FOREACH</keyword>
         <keyword ref="qtglobal.html#Q_FOREVER">Q_FOREVER</keyword>
         <keyword ref="qtglobal.html#Q_FUNC_INFO">Q_FUNC_INFO</keyword>
@@ -25816,6 +24506,9 @@
     </section>
     <section ref="qtscriptextensions.html" title="Creating QtScript Extensions">
         <keyword ref="qtscriptextensions.html">Creating QtScript Extensions</keyword>
+    </section>
+    <section ref="sharedlibrary.html" title="Creating Shared Libraries">
+        <keyword ref="sharedlibrary.html">Creating Shared Libraries</keyword>
     </section>
     <section ref="qt-embedded-crosscompiling.html" title="Cross-Compiling Qt for Embedded Linux Applications">
         <keyword ref="qt-embedded-crosscompiling.html">Cross-Compiling Qt for Embedded Linux Applications</keyword>
@@ -26006,11 +24699,8 @@
     <section ref="focus.html" title="Keyboard Focus">
         <keyword ref="focus.html">Keyboard Focus</keyword>
     </section>
-    <section ref="known-issues.html" title="Known Issues in 4.5&#x2e;0">
-        <keyword ref="known-issues.html">Known Issues in 4.5&#x2e;0</keyword>
-    </section>
-    <section ref="qtcocoa-known-issues.html" title="Known Issues with the Qt/Mac Cocoa Port">
-        <keyword ref="qtcocoa-known-issues.html">Known Issues with the Qt/Mac Cocoa Port</keyword>
+    <section ref="known-issues.html" title="Known Issues in 4.5&#x2e;1">
+        <keyword ref="known-issues.html">Known Issues in 4.5&#x2e;1</keyword>
     </section>
     <section ref="layout.html" title="Layout Classes">
         <keyword ref="layout.html">Layout Classes</keyword>
@@ -26710,23 +25400,23 @@
     <section ref="phonon-capabilities.html" title="Capabilities Example">
         <keyword ref="phonon-capabilities.html">Capabilities Example</keyword>
     </section>
-    <section ref="tutorials-addressbook-fr-part5.html" title="Carnet d'adresse 5 - Ajouter une fonction de recherche">
-        <keyword ref="tutorials-addressbook-fr-part5.html">Carnet d'adresse 5 - Ajouter une fonction de recherche</keyword>
+    <section ref="tutorials-addressbook-fr-part5.html" title="Carnet d'adresse 5 - Ajout d'une fonction de recherche">
+        <keyword ref="tutorials-addressbook-fr-part5.html">Carnet d'adresse 5 - Ajout d'une fonction de recherche</keyword>
     </section>
-    <section ref="tutorials-addressbook-fr-part7.html" title="Carnet d'adresse 7 - Fonctionnalitées avancées">
-        <keyword ref="tutorials-addressbook-fr-part7.html">Carnet d'adresse 7 - Fonctionnalitées avancées</keyword>
+    <section ref="tutorials-addressbook-fr-part7.html" title="Carnet d'adresse 7 - Fonctionnalit&#xe9;s avanc&#xe9;es">
+        <keyword ref="tutorials-addressbook-fr-part7.html">Carnet d'adresse 7 - Fonctionnalit&#xe9;s avanc&#xe9;es</keyword>
     </section>
-    <section ref="tutorials-addressbook-fr-part1.html" title="Carnet d'adresses 1 - Concevoir l'interface utilisateur">
-        <keyword ref="tutorials-addressbook-fr-part1.html">Carnet d'adresses 1 - Concevoir l'interface utilisateur</keyword>
+    <section ref="tutorials-addressbook-fr-part1.html" title="Carnet d'adresses 1 - Conception de l'interface utilisateur">
+        <keyword ref="tutorials-addressbook-fr-part1.html">Carnet d'adresses 1 - Conception de l'interface utilisateur</keyword>
     </section>
     <section ref="tutorials-addressbook-fr-part2.html" title="Carnet d'adresses 2 - Ajouter des adresses">
         <keyword ref="tutorials-addressbook-fr-part2.html">Carnet d'adresses 2 - Ajouter des adresses</keyword>
     </section>
-    <section ref="tutorials-addressbook-fr-part3.html" title="Carnet d'adresses 3 - Naviguer entre les éléments">
-        <keyword ref="tutorials-addressbook-fr-part3.html">Carnet d'adresses 3 - Naviguer entre les éléments</keyword>
+    <section ref="tutorials-addressbook-fr-part3.html" title="Carnet d'adresses 3 - Navigation entre les &#xe9;l&#xe9;ments">
+        <keyword ref="tutorials-addressbook-fr-part3.html">Carnet d'adresses 3 - Navigation entre les &#xe9;l&#xe9;ments</keyword>
     </section>
-    <section ref="tutorials-addressbook-fr-part4.html" title="Carnet d'Adresses 4 - Éditer et supprimer des adresses">
-        <keyword ref="tutorials-addressbook-fr-part4.html">Carnet d'Adresses 4 - Éditer et supprimer des adresses</keyword>
+    <section ref="tutorials-addressbook-fr-part4.html" title="Carnet d'Adresses 4 - &#xe9;diter et supprimer des adresses">
+        <keyword ref="tutorials-addressbook-fr-part4.html">Carnet d'Adresses 4 - &#xe9;diter et supprimer des adresses</keyword>
     </section>
     <section ref="tutorials-addressbook-fr-part6.html" title="Carnet d'Adresses 6 - Sauvegarde et chargement">
         <keyword ref="tutorials-addressbook-fr-part6.html">Carnet d'Adresses 6 - Sauvegarde et chargement</keyword>
@@ -26799,6 +25489,12 @@
     </section>
     <section ref="itemviews-customsortfiltermodel.html" title="Custom Sort/Filter Model Example">
         <keyword ref="itemviews-customsortfiltermodel.html">Custom Sort/Filter Model Example</keyword>
+    </section>
+    <section ref="tools-customtype.html" title="Custom Type Example">
+        <keyword ref="tools-customtype.html">Custom Type Example</keyword>
+    </section>
+    <section ref="tools-customtypesending.html" title="Custom Type Sending Example">
+        <keyword ref="tools-customtypesending.html">Custom Type Sending Example</keyword>
     </section>
     <section ref="designer-customwidgetplugin.html" title="Custom Widget Plugin Example">
         <keyword ref="designer-customwidgetplugin.html">Custom Widget Plugin Example</keyword>
@@ -27076,6 +25772,9 @@
     <section ref="sql-querymodel.html" title="Query Model Example">
         <keyword ref="sql-querymodel.html">Query Model Example</keyword>
     </section>
+    <section ref="threads-queuedcustomtype.html" title="Queued Custom Type Example">
+        <keyword ref="threads-queuedcustomtype.html">Queued Custom Type Example</keyword>
+    </section>
     <section ref="xml-streambookmarks.html" title="QXmlStream Bookmarks Example">
         <keyword ref="xml-streambookmarks.html">QXmlStream Bookmarks Example</keyword>
     </section>
@@ -27177,6 +25876,9 @@
     </section>
     <section ref="widgets-styles.html" title="Styles Example">
         <keyword ref="widgets-styles.html">Styles Example</keyword>
+    </section>
+    <section ref="painting-svggenerator.html" title="SVG Generator Example">
+        <keyword ref="painting-svggenerator.html">SVG Generator Example</keyword>
     </section>
     <section ref="painting-svgviewer.html" title="SVG Viewer Example">
         <keyword ref="painting-svgviewer.html">SVG Viewer Example</keyword>

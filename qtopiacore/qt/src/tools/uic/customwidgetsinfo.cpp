@@ -71,14 +71,20 @@ void CustomWidgetsInfo::acceptCustomWidget(DomCustomWidget *node)
     m_customWidgets.insert(node->elementClass(), node);
 }
 
-bool CustomWidgetsInfo::extends(const QString &className, const QLatin1String &baseClassName) const
+bool CustomWidgetsInfo::extends(const QString &classNameIn, const QLatin1String &baseClassName) const
 {
-    if (className == baseClassName)
+    if (classNameIn == baseClassName)
         return true;
 
-    if (DomCustomWidget *c = customWidget(className))
-        return c->elementExtends() == baseClassName;
-
+    QString className = classNameIn;
+    while (const DomCustomWidget *c = customWidget(className)) {
+        const QString extends = c->elementExtends();
+        if (className == extends) // Faulty legacy custom widget entries exist.
+            return false;
+        if (extends == baseClassName)
+            return true;
+        className = extends;
+    }
     return false;
 }
 

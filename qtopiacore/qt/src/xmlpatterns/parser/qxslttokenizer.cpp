@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -1728,9 +1728,11 @@ bool XSLTTokenizer::insideSequenceConstructor(TokenSource::Queue *const to,
                             queueToken(DOLLAR, to);
                             queueToken(Token(NCNAME, QString(QLatin1Char('b'))), to); // TODO we need an internal name
                             queueToken(ASSIGN, to);
+                            queueToken(LPAREN, to);
                             pushState(InsideSequenceConstructor);
                             /* Don't queue an empty sequence, we want the dot. */
                             insideSequenceConstructor(to);
+                            queueToken(RPAREN, to);
                             queueToken(RETURN, to);
 
                             /* if(self::element()) then */

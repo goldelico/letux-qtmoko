@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/text/qtextobject.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/text/qtextobject.cpp -->
 <head>
   <title>Qt 4.5: QTextBlock Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -43,7 +43,7 @@
 <li><div class="fn"></div>bool <b><a href="qtextblock.html#isValid">isValid</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="qtextblock.html#isVisible">isVisible</a></b> () const</li>
 <li><div class="fn"></div>QTextLayout * <b><a href="qtextblock.html#layout">layout</a></b> () const</li>
-<li><div class="fn"></div>int <b><a href="qtextblock.html#lengthx">length</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="qtextblock.html#length">length</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qtextblock.html#lineCount">lineCount</a></b> () const</li>
 <li><div class="fn"></div>QTextBlock <b><a href="qtextblock.html#next">next</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qtextblock.html#position">position</a></b> () const</li>
@@ -69,7 +69,7 @@
 <p>The QTextBlock class provides a container for text fragments in a <a href="qtextdocument.html">QTextDocument</a>.</p>
 <p>A text block encapsulates a block or paragraph of text in a <a href="qtextdocument.html">QTextDocument</a>. QTextBlock provides read-only access to the block/paragraph structure of QTextDocuments. It is mainly of use if you want to implement your own layouts for the visual representation of a <a href="qtextdocument.html">QTextDocument</a>, or if you want to iterate over a document and write out the contents in your own custom format.</p>
 <p>Text blocks are created by their parent documents. If you need to create a new text block, or modify the contents of a document while examining its contents, use the cursor-based interface provided by <a href="qtextcursor.html">QTextCursor</a> instead.</p>
-<p>Each text block is located at a specific <a href="qtextblock.html#position">position</a>() in a <a href="qtextblock.html#document">document</a>(). The contents of the block can be obtained by using the <a href="qtextblock.html#text">text</a>() function. The <a href="qtextblock.html#lengthx">length</a>() function determines the block's size within the document (including formatting characters). The visual properties of the block are determined by its text <a href="qtextblock.html#layout">layout</a>(), its <a href="qtextblock.html#charFormat">charFormat</a>(), and its <a href="qtextblock.html#blockFormat">blockFormat</a>().</p>
+<p>Each text block is located at a specific <a href="qtextblock.html#position">position</a>() in a <a href="qtextblock.html#document">document</a>(). The contents of the block can be obtained by using the <a href="qtextblock.html#text">text</a>() function. The <a href="qtextblock.html#length">length</a>() function determines the block's size within the document (including formatting characters). The visual properties of the block are determined by its text <a href="qtextblock.html#layout">layout</a>(), its <a href="qtextblock.html#charFormat">charFormat</a>(), and its <a href="qtextblock.html#blockFormat">blockFormat</a>().</p>
 <p>The <a href="qtextblock.html#next">next</a>() and <a href="qtextblock.html#previous">previous</a>() functions enable iteration over consecutive valid blocks in a document under the condition that the document is not modified by other means during the iteration process. Note that, although blocks are returned in sequence, adjacent blocks may come from different places in the document structure. The validity of a block can be determined by calling <a href="qtextblock.html#isValid">isValid</a>().</p>
 <p>QTextBlock provides comparison operators to make it easier to work with blocks: <a href="qtextblock.html#operator-eq-eq">operator==</a>() compares two block for equality, <a href="qtextblock.html#operator-not-eq">operator!=</a>() compares two blocks for inequality, and <a href="qtextblock.html#operator-lt">operator&lt;</a>() determines whether a block precedes another in the same document.</p>
 <p align="center"><img src="images/qtextblock-sequence.png" /></p><p>See also <a href="qtextblockformat.html">QTextBlockFormat</a>, <a href="qtextcharformat.html">QTextCharFormat</a>, and <a href="qtextfragment.html">QTextFragment</a>.</p>
@@ -125,7 +125,7 @@
 <p>Returns the <a href="qtextlayout.html">QTextLayout</a> that is used to lay out and display the block's contents.</p>
 <p>Note that the returned <a href="qtextlayout.html">QTextLayout</a> object can only be modified from the documentChanged implementation of a <a href="qabstracttextdocumentlayout.html">QAbstractTextDocumentLayout</a> subclass. Any changes applied from the outside cause undefined behavior.</p>
 <p>See also <a href="qtextblock.html#clearLayout">clearLayout</a>().</p>
-<h3 class="fn"><a name="lengthx"></a>int QTextBlock::length () const</h3>
+<h3 class="fn"><a name="length"></a>int QTextBlock::length () const</h3>
 <p>Returns the length of the block in characters.</p>
 <p><b>Note:</b> The length returned includes all formatting characters, for example, newline.</p>
 <p>See also <a href="qtextblock.html#text">text</a>(), <a href="qtextblock.html#charFormat">charFormat</a>(), and <a href="qtextblock.html#blockFormat">blockFormat</a>().</p>
@@ -172,7 +172,7 @@
 <p>See also <a href="qtextblock.html#isVisible">isVisible</a>().</p>
 <h3 class="fn"><a name="text"></a><a href="qstring.html">QString</a> QTextBlock::text () const</h3>
 <p>Returns the block's contents as plain text.</p>
-<p>See also <a href="qtextblock.html#lengthx">length</a>(), <a href="qtextblock.html#charFormat">charFormat</a>(), and <a href="qtextblock.html#blockFormat">blockFormat</a>().</p>
+<p>See also <a href="qtextblock.html#length">length</a>(), <a href="qtextblock.html#charFormat">charFormat</a>(), and <a href="qtextblock.html#blockFormat">blockFormat</a>().</p>
 <h3 class="fn"><a name="textList"></a><a href="qtextlist.html">QTextList</a> * QTextBlock::textList () const</h3>
 <p>If the block represents a list item, returns the list that the item belongs to; otherwise returns 0.</p>
 <h3 class="fn"><a name="userData"></a><a href="qtextblockuserdata.html">QTextBlockUserData</a> * QTextBlock::userData () const</h3>
@@ -195,6 +195,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

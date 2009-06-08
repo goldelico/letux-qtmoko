@@ -97,6 +97,7 @@ private:
 };
 
 LanguageResourceDialogPrivate::LanguageResourceDialogPrivate(QDesignerResourceBrowserInterface *rb) :
+    q_ptr(0),
     m_browser(rb),
     m_dialogButtonBox(new QDialogButtonBox(QDialogButtonBox::Ok | QDialogButtonBox::Cancel))
 {
@@ -214,6 +215,7 @@ public:
 };
 
 IconSelectorPrivate::IconSelectorPrivate() :
+    q_ptr(0),
     m_stateComboBox(0),
     m_iconButton(0),
     m_resetAction(0),

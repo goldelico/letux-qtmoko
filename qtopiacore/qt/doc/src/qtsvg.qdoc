@@ -41,8 +41,8 @@
 
 /*!
   \module QtSvg
-  \since 4.1
   \title QtSvg Module
+  \since 4.1
   \contentspage Qt's Modules
   \previouspage QtSql
   \nextpage QtWebKit

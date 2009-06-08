@@ -964,8 +964,6 @@ QTextLineItemIterator::QTextLineItemIterator(QTextEngine *_eng, int lineNum, con
       levels(nItems),
       selection(_selection)
 {
-    Q_ASSERT(firstItem >= 0);
-    Q_ASSERT(nItems >= 0);
     pos_x = x = QFixed::fromReal(pos.x());
 
     x += line.x;

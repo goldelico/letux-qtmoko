@@ -50,10 +50,8 @@
 #include "qtoolbar.h"
 #include "qevent.h"
 #include "qstyle.h"
-#include "qdebug.h"
 #include "qwidgetaction.h"
 #include "qmacnativewidget_mac.h"
-#include "qdebug.h"
 
 #include <private/qapplication_p.h>
 #include <private/qcocoaapplication_mac_p.h>
@@ -143,6 +141,20 @@ static int qt_mac_CountMenuItems(OSMenuRef menu)
 #endif
     }
     return 0;
+}
+
+static bool actualMenuItemVisibility(const QMenuBarPrivate::QMacMenuBarPrivate *mbp,
+                                     const QMacMenuAction *action)
+{
+    bool visible = action->action->isVisible();
+    if (visible && action->action->text() == QString(QChar(0x14)))
+        return false;
+    if (visible && action->action->menu() && !action->action->menu()->actions().isEmpty() &&
+        !qt_mac_CountMenuItems(action->action->menu()->macMenu(mbp->apple_menu)) &&
+        !qt_mac_watchingAboutToShow(action->action->menu())) {
+        return false;
+    }
+    return visible;
 }
 
 #ifndef QT_MAC_USE_COCOA
@@ -575,7 +587,7 @@ static inline void syncMenuBarItemsVisiblity(const QMenuBarPrivate::QMacMenuBarP
     const QList<QMacMenuAction *> &menubarActions = mac_menubar->actionItems;
     for (int i = 0; i < menubarActions.size(); ++i) {
         const QMacMenuAction *action = menubarActions.at(i);
-        syncNSMenuItemVisiblity(action->menuItem, action->action->isVisible());
+        syncNSMenuItemVisiblity(action->menuItem, actualMenuItemVisibility(mac_menubar, action));
     }
 }
 
@@ -618,7 +630,17 @@ void qt_mac_set_modal_state_helper_recursive(OSMenuRef menu, OSMenuRef merge, bo
         if (submenu != merge) {
             if (submenu)
                 qt_mac_set_modal_state_helper_recursive(submenu, merge, on);
-            [item setEnabled:!on];
+            if (!on) {
+                // The item should follow what the QAction has.
+                if ([item tag]) {
+                    QAction *action = reinterpret_cast<QAction *>([item tag]);
+                    [item setEnabled:action->isEnabled()];
+                 } else {
+                     [item setEnabled:YES];
+                 }
+            } else {
+                [item setEnabled:NO];
+            }
         }
     }
 #endif
@@ -1662,16 +1684,10 @@ QMenuBarPrivate::QMacMenuBarPrivate::syncAction(QMacMenuAction *action)
     }
 
     if (submenu) {
+        bool visible = actualMenuItemVisibility(this, action);
 #ifndef QT_MAC_USE_COCOA
         SetMenuItemHierarchicalMenu(action->menu, index, submenu);
         SetMenuTitleWithCFString(submenu, QCFString(qt_mac_removeMnemonics(action->action->text())));
-        bool visible = action->action->isVisible();
-        if (visible && action->action->text() == QString(QChar(0x14)))
-            visible = false;
-        if (visible && action->action->menu() && !action->action->menu()->actions().isEmpty() &&
-           !qt_mac_CountMenuItems(action->action->menu()->macMenu(apple_menu)) &&
-           !qt_mac_watchingAboutToShow(action->action->menu()))
-            visible = false;
         if (visible)
             ChangeMenuAttributes(submenu, 0, kMenuAttrHidden);
         else
@@ -1679,13 +1695,6 @@ QMenuBarPrivate::QMacMenuBarPrivate::syncAction(QMacMenuAction *action)
 #else
         [item setSubmenu: submenu];
         [submenu setTitle:reinterpret_cast<const NSString *>(static_cast<CFStringRef>(QCFString(qt_mac_removeMnemonics(action->action->text()))))];
-        bool visible = action->action->isVisible();
-        if (visible && action->action->text() == QString(QChar(0x14)))
-            visible = false;
-        if (visible && action->action->menu() && !action->action->menu()->actions().isEmpty() &&
-           !qt_mac_CountMenuItems(action->action->menu()->macMenu(apple_menu)) &&
-           !qt_mac_watchingAboutToShow(action->action->menu()))
-            visible = false;
         syncNSMenuItemVisiblity(item, visible);
 #endif
         if (release_submenu) { //no pointers to it
@@ -1914,6 +1923,9 @@ bool QMenuBar::macUpdateMenuBar()
     //now set it
     bool ret = false;
     if (mb) {
+#ifdef QT_MAC_USE_COCOA
+        QMacCocoaAutoReleasePool pool;
+#endif
         if (OSMenuRef menu = mb->macMenu()) {
 #ifndef QT_MAC_USE_COCOA
             SetRootMenu(menu);
@@ -1986,7 +1998,7 @@ bool QMenuPrivate::QMacMenuPrivate::merged(const QAction *action) const
                     return true;
             }
         }
-}
+    }
 #endif
     return false;
 }

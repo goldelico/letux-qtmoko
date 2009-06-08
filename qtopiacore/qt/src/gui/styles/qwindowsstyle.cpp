@@ -249,7 +249,7 @@ bool QWindowsStyle::eventFilter(QObject *o, QEvent *e)
 }
 
 /*!
-    \class QWindowsStyle qwindowsstyle.h
+    \class QWindowsStyle
     \brief The QWindowsStyle class provides a Microsoft Windows-like look and feel.
 
     \ingroup appearance
@@ -1165,7 +1165,7 @@ int QWindowsStyle::styleHint(StyleHint hint, const QStyleOption *opt, const QWid
                 }
                 // If we paint a menu bar draw underlines if is in the keyboardState
                 if (menuBar) {
-                    if (menuBar->d_func()->keyboardState)
+                    if (menuBar->d_func()->keyboardState || d->altDown())
                         ret = 1;
                     // Otherwise draw underlines if the toplevel widget has seen an alt-press
                 } else

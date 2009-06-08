@@ -65,6 +65,23 @@ QT_BEGIN_NAMESPACE
 //
 
 inline QScriptContextPrivate::QScriptContextPrivate()
+    : previous(0),
+      argc(0),
+      m_state(QScriptContext::NormalState),
+      args(0),
+      tempStack(0),
+      stackPtr(0),
+      m_code(0),
+      iPtr(0),
+      firstInstruction(0),
+      lastInstruction(0),
+      currentLine(0),
+      currentColumn(0),
+      errorLineNumber(0),
+      catching(false),
+      m_calledAsConstructor(false),
+      calleeMetaIndex(0),
+      q_ptr(0)
 {
 }
 

@@ -114,7 +114,15 @@ void QGridLayoutBox::combine(const QGridLayoutBox &other)
 
     q_minimumSize = qMax(q_minimumAscent + q_minimumDescent,
                          qMax(q_minimumSize, other.q_minimumSize));
-    q_maximumSize = qBound(q_minimumSize, q_maximumSize, other.q_maximumSize);
+    qreal maxMax;
+    if (q_maximumSize == FLT_MAX && other.q_maximumSize != FLT_MAX)
+        maxMax = other.q_maximumSize;
+    else if (other.q_maximumSize == FLT_MAX && q_maximumSize != FLT_MAX)
+        maxMax = q_maximumSize;
+    else
+        maxMax = qMax(q_maximumSize, other.q_maximumSize);
+
+    q_maximumSize = qMax(q_minimumSize, maxMax);
     q_preferredSize = qBound(q_minimumSize, qMax(q_preferredSize, other.q_preferredSize),
                              q_maximumSize);
 }
@@ -1113,7 +1121,8 @@ void QGridLayoutEngine::dump(int indent) const
     qDebug("%*sEngine", indent, "");
 
     qDebug("%*s Items (%d)", indent, "", q_items.count());
-    for (int i = 0; i < q_items.count(); ++i)
+    int i;
+    for (i = 0; i < q_items.count(); ++i)
         q_items.at(i)->dump(indent + 2);
 
     qDebug("%*s Grid (%d x %d)", indent, "", internalGridRowCount(),
@@ -1136,7 +1145,22 @@ void QGridLayoutEngine::dump(int indent) const
     q_infos[Hor].dump(indent + 2);
     q_infos[Ver].dump(indent + 2);
 
-    // ### output caching
+    qDebug("%*s Column and row data", indent, "");
+    q_columnData.dump(indent + 2);
+    q_rowData.dump(indent + 2);
+
+    qDebug("%*s Geometries output", indent, "");
+    for (int pass = 0; pass < 2; ++pass) {
+        QVector<qreal> &cellPos = q_yy;
+        QString message;
+        for (i = 0; i < cellPos.count(); ++i) {
+            message += QLatin1String((message.isEmpty() ? "[" : ", "));
+            message += QString::number(cellPos.at(i));
+        }
+        message += QLatin1String("]");
+        qDebug("%*s %s %s", indent, "", (pass == 0 ? "rows:" : "columns:"), qPrintable(message));
+        cellPos = q_xx;
+    }
 }
 #endif
 
@@ -1297,11 +1321,6 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
             continue;
 
         QGridLayoutBox &rowBox = rowData->boxes[row];
-        if (row < rowInfo.boxes.count()) {
-            rowBox = rowInfo.boxes.at(row);
-            rowBox.normalize();
-        }
-
         if (option.state & QStyle::State_Window) {
             nextToNextToLastRowAdHocData = nextToLastRowAdHocData;
             nextToLastRowAdHocData = lastRowAdHocData;
@@ -1352,6 +1371,17 @@ void QGridLayoutEngine::fillRowData(QGridLayoutRowData *rowData, const QLayoutSt
                     }
                 }
             }
+        }
+        if (row < rowInfo.boxes.count()) {
+            QGridLayoutBox rowBoxInfo = rowInfo.boxes.at(row);
+            rowBoxInfo.normalize();
+            rowBox.q_minimumSize = qMax(rowBox.q_minimumSize, rowBoxInfo.q_minimumSize);
+            rowBox.q_maximumSize = qMax(rowBox.q_minimumSize,
+                                        (rowBoxInfo.q_maximumSize != FLT_MAX ?
+                                        rowBoxInfo.q_maximumSize : rowBox.q_maximumSize));
+            rowBox.q_preferredSize = qBound(rowBox.q_minimumSize,
+                                            qMax(rowBox.q_preferredSize, rowBoxInfo.q_preferredSize),
+                                            rowBox.q_maximumSize);
         }
         if (hasIgnoreFlag)
             rowData->hasIgnoreFlag = true;

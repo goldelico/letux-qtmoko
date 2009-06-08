@@ -43,6 +43,7 @@ public:
     virtual GstElement *videoSink() {return m_videoSink;}
     virtual void aspectRatioChanged(Phonon::VideoWidget::AspectRatio aspectRatio);
     virtual void scaleModeChanged(Phonon::VideoWidget::ScaleMode scaleMode);
+    virtual void movieSizeChanged(const QSize &movieSize);
     virtual void handleMediaNodeEvent(const MediaNodeEvent *event) = 0;
     virtual bool eventFilter(QEvent *) = 0;
     virtual void handlePaint(QPaintEvent *) {}

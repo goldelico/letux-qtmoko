@@ -68,7 +68,7 @@ class QScriptClassPrivate
 {
     Q_DECLARE_PUBLIC(QScriptClass)
 public:
-    QScriptClassPrivate();
+    QScriptClassPrivate(QScriptClass*);
     virtual ~QScriptClassPrivate();
 
     static QScriptClassPrivate *get(QScriptClass *klass);

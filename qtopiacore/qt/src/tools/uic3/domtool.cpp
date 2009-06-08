@@ -55,7 +55,7 @@
 QT_BEGIN_NAMESPACE
 
 /*
-  \class DomTool domtool.h
+  \class DomTool
   \brief The DomTool class provides static functions for Qt Designer
   and uic.
 

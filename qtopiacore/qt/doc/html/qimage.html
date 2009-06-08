@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/image/qimage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimage.cpp -->
 <head>
   <title>Qt 4.5: QImage Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -126,8 +126,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-86">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-54">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-106">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-58">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -558,11 +558,11 @@
 <p>See also <a href="qimage.html#colorTable">colorTable</a>(), <a href="qimage.html#setColor">setColor</a>(), and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="setDotsPerMeterX"></a>void QImage::setDotsPerMeterX ( int <i>x</i> )</h3>
 <p>Sets the number of pixels that fit horizontally in a physical meter, to <i>x</i>.</p>
-<p>Together with <a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a>(), this number defines the intended scale and aspect ratio of the image.</p>
+<p>Together with <a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a>(), this number defines the intended scale and aspect ratio of the image, and determines the scale at which <a href="qpainter.html">QPainter</a> will draw graphics on the image. It does not change the scale or aspect ratio of the image when it is rendered on other paint devices.</p>
 <p>See also <a href="qimage.html#dotsPerMeterX">dotsPerMeterX</a>() and <a href="qimage.html#image-information">Image Information</a>.</p>
 <h3 class="fn"><a name="setDotsPerMeterY"></a>void QImage::setDotsPerMeterY ( int <i>y</i> )</h3>
 <p>Sets the number of pixels that fit vertically in a physical meter, to <i>y</i>.</p>
-<p>Together with <a href="qimage.html#dotsPerMeterX">dotsPerMeterX</a>(), this number defines the intended scale and aspect ratio of the image.</p>
+<p>Together with <a href="qimage.html#dotsPerMeterX">dotsPerMeterX</a>(), this number defines the intended scale and aspect ratio of the image, and determines the scale at which <a href="qpainter.html">QPainter</a> will draw graphics on the image. It does not change the scale or aspect ratio of the image when it is rendered on other paint devices.</p>
 <p>See also <a href="qimage.html#dotsPerMeterY">dotsPerMeterY</a>() and <a href="qimage.html#image-information">Image Information</a>.</p>
 <h3 class="fn"><a name="setNumColors"></a>void QImage::setNumColors ( int <i>numColors</i> )</h3>
 <p>Resizes the color table to contain <i>numColors</i> entries.</p>
@@ -645,16 +645,16 @@
 <p>See also <a href="qimage.html#operator-eq">operator=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-86"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-106"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
 <p>Writes the given <i>image</i> to the given <i>stream</i> as a PNG image, or as a BMP image if the stream's version is 1. Note that writing the stream to a file will not produce a valid image file.</p>
 <p>See also <a href="qimage.html#save">QImage::save</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-54"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-58"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
 <p>Reads an image from the given <i>stream</i> and stores it in the given <i>image</i>.</p>
 <p>See also <a href="qimage.html#load">QImage::load</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

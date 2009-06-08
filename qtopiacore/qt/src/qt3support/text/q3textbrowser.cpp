@@ -63,7 +63,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3TextBrowser q3textbrowser.h
+    \class Q3TextBrowser
     \brief The Q3TextBrowser class provides a rich text browser with hypertext navigation.
 
     \compat

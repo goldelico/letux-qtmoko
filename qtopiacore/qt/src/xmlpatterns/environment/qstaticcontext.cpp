@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -40,6 +40,7 @@
 ****************************************************************************/
 
 #include "qcommonnamespaces_p.h"
+#include "qexpression_p.h"
 
 #include "qstaticcontext_p.h"
 
@@ -49,6 +50,12 @@ using namespace QPatternist;
 
 StaticContext::~StaticContext()
 {
+}
+
+void StaticContext::wrapExpressionWith(const SourceLocationReflection *const existingNode,
+                                       const QExplicitlySharedDataPointer<Expression> &newNode)
+{
+    addLocation(newNode.data(), locationFor(existingNode));
 }
 
 QT_END_NAMESPACE

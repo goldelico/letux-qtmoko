@@ -41,7 +41,6 @@
 
 /*!
     \group qttools
-
     \title Qt's Tools
     \ingroup buildsystem
 
@@ -55,7 +54,7 @@
          \o Create forms visually.
     \row \o \l{Qt Assistant Manual}{Qt Assistant}
          \o Quickly find the help you need.
-    \row \o \l{Qt Linguist Manual}{Qt Linguist, lupdate, lrelease}
+    \row \o \l{Qt Linguist Manual}{Qt Linguist, lupdate, lrelease, lconvert}
          \o Translate applications to reach international markets.
     \row \o \l{qmake Manual}{qmake}
          \o Create makefiles from simple platform-independent project files (\c .pro files).

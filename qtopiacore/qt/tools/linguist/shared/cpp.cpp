@@ -107,6 +107,7 @@ enum {
 static QString yyFileName;
 static int yyCh;
 static bool yyCodecIsUtf8;
+static bool yyForceUtf8;
 static QString yyIdent;
 static QString yyComment;
 static QString yyString;
@@ -129,12 +130,19 @@ static int yyInPos;
 
 static uint getChar()
 {
-    if (yyInPos >= yyInStr.size())
-        return EOF;
-    QChar c = yyInStr[yyInPos++];
-    if (c.unicode() == '\n')
-        ++yyCurLineNo;
-    return c.unicode();
+    forever {
+        if (yyInPos >= yyInStr.size())
+            return EOF;
+        uint c = yyInStr[yyInPos++].unicode();
+        if (c == '\\' && yyInPos < yyInStr.size() && yyInStr[yyInPos].unicode() == '\n') {
+            ++yyCurLineNo;
+            ++yyInPos;
+            continue;
+        }
+        if (c == '\n')
+            ++yyCurLineNo;
+        return c;
+    }
 }
 
 static uint getToken()
@@ -692,7 +700,7 @@ static void recordMessage(
         yyFileName, line, QStringList(),
         TranslatorMessage::Unfinished, plural);
     msg.setExtraComment(transcode(extracomment.simplified(), utf8));
-    if (utf8 && !yyCodecIsUtf8 && msg.needs8Bit())
+    if ((utf8 || yyForceUtf8) && !yyCodecIsUtf8 && msg.needs8Bit())
         msg.setUtf8(true);
     tor->extend(msg);
 }
@@ -783,7 +791,7 @@ static void parse(Translator *tor, const QString &initialContext, const QString 
                     if (yyTok == Tok_ColonColon)
                         fullName.append(QString());
                     while (yyTok == Tok_ColonColon || yyTok == Tok_Ident) {
-                        if (yyTok == Tok_Ident) 
+                        if (yyTok == Tok_Ident)
                             fullName.append(yyIdent);
                         yyTok = getToken();
                     }
@@ -1007,6 +1015,9 @@ void fetchtrInlinedCpp(const QString &in, Translator &translator, const QString 
     yyInStr = in;
     yyInPos = 0;
     yyFileName = QString();
+    yyCodecIsUtf8 = (translator.codecName() == "UTF-8");
+    yyForceUtf8 = true;
+    yySourceIsUnicode = true;
     yySavedBraceDepth.clear();
     yySavedParenDepth.clear();
     yyBraceDepth = 0;
@@ -1025,6 +1036,7 @@ bool loadCPP(Translator &translator, QIODevice &dev, ConversionData &cd)
     QString defaultContext = cd.m_defaultContext;
 
     yyCodecIsUtf8 = (translator.codecName() == "UTF-8");
+    yyForceUtf8 = false;
     QTextStream ts(&dev);
     QByteArray codecName = cd.m_codecForSource.isEmpty()
         ? translator.codecName() : cd.m_codecForSource;
@@ -1051,14 +1063,6 @@ bool loadCPP(Translator &translator, QIODevice &dev, ConversionData &cd)
     return true;
 }
 
-bool saveCPP(const Translator &translator, QIODevice &dev, ConversionData &cd) 
-{
-    Q_UNUSED(dev);
-    Q_UNUSED(translator);
-    cd.appendError(QLatin1String("Cannot save .cpp files"));
-    return false;
-}
-
 int initCPP()
 {
     Translator::FileFormat format;
@@ -1067,7 +1071,7 @@ int initCPP()
     format.priority = 0;
     format.description = QObject::tr("C++ source files");
     format.loader = &loadCPP;
-    format.saver = &saveCPP;
+    format.saver = 0;
     Translator::registerFileFormat(format);
     return 1;
 }

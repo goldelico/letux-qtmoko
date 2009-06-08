@@ -1218,8 +1218,12 @@ bool QItemSelectionModel::isRowSelected(int row, const QModelIndex &parent) cons
     for (int column = 0; column < colCount; ++column) {
         for (it = joined.constBegin(); it != joined.constEnd(); ++it) {
             if ((*it).contains(row, column, parent)) {
-                Qt::ItemFlags flags = d->model->index(row, column, parent).flags();
-                if ((flags & Qt::ItemIsSelectable) && (flags & Qt::ItemIsEnabled)) {
+                bool selectable = false;
+                for (int i = column; !selectable && i <= (*it).right(); ++i) {
+                    Qt::ItemFlags flags = d->model->index(row, i, parent).flags();
+                    selectable = flags & Qt::ItemIsSelectable;
+                }
+                if (selectable){
                     column = qMax(column, (*it).right());
                     break;
                 }

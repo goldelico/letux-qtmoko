@@ -190,7 +190,7 @@ INLINE_ELAPSED(__inline__)
 #endif
 
 /* Visual C++ -- thanks to Morten Nissov for his help with this */
-#if _MSC_VER >= 1200 && _M_IX86 >= 500 && !defined(HAVE_TICK_COUNTER)
+#if _MSC_VER >= 1200 && (_M_IX86 >= 500 || (defined(_WIN32_WCE) && defined(_X86_))) && !defined(HAVE_TICK_COUNTER)
 #include <windows.h>
 typedef LARGE_INTEGER CycleCounterTicks;
 #define RDTSC __asm __emit 0fh __asm __emit 031h /* hack for VC++ 5.0 */
@@ -200,9 +200,9 @@ static __inline CycleCounterTicks getticks(void)
      CycleCounterTicks retval;
 
      __asm {
-	  RDTSC
-	  mov retval.HighPart, edx
-	  mov retval.LowPart, eax
+      RDTSC
+      mov retval.HighPart, edx
+      mov retval.LowPart, eax
      }
      return retval;
 }
@@ -214,6 +214,24 @@ static __inline double elapsed(CycleCounterTicks t1, CycleCounterTicks t0)
 
 #define HAVE_TICK_COUNTER
 #define TIME_MIN 5000.0   /* unreliable pentium IV cycle counter */
+#endif
+
+#if _MSC_VER >= 1400 && defined(_WIN32_WCE) && !defined(HAVE_TICK_COUNTER)
+#include <windows.h>
+typedef DWORD CycleCounterTicks;
+
+static __inline CycleCounterTicks getticks(void)
+{
+    return GetTickCount();
+}
+
+static __inline double elapsed(CycleCounterTicks t1, CycleCounterTicks t0)
+{
+     return (double)(t1 - t0);
+}
+
+#define HAVE_TICK_COUNTER
+#define TIME_MIN 5000.0
 #endif
 
 /*----------------------------------------------------------------*/

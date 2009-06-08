@@ -744,7 +744,7 @@ bool saveXLIFF(const Translator &translator, QIODevice &dev, ConversionData &cd)
     int indent = 0;
 
     QTextStream ts(&dev);
-    //ts.setCodec( QTextCodec::codecForName("ISO-8859-1") );  // FIXME: Huh?
+    ts.setCodec(QTextCodec::codecForName("UTF-8"));
 
     QStringList dtgs = cd.dropTags();
     dtgs << QLatin1String("po-(old_)?msgid_plural");
@@ -776,7 +776,7 @@ bool saveXLIFF(const Translator &translator, QIODevice &dev, ConversionData &cd)
             << " datatype=\"" << dataType(messageOrder[fn].begin()->first()) << "\""
             << " source-language=\""
                 << (translator.sourceLanguageCode().isEmpty() ?
-                    "en" : translator.sourceLanguageCode().toLatin1()) << "\""
+                    QByteArray("en") : translator.sourceLanguageCode().toLatin1()) << "\""
             << " target-language=\"" << translator.languageCode() << "\""
             << "><body>\n";
         ++indent;

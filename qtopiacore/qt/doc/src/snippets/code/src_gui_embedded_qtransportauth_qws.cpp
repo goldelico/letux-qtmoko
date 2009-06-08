@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 QTransportAuth::Data *conData;
 QTransportAuth *a = QTransportAuth::getInstance();
@@ -38,3 +42,6 @@ qWarning( "error: %s", QTransportAuth::errorStrings[r] );
 //! [5]
 MD5(K XOR opad, MD5(K XOR ipad, text))
 //! [5]
+
+}
+

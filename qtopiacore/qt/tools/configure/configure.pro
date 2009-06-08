@@ -24,7 +24,7 @@ INCPATH += $$QT_SOURCE_TREE/src/corelib/arch/generic \
            $$QT_BUILD_TREE/include \
            $$QT_BUILD_TREE/include/QtCore \
 
-HEADERS  = configureapp.h environment.h \
+HEADERS  = configureapp.h environment.h tools.h\
            $$QT_SOURCE_TREE/src/corelib/tools/qbytearray.h \
            $$QT_SOURCE_TREE/src/corelib/tools/qbytearraymatcher.h \
            $$QT_SOURCE_TREE/src/corelib/tools/qchar.h \
@@ -56,7 +56,7 @@ HEADERS  = configureapp.h environment.h \
            $$QT_SOURCE_TREE/src/corelib/tools/qunicodetables_p.h
 
 
-SOURCES  = main.cpp configureapp.cpp environment.cpp \
+SOURCES  = main.cpp configureapp.cpp environment.cpp tools.cpp \
            $$QT_SOURCE_TREE/src/corelib/tools/qbytearray.cpp \
            $$QT_SOURCE_TREE/src/corelib/tools/qbytearraymatcher.cpp \
            $$QT_SOURCE_TREE/src/corelib/tools/qchar.cpp \
@@ -100,14 +100,7 @@ SOURCES  = main.cpp configureapp.cpp environment.cpp \
 
 win32:SOURCES += $$QT_SOURCE_TREE/src/corelib/io/qfsfileengine_win.cpp
 
-exists(../../util/configure/commercial/tools.h):exists(../../util/configure/commercial/tools.cpp) {
-    DEFINES += COMMERCIAL_VERSION
-    HEADERS += ../../util/configure/commercial/tools.h
-    SOURCES += ../../util/configure/commercial/tools.cpp
-    INCLUDEPATH += ../../util/configure/commercial
-} else {
-    DEFINES += GPL_VERSION
-}
+DEFINES += COMMERCIAL_VERSION
 
 INCLUDEPATH += $$QT_SOURCE_TREE/src/corelib/arch/generic \
                $$QT_SOURCE_TREE/include/QtCore \

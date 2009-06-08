@@ -129,6 +129,7 @@ class TokenContainerData : public QSharedData
 {
 public:
     TokenContainerData()
+        : typeInfo(0)
     {tokenAttributes = new TokenAttributes();}
     ~TokenContainerData()
     {delete tokenAttributes; delete typeInfo; }

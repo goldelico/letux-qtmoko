@@ -201,6 +201,13 @@ bool QVFbScreen::connect(const QString &displaySpec)
     if (key == -1)
         return false;
 
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+#ifndef QT_QWS_FRAMEBUFFER_LITTLE_ENDIAN
+    if (displayArgs.contains(QLatin1String("littleendian")))
+#endif
+        QScreen::setFrameBufferLittleEndian(true);
+#endif
+
     int shmId = shmget(key, 0, 0);
     if (shmId != -1)
         d_ptr->shmrgn = (unsigned char *)shmat(shmId, 0, 0);

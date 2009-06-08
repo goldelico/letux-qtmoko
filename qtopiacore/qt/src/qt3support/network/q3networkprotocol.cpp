@@ -105,7 +105,7 @@ public:
 };
 
 /*!
-    \class Q3NetworkProtocol q3networkprotocol.h
+    \class Q3NetworkProtocol
     \brief The Q3NetworkProtocol class provides a common API for network protocols.
 
     \compat

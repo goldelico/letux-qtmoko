@@ -307,6 +307,7 @@ static const PseudoElementInfo knownPseudoElements[NumPseudoElements] = {
 struct QStyleSheetBorderImageData : public QSharedData
 {
     QStyleSheetBorderImageData()
+        : horizStretch(QCss::TileMode_Unknown), vertStretch(QCss::TileMode_Unknown)
     {
         for (int i = 0; i < 4; i++)
             cuts[i] = -1;
@@ -1513,20 +1514,11 @@ void QRenderRule::configurePalette(QPalette *p, QPalette::ColorRole fr, QPalette
 
 void QRenderRule::configurePalette(QPalette *p, QPalette::ColorGroup cg, const QWidget *w, bool embedded)
 {
-#ifdef QT_NO_COMBOBOX
-    const bool isReadOnlyCombo = false;
-#else
-    const bool isReadOnlyCombo = qobject_cast<const QComboBox *>(w) != 0;
-#endif
-
     if (bg && bg->brush.style() != Qt::NoBrush) {
-        if (isReadOnlyCombo) {
-            p->setBrush(cg, QPalette::Base, bg->brush); // for windows, windowxp
-            p->setBrush(cg, QPalette::Button, bg->brush); // for plastique
-        } else {
-            p->setBrush(cg, w->backgroundRole(), bg->brush);
-            //p->setBrush(cg, QPalette::Window, bg->brush);
-        }
+        p->setBrush(cg, QPalette::Base, bg->brush); // for windows, windowxp
+        p->setBrush(cg, QPalette::Button, bg->brush); // for plastique
+        p->setBrush(cg, w->backgroundRole(), bg->brush);
+        p->setBrush(cg, QPalette::Window, bg->brush);
     }
 
     if (embedded) {
@@ -1541,12 +1533,9 @@ void QRenderRule::configurePalette(QPalette *p, QPalette::ColorGroup cg, const Q
         return;
 
     if (pal->foreground.style() != Qt::NoBrush) {
-        if (isReadOnlyCombo) {
-            p->setBrush(cg, QPalette::ButtonText, pal->foreground);
-        } else {
-            p->setBrush(cg, w->foregroundRole(), pal->foreground);
-            p->setBrush(cg, QPalette::WindowText, pal->foreground);
-        }
+        p->setBrush(cg, QPalette::ButtonText, pal->foreground);
+        p->setBrush(cg, w->foregroundRole(), pal->foreground);
+        p->setBrush(cg, QPalette::WindowText, pal->foreground);
         p->setBrush(cg, QPalette::Text, pal->foreground);
     }
     if (pal->selectionBackground.style() != Qt::NoBrush)
@@ -2384,6 +2373,7 @@ QSize QStyleSheetStyle::defaultSize(const QWidget *w, QSize sz, const QRect& rec
             sz.setWidth(pm);
         if (sz.height() == -1)
             sz.setHeight(pm);
+        break;
                                         }
 
     case PseudoElement_DockWidgetCloseButton:
@@ -2663,7 +2653,7 @@ void QStyleSheetStyle::setProperties(QWidget *w)
         case QVariant::Color: v = decl.colorValue(); break;
         case QVariant::Brush: v = decl.brushValue(); break;
 #ifndef QT_NO_SHORTCUT
-        case QVariant::KeySequence: v = QKeySequence(decl.d->values.at(0).variant.toString());
+        case QVariant::KeySequence: v = QKeySequence(decl.d->values.at(0).variant.toString()); break;
 #endif
         default: v = decl.d->values.at(0).variant; break;
         }
@@ -2914,6 +2904,10 @@ void QStyleSheetStyle::polish(QWidget *w)
         if (ew->autoFillBackground()) {
             ew->setAutoFillBackground(false);
             autoFillDisabledWidgets->insert(w);
+            if (ew != w) { //eg. viewport of a scrollarea
+                //(in order to draw the background anyway in case we don't.)
+                ew->setAttribute(Qt::WA_StyledBackground, true);
+            }
         }
         if (!rule.hasBackground() || rule.background()->isTransparent() || rule.hasBox()
             || (!rule.hasNativeBorder() && !rule.border()->isOpaque()))
@@ -3194,6 +3188,7 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
     case CC_ToolButton:
         if (const QStyleOptionToolButton *tool = qstyleoption_cast<const QStyleOptionToolButton *>(opt)) {
             QStyleOptionToolButton toolOpt(*tool);
+            rule.configurePalette(&toolOpt.palette, QPalette::ButtonText, QPalette::Button);
             toolOpt.rect = rule.borderRect(opt->rect);
             bool customArrow = (tool->features & (QStyleOptionToolButton::HasMenu | QStyleOptionToolButton::MenuButtonPopup));
             bool customDropDown = tool->features & QStyleOptionToolButton::MenuButtonPopup;
@@ -3210,7 +3205,6 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
                     if (!(bflags & (State_Sunken | State_On | State_Raised)))
                         rule.drawBackground(p, toolOpt.rect);
                 }
-                rule.configurePalette(&toolOpt.palette, QPalette::ButtonText, QPalette::Button);
                 customArrow = customArrow && hasStyleRule(w, PseudoElement_ToolButtonDownArrow);
                 if (customArrow)
                     toolOpt.features &= ~QStyleOptionToolButton::HasMenu;
@@ -3233,7 +3227,6 @@ void QStyleSheetStyle::drawComplexControl(ComplexControl cc, const QStyleOptionC
                     toolOpt.font = rule.font;
                 drawControl(CE_ToolButtonLabel, &toolOpt, p, w);
             }
-
 
             QRenderRule subRule = renderRule(w, opt, PseudoElement_ToolButtonMenu);
             QRect r = subControlRect(CC_ToolButton, opt, QStyle::SC_ToolButtonMenu, w);
@@ -4344,8 +4337,16 @@ void QStyleSheetStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *op
         return;
 
     case PE_Widget:
-        if (!rule.hasBackground())
+        if (!rule.hasBackground()) {
+            QWidget *container = containerWidget(w);
+            if (autoFillDisabledWidgets->contains(container)
+                && (container == w || !renderRule(container, opt).hasBackground())) {
+                //we do not have a background, but we disabled the autofillbackground anyway. so fill the background now.
+                // (this may happen if we have rules like :focus)
+                p->fillRect(opt->rect, opt->palette.brush(w->backgroundRole()));
+            }
             break;
+        }
 
 #ifndef QT_NO_SCROLLAREA
         if (const QAbstractScrollArea *sa = qobject_cast<const QAbstractScrollArea *>(w)) {
@@ -4622,15 +4623,6 @@ int QStyleSheetStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const 
         break;
 
     case PM_DefaultFrameWidth:
-#ifndef QT_NO_COMBOBOX
-        // QComboBox uses this for resizing its popup
-        if (qobject_cast<const QComboBox *>(w)) {
-            QAbstractItemView *view = qFindChild<QAbstractItemView *>(w);
-            QRenderRule subRule = renderRule(view, PseudoElement_None);
-            if (!subRule.hasNativeBorder())
-                return subRule.border()->borders[TopEdge] + (subRule.hasBox() ? subRule.box()->paddings[TopEdge] : 0);
-        } else
-#endif
         if (!rule.hasNativeBorder())
             return rule.border()->borders[LeftEdge];
         break;
@@ -4722,7 +4714,7 @@ int QStyleSheetStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const 
     case PM_RadioButtonLabelSpacing:
         if (rule.hasBox() && rule.box()->spacing != -1)
             return rule.box()->spacing;
-
+        break;
     case PM_CheckBoxLabelSpacing:
         if (qobject_cast<const QCheckBox *>(w)) {
             if (rule.hasBox() && rule.box()->spacing != -1)
@@ -4848,7 +4840,8 @@ int QStyleSheetStyle::pixelMetric(PixelMetric m, const QStyleOption *opt, const 
         if (subRule.hasContentsSize())
             return subRule.size().height();
         else if (subRule.hasBox() || subRule.hasBorder()) {
-            return subRule.size(QSize(0, opt->fontMetrics.lineSpacing())).height();
+            QFontMetrics fm = opt ?  opt->fontMetrics : w->fontMetrics();
+            return subRule.size(QSize(0, fm.lineSpacing())).height();
         }
         break;
                             }
@@ -4928,7 +4921,7 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
                                                   : QWindowsStyle::sizeFromContents(ct, opt, sz, w);
             }
         }
-
+        break;
     case CT_GroupBox:
     case CT_LineEdit:
 #ifndef QT_NO_SPINBOX

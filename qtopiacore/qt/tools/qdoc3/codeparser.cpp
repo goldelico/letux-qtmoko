@@ -68,22 +68,38 @@ QT_BEGIN_NAMESPACE
 
 QList<CodeParser *> CodeParser::parsers;
 
+/*!
+  The constructor adds this code parser to the static
+  list of code parsers.
+ */
 CodeParser::CodeParser()
 {
-    parsers.prepend( this );
+    parsers.prepend(this);
 }
 
+/*!
+  The destructor removes this code parser from the static
+  list of code parsers.
+ */
 CodeParser::~CodeParser()
 {
-    parsers.removeAll( this );
+    parsers.removeAll(this);
 }
 
+/*!
+  Initializing a code parser is trivial.
+ */
 void CodeParser::initializeParser(const Config & /* config */)
 {
+    // nothing.
 }
 
+/*!
+  Teerminating a code parser is trivial.
+ */
 void CodeParser::terminateParser()
 {
+    // nothing.
 }
 
 QString CodeParser::headerFileNameFilter()
@@ -91,40 +107,48 @@ QString CodeParser::headerFileNameFilter()
     return sourceFileNameFilter();
 }
 
-void CodeParser::parseHeaderFile( const Location& location,
-				  const QString& filePath, Tree *tree )
+void CodeParser::parseHeaderFile(const Location& location,
+                                 const QString& filePath,
+                                 Tree *tree)
 {
-    parseSourceFile( location, filePath, tree );
+    parseSourceFile(location, filePath, tree);
 }
 
-void CodeParser::doneParsingHeaderFiles( Tree *tree )
+void CodeParser::doneParsingHeaderFiles(Tree *tree)
 {
-    doneParsingSourceFiles( tree );
+    doneParsingSourceFiles(tree);
 }
 
-void CodeParser::initialize( const Config& config )
+/*!
+  All the code parsers in the static list are initialized here,
+  after the qdoc configuration variables have been set.
+ */
+void CodeParser::initialize(const Config& config)
 {
     QList<CodeParser *>::ConstIterator p = parsers.begin();
-    while ( p != parsers.end() ) {
-	(*p)->initializeParser( config );
+    while (p != parsers.end()) {
+	(*p)->initializeParser(config);
 	++p;
     }
 }
 
+/*!
+  All the code parsers in the static list are terminated here.
+ */
 void CodeParser::terminate()
 {
     QList<CodeParser *>::ConstIterator p = parsers.begin();
-    while ( p != parsers.end() ) {
+    while (p != parsers.end()) {
 	(*p)->terminateParser();
 	++p;
     }
 }
 
-CodeParser *CodeParser::parserForLanguage( const QString& language )
+CodeParser *CodeParser::parserForLanguage(const QString& language)
 {
     QList<CodeParser *>::ConstIterator p = parsers.begin();
-    while ( p != parsers.end() ) {
-	if ( (*p)->language() == language )
+    while (p != parsers.end()) {
+	if ((*p)->language() == language)
 	    return *p;
 	++p;
     }
@@ -153,6 +177,11 @@ QSet<QString> CodeParser::commonMetaCommands()
                            << COMMAND_TITLE;
 }
 
+/*!
+  The topic command has been processed. Now process the other
+  metacommands that were found. These are not the text markup
+  commands. 
+ */
 void CodeParser::processCommonMetaCommand(const Location &location,
                                           const QString &command,
 					  const QString &arg,
@@ -161,31 +190,43 @@ void CodeParser::processCommonMetaCommand(const Location &location,
 {
     if (command == COMMAND_COMPAT) {
         node->setStatus(Node::Compat);
-    } else if ( command == COMMAND_DEPRECATED ) {
-	node->setStatus( Node::Deprecated );
-    } else if ( command == COMMAND_INGROUP ) {
+    }
+    else if (command == COMMAND_DEPRECATED) {
+	node->setStatus(Node::Deprecated);
+    }
+    else if (command == COMMAND_INGROUP) {
 	tree->addToGroup(node, arg);
-    } else if ( command == COMMAND_INPUBLICGROUP ) {
+    }
+    else if (command == COMMAND_INPUBLICGROUP) {
         tree->addToPublicGroup(node, arg);
-    } else if ( command == COMMAND_INMODULE ) {
+    }
+    else if (command == COMMAND_INMODULE) {
 	node->setModuleName(arg);
-    } else if (command == COMMAND_MAINCLASS) {
+    }
+    else if (command == COMMAND_MAINCLASS) {
 	node->setStatus(Node::Main);
-    } else if ( command == COMMAND_OBSOLETE ) {
+    }
+    else if (command == COMMAND_OBSOLETE) {
         if (node->status() != Node::Compat)
-            node->setStatus( Node::Obsolete );
-    } else if ( command == COMMAND_NONREENTRANT ) {
+            node->setStatus(Node::Obsolete);
+    }
+    else if (command == COMMAND_NONREENTRANT) {
 	node->setThreadSafeness(Node::NonReentrant);
-    } else if ( command == COMMAND_PRELIMINARY ) {
-	node->setStatus( Node::Preliminary );
-    } else if (command == COMMAND_INTERNAL) {
-	node->setAccess( Node::Private );
-        node->setStatus( Node::Internal );
-    } else if (command == COMMAND_REENTRANT) {
+    }
+    else if (command == COMMAND_PRELIMINARY) {
+	node->setStatus(Node::Preliminary);
+    }
+    else if (command == COMMAND_INTERNAL) {
+	node->setAccess(Node::Private);
+        node->setStatus(Node::Internal);
+    }
+    else if (command == COMMAND_REENTRANT) {
 	node->setThreadSafeness(Node::Reentrant);
-    } else if (command == COMMAND_SINCE) {
+    }
+    else if (command == COMMAND_SINCE) {
         node->setSince(arg);
-    } else if (command == COMMAND_SUBTITLE) {
+    }
+    else if (command == COMMAND_SUBTITLE) {
 	if (node->type() == Node::Fake) {
 	    FakeNode *fake = static_cast<FakeNode *>(node);
             fake->setSubTitle(arg);
@@ -200,6 +241,7 @@ void CodeParser::processCommonMetaCommand(const Location &location,
 	if (node->type() == Node::Fake) {
 	    FakeNode *fake = static_cast<FakeNode *>(node);
             fake->setTitle(arg);
+#ifdef QDOC2DOX            
             /* qdoc -> doxygen.
                I think this must be done here, because there can be multiple
                "\externalpage" and "\title" metacommands in a single qdoc
@@ -211,6 +253,7 @@ void CodeParser::processCommonMetaCommand(const Location &location,
              */
             if (DoxWriter::isDoxPass(1))
                 DoxWriter::insertTitle(fake,arg);
+#endif            
         }
         else
 	    location.warning(tr("Ignored '\\%1'").arg(COMMAND_TITLE));

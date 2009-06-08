@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/emb-install.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/emb-install.qdoc -->
 <head>
   <title>Qt 4.5: Installing Qt for Embedded Linux</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -31,16 +31,16 @@
 <h3>Step 2: Unpacking the Archive</h3>
 <p>First uncompress the archive in the preferred location, then unpack it:</p>
 <pre> cd &lt;anywhere&gt;
- gunzip qt-embedded-linux-commercial-src-4.5.0.tar.gz
- tar xf qt-embedded-linux-commercial-src-4.5.0.tar</pre>
+ gunzip qt-embedded-linux-commercial-src-4.5.1.tar.gz
+ tar xf qt-embedded-linux-commercial-src-4.5.1.tar</pre>
 <p>This document assumes that the archive is unpacked in the following directory:</p>
-<pre> ~/qt-embedded-linux-commercial-src-4.5.0</pre>
+<pre> ~/qt-embedded-linux-commercial-src-4.5.1</pre>
 <a name="step-3-building-the-library"></a>
 <h3>Step 3: Building the Library</h3>
 <p>Before building the <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> library, run the <tt>./configure</tt> script to configure the library for your development architecture. You can list all of the configuration system's options by typing <tt>./configure -help</tt>.</p>
-<p>Note that by default, <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> is configured for installation in the <tt>/usr/local/Trolltech/QtEmbedded-4.5.0</tt> directory, but this can be changed by using the <tt>-prefix</tt> option. Alternatively, the <tt>-prefix-install</tt> option can be used to specify a &quot;local&quot; installation within the source directory.</p>
+<p>Note that by default, <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> is configured for installation in the <tt>/usr/local/Trolltech/QtEmbedded-4.5.1</tt> directory, but this can be changed by using the <tt>-prefix</tt> option. Alternatively, the <tt>-prefix-install</tt> option can be used to specify a &quot;local&quot; installation within the source directory.</p>
 <p>The configuration system is also designed to allow you to specify your platform architecture:</p>
-<pre> cd  ~/qt-embedded-linux-commercial-src-4.5.0
+<pre> cd  ~/qt-embedded-linux-commercial-src-4.5.1
  ./configure -embedded [architecture]</pre>
 <p>In general, all Linux systems which have framebuffer support can use the <tt>generic</tt> architecture. Other typical architectures are <tt>x86</tt>, <tt>arm</tt> and <tt>mips</tt>.</p>
 <p><b>Note:</b> If you want to build Qt for Embedded Linux for use with a virtual framebuffer, pass the <tt>-qvfb</tt> option to the <tt>configure</tt> script.</p>
@@ -55,12 +55,12 @@
 <h3>Step 4: Adjusting the Environment Variables</h3>
 <p>In order to use <a href="qt-embedded-linux.html">Qt for Embedded Linux</a>, the <tt>PATH</tt> variable must be extended to locate <tt>qmake</tt>, <tt>moc</tt> and other <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> tools, and the <tt>LD_LIBRARY_PATH</tt> must be extended for compilers that do not support <tt>rpath</tt>.</p>
 <p>To set the <tt>PATH</tt> variable, add the following lines to your <tt>.profile</tt> file if your shell is bash, ksh, zsh or sh:</p>
-<pre> PATH=/usr/local/Trolltech/QtEmbedded-4.5.0/bin:$PATH
+<pre> PATH=/usr/local/Trolltech/QtEmbedded-4.5.1/bin:$PATH
  export PATH</pre>
 <p>In case your shell is csh or tcsh, add the following line to the <tt>.login</tt> file instead:</p>
-<pre> setenv PATH /usr/local/Trolltech/QtEmbedded-4.5.0/bin:$PATH</pre>
+<pre> setenv PATH /usr/local/Trolltech/QtEmbedded-4.5.1/bin:$PATH</pre>
 <p>If you use a different shell, please modify your environment variables accordingly.</p>
-<p>For compilers that do not support <tt>rpath</tt> you must also extend the <tt>LD_LIBRARY_PATH</tt> environment variable to include <tt>/usr/local/Trolltech/QtEmbedded-4.5.0/lib</tt>. Note that on Linux with GCC, this step is not needed.</p>
+<p>For compilers that do not support <tt>rpath</tt> you must also extend the <tt>LD_LIBRARY_PATH</tt> environment variable to include <tt>/usr/local/Trolltech/QtEmbedded-4.5.1/lib</tt>. Note that on Linux with GCC, this step is not needed.</p>
 <a name="step-5-building-the-virtual-framebuffer"></a>
 <h3>Step 5: Building the Virtual Framebuffer</h3>
 <p>For development and debugging, <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> provides a virtual framebuffer as well as the option of running <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> as a VNC server. For a description of how to install the virtual framebuffer and how to use the VNC protocol, please consult the documentation at:</p>
@@ -85,6 +85,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

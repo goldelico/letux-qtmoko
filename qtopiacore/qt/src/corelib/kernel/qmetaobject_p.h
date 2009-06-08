@@ -127,21 +127,24 @@ static QByteArray normalizeTypeInternal(const char *t, const char *e, bool fixSc
 
     // some type substitutions for 'unsigned x'
     if (strncmp("unsigned", t, 8) == 0) {
-        if (strncmp(" int", t+8, 4) == 0) {
-            t += 8+4;
-            result += "uint";
-        } else if (strncmp(" long", t+8, 5) == 0) {
-            if ((strlen(t + 8 + 5) < 4 || strncmp(t + 8 + 5, " int", 4) != 0) // preserve '[unsigned] long int'
-                && (strlen(t + 8 + 5) < 5 || strncmp(t + 8 + 5, " long", 5) != 0) // preserve '[unsigned] long long'
-               ) {
-                t += 8+5;
-                result += "ulong";
+        // make sure "unsigned" is an isolated word before making substitutions
+        if (!t[8] || !is_ident_char(t[8])) {
+            if (strncmp(" int", t+8, 4) == 0) {
+                t += 8+4;
+                result += "uint";
+            } else if (strncmp(" long", t+8, 5) == 0) {
+                if ((strlen(t + 8 + 5) < 4 || strncmp(t + 8 + 5, " int", 4) != 0) // preserve '[unsigned] long int'
+                    && (strlen(t + 8 + 5) < 5 || strncmp(t + 8 + 5, " long", 5) != 0) // preserve '[unsigned] long long'
+                   ) {
+                    t += 8+5;
+                    result += "ulong";
+                }
+            } else if (strncmp(" short", t+8, 6) != 0  // preserve unsigned short
+                && strncmp(" char", t+8, 5) != 0) {    // preserve unsigned char
+                //  treat rest (unsigned) as uint
+                t += 8;
+                result += "uint";
             }
-        } else if (strncmp(" short", t+8, 6) != 0  // preserve unsigned short
-            && strncmp(" char", t+8, 5) != 0) {    // preserve unsigned char
-            //  treat rest (unsigned) as uint
-            t += 8;
-            result += "uint";
         }
     } else {
         // discard 'struct', 'class', and 'enum'; they are optional

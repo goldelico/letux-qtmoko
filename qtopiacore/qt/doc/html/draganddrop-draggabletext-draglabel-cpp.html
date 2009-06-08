@@ -18,7 +18,7 @@
  ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
- ** This file is part of the example classes of the Qt Toolkit.
+ ** This file is part of the examples of the Qt Toolkit.
  **
  ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
@@ -64,37 +64,11 @@
      setAutoFillBackground(true);
      setFrameShape(QFrame::Panel);
      setFrameShadow(QFrame::Raised);
- }
-
- void DragLabel::mousePressEvent(QMouseEvent *event)
- {
-     QPoint hotSpot = event-&gt;pos();
-
-     QMimeData *mimeData = new QMimeData;
-     mimeData-&gt;setText(text());
-     mimeData-&gt;setData(&quot;application/x-hotspot&quot;,
-                       QByteArray::number(hotSpot.x())
-                       + &quot; &quot; + QByteArray::number(hotSpot.y()));
-
-     QPixmap pixmap(size());
-     render(&amp;pixmap);
-
-     QDrag *drag = new QDrag(this);
-     drag-&gt;setMimeData(mimeData);
-     drag-&gt;setPixmap(pixmap);
-     drag-&gt;setHotSpot(hotSpot);
-
-     Qt::DropAction dropAction = drag-&gt;exec(Qt::CopyAction | Qt::MoveAction, Qt::CopyAction);
-
-     if (dropAction == Qt::MoveAction) {
-         close();
-         update();
-     }
  }</pre>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

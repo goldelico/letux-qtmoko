@@ -2001,6 +2001,7 @@ QTextEngine::LayoutData::LayoutData()
     inLayout = false;
     haveCharAttributes = false;
     logClustersPtr = 0;
+    available_glyphs = 0;
 }
 
 QTextEngine::LayoutData::LayoutData(const QString &str, void **stack_memory, int _allocated)

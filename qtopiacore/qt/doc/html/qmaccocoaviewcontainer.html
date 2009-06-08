@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-all-opensource-src-4.5.0/src/gui/widgets/qmaccocoaviewcontainer_mac.mm -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-all-opensource-src-4.5.1/src/gui/widgets/qmaccocoaviewcontainer_mac.mm -->
 <head>
   <title>Qt 4.5: QMacCocoaViewContainer Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -24,7 +24,7 @@
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"></div><b><a href="qmaccocoaviewcontainer.html#QMacCocoaViewContainer">QMacCocoaViewContainer</a></b> ( void <i>NSView</i> )</li>
+<li><div class="fn"></div><b><a href="qmaccocoaviewcontainer.html#QMacCocoaViewContainer">QMacCocoaViewContainer</a></b> ( void * <i>cocoaViewToWrap</i>, QWidget * <i>parent</i> = 0 )</li>
 <li><div class="fn"></div>virtual <b><a href="qmaccocoaviewcontainer.html#dtor.QMacCocoaViewContainer">~QMacCocoaViewContainer</a></b> ()</li>
 <li><div class="fn"></div>void * <b><a href="qmaccocoaviewcontainer.html#cocoaView">cocoaView</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qmaccocoaviewcontainer.html#setCocoaView">setCocoaView</a></b> ( void * <i>cocoaViewToWrap</i> )</li>
@@ -45,7 +45,7 @@
 <li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
 <li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
 <li><div class="fn"></div>1 static public member inherited from <a href="qpaintdevice.html#static-public-members">QPaintDevice</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 <li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
@@ -86,7 +86,9 @@
 <hr />
 <h2>Member Function Documentation</h2>
 <a name="//apple_ref/cpp/instm/QMacCocoaViewContainer/QMacCocoaViewContainer" />
-<h3 class="fn"><a name="QMacCocoaViewContainer"></a>QMacCocoaViewContainer::QMacCocoaViewContainer ( void <i>NSView</i> )</h3>
+<h3 class="fn"><a name="QMacCocoaViewContainer"></a>QMacCocoaViewContainer::QMacCocoaViewContainer ( void * <i>cocoaViewToWrap</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i> = 0 )</h3>
+<p>Create a new <a href="qmaccocoaviewcontainer.html">QMacCocoaViewContainer</a> using the NSView pointer in <i>cocoaViewToWrap</i> with parent, <i>parent</i>. <a href="qmaccocoaviewcontainer.html">QMacCocoaViewContainer</a> will retain <i>cocoaViewToWrap</i>.</p>
+<p><i>cocoaViewToWrap</i> is a void pointer that allows the header to be included with C++ source.</p>
 <a name="//apple_ref/cpp/instm/QMacCocoaViewContainer/~QMacCocoaViewContainer" />
 <h3 class="fn"><a name="dtor.QMacCocoaViewContainer"></a>QMacCocoaViewContainer::~QMacCocoaViewContainer ()&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Destroy the <a href="qmaccocoaviewcontainer.html">QMacCocoaViewContainer</a> and release the wrapped view.</p>
@@ -102,6 +104,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

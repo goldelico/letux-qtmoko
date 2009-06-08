@@ -52,20 +52,20 @@ QT_BEGIN_NAMESPACE
 
 class Text
 {
-public:
+ public:
     Text();
     explicit Text(const QString &str);
-    Text( const Text& text );
+    Text(const Text& text);
     ~Text();
 
-    Text& operator=( const Text& text );
+    Text& operator=(const Text& text);
 
     Atom *firstAtom() { return first; }
     Atom *lastAtom() { return last; }
-    Text& operator<<( Atom::Type atomType );
-    Text& operator<<( const QString& string );
-    Text& operator<<( const Atom& atom );
-    Text& operator<<( const Text& text );
+    Text& operator<<(Atom::Type atomType);
+    Text& operator<<(const QString& string);
+    Text& operator<<(const Atom& atom);
+    Text& operator<<(const Text& text);
     void stripFirstAtom();
     void stripLastAtom();
 
@@ -73,15 +73,15 @@ public:
     QString toString() const;
     const Atom *firstAtom() const { return first; }
     const Atom *lastAtom() const { return last; }
-    Text subText( Atom::Type left, Atom::Type right, const Atom *from = 0) const;
+    Text subText(Atom::Type left, Atom::Type right, const Atom *from = 0) const;
     void dump() const;
 
-    static Text subText( const Atom *begin, const Atom *end = 0 );
+    static Text subText(const Atom *begin, const Atom *end = 0);
     static Text sectionHeading(const Atom *sectionBegin);
     static const Atom *sectionHeadingAtom(const Atom *sectionLeft);
     static int compare(const Text &text1, const Text &text2);
 
-private:
+ private:
     void clear();
 
     Atom *first;

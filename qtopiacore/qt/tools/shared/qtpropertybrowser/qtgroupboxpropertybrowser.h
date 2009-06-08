@@ -48,6 +48,8 @@
 QT_BEGIN_NAMESPACE
 #endif
 
+class QtGroupBoxPropertyBrowserPrivate;
+
 class QtGroupBoxPropertyBrowser : public QtAbstractPropertyBrowser
 {
     Q_OBJECT
@@ -63,7 +65,7 @@ protected:
 
 private:
 
-    class QtGroupBoxPropertyBrowserPrivate *d_ptr;
+    QtGroupBoxPropertyBrowserPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtGroupBoxPropertyBrowser)
     Q_DISABLE_COPY(QtGroupBoxPropertyBrowser)
     Q_PRIVATE_SLOT(d_func(), void slotUpdate())

@@ -292,6 +292,11 @@ Configure::Configure( int& argc, char** argv )
     dictionary[ "BUILD" ]           = "debug";
     dictionary[ "BUILDALL" ]        = "auto"; // Means yes, but not explicitly
 
+    dictionary[ "BUILDTYPE" ]      = "none";
+
+    dictionary[ "BUILDDEV" ]        = "no";
+    dictionary[ "BUILDNOKIA" ]      = "no";
+
     dictionary[ "SHARED" ]          = "yes";
 
     dictionary[ "ZLIB" ]            = "auto";
@@ -466,7 +471,19 @@ void Configure::parseCmdLine()
             dictionary[ "SHARED" ] = "yes";
         else if( configCmdLine.at(i) == "-static" )
             dictionary[ "SHARED" ] = "no";
-
+        else if( configCmdLine.at(i) == "-developer-build" )
+            dictionary[ "BUILDDEV" ] = "yes";
+        else if( configCmdLine.at(i) == "-nokia-developer" ) {
+            dictionary[ "BUILDNOKIA" ] = "yes";
+            dictionary[ "BUILDDEV" ] = "yes";
+            dictionary["LICENSE_CONFIRMED"] = "yes";
+        }
+        else if( configCmdLine.at(i) == "-opensource" ) {
+            dictionary[ "BUILDTYPE" ] = "opensource";
+        }
+        else if( configCmdLine.at(i) == "-commercial" ) {
+            dictionary[ "BUILDTYPE" ] = "commercial";
+        }
 #endif
 
         else if( configCmdLine.at(i) == "-platform" ) {
@@ -1433,6 +1450,11 @@ bool Configure::displayHelp()
         desc("BUILD", "release","-release",             "Compile and link Qt with debugging turned off.");
         desc("BUILD", "debug",  "-debug",               "Compile and link Qt with debugging turned on.");
         desc("BUILDALL", "yes", "-debug-and-release",   "Compile and link two Qt libraries, with and without debugging turned on.\n");
+
+        desc("OPENSOURCE", "opensource", "-opensource",   "Compile and link the Open-Source Edition of Qt.");
+        desc("COMMERCIAL", "commercial", "-commercial",   "Compile and link the Commercial Edition of Qt.\n");
+
+        desc("BUILDDEV", "yes", "-developer-build",      "Compile and link Qt with Qt developer options (including auto-tests exporting)\n");
 
         desc("SHARED", "yes",   "-shared",              "Create and use shared Qt libraries.");
         desc("SHARED", "no",    "-static",              "Create and use static Qt libraries.\n");
@@ -2587,7 +2609,8 @@ void Configure::generateConfigfiles()
         tmpStream << endl;
         tmpStream << dictionary["BUILD_KEY"];
         tmpStream << endl;
-        if (dictionary["EDITION"] == "Trolltech") {
+        if (dictionary["BUILDDEV"] == "yes") {
+            dictionary["QMAKE_INTERNAL"] = "yes";
             tmpStream << "/* Used for example to export symbols for the certain autotests*/" << endl;
             tmpStream << "#define QT_BUILD_INTERNAL" << endl;
             tmpStream << endl;
@@ -2849,12 +2872,11 @@ void Configure::displayConfig()
         env = "Unset";
     cout << "    PATH=\r\n      " << env << endl;
 
-    if (dictionary["EDITION"] == "Trolltech") {
-        cout << "Trolltech license file used (" << dictionary["LICENSE FILE"] << ")" << endl;
-    } else if (dictionary["EDITION"] == "OpenSource") {
-        cout << "You are licensed to use this software under the terms of the GNU LGPL version 2.1 or the GNU GPL version 3." << endl;
-        cout << "See " << dictionary["LICENSE FILE"] << ".LGPL" << endl
-             << " or " << dictionary["LICENSE FILE"] << ".GPL3" << endl << endl;
+    if (dictionary["EDITION"] == "OpenSource") {
+        cout << "You are licensed to use this software under the terms of the GNU GPL version 3.";
+        cout << "You are licensed to use this software under the terms of the Lesser GNU LGPL version 2.1." << endl;
+        cout << "See " << dictionary["LICENSE FILE"] << "3" << endl << endl
+             << " or " << dictionary["LICENSE FILE"] << "L" << endl << endl;
     } else {
         QString l1 = licenseInfo[ "LICENSEE" ];
         QString l2 = licenseInfo[ "LICENSEID" ];
@@ -3008,7 +3030,7 @@ void Configure::generateHeaders()
         args += buildPath + "/bin/syncqt.bat";
         QStringList env;
         env += QString("QTDIR=" + sourcePath);
-        //env += QString("PATH=" + buildPath + "/bin/;%PATH%");
+        env += QString("PATH=" + buildPath + "/bin/;" + qgetenv("PATH"));
         Environment::execute(args, env, QStringList());
     }
 }
@@ -3358,7 +3380,7 @@ bool Configure::showLicense(QString orgLicenseFile)
     QString licenseFile = orgLicenseFile;
     QString theLicense;
     if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
-        theLicense = "GNU Lesser Public License (LGPL) version 2.1 or GNU General Public License (GPL) version 3";
+        theLicense = "GNU General Public License (GPL) version 3 \nor the GNU Lesser General Public License (LGPL) version 2.1";
     } else {
         // the first line of the license file tells us which license it is
         QFile file(licenseFile);
@@ -3375,8 +3397,8 @@ bool Configure::showLicense(QString orgLicenseFile)
              << "the " << theLicense << "." << endl
              << endl;
         if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
-            cout << "Type 'L' to view the GNU Lesser General Public License version 2.1 (LGPLv2.1)." << endl;
             cout << "Type '3' to view the GNU General Public License version 3 (GPLv3)." << endl;
+            cout << "Type 'L' to view the Lesser GNU General Public License version 2.1 (LGPLv2.1)." << endl;
         } else {
             cout << "Type '?' to view the " << theLicense << "." << endl;
         }
@@ -3394,9 +3416,9 @@ bool Configure::showLicense(QString orgLicenseFile)
         } else {
             if (dictionary["EDITION"] == "OpenSource" || dictionary["EDITION"] == "Snapshot") {
                 if (accept == '3')
-                    licenseFile = orgLicenseFile + ".GPL3";
+                    licenseFile = orgLicenseFile + "/LICENSE.GPL3";
                 else
-                    licenseFile = orgLicenseFile + ".LGPL";
+                    licenseFile = orgLicenseFile + "/LICENSE.LGPL";
             }
             // Get console line height, to fill the screen properly
             int i = 0, screenHeight = 25; // default
@@ -3410,7 +3432,7 @@ bool Configure::showLicense(QString orgLicenseFile)
             // Prompt the license content to the user
             QFile file(licenseFile);
             if (!file.open(QFile::ReadOnly)) {
-                cout << "Failed to load LICENSE file" << endl;
+                cout << "Failed to load LICENSE file" << licenseFile << endl;
                 return false;
             }
             QStringList licenseContent = QString(file.readAll()).split('\n');
@@ -3432,43 +3454,61 @@ void Configure::readLicense()
     dictionary[ "PLATFORM NAME" ]   = (QFile::exists(dictionary["QT_SOURCE_TREE"] + "/src/corelib/kernel/qfunctions_wince.h")
                                       && (dictionary.value("QMAKESPEC").startsWith("wince") || dictionary.value("XQMAKESPEC").startsWith("wince")))
                                         ? "Qt for Windows CE" : "Qt for Windows";
+    bool openSource = false;
+    if (dictionary["BUILDNOKIA"] == "yes" || dictionary["BUILDTYPE"] == "commercial") {
+        openSource = false;
+    } else if (dictionary["BUILDTYPE"] == "opensource") {
+        openSource = true;
+    } else {
+        forever {
+            char accept = '?';
+            cout << "Which edition of Qt do you want to use ?" << endl;
+            cout << "Type 'c' if you want to use the Commercial Edition." << endl;
+            cout << "Type 'o' if you want to use the Open Source Edition." << endl;
+            cin >> accept;
+            accept = tolower(accept);
 
-    dictionary["LICENSE FILE"] = sourcePath + "/LICENSE";
-    if (QFile::exists(dictionary["LICENSE FILE"] + ".LGPL") || QFile::exists(dictionary["LICENSE FILE"] + ".GPL3")) {
-        cout << endl << "This is the " << dictionary["PLATFORM NAME"] << " Open Source Edition." << endl;
-        licenseInfo["LICENSEE"] = "Open Source";
-        dictionary["EDITION"] = "OpenSource";
-        dictionary["QT_EDITION"] = "QT_EDITION_OPENSOURCE";
-        cout << endl;
-        if (!showLicense(dictionary["LICENSE FILE"])) {
-            cout << "Configuration aborted since license was not accepted";
-            dictionary["DONE"] = "error";
+            if (accept == 'c') {
+                openSource = false;
+                break;
+            } else if (accept == 'o') {
+                openSource = true;
+                break;
+            }
+        }
+    }
+    if (openSource) {
+        dictionary["LICENSE FILE"] = sourcePath;
+        if (QFile::exists(dictionary["LICENSE FILE"] + "/LICENSE.GPL3") || QFile::exists(dictionary["LICENSE FILE"] + "/LICENSE.LGPL")) {
+            cout << endl << "This is the " << dictionary["PLATFORM NAME"] << " Open Source Edition." << endl;
+            licenseInfo["LICENSEE"] = "Open Source";
+            dictionary["EDITION"] = "OpenSource";
+            dictionary["QT_EDITION"] = "QT_EDITION_OPENSOURCE";
+            cout << endl;
+            if (!showLicense(dictionary["LICENSE FILE"])) {
+                cout << "Configuration aborted since license was not accepted";
+                dictionary["DONE"] = "error";
+                return;
+            }
             return;
         }
-        return;
-    }
 #ifndef COMMERCIAL_VERSION
     else {
-        cout << endl << "Cannot find the LGPL/GPL license files!" << endl;
+        cout << endl << "Cannot find the GPL license files!" << endl;
         dictionary["DONE"] = "error";
     }
 #else
-    else if (Tools::checkInternalLicense(dictionary)) {
-        licenseInfo["LICENSEE"] = dictionary["EDITION"];
-        return;
-    }
-
-    Tools::checkLicense(dictionary, licenseInfo, firstLicensePath());
-    if (dictionary["DONE"] != "error") {
-        // give the user some feedback, and prompt for license acceptance
-        cout << endl << "This is the " << dictionary["PLATFORM NAME"] << " " << dictionary["EDITION"] << " Edition."<< endl << endl;
-        if (!showLicense(dictionary["LICENSE FILE"])) {
-            cout << "Configuration aborted since license was not accepted";
-            dictionary["DONE"] = "error";
-            return;
+    } else {
+        Tools::checkLicense(dictionary, licenseInfo, firstLicensePath());
+        if (dictionary["DONE"] != "error") {
+            // give the user some feedback, and prompt for license acceptance
+            cout << endl << "This is the " << dictionary["PLATFORM NAME"] << " " << dictionary["EDITION"] << " Edition."<< endl << endl;
+            if (!showLicense(dictionary["LICENSE FILE"])) {
+                cout << "Configuration aborted since license was not accepted";
+                dictionary["DONE"] = "error";
+                return;
+            }
         }
-        if (!dictionary.contains("METERED LICENSE"))
-            QFile::remove(sourcePath + "/bin/qtusagereporter.exe");
     }
 #endif // COMMERCIAL_VERSION
 }

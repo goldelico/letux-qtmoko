@@ -932,9 +932,9 @@ void PropertyEditor::setObject(QObject *object)
         itRemove.next();
 
         QtVariantProperty *property = itRemove.value();
-        delete property;
         m_nameToProperty.remove(itRemove.key());
         m_propertyToGroup.remove(property);
+        delete property;
     }
 
     if (oldFormWindow != formWindow)

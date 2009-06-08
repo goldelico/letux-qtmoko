@@ -213,7 +213,7 @@
      QPalette palette;
      palette.setBrush(QPalette::WindowText, Qt::white);
  #ifndef Q_WS_MAC
-     openButton-&gt;setMinimumSize(47, buttonSize.height());
+     openButton-&gt;setMinimumSize(54, buttonSize.height());
      rewindButton-&gt;setMinimumSize(buttonSize);
      forwardButton-&gt;setMinimumSize(buttonSize);
      playButton-&gt;setMinimumSize(buttonSize);
@@ -810,11 +810,12 @@
      QSettings settings;
      settings.beginGroup(QLatin1String(&quot;BrowserMainWindow&quot;));
      QString sourceURL = settings.value(&quot;location&quot;).toString();
-     sourceURL = QInputDialog::getText(this, tr(&quot;Open Location&quot;), tr(&quot;Please enter a valid address here:&quot;), QLineEdit::Normal, sourceURL);
-     if (!sourceURL.isEmpty()) {
-             setWindowTitle(sourceURL.right(sourceURL.length() - sourceURL.lastIndexOf('/') - 1));
-             m_MediaObject.setCurrentSource(Phonon::MediaSource(QUrl::fromEncoded(sourceURL.toUtf8())));
-             m_MediaObject.play();
+     bool ok = false;
+     sourceURL = QInputDialog::getText(this, tr(&quot;Open Location&quot;), tr(&quot;Please enter a valid address here:&quot;), QLineEdit::Normal, sourceURL, &amp;ok);
+     if (ok &amp;&amp; !sourceURL.isEmpty()) {
+         setWindowTitle(sourceURL.right(sourceURL.length() - sourceURL.lastIndexOf('/') - 1));
+         m_MediaObject.setCurrentSource(Phonon::MediaSource(QUrl::fromEncoded(sourceURL.toUtf8())));
+         m_MediaObject.play();
          settings.setValue(&quot;location&quot;, sourceURL);
      }
  }
@@ -851,6 +852,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

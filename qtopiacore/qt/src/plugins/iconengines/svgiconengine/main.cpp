@@ -61,7 +61,7 @@ public:
 
 QStringList QSvgIconPlugin::keys() const
 {
-    QStringList keys("svg");
+    QStringList keys(QLatin1String("svg"));
 #ifndef QT_NO_COMPRESS
     keys << QLatin1String("svgz") << QLatin1String("svg.gz");
 #endif

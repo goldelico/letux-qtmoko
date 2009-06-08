@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/calendarwidget.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/calendarwidget.qdoc -->
 <head>
   <title>Qt 4.5: Calendar Widget Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -230,6 +230,7 @@
              this, SLOT(minimumDateChanged(const QDate &amp;)));
      connect(maximumDateEdit, SIGNAL(dateChanged(const QDate &amp;)),
              this, SLOT(maximumDateChanged(const QDate &amp;)));
+
      ...
  }</pre>
 <p>We connect the <tt>currentDateEdit</tt>'s <a href="qdatetimeedit.html#dateChanged">dateChanged()</a> signal directly to the calendar's <a href="qcalendarwidget.html#selectedDate-prop">setSelectedDate()</a> slot. When the calendar's selected date changes, either as a result of a user action or programmatically, our <tt>selectedDateChanged()</tt> slot updates the <b>Current Date</b> editor. We also need to react when the user changes the <b>Minimum Date</b> and <b>Maximum Date</b> editors.</p>
@@ -380,6 +381,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

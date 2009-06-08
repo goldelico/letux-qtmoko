@@ -92,7 +92,7 @@ void QEmulationPaintEngine::fill(const QVectorPath &path, const QBrush &brush)
             if (g->coordinateMode() == QGradient::StretchToDeviceMode) {
                 QBrush copy = brush;
                 QTransform mat = copy.transform();
-                mat.scale(real_engine->paintDevice()->width(), real_engine->paintDevice()->height());
+                mat.scale(real_engine->painter()->device()->width(), real_engine->painter()->device()->height());
                 copy.setTransform(mat);
                 real_engine->fill(path, copy);
                 return;

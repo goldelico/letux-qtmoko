@@ -112,7 +112,7 @@ bool QToolButtonPrivate::hasMenu() const
 #endif
 
 /*!
-    \class QToolButton qtoolbutton.h
+    \class QToolButton
     \brief The QToolButton class provides a quick-access button to
     commands or options, usually used inside a QToolBar.
 

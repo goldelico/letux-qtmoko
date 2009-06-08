@@ -130,7 +130,7 @@ PreferencesDialog::~PreferencesDialog()
     }
 
     if (!m_ui.homePageLineEdit->text().isEmpty())
-        m_helpEngine->setCustomValue("homepage", m_ui.homePageLineEdit->text());
+        m_helpEngine->setCustomValue(QLatin1String("homepage"), m_ui.homePageLineEdit->text());
 }
 
 void PreferencesDialog::showDialog()

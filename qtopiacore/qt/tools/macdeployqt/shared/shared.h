@@ -45,6 +45,8 @@
 #include <QStringList>
 #include <QDebug>
 
+extern bool runStripEnabled;
+
 class FrameworkInfo
 {
 public:

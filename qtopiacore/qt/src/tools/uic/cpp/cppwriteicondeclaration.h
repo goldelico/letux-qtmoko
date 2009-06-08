@@ -64,7 +64,6 @@ public:
     void acceptImage(DomImage *image);
 
 private:
-    Uic *uic;
     Driver *driver;
     QTextStream &output;
     const Option &option;

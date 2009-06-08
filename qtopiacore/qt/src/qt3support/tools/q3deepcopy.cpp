@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3DeepCopy qdeepcopy.h
+    \class Q3DeepCopy
     \brief The Q3DeepCopy class is a template class which ensures that
     implicitly shared and explicitly shared classes reference unique
     data.

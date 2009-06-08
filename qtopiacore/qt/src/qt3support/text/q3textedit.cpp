@@ -214,7 +214,7 @@ const char* Q3RichTextDrag::format(int i) const
 static bool block_set_alignment = false;
 
 /*!
-    \class Q3TextEdit qtextedit.h
+    \class Q3TextEdit
     \brief The Q3TextEdit widget provides a powerful single-page rich text editor.
 
     \compat

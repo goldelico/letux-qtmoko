@@ -41,8 +41,8 @@
 
 /*!
     \group ipc
-    \ingroup groups
     \title Inter-Process Communication in Qt
+    \ingroup groups
     \ingroup architecture
     \brief Inter-Process communication in Qt applications.
 

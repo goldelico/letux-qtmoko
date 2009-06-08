@@ -7,8 +7,8 @@ SOURCES         = main.cpp \
 QT += svg
 
 # install
-target.path = $$[QT_INSTALL_EXAMPLES]/itemviews/stardelegate
+target.path = $$[QT_INSTALL_EXAMPLES]/richtext/textobject
 sources.files = $$SOURCES $$HEADERS *.pro
-sources.path = $$[QT_INSTALL_EXAMPLES]/itemviews/stardelegate
+sources.path = $$[QT_INSTALL_EXAMPLES]/richtext/textobject
 INSTALLS += target sources
 

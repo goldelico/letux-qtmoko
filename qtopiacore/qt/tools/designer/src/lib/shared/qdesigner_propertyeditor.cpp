@@ -72,9 +72,17 @@ QDesignerPropertyEditor::StringPropertyParameters QDesignerPropertyEditor::textP
     if (propertyName == QLatin1String("accessibleDescription") || propertyName == QLatin1String("accessibleName"))
         return StringPropertyParameters(ValidationRichText, true);
 
-    // Any names
-    if (propertyName == QLatin1String("buddy") || propertyName.endsWith(QLatin1String("Name")))
+    // Names
+    if (propertyName == QLatin1String("buddy")
+          || propertyName == QLatin1String("currentItemName")
+          || propertyName == QLatin1String("currentPageName")
+          || propertyName == QLatin1String("currentTabName")
+          || propertyName == QLatin1String("layoutName")
+          || propertyName == QLatin1String("spacerName"))
         return StringPropertyParameters(ValidationObjectName, false);
+
+    if (propertyName.endsWith(QLatin1String("Name")))
+        return StringPropertyParameters(ValidationSingleLine, true);
 
     // Multi line?
     if (propertyName == QLatin1String("styleSheet"))

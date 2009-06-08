@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -251,7 +251,7 @@ namespace QPatternist
     /**
      * @short Formats QName.
      *
-     * @relates QName
+     * @relates QXmlName
      */
     static inline QString formatKeyword(const NamePool::Ptr &np, const QXmlName name)
     {

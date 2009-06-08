@@ -49,6 +49,7 @@ QT_BEGIN_NAMESPACE
 #endif
 
 class QTreeWidgetItem;
+class QtTreePropertyBrowserPrivate;
 
 class QtTreePropertyBrowser : public QtAbstractPropertyBrowser
 {
@@ -119,7 +120,7 @@ protected:
 
 private:
 
-    class QtTreePropertyBrowserPrivate *d_ptr;
+    QtTreePropertyBrowserPrivate *d_ptr;
     Q_DECLARE_PRIVATE(QtTreePropertyBrowser)
     Q_DISABLE_COPY(QtTreePropertyBrowser)
 

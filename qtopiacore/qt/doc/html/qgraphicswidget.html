@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/graphicsview/qgraphicswidget.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicswidget.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -220,11 +220,15 @@
 </ul>
 <p>See also <a href="qapplication.html#font">QApplication::font</a>(), <a href="qgraphicsscene.html#font-prop">QGraphicsScene::font</a>, and <a href="qfont.html#resolve">QFont::resolve</a>().</p>
 <h3 class="fn"><a name="geometry-prop"></a>geometry : <a href="qrectf.html">QRectF</a></h3>
+<p>This property holds the geometry of the widget.</p>
+<p>Sets the item's geometry to <i>rect</i>. The item's position and size are modified as a result of calling this function. The item is first moved, then resized.</p>
+<p>A side effect of calling this function is that the widget will receive a move event and a resize event. Also, if the widget has a layout assigned, the layout will activate.</p>
 <p>Access functions:</p>
 <ul>
 <li><div class="fn"></div><b>virtual void setGeometry ( const QRectF &amp; <i>rect</i> )</b></li>
 <li><div class="fn"></div><b>void setGeometry ( qreal <i>x</i>, qreal <i>y</i>, qreal <i>w</i>, qreal <i>h</i> )</b></li>
 </ul>
+<p>See also <a href="qgraphicslayoutitem.html#geometry">geometry</a>() and <a href="qgraphicswidget.html#size-prop">resize</a>().</p>
 <h3 class="fn"><a name="layoutDirection-prop"></a>layoutDirection : <a href="qt.html#LayoutDirection-enum">Qt::LayoutDirection</a></h3>
 <p>This property holds the layout direction for this widget.</p>
 <p>This property modifies this widget's and all of its descendants' <a href="qt.html#WidgetAttribute-enum">Qt::WA_RightToLeft</a> attribute. It also sets this widget's <a href="qt.html#WidgetAttribute-enum">Qt::WA_SetLayoutDirection</a> attribute.</p>
@@ -238,6 +242,7 @@
 </ul>
 <p>See also <a href="qwidget.html#layoutDirection-prop">QWidget::layoutDirection</a> and <a href="qapplication.html#layoutDirection-prop">QApplication::layoutDirection</a>.</p>
 <h3 class="fn"><a name="opacity-prop"></a>opacity : const <a href="qtglobal.html#qreal-typedef">qreal</a></h3>
+<p>This property holds the opacity of the widget.</p>
 <h3 class="fn"><a name="palette-prop"></a>palette : <a href="qpalette.html">QPalette</a></h3>
 <p>This property holds the widget's palette.</p>
 <p>This property provides the widget's palette. The palette provides colors and brushes for color groups (e.g&#x2e;, <a href="qpalette.html#ColorRole-enum">QPalette::Button</a>) and states (e.g&#x2e;, <a href="qpalette.html#ColorGroup-enum">QPalette::Inactive</a>), loosely defining the general look of the widget and its children.</p>
@@ -251,6 +256,7 @@
 </ul>
 <p>See also <a href="qapplication.html#palette">QApplication::palette</a>(), <a href="qgraphicsscene.html#palette-prop">QGraphicsScene::palette</a>, and <a href="qpalette.html#resolve">QPalette::resolve</a>().</p>
 <h3 class="fn"><a name="pos-prop"></a>pos : const <a href="qpointf.html">QPointF</a></h3>
+<p>This property holds the position of the widget.</p>
 <h3 class="fn"><a name="size-prop"></a>size : <a href="qsizef.html">QSizeF</a></h3>
 <p>This property holds the size of the widget.</p>
 <p>Calling resize() resizes the widget to a <i>size</i> bounded by <a href="qgraphicslayoutitem.html#minimumSize">minimumSize</a>() and <a href="qgraphicslayoutitem.html#maximumSize">maximumSize</a>(). This property only affects the widget's width and height (e.g&#x2e;, its right and bottom edges); the widget's position and top-left corner remains unaffected.</p>
@@ -522,6 +528,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

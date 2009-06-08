@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -75,7 +75,8 @@ Item IdFN::mapToItem(const QString &id,
  *
  * @relates StringSplitter
  */
-static bool qIsForwardIteratorEnd(const QString &unit)
+template<>
+bool qIsForwardIteratorEnd(const QString &unit)
 {
     return unit.isNull();
 }
@@ -199,7 +200,7 @@ Expression::Ptr IdFN::typeCheck(const StaticContext::Ptr &context,
     else
     {
         const Expression::Ptr newMe(new NodeSortExpression(Expression::Ptr(this)));
-        // TODO
+        context->wrapExpressionWith(this, newMe);
         m_hasCreatedSorter = true;
         return newMe->typeCheck(context, reqType);
     }

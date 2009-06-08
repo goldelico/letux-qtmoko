@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/tutorials/addressbook-fr.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/tutorials/addressbook-fr.qdoc -->
 <head>
   <title>Qt 4.5: Carnet d'adresses 2 - Ajouter des adresses</title>
   <link rel="prev" href="tutorials-addressbook-fr-part1.html" />
@@ -29,32 +29,32 @@
 <li><a href="tutorials-addressbook-fr-part2-main-cpp.html">tutorials/addressbook-fr/part2/main.cpp</a></li>
 <li><a href="tutorials-addressbook-fr-part2-part2-pro.html">tutorials/addressbook-fr/part2/part2.pro</a></li>
 </ul>
-<p>La prochaine étape pour créer notre carnet d'adresses est d'ajouter un soupçon d'interactivité.</p>
-<p align="center"><img src="images/addressbook-tutorial-part2-add-contact.png" /></p><p>Nous allons fournir un bouton que l'utilisateur peut cliquer pour ajouter un nouveau contact. Une structure de données est aussi nécessaire afin de pouvoir stocker les contacts en mémoire.</p>
-<a name="d-finir-la-classe-addressbook"></a>
-<h2>Définir la classe AddressBook</h2>
-<p>Maintenant que nous avons mis en place les labels et les champs de saisie, nous ajoutons les boutons pour compléter le processus d'ajout d'un contact. Cela veut dire que notre fichier <tt>addressbook.h</tt> a maintenant trois objets <a href="qpushbutton.html">QPushButton</a> et trois slots publics correspondant.</p>
+<p>La prochaine &#xe9;tape pour cr&#xe9;er notre carnet d'adresses est d'ajouter un soup&#xe7;on d'interactivit&#xe9;.</p>
+<p align="center"><img src="images/addressbook-tutorial-part2-add-contact.png" /></p><p>Nous allons fournir un bouton que l'utilisateur peut cliquer pour ajouter un nouveau contact. Une structure de donn&#xe9;es est aussi n&#xe9;cessaire afin de pouvoir stocker les contacts en m&#xe9;moire.</p>
+<a name="d-finition-de-la-classe-addressbook"></a>
+<h2>D&#xe9;finition de la classe AddressBook</h2>
+<p>Maintenant que nous avons mis en place les labels et les champs de saisie, nous ajoutons les boutons pour compl&#xe9;ter le processus d'ajout d'un contact. Cela veut dire que notre fichier <tt>addressbook.h</tt> a maintenant trois objets <a href="qpushbutton.html">QPushButton</a> et trois slots publics correspondant.</p>
 <pre> public slots:
      void addContact();
      void submitContact();
      void cancel();</pre>
-<p>Un slot est une méthode qui répond à un signal. Nous allons voir ce concept en détail lorsque nous implémenterons la classe <tt>AddressBook</tt>. Pour une explication détaillée du concept de signal et slot, vous pouvez vous référer au document <a href="signalsandslots.html">Signals and Slots</a>.</p>
-<p>Les trois objets <a href="qpushbutton.html">QPushButton</a> <tt>addButton</tt>, <tt>submitButton</tt> et <tt>cancelButton</tt> sont maintenant inclus dans la déclaration des variables privées, avec <tt>nameLine</tt> et <tt>addressText</tt> du chapitre précédent.</p>
+<p>Un slot est une m&#xe9;thode qui r&#xe9;pond &#xe0; un signal. Nous allons voir ce concept en d&#xe9;tail lorsque nous impl&#xe9;menterons la classe <tt>AddressBook</tt>. Pour une explication d&#xe9;taill&#xe9;e du concept de signal et slot, vous pouvez vous r&#xe9;f&#xe9;rer au document <a href="signalsandslots.html">Signals and Slots</a>.</p>
+<p>Les trois objets <a href="qpushbutton.html">QPushButton</a> <tt>addButton</tt>, <tt>submitButton</tt> et <tt>cancelButton</tt> sont maintenant inclus dans la d&#xe9;claration des variables priv&#xe9;es, avec <tt>nameLine</tt> et <tt>addressText</tt> du chapitre pr&#xe9;c&#xe9;dent.</p>
 <pre> private:
      QPushButton *addButton;
      QPushButton *submitButton;
      QPushButton *cancelButton;
      QLineEdit *nameLine;
      QTextEdit *addressText;</pre>
-<p>Nous avons besoin d'un conteneur pour stocker les contacts du carnet d'adresses, de façon à pouvoir les énumérer et les afficher. Un objet <a href="qmap.html">QMap</a>, <tt>contacts</tt>, est utilisé pour ça, car il permet de stocker des paires clé-valeur: le nom du contact est la <i>clé</i> et l'adresse du contact est la <i>valeur</i>.</p>
+<p>Nous avons besoin d'un conteneur pour stocker les contacts du carnet d'adresses, de fa&#xe7;on &#xe0; pouvoir les &#xe9;num&#xe9;rer et les afficher. Un objet <a href="qmap.html">QMap</a>, <tt>contacts</tt>, est utilis&#xe9; pour &#xe7;a, car il permet de stocker des paires cl&#xe9;-valeur: le nom du contact est la <i>cl&#xe9;</i> et l'adresse du contact est la <i>valeur</i>.</p>
 <pre>     QMap&lt;QString, QString&gt; contacts;
      QString oldName;
      QString oldAddress;
  };</pre>
-<p>Nous déclarons aussi deux objects <a href="qstring.html">QString</a> privés: <tt>oldName</tt> et <tt>oldAddress</tt>. Ces objets sont nécessaires pour conserver le nom et l'adresse du dernier contact affiché avant que l'utilisateur ne clique sur le bouton &quot;Add&quot;. Grâce à ces variables si l'utilisateur clique sur &quot;Cancel&quot;, il est possible de revenir à l'affichage du dernier contact.</p>
-<a name="impl-menter-la-classe-addressbook"></a>
-<h2>Implémenter la classe AddressBook</h2>
-<p>Dans le constructeur de <tt>AddressBook</tt>, <tt>nameLine</tt> et <tt>addressText</tt> sont mis en mode lecture seule, de façon à autoriser l'affichage mais pas la modification du contact courant.</p>
+<p>Nous d&#xe9;clarons aussi deux objects <a href="qstring.html">QString</a> priv&#xe9;s: <tt>oldName</tt> et <tt>oldAddress</tt>. Ces objets sont n&#xe9;cessaires pour conserver le nom et l'adresse du dernier contact affich&#xe9; avant que l'utilisateur ne clique sur le bouton &quot;Add&quot;. Gr&#xe2;ce &#xe0; ces variables si l'utilisateur clique sur &quot;Cancel&quot;, il est possible de revenir &#xe0; l'affichage du dernier contact.</p>
+<a name="impl-mentation-de-la-classe-addressbook"></a>
+<h2>Impl&#xe9;mentation de la classe AddressBook</h2>
+<p>Dans le constructeur de <tt>AddressBook</tt>, <tt>nameLine</tt> et <tt>addressText</tt> sont mis en mode lecture seule, de fa&#xe7;on &#xe0; autoriser l'affichage mais pas la modification du contact courant.</p>
 <pre>     ...
      nameLine-&gt;setReadOnly(true);
      ...
@@ -66,27 +66,27 @@
      submitButton-&gt;hide();
      cancelButton = new QPushButton(tr(&quot;&amp;Cancel&quot;));
      cancelButton-&gt;hide();</pre>
-<p>Le bouton <tt>addButton</tt> est affiché en invoquant la méthode <a href="qwidget.html#show">show()</a>, tandis que <tt>submitButton</tt> et <tt>cancelButton</tt> sont cachés en invoquant <a href="qwidget.html#hide">hide()</a>. Ces deux boutons ne seront affichés que lorsque l'utilisateur cliquera sur &quot;Add&quot;, et ceci est géré par la méthode <tt>addContact()</tt> décrite plus loin.</p>
+<p>Le bouton <tt>addButton</tt> est affich&#xe9; en invoquant la m&#xe9;thode <a href="qwidget.html#show">show()</a>, tandis que <tt>submitButton</tt> et <tt>cancelButton</tt> sont cach&#xe9;s en invoquant <a href="qwidget.html#hide">hide()</a>. Ces deux boutons ne seront affich&#xe9;s que lorsque l'utilisateur cliquera sur &quot;Add&quot;, et ceci est g&#xe9;r&#xe9; par la m&#xe9;thode <tt>addContact()</tt> d&#xe9;crite plus loin.</p>
 <pre>     connect(addButton, SIGNAL(clicked()), this, SLOT(addContact()));
      connect(submitButton, SIGNAL(clicked()), this, SLOT(submitContact()));
      connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancel()));</pre>
-<p>Nous connectons le signal <a href="qabstractbutton.html#clicked">clicked()</a> de chaque bouton au slot qui gèrera l'action. L'image ci-dessous illustre ceci:</p>
+<p>Nous connectons le signal <a href="qabstractbutton.html#clicked">clicked()</a> de chaque bouton au slot qui g&#xe8;rera l'action. L'image ci-dessous illustre ceci:</p>
 <p align="center"><img src="images/addressbook-tutorial-part2-signals-and-slots.png" /></p><p>Ensuite, nous arrangeons proprement les boutons sur la droite du widget AddressBook, et nous utilisons un <a href="qvboxlayout.html">QVBoxLayout</a> pour les aligner verticalement.</p>
 <pre>     QVBoxLayout *buttonLayout1 = new QVBoxLayout;
      buttonLayout1-&gt;addWidget(addButton, Qt::AlignTop);
      buttonLayout1-&gt;addWidget(submitButton);
      buttonLayout1-&gt;addWidget(cancelButton);
      buttonLayout1-&gt;addStretch();</pre>
-<p>La methode <a href="qboxlayout.html#addStretch">addStretch()</a> est utilisée pour assurer que les boutons ne sont pas répartis uniformément, mais regroupés dans la partie supperieure du widget. La figure ci-dessous montre la différence si <a href="qboxlayout.html#addStretch">addStretch()</a> est utilisé ou pas.</p>
-<p align="center"><img src="images/addressbook-tutorial-part2-stretch-effects.png" /></p><p>Ensuite nous ajoutons <tt>buttonLayout1</tt> à <tt>mainLayout</tt>, en utilisant <a href="qgridlayout.html#addLayout">addLayout()</a>. Ceci nous permet d'imbriquer les mises en page puisque <tt>buttonLayout1</tt> est maintenant un enfant de <tt>mainLayout</tt>.</p>
+<p>La methode <a href="qboxlayout.html#addStretch">addStretch()</a> est utilis&#xe9;e pour assurer que les boutons ne sont pas r&#xe9;partis uniform&#xe9;ment, mais regroup&#xe9;s dans la partie supperieure du widget. La figure ci-dessous montre la diff&#xe9;rence si <a href="qboxlayout.html#addStretch">addStretch()</a> est utilis&#xe9; ou pas.</p>
+<p align="center"><img src="images/addressbook-tutorial-part2-stretch-effects.png" /></p><p>Ensuite nous ajoutons <tt>buttonLayout1</tt> &#xe0; <tt>mainLayout</tt>, en utilisant <a href="qgridlayout.html#addLayout">addLayout()</a>. Ceci nous permet d'imbriquer les mises en page puisque <tt>buttonLayout1</tt> est maintenant un enfant de <tt>mainLayout</tt>.</p>
 <pre>     QGridLayout *mainLayout = new QGridLayout;
      mainLayout-&gt;addWidget(nameLabel, 0, 0);
      mainLayout-&gt;addWidget(nameLine, 0, 1);
      mainLayout-&gt;addWidget(addressLabel, 1, 0, Qt::AlignTop);
      mainLayout-&gt;addWidget(addressText, 1, 1);
      mainLayout-&gt;addLayout(buttonLayout1, 1, 2);</pre>
-<p>Les coordonnées du layout global ressemblent maintenant à ça:</p>
-<p align="center"><img src="images/addressbook-tutorial-part2-labeled-layout.png" /></p><p>Dans la fonction <tt>addContact()</tt>, nous stockons les détails du dernier contact affiché dans <tt>oldName</tt> et <tt>oldAddress</tt>. Ensuite, nous vidons ces champs de saisie et nous désactivons le mode lecture seule. Le focus est placé sur <tt>nameLine</tt> et on affiche <tt>submitButton</tt> et <tt>cancelButton</tt>.</p>
+<p>Les coordonn&#xe9;es du layout global ressemblent maintenant &#xe0; &#xe7;a:</p>
+<p align="center"><img src="images/addressbook-tutorial-part2-labeled-layout.png" /></p><p>Dans la m&#xe9;thode <tt>addContact()</tt>, nous stockons les d&#xe9;tails du dernier contact affich&#xe9; dans <tt>oldName</tt> et <tt>oldAddress</tt>. Ensuite, nous vidons ces champs de saisie et nous d&#xe9;sactivons le mode lecture seule. Le focus est plac&#xe9; sur <tt>nameLine</tt> et on affiche <tt>submitButton</tt> et <tt>cancelButton</tt>.</p>
 <pre> void AddressBook::addContact()
  {
      oldName = nameLine-&gt;text();
@@ -103,9 +103,9 @@
      submitButton-&gt;show();
      cancelButton-&gt;show();
  }</pre>
-<p>La méthode <tt>submitContact()</tt> peut être divisée en trois parties:</p>
+<p>La m&#xe9;thode <tt>submitContact()</tt> peut &#xea;tre divis&#xe9;e en trois parties:</p>
 <ol type="1">
-<li>Nous extrayons les détails du contact depuis <tt>nameLine</tt> et <tt>addressText</tt> et les stockons dans des objets <a href="qstring.html">QString</a>. Nous les validons pour s'assurer que l'utilisateur n'a pas cliqué sur &quot;Add&quot; avec des champs de saisie vides; sinon un message est affiché avec <a href="qmessagebox.html">QMessageBox</a> pour rappeller à l'utilisateur que les deux champs doivent être complétés.<pre> void AddressBook::submitContact()
+<li>Nous extrayons les d&#xe9;tails du contact depuis <tt>nameLine</tt> et <tt>addressText</tt> et les stockons dans des objets <a href="qstring.html">QString</a>. Nous les validons pour s'assurer que l'utilisateur n'a pas cliqu&#xe9; sur &quot;Add&quot; avec des champs de saisie vides; sinon un message est affich&#xe9; avec <a href="qmessagebox.html">QMessageBox</a> pour rappeller &#xe0; l'utilisateur que les deux champs doivent &#xea;tre compl&#xe9;t&#xe9;s.<pre> void AddressBook::submitContact()
  {
      QString name = nameLine-&gt;text();
      QString address = addressText-&gt;toPlainText();
@@ -116,7 +116,7 @@
          return;
      }</pre>
 </li>
-<li>Ensuite, nous vérifions si le contact existe déjà. Si aucun contacts existant n'entre en conflit avec le nouveau, nous l'ajoutons à <tt>contacts</tt> et nous affichons un <a href="qmessagebox.html">QMessageBox</a> pour informer l'utilisateur que le contact a été ajouté.<pre>     if (!contacts.contains(name)) {
+<li>Ensuite, nous v&#xe9;rifions si le contact existe d&#xe9;j&#xe0;. Si aucun contacts existant n'entre en conflit avec le nouveau, nous l'ajoutons &#xe0; <tt>contacts</tt> et nous affichons un <a href="qmessagebox.html">QMessageBox</a> pour informer l'utilisateur que le contact a &#xe9;t&#xe9; ajout&#xe9;.<pre>     if (!contacts.contains(name)) {
          contacts.insert(name, address);
          QMessageBox::information(this, tr(&quot;Add Successful&quot;),
              tr(&quot;\&quot;%1\&quot; has been added to your address book.&quot;).arg(name));
@@ -125,9 +125,9 @@
              tr(&quot;Sorry, \&quot;%1\&quot; is already in your address book.&quot;).arg(name));
          return;
      }</pre>
-<p>Si le contact existe déjà, nous affichons un <a href="qmessagebox.html">QMessageBox</a> pour informer l'utilisateur du problème. Notre objet <tt>contacts</tt> est basé sur des paires clé-valeur formés par le nom et l'adresse, nous voulons nous assurer que la <i>clé</i> est unique.</p>
+<p>Si le contact existe d&#xe9;j&#xe0;, nous affichons un <a href="qmessagebox.html">QMessageBox</a> pour informer l'utilisateur du probl&#xe8;me. Notre objet <tt>contacts</tt> est bas&#xe9; sur des paires cl&#xe9;-valeur form&#xe9;s par le nom et l'adresse, nous voulons nous assurer que la <i>cl&#xe9;</i> est unique.</p>
 </li>
-<li>Une fois que les deux vérifications précédentes ont été traitées, nous restaurons les boutons à leur état normal à l'aide du code suivant:<pre>     if (contacts.isEmpty()) {
+<li>Une fois que les deux v&#xe9;rifications pr&#xe9;c&#xe9;dentes ont &#xe9;t&#xe9; trait&#xe9;es, nous restaurons les boutons &#xe0; leur &#xe9;tat normal &#xe0; l'aide du code suivant:<pre>     if (contacts.isEmpty()) {
          nameLine-&gt;clear();
          addressText-&gt;clear();
      }
@@ -140,8 +140,8 @@
  }</pre>
 </li>
 </ol>
-<p>La capture d'écran ci-dessous montre l'affichage fourni par un objet <a href="qmessagebox.html">QMessageBox</a>, utilisé ici pour afficher un message d'information à l'utilisateur:</p>
-<p align="center"><img src="images/addressbook-tutorial-part2-add-successful.png" /></p><p>La méthode <tt>cancel()</tt> restaure les détails du dernier contact, active <tt>addButton</tt>, et cache <tt>submitButton</tt> et <tt>cancelButton</tt>.</p>
+<p>La capture d'&#xe9;cran ci-dessous montre l'affichage fournit par un objet <a href="qmessagebox.html">QMessageBox</a>, utilis&#xe9; ici pour afficher un message d'information &#xe0; l'utilisateur:</p>
+<p align="center"><img src="images/addressbook-tutorial-part2-add-successful.png" /></p><p>La m&#xe9;thode <tt>cancel()</tt> restaure les d&#xe9;tails du dernier contact, active <tt>addButton</tt>, et cache <tt>submitButton</tt> et <tt>cancelButton</tt>.</p>
 <pre> void AddressBook::cancel()
  {
      nameLine-&gt;setText(oldName);
@@ -154,7 +154,7 @@
      submitButton-&gt;hide();
      cancelButton-&gt;hide();
  }</pre>
-<p>L'idée générale pour augmenter la flexibilité lors de l'ajout d'un contact est de donner la possiblité de cliquer sur &quot;Add&quot; ou &quot;Cancel&quot; à n'importe quel moment. L'organigramme ci-dessous reprend l'ensemble des interactions dévelopées jusqu'ici:</p>
+<p>L'id&#xe9;e g&#xe9;n&#xe9;rale pour augmenter la flexibilit&#xe9; lors de l'ajout d'un contact est de donner la possiblit&#xe9; de cliquer sur &quot;Add&quot; ou &quot;Cancel&quot; &#xe0; n'importe quel moment. L'organigramme ci-dessous reprend l'ensemble des interactions d&#xe9;velop&#xe9;es jusqu'ici:</p>
 <p align="center"><img src="images/addressbook-tutorial-part2-add-flowchart.png" /></p><p>
 [Previous: <a href="tutorials-addressbook-fr-part1.html">Chapitre 1</a>]
 [<a href="tutorials-addressbook-fr.html">Sommaire</a>]
@@ -164,6 +164,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

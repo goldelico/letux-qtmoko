@@ -383,7 +383,7 @@ private:
 struct ClassType: public Type
 {
     ClassType()
-        : m_scope(0) {}
+        : m_parent(0), m_scope(0) {}
 
     ClassScope *scope() const
     { return m_scope; }
@@ -731,7 +731,7 @@ private:
 struct UsingDirectiveLink: public Item
 {
     UsingDirectiveLink()
-        : m_parent(0) {}
+        : m_parent(0), m_targetNamespace(0), m_insertionNamespace(0) {}
 
     QByteArray name() const
     { return QByteArray(); }

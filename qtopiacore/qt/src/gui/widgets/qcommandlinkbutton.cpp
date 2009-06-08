@@ -52,7 +52,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class QCommandLinkButton qcommandlinkbutton.h
+    \class QCommandLinkButton
     \since 4.4
     \brief The QCommandLinkButton widget provides a Vista style command link button.
 

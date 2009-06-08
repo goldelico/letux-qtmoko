@@ -2012,16 +2012,17 @@ QStringList QODBCDriver::tables(QSql::TableType type) const
                         SQL_ATTR_CURSOR_TYPE,
                         (SQLPOINTER)SQL_CURSOR_FORWARD_ONLY,
                         SQL_IS_UINTEGER);
-    QString tableType;
+    QStringList tableType;
     if (type & QSql::Tables)
-        tableType += QLatin1String("TABLE,");
+        tableType += QLatin1String("TABLE");
     if (type & QSql::Views)
-        tableType += QLatin1String("VIEW,");
+        tableType += QLatin1String("VIEW");
     if (type & QSql::SystemTables)
-        tableType += QLatin1String("SYSTEM TABLE,");
+        tableType += QLatin1String("SYSTEM TABLE");
     if (tableType.isEmpty())
         return tl;
-    tableType.chop(1);
+
+    QString joinedTableTypeString = tableType.join(QLatin1String(","));
 
     r = SQLTables(hStmt,
                    NULL,
@@ -2031,11 +2032,11 @@ QStringList QODBCDriver::tables(QSql::TableType type) const
                    NULL,
                    0,
 #ifdef UNICODE
-                   (SQLWCHAR*)tableType.unicode(),
+                   (SQLWCHAR*)joinedTableTypeString.unicode(),
 #else
-                   (SQLCHAR*)tableType.toLatin1().constData(),
+                   (SQLCHAR*)joinedTableTypeString.toLatin1().constData(),
 #endif
-                   tableType.length() /* characters, not bytes */);
+                   joinedTableTypeString.length() /* characters, not bytes */);
 
     if (r != SQL_SUCCESS)
         qSqlWarning(QLatin1String("QODBCDriver::tables Unable to execute table list"), d);
@@ -2294,12 +2295,16 @@ QString QODBCDriver::escapeIdentifier(const QString &identifier, IdentifierType)
 {
     QString res = identifier;
     if (d->isMySqlServer) {
-        res.prepend(QLatin1Char('`')).append(QLatin1Char('`'));
-        res.replace(QLatin1Char('.'), QLatin1String("`.`"));
+        if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('`')) && identifier.right(1) != QString(QLatin1Char('`')) ) {
+            res.prepend(QLatin1Char('`')).append(QLatin1Char('`'));
+            res.replace(QLatin1Char('.'), QLatin1String("`.`"));
+        }
     } else {
-        res.replace(QLatin1Char('"'), QLatin1String("\"\""));
-        res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
-        res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+        if(!identifier.isEmpty() && identifier.left(1) != QString(QLatin1Char('"')) && identifier.right(1) != QString(QLatin1Char('"')) ) {
+            res.replace(QLatin1Char('"'), QLatin1String("\"\""));
+            res.prepend(QLatin1Char('"')).append(QLatin1Char('"'));
+            res.replace(QLatin1Char('.'), QLatin1String("\".\""));
+        }
     }
     return res;
 }

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/codecs/qtextcodec.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/codecs/qtextcodec.cpp -->
 <head>
   <title>Qt 4.5: QTextCodec Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -150,7 +150,7 @@
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
 <tr><th width="25%">Constant</th><th width="15%">Value</th><th width="60%">Description</th></tr>
 <tr><td valign="top"><tt>QTextCodec::DefaultConversion</tt></td><td align="center" valign="top"><tt>0</tt></td><td valign="top">No flag is set.</td></tr>
-<tr><td valign="top"><tt>QTextCodec::ConvertInvalidToNull</tt></td><td align="center" valign="top"><tt>0x80000000</tt></td><td valign="top">If this flag is set, invalid input results in an empty string.</td></tr>
+<tr><td valign="top"><tt>QTextCodec::ConvertInvalidToNull</tt></td><td align="center" valign="top"><tt>0x80000000</tt></td><td valign="top">If this flag is set, each invalid input character is output as a null character.</td></tr>
 <tr><td valign="top"><tt>QTextCodec::IgnoreHeader</tt></td><td align="center" valign="top"><tt>0x1</tt></td><td valign="top">Ignore any Unicode byte-order mark and don't generate any.</td></tr>
 </table></p>
 <p>The ConversionFlags type is a typedef for <a href="qflags.html">QFlags</a>&lt;ConversionFlag&gt;. It stores an OR combination of ConversionFlag values.</p>
@@ -181,7 +181,7 @@
 <p>Returns the codec used by <a href="qstring.html">QString</a> to convert to and from <tt>const char *</tt> and QByteArrays. If this function returns 0 (the default), <a href="qstring.html">QString</a> assumes Latin-1.</p>
 <p>See also <a href="qtextcodec.html#setCodecForCStrings">setCodecForCStrings</a>().</p>
 <h3 class="fn"><a name="codecForHtml"></a>QTextCodec * QTextCodec::codecForHtml ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>ba</i>, QTextCodec * <i>defaultCodec</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>Tries to detect the encoding of the provided snippet of html in the given byte array, <i>ba</i>, and returns a <a href="qtextcodec.html">QTextCodec</a> instance that is capable of decoding the html to unicode. If the codec cannot be detected from the content provided, <i>defaultCodec</i> is returned.</p>
+<p>Tries to detect the encoding of the provided snippet of HTML in the given byte array, <i>ba</i>, and returns a <a href="qtextcodec.html">QTextCodec</a> instance that is capable of decoding the html to unicode. If the codec cannot be detected from the content provided, <i>defaultCodec</i> is returned.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="codecForHtml-2"></a>QTextCodec * QTextCodec::codecForHtml ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>ba</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>This is an overloaded member function, provided for convenience.</p>
@@ -257,6 +257,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

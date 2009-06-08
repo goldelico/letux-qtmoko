@@ -873,8 +873,8 @@ QTextCodec::ConverterState::~ConverterState()
     \enum QTextCodec::ConversionFlag
 
     \value DefaultConversion  No flag is set.
-    \value ConvertInvalidToNull  If this flag is set, invalid input results in
-           an empty string.
+    \value ConvertInvalidToNull  If this flag is set, each invalid input
+                                 character is output as a null character.
     \value IgnoreHeader  Ignore any Unicode byte-order mark and don't generate any.
 
     \omitvalue FreeFunction
@@ -1508,7 +1508,7 @@ QString QTextDecoder::toUnicode(const QByteArray &ba)
 /*!
     \since 4.4
 
-    Tries to detect the encoding of the provided snippet of html in the given byte array, \a ba,
+    Tries to detect the encoding of the provided snippet of HTML in the given byte array, \a ba,
     and returns a QTextCodec instance that is capable of decoding the html to unicode.
     If the codec cannot be detected from the content provided, \a defaultCodec is returned.
 */

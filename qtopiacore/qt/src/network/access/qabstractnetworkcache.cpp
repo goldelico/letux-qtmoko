@@ -316,9 +316,16 @@ QDataStream &operator<<(QDataStream &out, const QNetworkCacheMetaData &metaData)
     return out;
 }
 
-static inline QDataStream &operator<<(QDataStream &out, QNetworkRequest::Attribute attr)
+static inline QDataStream &operator<<(QDataStream &out, const QNetworkCacheMetaData::AttributesMap &hash)
 {
-    return out << int(attr);
+    out << quint32(hash.size());
+    QNetworkCacheMetaData::AttributesMap::ConstIterator it = hash.end();
+    QNetworkCacheMetaData::AttributesMap::ConstIterator begin = hash.begin();
+    while (it != begin) {
+        --it;
+        out << int(it.key()) << it.value();
+    }
+    return out;
 }
 
 void QNetworkCacheMetaDataPrivate::save(QDataStream &out, const QNetworkCacheMetaData &metaData)
@@ -347,11 +354,30 @@ QDataStream &operator>>(QDataStream &in, QNetworkCacheMetaData &metaData)
     return in;
 }
 
-static inline QDataStream &operator>>(QDataStream &in, QNetworkRequest::Attribute& attr)
+static inline QDataStream &operator>>(QDataStream &in, QNetworkCacheMetaData::AttributesMap &hash)
 {
-    int v;
-    in >> v;
-    attr = QNetworkRequest::Attribute(v);
+    hash.clear();
+    QDataStream::Status oldStatus = in.status();
+    in.resetStatus();
+    hash.clear();
+
+    quint32 n;
+    in >> n;
+
+    for (quint32 i = 0; i < n; ++i) {
+        if (in.status() != QDataStream::Ok)
+            break;
+
+        int k;
+        QVariant t;
+        in >> k >> t;
+        hash.insertMulti(QNetworkRequest::Attribute(k), t);
+    }
+
+    if (in.status() != QDataStream::Ok)
+        hash.clear();
+    if (oldStatus != QDataStream::Ok)
+        in.setStatus(oldStatus);
     return in;
 }
 

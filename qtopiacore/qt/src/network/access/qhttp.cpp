@@ -1996,7 +1996,7 @@ bool QHttp::hasPendingRequests() const
 /*!
     Deletes all pending requests from the list of scheduled requests.
     This does not affect the request that is being executed. If
-    you want to stop this this as well, use abort().
+    you want to stop this as well, use abort().
 
     \sa hasPendingRequests() abort()
 */
@@ -2120,6 +2120,10 @@ int QHttp::setUser(const QString &userName, const QString &password)
     Web proxy cache server (from \l http://www.squid.org/). For transparent
     proxying, such as SOCKS5, use QNetworkProxy instead.
 
+    \note setProxy() has to be called before setHost() for it to take effect.
+    If setProxy() is called after setHost(), then it will not apply until after 
+    setHost() is called again.
+
     \sa QFtp::setProxy()
 */
 int QHttp::setProxy(const QString &host, int port,
@@ -2139,7 +2143,7 @@ int QHttp::setProxy(const QString &host, int port,
     is QNetworkProxy::HttpCachingProxy, QHttp will behave like the
     previous function.
 
-    Note: for compatibility with Qt 4.3, if the proxy type is
+    \note for compatibility with Qt 4.3, if the proxy type is
     QNetworkProxy::HttpProxy and the request type is unencrypted (that
     is, ConnectionModeHttp), QHttp will treat the proxy as a caching
     proxy.
@@ -2744,6 +2748,11 @@ void QHttpPrivate::_q_slotReadyRead()
 #endif
                     emit q->authenticationRequired(hostName, port, auth);
                 socket->blockSignals(false);
+            } else if (priv->phase == QAuthenticatorPrivate::Invalid) {
+                finishedWithError(QLatin1String(QT_TRANSLATE_NOOP("QHttp", "Unknown authentication method")),
+                        QHttp::AuthenticationRequiredError);
+                closeConn();
+                return;
             }
 
             // priv->phase will get reset to QAuthenticatorPrivate::Start if the authenticator got modified in the signal above.

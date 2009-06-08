@@ -367,7 +367,10 @@ void QSqlTableModel::setTable(const QString &tableName)
 {
     Q_D(QSqlTableModel);
     clear();
-    d->tableName = tableName;
+    if(d->db.tables().contains(tableName.toUpper()))
+        d->tableName = tableName.toUpper();
+    else
+        d->tableName = tableName;
     d->initRecordAndPrimaryIndex();
     d->initColOffsets(d->rec.count());
 

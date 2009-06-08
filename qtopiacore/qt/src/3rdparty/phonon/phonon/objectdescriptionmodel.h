@@ -35,18 +35,6 @@ QT_BEGIN_NAMESPACE
 
 #ifndef QT_NO_PHONON_OBJECTDESCRIPTIONMODEL
 
-/* MinGW 3.4.x gives an ICE when trying to instantiate one of the
-   ObjectDescriptionModel<foo> classes because it can't handle
-   half exported classes correct. gcc 4.3.x has a fix for this but
-   we currently there's no official gcc 4.3 on windows available.
-   Because of this we need this little hack
- */
-#if defined(Q_CC_MINGW)
-#define PHONON_EXPORT_ODM
-#else
-#define PHONON_EXPORT_ODM  PHONON_EXPORT
-#endif
-
 namespace Phonon
 {
     class ObjectDescriptionModelDataPrivate;
@@ -191,13 +179,22 @@ namespace Phonon
     {
         public:
             Q_OBJECT_CHECK
+
+/* MinGW 3.4.x gives an ICE when trying to instantiate one of the
+   ObjectDescriptionModel<foo> classes because it can't handle
+   half exported classes correct. gcc 4.3.x has a fix for this but
+   we currently there's no official gcc 4.3 on windows available.
+   Because of this we need this little hack
+ */
+#if !defined(Q_CC_MINGW) || __MINGW32_MAJOR_VERSION >= 4
             /** \internal */
             static PHONON_EXPORT const QMetaObject staticMetaObject;
             /** \internal */
-            PHONON_EXPORT_ODM const QMetaObject *metaObject() const;
+            PHONON_EXPORT const QMetaObject *metaObject() const;
             /** \internal */
-            PHONON_EXPORT_ODM void *qt_metacast(const char *_clname);
+            PHONON_EXPORT void *qt_metacast(const char *_clname);
             //int qt_metacall(QMetaObject::Call _c, int _id, void **_a);
+#endif
 
             /**
              * Returns the number of rows in the model. This value corresponds

@@ -1,3 +1,6 @@
+void wrapInFunction()
+{
+
 //! [0]
 QFile file("file.dat");
 file.open(QIODevice::WriteOnly);
@@ -74,3 +77,5 @@ in >> other_interesting_data;
 QDataStream out(file);
 out.setVersion(QDataStream::Qt_4_0);
 //! [5]
+
+}

@@ -4139,12 +4139,13 @@ void QOpenGLPaintEnginePrivate::strokeLines(const QPainterPath &path)
     enableClipping();
 }
 
+extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
+
 void QOpenGLPaintEnginePrivate::strokePath(const QPainterPath &path, bool use_cache)
 {
     QBrush old_brush = cbrush;
     cbrush = cpen.brush();
 
-    extern bool qt_scaleForTransform(const QTransform &transform, qreal *scale); // qtransform.cpp
     qreal txscale = 1;
     if (cpen.isCosmetic() || (qt_scaleForTransform(matrix, &txscale) && txscale != 1)) {
         QTransform temp = matrix;
@@ -5326,6 +5327,9 @@ void QOpenGLPaintEnginePrivate::composite(GLuint primitive, const q_vertexType *
 #else
     Q_Q(QOpenGLPaintEngine);
     QGL_FUNC_CONTEXT;
+
+    if (current_style == Qt::NoBrush)
+        return;
 
     DEBUG_ONCE qDebug() << "QOpenGLPaintEnginePrivate: Using compositing program: fragment_brush ="
                         << fragment_brush << ", fragment_composition_mode =" << fragment_composition_mode;

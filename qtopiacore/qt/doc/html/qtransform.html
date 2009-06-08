@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/painting/qtransform.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qtransform.cpp -->
 <head>
   <title>Qt 4.5: QTransform Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -28,8 +28,8 @@
 <h3>Public Functions</h3>
 <ul>
 <li><div class="fn"></div><b><a href="qtransform.html#QTransform">QTransform</a></b> ()</li>
-<li><div class="fn"></div><b><a href="qtransform.html#QTransform-2">QTransform</a></b> ( qreal <i>h11</i>, qreal <i>h12</i>, qreal <i>h13</i>, qreal <i>h21</i>, qreal <i>h22</i>, qreal <i>h23</i>, qreal <i>h31</i>, qreal <i>h32</i>, qreal <i>h33</i> = 1.0 )</li>
-<li><div class="fn"></div><b><a href="qtransform.html#QTransform-3">QTransform</a></b> ( qreal <i>h11</i>, qreal <i>h12</i>, qreal <i>h21</i>, qreal <i>h22</i>, qreal <i>dx</i>, qreal <i>dy</i> )</li>
+<li><div class="fn"></div><b><a href="qtransform.html#QTransform-2">QTransform</a></b> ( qreal <i>m11</i>, qreal <i>m12</i>, qreal <i>m13</i>, qreal <i>m21</i>, qreal <i>m22</i>, qreal <i>m23</i>, qreal <i>m31</i>, qreal <i>m32</i>, qreal <i>m33</i> = 1.0 )</li>
+<li><div class="fn"></div><b><a href="qtransform.html#QTransform-3">QTransform</a></b> ( qreal <i>m11</i>, qreal <i>m12</i>, qreal <i>m21</i>, qreal <i>m22</i>, qreal <i>dx</i>, qreal <i>dy</i> )</li>
 <li><div class="fn"></div><b><a href="qtransform.html#QTransform-4">QTransform</a></b> ( const QMatrix &amp; <i>matrix</i> )</li>
 <li><div class="fn"></div>qreal <b><a href="qtransform.html#m11">m11</a></b> () const</li>
 <li><div class="fn"></div>qreal <b><a href="qtransform.html#m12">m12</a></b> () const</li>
@@ -98,16 +98,16 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QPoint <b><a href="qtransform.html#operator-2a-14">operator*</a></b> ( const QPoint &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QPointF <b><a href="qtransform.html#operator-2a-15">operator*</a></b> ( const QPointF &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QLineF <b><a href="qtransform.html#operator-2a-16">operator*</a></b> ( const QLineF &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QLine <b><a href="qtransform.html#operator-2a-17">operator*</a></b> ( const QLine &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QPolygon <b><a href="qtransform.html#operator-2a-18">operator*</a></b> ( const QPolygon &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QPolygonF <b><a href="qtransform.html#operator-2a-19">operator*</a></b> ( const QPolygonF &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QRegion <b><a href="qtransform.html#operator-2a-20">operator*</a></b> ( const QRegion &amp; <i>region</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QPainterPath <b><a href="qtransform.html#operator-2a-21">operator*</a></b> ( const QPainterPath &amp; <i>path</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qtransform.html#operator-lt-lt-68">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QTransform &amp; <i>matrix</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qtransform.html#operator-gt-gt-42">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QPoint <b><a href="qtransform.html#operator-2a">operator*</a></b> ( const QPoint &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QPointF <b><a href="qtransform.html#operator-2a-3">operator*</a></b> ( const QPointF &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QLineF <b><a href="qtransform.html#operator-2a-4">operator*</a></b> ( const QLineF &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QLine <b><a href="qtransform.html#operator-2a-5">operator*</a></b> ( const QLine &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QPolygon <b><a href="qtransform.html#operator-2a-6">operator*</a></b> ( const QPolygon &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QPolygonF <b><a href="qtransform.html#operator-2a-7">operator*</a></b> ( const QPolygonF &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QRegion <b><a href="qtransform.html#operator-2a-8">operator*</a></b> ( const QRegion &amp; <i>region</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QPainterPath <b><a href="qtransform.html#operator-2a-9">operator*</a></b> ( const QPainterPath &amp; <i>path</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qtransform.html#operator-lt-lt-43">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QTransform &amp; <i>matrix</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qtransform.html#operator-gt-gt-20">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QTransform &amp; <i>matrix</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -165,7 +165,7 @@
 </table></p>
 <a name="basic-matrix-operations"></a>
 <h3>Basic Matrix Operations</h3>
-<p align="center"><img src="images/qtransform-representation.png" /></p><p>A QTransform object contains a 3 x 3 matrix. The <tt>dx</tt> and <tt>dy</tt> elements specify horizontal and vertical translation. The <tt>m11</tt> and <tt>m22</tt> elements specify horizontal and vertical scaling. The <tt>m21</tt> and <tt>m12</tt> elements specify horizontal and vertical <i>shearing</i>. And finally, the <tt>m13</tt> and <tt>m23</tt> elements specify horizontal and vertical projection, with <tt>m33</tt> as an additional projection factor.</p>
+<p align="center"><img src="images/qtransform-representation.png" /></p><p>A QTransform object contains a 3 x 3 matrix. The <tt>m31</tt> (<tt>dx</tt>) and <tt>m32</tt> (<tt>dy</tt>) elements specify horizontal and vertical translation. The <tt>m11</tt> and <tt>m22</tt> elements specify horizontal and vertical scaling. The <tt>m21</tt> and <tt>m12</tt> elements specify horizontal and vertical <i>shearing</i>. And finally, the <tt>m13</tt> and <tt>m23</tt> elements specify horizontal and vertical projection, with <tt>m33</tt> as an additional projection factor.</p>
 <p>QTransform transforms a point in the plane to another point using the following formulas:</p>
 <pre> x' = m11*x + m21*y + dx
  y' = m22*y + m12*x + dy
@@ -225,11 +225,11 @@
 <p>Constructs an identity matrix.</p>
 <p>All elements are set to zero except <tt>m11</tt> and <tt>m22</tt> (specifying the scale) and <tt>m13</tt> which are set to 1.</p>
 <p>See also <a href="qtransform.html#reset">reset</a>().</p>
-<h3 class="fn"><a name="QTransform-2"></a>QTransform::QTransform ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h11</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h12</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h13</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h21</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h22</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h23</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h31</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h32</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h33</i> = 1.0 )</h3>
-<p>Constructs a matrix with the elements, <i>h11</i>, <i>h12</i>, <i>h13</i>, <i>h21</i>, <i>h22</i>, <i>h23</i>, <i>h31</i>, <i>h32</i>, <i>h33</i>.</p>
+<h3 class="fn"><a name="QTransform-2"></a>QTransform::QTransform ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m11</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m12</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m13</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m21</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m22</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m23</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m31</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m32</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m33</i> = 1.0 )</h3>
+<p>Constructs a matrix with the elements, <i>m11</i>, <i>m12</i>, <i>m13</i>, <i>m21</i>, <i>m22</i>, <i>m23</i>, <i>m31</i>, <i>m32</i>, <i>m33</i>.</p>
 <p>See also <a href="qtransform.html#setMatrix">setMatrix</a>().</p>
-<h3 class="fn"><a name="QTransform-3"></a>QTransform::QTransform ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h11</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h12</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h21</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h22</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>dx</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>dy</i> )</h3>
-<p>Constructs a matrix with the elements, <i>h11</i>, <i>h12</i>, <i>h21</i>, <i>h22</i>, <i>dx</i> and <i>dy</i>.</p>
+<h3 class="fn"><a name="QTransform-3"></a>QTransform::QTransform ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m11</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m12</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m21</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m22</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>dx</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>dy</i> )</h3>
+<p>Constructs a matrix with the elements, <i>m11</i>, <i>m12</i>, <i>m21</i>, <i>m22</i>, <i>dx</i> and <i>dy</i>.</p>
 <p>See also <a href="qtransform.html#setMatrix">setMatrix</a>().</p>
 <h3 class="fn"><a name="QTransform-4"></a>QTransform::QTransform ( const <a href="qmatrix.html">QMatrix</a> &amp; <i>matrix</i> )</h3>
 <p>Constructs a matrix that is a copy of the given <i>matrix</i>. Note that the <tt>m13</tt>, <tt>m23</tt>, and <tt>m33</tt> elements are set to 0, 0, and 1 respectively.</p>
@@ -437,37 +437,37 @@
 <p>Returns true if this matrix is equal to the given <i>matrix</i>, otherwise returns false.</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-2a-14"></a><a href="qpoint.html">QPoint</a> operator* ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a"></a><a href="qpoint.html">QPoint</a> operator* ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>point</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-15"></a><a href="qpointf.html">QPointF</a> operator* ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-3"></a><a href="qpointf.html">QPointF</a> operator* ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>Same as <i>matrix</i>.map(<i>point</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-16"></a><a href="qlinef.html">QLineF</a> operator* ( const <a href="qlinef.html">QLineF</a> &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-4"></a><a href="qlinef.html">QLineF</a> operator* ( const <a href="qlinef.html">QLineF</a> &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>line</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-17"></a><a href="qline.html">QLine</a> operator* ( const <a href="qline.html">QLine</a> &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-5"></a><a href="qline.html">QLine</a> operator* ( const <a href="qline.html">QLine</a> &amp; <i>line</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>line</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-18"></a><a href="qpolygon.html">QPolygon</a> operator* ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-6"></a><a href="qpolygon.html">QPolygon</a> operator* ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>polygon</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-19"></a><a href="qpolygonf.html">QPolygonF</a> operator* ( const <a href="qpolygonf.html">QPolygonF</a> &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-7"></a><a href="qpolygonf.html">QPolygonF</a> operator* ( const <a href="qpolygonf.html">QPolygonF</a> &amp; <i>polygon</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>polygon</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-20"></a><a href="qregion.html">QRegion</a> operator* ( const <a href="qregion.html">QRegion</a> &amp; <i>region</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-8"></a><a href="qregion.html">QRegion</a> operator* ( const <a href="qregion.html">QRegion</a> &amp; <i>region</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>region</i>).</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-2a-21"></a><a href="qpainterpath.html">QPainterPath</a> operator* ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-2a-9"></a><a href="qpainterpath.html">QPainterPath</a> operator* ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>This is the same as <i>matrix</i>.map(<i>path</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qtransform.html#map">QTransform::map</a>().</p>
-<h3 class="fn"><a name="operator-lt-lt-68"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-43"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QTransform &amp; <i>matrix</i> )</h3>
 <p>Writes the given <i>matrix</i> to the given <i>stream</i> and returns a reference to the stream.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-42"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QTransform &amp; <i>matrix</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-20"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QTransform &amp; <i>matrix</i> )</h3>
 <p>Reads the given <i>matrix</i> from the given <i>stream</i> and returns a reference to the stream.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
@@ -475,6 +475,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -44,7 +44,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3PtrCollection qptrcollection.h
+    \class Q3PtrCollection
     \reentrant
     \brief The Q3PtrCollection class is the base class of most pointer-based Qt collections.
 

@@ -39,6 +39,7 @@
 **
 ****************************************************************************/
 
+#include <QtDebug>
 #include "config.h"
 #include "location.h"
 
@@ -64,6 +65,8 @@ QRegExp *Location::spuriousRegExp = 0;
 
   It maintains a stack of file positions. A file position 
   consists of the file path, line number, and column number.
+  The location is used for printing error messages that are
+  tied to a location in a file.
  */
 
 /*!
@@ -267,7 +270,10 @@ void Location::fatal(const QString& message, const QString& details) const
 }
 
 /*!
-  
+  Gets several parameters from the \a config, including
+  tab size, program name, and a regular expression that
+  appears to be used for matching certain error messages
+  so that emitMessage() can avoid printing them.
  */
 void Location::initialize(const Config& config)
 {
@@ -285,9 +291,9 @@ void Location::initialize(const Config& config)
 }
 
 /*!
-  Apparently, all this does is delete a so-called
-  \e{spurious regular expression} in the internal
-  state and set the pointer to it to 0.
+  Apparently, all this does is delete the regular expression
+  used for intercepting certain error messages that should
+  not be emitted by emitMessage().
  */
 void Location::terminate()
 {
@@ -340,6 +346,10 @@ void Location::emitMessage(MessageType type,
     fflush(stderr);
 }
 
+/*!
+  Converts the location to a string to be prepended to error
+  messages. 
+ */
 QString Location::toString() const
 {
     QString str;

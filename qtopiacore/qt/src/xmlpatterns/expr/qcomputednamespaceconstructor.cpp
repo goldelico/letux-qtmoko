@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -66,7 +66,7 @@ void ComputedNamespaceConstructor::evaluateToSequenceReceiver(const DynamicConte
 
     if(namespaceURI.isEmpty())
     {
-        context->error(QtXmlPatterns::tr("In a namespace constructor, the value for a namespace value cannot be an empty string."),
+        context->error(QtXmlPatterns::tr("In a namespace constructor, the value for a namespace cannot be an empty string."),
                        ReportContext::XTDE0930,
                        this);
     }

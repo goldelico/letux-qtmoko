@@ -71,7 +71,7 @@ QT_BEGIN_NAMESPACE
 // --- QDateTimeEdit ---
 
 /*!
-  \class QDateTimeEdit qdatetimeedit.h
+  \class QDateTimeEdit
   \brief The QDateTimeEdit class provides a widget for editing dates and times.
 
   \ingroup basicwidgets

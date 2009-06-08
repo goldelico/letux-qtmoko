@@ -1186,8 +1186,8 @@ void Moc::checkSuperClasses(ClassDef *def)
         msg += def->superclassList.value(0);
         msg += " but that is not a known QObject subclass. You may get compilation errors.";
         warning(msg.constData());
-        return;
 #endif
+        return;
     }
     for (int i = 1; i < def->superclassList.count(); ++i) {
         const QByteArray superClass = def->superclassList.at(i).first;

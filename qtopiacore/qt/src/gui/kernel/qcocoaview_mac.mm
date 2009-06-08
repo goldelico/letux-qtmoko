@@ -300,11 +300,13 @@ extern "C" {
     NSPoint windowPoint = [sender draggingLocation];
     NSPoint globalPoint = [[sender draggingDestinationWindow] convertBaseToScreen:windowPoint];
     NSPoint localPoint = [self convertPoint:windowPoint fromView:nil];
+    NSDragOperation nsActions = [sender draggingSourceOperationMask];
     QPoint posDrag(localPoint.x, localPoint.y);
-    if (qt_mac_mouse_inside_answer_rect(posDrag))
+    if (qt_mac_mouse_inside_answer_rect(posDrag)
+        && QT_PREPEND_NAMESPACE(qt_mac_dnd_answer_rec.lastOperation) == nsActions)
         return QT_PREPEND_NAMESPACE(qt_mac_mapDropActions)(QT_PREPEND_NAMESPACE(qt_mac_dnd_answer_rec.lastAction));
     // send drag move event to the widget    
-    NSDragOperation nsActions = [sender draggingSourceOperationMask]; 
+    QT_PREPEND_NAMESPACE(qt_mac_dnd_answer_rec.lastOperation) = nsActions;
     Qt::DropActions qtAllowed = QT_PREPEND_NAMESPACE(qt_mac_mapNSDragOperations)(nsActions);
     QMimeData *mimeData = dropData;
     if (QDragManager::self()->source())
@@ -433,7 +435,7 @@ extern "C" {
         QPaintEngine *engine = qwidget->paintEngine();
         if (engine)
             engine->setSystemClip(qrgn);
-        if (qwidgetprivate->extra && qwidgetprivate->extra->imageMask) {
+        if (qwidgetprivate->extra && qwidgetprivate->extra->hasMask) {
             CGRect widgetRect = CGRectMake(0, 0, qwidget->width(), qwidget->height());
             CGContextTranslateCTM (cg, 0, widgetRect.size.height);
             CGContextScaleCTM(cg, 1, -1);
@@ -812,6 +814,7 @@ extern "C" {
     qwidget->setGeometry(newGeo);
     qwidget->setAttribute(Qt::WA_Moved, moved);
     qwidget->setAttribute(Qt::WA_Resized, resized);
+    qwidgetprivate->syncCocoaMask();
 }
 
 - (BOOL)isEnabled
@@ -886,15 +889,18 @@ extern "C" {
     QWidget *widgetToGetKey = qwidget;
 
     QWidget *popup = qAppInstance()->activePopupWidget();
-    if (popup && popup != qwidget->window())
+    bool sendToPopup = false;
+    if (popup && popup != qwidget->window()) {
         widgetToGetKey = popup->focusWidget() ? popup->focusWidget() : popup;
+        sendToPopup = true;
+    }
 
     if (widgetToGetKey->testAttribute(Qt::WA_InputMethodEnabled)) {
         [qt_mac_nativeview_for(widgetToGetKey) interpretKeyEvents:[NSArray arrayWithObject: theEvent]];
     }
     if (sendKeyEvents && !composing) {
         bool keyOK = qt_dispatchKeyEvent(theEvent, widgetToGetKey);
-        if (!keyOK)
+        if (!keyOK && !sendToPopup)
             [super keyDown:theEvent];
     }
 }
@@ -908,6 +914,27 @@ extern "C" {
             [super keyUp:theEvent];
     }
 }
+
+- (void)viewWillMoveToWindow:(NSWindow *)window
+{
+    if (qwidget->windowFlags() & Qt::MSWindowsOwnDC
+          && (window != [self window])) { // OpenGL Widget
+        // Create a stupid ClearDrawable Event
+        QEvent event(QEvent::MacGLClearDrawable);
+        qApp->sendEvent(qwidget, &event);
+    }
+}
+
+- (void)viewDidMoveToWindow
+{
+    if (qwidget->windowFlags() & Qt::MSWindowsOwnDC && [self window]) {
+        // call update paint event
+        qwidgetprivate->needWindowChange = true;
+        QEvent event(QEvent::MacGLWindowChange);
+        qApp->sendEvent(qwidget, &event);
+    }
+}
+
 
 // NSTextInput Protocol implementation
 
@@ -1202,15 +1229,16 @@ Qt::DropAction QDragManager::drag(QDrag *o)
     // convert the image to NSImage.
     NSImage *image = (NSImage *)qt_mac_create_nsimage(pix);
     [image retain];
-    DnDParams *dndParams = [QT_MANGLE_NAMESPACE(QCocoaView) currentMouseEvent];                       
+    DnDParams *dndParams = [QT_MANGLE_NAMESPACE(QCocoaView) currentMouseEvent];
     // save supported actions 
     [dndParams->view setSupportedActions: qt_mac_mapDropActions(dragPrivate()->possible_actions)];
-    NSPoint imageLoc = {dndParams->localPoint.x - hotspot.x(), 
-			dndParams->localPoint.y + pix.height() - hotspot.y()};
+    NSPoint imageLoc = {dndParams->localPoint.x - hotspot.x(),
+                        dndParams->localPoint.y + pix.height() - hotspot.y()};
     NSSize mouseOffset = {0.0, 0.0};
     NSPasteboard *pboard = [NSPasteboard pasteboardWithName:NSDragPboard];
     NSPoint windowPoint = [dndParams->theEvent locationInWindow];
     // do the drag
+    [dndParams->view retain];
     [dndParams->view dragImage:image
                             at:imageLoc
                         offset:mouseOffset
@@ -1218,13 +1246,14 @@ Qt::DropAction QDragManager::drag(QDrag *o)
                     pasteboard:pboard
                         source:dndParams->view
                      slideBack:YES];
+    [dndParams->view release];
     [image release];
     object = 0;
     Qt::DropAction performedAction(qt_mac_mapNSDragOperation(dndParams->performedAction));
     // do post drag processing, if required.
     if(performedAction != Qt::IgnoreAction) {
         // check if the receiver points us to a file location. 
-	// if so, we need to do the file copy/move ourselves.
+        // if so, we need to do the file copy/move ourselves.
         QCFType<CFURLRef> pasteLocation = 0;
         PasteboardCopyPasteLocation(dragBoard.pasteBoard(), &pasteLocation);
         if (pasteLocation) {

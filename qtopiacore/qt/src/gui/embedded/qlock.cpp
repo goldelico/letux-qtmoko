@@ -92,7 +92,7 @@ public:
 #endif // QT_NO_QWS_MULTIPROCESS
 
 /*!
-    \class QLock qlock_p.h
+    \class QLock
     \brief The QLock class is a wrapper for a System V shared semaphore.
 
     \ingroup qws

@@ -54,7 +54,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3SqlEditorFactory qsqleditorfactory.h
+    \class Q3SqlEditorFactory
     \brief The Q3SqlEditorFactory class is used to create the editors
     used by Q3DataTable and Q3SqlForm.
 

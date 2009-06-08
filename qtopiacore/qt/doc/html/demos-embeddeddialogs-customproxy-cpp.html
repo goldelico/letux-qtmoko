@@ -59,7 +59,7 @@
  #include &lt;QtGui&gt;
 
  CustomProxy::CustomProxy(QGraphicsItem *parent, Qt::WindowFlags wFlags)
-     : QGraphicsProxyWidget(parent, wFlags), popupShown(false)
+     : QGraphicsProxyWidget(parent, wFlags), popupShown(false), currentPopup(0)
  {
      timeLine = new QTimeLine(250, this);
      connect(timeLine, SIGNAL(valueChanged(qreal)),
@@ -127,13 +127,17 @@
  QVariant CustomProxy::itemChange(GraphicsItemChange change, const QVariant &amp;value)
  {
      if (change == ItemChildAddedChange || change == ItemChildRemovedChange) {
-         QGraphicsItem *item = qVariantValue&lt;QGraphicsItem *&gt;(value);
          if (change == ItemChildAddedChange) {
-             item-&gt;setCacheMode(ItemCoordinateCache);
-             item-&gt;installSceneEventFilter(this);
-         } else {
-             item-&gt;removeSceneEventFilter(this);
+             currentPopup = qVariantValue&lt;QGraphicsItem *&gt;(value);
+             currentPopup-&gt;setCacheMode(ItemCoordinateCache);
+             if (scene())
+                 currentPopup-&gt;installSceneEventFilter(this);
+         } else if (scene()) {
+             currentPopup-&gt;removeSceneEventFilter(this);
+             currentPopup = 0;
          }
+     } else if (currentPopup &amp;&amp; change == ItemSceneHasChanged) {
+         currentPopup-&gt;installSceneEventFilter(this);
      }
      return QGraphicsProxyWidget::itemChange(change, value);
  }
@@ -180,6 +184,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

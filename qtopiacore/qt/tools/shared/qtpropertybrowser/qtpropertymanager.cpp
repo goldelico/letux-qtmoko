@@ -55,6 +55,7 @@
 #include <QtGui/QLabel>
 
 #include <limits.h>
+#include <float.h>
 
 #if defined(Q_CC_MSVC)
 #    pragma warning(disable: 4786) /* MS VS 6: truncating debug info after 255 characters */
@@ -855,7 +856,7 @@ void QtIntPropertyManager::setRange(QtProperty *property, int minVal, int maxVal
 
     The step is typically used to increment or decrement a property value while pressing an arrow key.
 
-    \sa step()
+    \sa singleStep()
 */
 void QtIntPropertyManager::setSingleStep(QtProperty *property, int step)
 {
@@ -1096,7 +1097,7 @@ void QtDoublePropertyManager::setValue(QtProperty *property, double val)
 
     The step is typically used to increment or decrement a property value while pressing an arrow key.
 
-    \sa step()
+    \sa singleStep()
 */
 void QtDoublePropertyManager::setSingleStep(QtProperty *property, double step)
 {
@@ -3782,7 +3783,7 @@ public:
 
     struct Data
     {
-        Data() : val(0, 0, 0, 0), constraint(QRect(0, 0, INT_MAX, INT_MAX)) {}
+        Data() : val(0, 0, 0, 0) {}
         QRect val;
         QRect constraint;
     };
@@ -3817,7 +3818,7 @@ void QtRectPropertyManagerPrivate::slotIntChanged(QtProperty *property, int valu
         Data data = m_values[prop];
         QRect r = data.val;
         r.setWidth(value);
-        if (data.constraint.x() + data.constraint.width() < r.x() + r.width()) {
+        if (!data.constraint.isNull() && data.constraint.x() + data.constraint.width() < r.x() + r.width()) {
             r.moveLeft(data.constraint.left() + data.constraint.width() - r.width());
         }
         q_ptr->setValue(prop, r);
@@ -3825,7 +3826,7 @@ void QtRectPropertyManagerPrivate::slotIntChanged(QtProperty *property, int valu
         Data data = m_values[prop];
         QRect r = data.val;
         r.setHeight(value);
-        if (data.constraint.y() + data.constraint.height() < r.y() + r.height()) {
+        if (!data.constraint.isNull() && data.constraint.y() + data.constraint.height() < r.y() + r.height()) {
             r.moveTop(data.constraint.top() + data.constraint.height() - r.height());
         }
         q_ptr->setValue(prop, r);
@@ -3852,12 +3853,18 @@ void QtRectPropertyManagerPrivate::slotPropertyDestroyed(QtProperty *property)
 void QtRectPropertyManagerPrivate::setConstraint(QtProperty *property,
             const QRect &constraint, const QRect &val)
 {
-    m_intPropertyManager->setRange(m_propertyToX[property], constraint.left(),
-                    constraint.left() + constraint.width());
-    m_intPropertyManager->setRange(m_propertyToY[property], constraint.top(),
-                    constraint.top() + constraint.height());
-    m_intPropertyManager->setRange(m_propertyToW[property], 0, constraint.width());
-    m_intPropertyManager->setRange(m_propertyToH[property], 0, constraint.height());
+    const bool isNull = constraint.isNull();
+    const int left   = isNull ? INT_MIN : constraint.left();
+    const int right  = isNull ? INT_MAX : constraint.left() + constraint.width();
+    const int top    = isNull ? INT_MIN : constraint.top();
+    const int bottom = isNull ? INT_MAX : constraint.top() + constraint.height();
+    const int width  = isNull ? INT_MAX : constraint.width();
+    const int height = isNull ? INT_MAX : constraint.height();
+
+    m_intPropertyManager->setRange(m_propertyToX[property], left, right);
+    m_intPropertyManager->setRange(m_propertyToY[property], top, bottom);
+    m_intPropertyManager->setRange(m_propertyToW[property], 0, width);
+    m_intPropertyManager->setRange(m_propertyToH[property], 0, height);
 
     m_intPropertyManager->setValue(m_propertyToX[property], val.x());
     m_intPropertyManager->setValue(m_propertyToY[property], val.y());
@@ -3969,7 +3976,7 @@ QRect QtRectPropertyManager::value(const QtProperty *property) const
 }
 
 /*!
-    Returns the given \a property's constraining rectangle.
+    Returns the given \a property's constraining rectangle. If returned value is null QRect it means there is no constraint applied.
 
     \sa value(), setConstraint()
 */
@@ -4014,7 +4021,7 @@ void QtRectPropertyManager::setValue(QtProperty *property, const QRect &val)
     QtRectPropertyManagerPrivate::Data data = it.value();
 
     QRect newRect = val.normalized();
-    if (!data.constraint.contains(newRect)) {
+    if (!data.constraint.isNull() && !data.constraint.contains(newRect)) {
         const QRect r1 = data.constraint;
         const QRect r2 = newRect;
         newRect.setLeft(qMax(r1.left(), r2.left()));
@@ -4046,7 +4053,7 @@ void QtRectPropertyManager::setValue(QtProperty *property, const QRect &val)
 
     When setting the constraint, the current value is adjusted if
     necessary (ensuring that the current rectangle value is inside the
-    constraint).
+    constraint). In order to reset the constraint pass a null QRect value.
 
     \sa setValue(), constraint(), constraintChanged()
 */
@@ -4066,9 +4073,10 @@ void QtRectPropertyManager::setConstraint(QtProperty *property, const QRect &con
 
     data.constraint = newConstraint;
 
-    if (!data.constraint.contains(oldVal)) {
+    if (!data.constraint.isNull() && !data.constraint.contains(oldVal)) {
         QRect r1 = data.constraint;
         QRect r2 = data.val;
+
         if (r2.width() > r1.width())
             r2.setWidth(r1.width());
         if (r2.height() > r1.height())
@@ -4108,7 +4116,6 @@ void QtRectPropertyManager::initializeProperty(QtProperty *property)
     QtProperty *xProp = d_ptr->m_intPropertyManager->addProperty();
     xProp->setPropertyName(tr("X"));
     d_ptr->m_intPropertyManager->setValue(xProp, 0);
-    d_ptr->m_intPropertyManager->setMinimum(xProp, 0);
     d_ptr->m_propertyToX[property] = xProp;
     d_ptr->m_xToProperty[xProp] = property;
     property->addSubProperty(xProp);
@@ -4116,7 +4123,6 @@ void QtRectPropertyManager::initializeProperty(QtProperty *property)
     QtProperty *yProp = d_ptr->m_intPropertyManager->addProperty();
     yProp->setPropertyName(tr("Y"));
     d_ptr->m_intPropertyManager->setValue(yProp, 0);
-    d_ptr->m_intPropertyManager->setMinimum(yProp, 0);
     d_ptr->m_propertyToY[property] = yProp;
     d_ptr->m_yToProperty[yProp] = property;
     property->addSubProperty(yProp);
@@ -4188,7 +4194,7 @@ public:
 
     struct Data
     {
-        Data() : val(0, 0, 0, 0), constraint(QRectF(0, 0, INT_MAX, INT_MAX)), decimals(2) {}
+        Data() : val(0, 0, 0, 0), decimals(2) {}
         QRectF val;
         QRectF constraint;
         int decimals;
@@ -4224,7 +4230,7 @@ void QtRectFPropertyManagerPrivate::slotDoubleChanged(QtProperty *property, doub
         Data data = m_values[prop];
         QRectF r = data.val;
         r.setWidth(value);
-        if (data.constraint.x() + data.constraint.width() < r.x() + r.width()) {
+        if (!data.constraint.isNull() && data.constraint.x() + data.constraint.width() < r.x() + r.width()) {
             r.moveLeft(data.constraint.left() + data.constraint.width() - r.width());
         }
         q_ptr->setValue(prop, r);
@@ -4232,7 +4238,7 @@ void QtRectFPropertyManagerPrivate::slotDoubleChanged(QtProperty *property, doub
         Data data = m_values[prop];
         QRectF r = data.val;
         r.setHeight(value);
-        if (data.constraint.y() + data.constraint.height() < r.y() + r.height()) {
+        if (!data.constraint.isNull() && data.constraint.y() + data.constraint.height() < r.y() + r.height()) {
             r.moveTop(data.constraint.top() + data.constraint.height() - r.height());
         }
         q_ptr->setValue(prop, r);
@@ -4259,12 +4265,18 @@ void QtRectFPropertyManagerPrivate::slotPropertyDestroyed(QtProperty *property)
 void QtRectFPropertyManagerPrivate::setConstraint(QtProperty *property,
             const QRectF &constraint, const QRectF &val)
 {
-    m_doublePropertyManager->setRange(m_propertyToX[property], constraint.left(),
-                    constraint.left() + constraint.width());
-    m_doublePropertyManager->setRange(m_propertyToY[property], constraint.top(),
-                    constraint.top() + constraint.height());
-    m_doublePropertyManager->setRange(m_propertyToW[property], 0, constraint.width());
-    m_doublePropertyManager->setRange(m_propertyToH[property], 0, constraint.height());
+    const bool isNull = constraint.isNull();
+    const float left   = isNull ? FLT_MIN : constraint.left();
+    const float right  = isNull ? FLT_MAX : constraint.left() + constraint.width();
+    const float top    = isNull ? FLT_MIN : constraint.top();
+    const float bottom = isNull ? FLT_MAX : constraint.top() + constraint.height();
+    const float width  = isNull ? FLT_MAX : constraint.width();
+    const float height = isNull ? FLT_MAX : constraint.height();
+
+    m_doublePropertyManager->setRange(m_propertyToX[property], left, right);
+    m_doublePropertyManager->setRange(m_propertyToY[property], top, bottom);
+    m_doublePropertyManager->setRange(m_propertyToW[property], 0, width);
+    m_doublePropertyManager->setRange(m_propertyToH[property], 0, height);
 
     m_doublePropertyManager->setValue(m_propertyToX[property], val.x());
     m_doublePropertyManager->setValue(m_propertyToY[property], val.y());
@@ -4396,7 +4408,7 @@ int QtRectFPropertyManager::decimals(const QtProperty *property) const
 }
 
 /*!
-    Returns the given \a property's constraining rectangle.
+    Returns the given \a property's constraining rectangle. If returned value is null QRectF it means there is no constraint applied.
 
     \sa value(), setConstraint()
 */
@@ -4442,7 +4454,7 @@ void QtRectFPropertyManager::setValue(QtProperty *property, const QRectF &val)
     QtRectFPropertyManagerPrivate::Data data = it.value();
 
     QRectF newRect = val.normalized();
-    if (!data.constraint.contains(newRect)) {
+    if (!data.constraint.isNull() && !data.constraint.contains(newRect)) {
         const QRectF r1 = data.constraint;
         const QRectF r2 = newRect;
         newRect.setLeft(qMax(r1.left(), r2.left()));
@@ -4474,7 +4486,7 @@ void QtRectFPropertyManager::setValue(QtProperty *property, const QRectF &val)
 
     When setting the constraint, the current value is adjusted if
     necessary (ensuring that the current rectangle value is inside the
-    constraint).
+    constraint). In order to reset the constraint pass a null QRectF value.
 
     \sa setValue(), constraint(), constraintChanged()
 */
@@ -4494,9 +4506,10 @@ void QtRectFPropertyManager::setConstraint(QtProperty *property, const QRectF &c
 
     data.constraint = newConstraint;
 
-    if (!data.constraint.contains(oldVal)) {
+    if (!data.constraint.isNull() && !data.constraint.contains(oldVal)) {
         QRectF r1 = data.constraint;
         QRectF r2 = data.val;
+
         if (r2.width() > r1.width())
             r2.setWidth(r1.width());
         if (r2.height() > r1.height())
@@ -4573,7 +4586,6 @@ void QtRectFPropertyManager::initializeProperty(QtProperty *property)
     xProp->setPropertyName(tr("X"));
     d_ptr->m_doublePropertyManager->setDecimals(xProp, decimals(property));
     d_ptr->m_doublePropertyManager->setValue(xProp, 0);
-    d_ptr->m_doublePropertyManager->setMinimum(xProp, 0);
     d_ptr->m_propertyToX[property] = xProp;
     d_ptr->m_xToProperty[xProp] = property;
     property->addSubProperty(xProp);
@@ -4582,7 +4594,6 @@ void QtRectFPropertyManager::initializeProperty(QtProperty *property)
     yProp->setPropertyName(tr("Y"));
     d_ptr->m_doublePropertyManager->setDecimals(yProp, decimals(property));
     d_ptr->m_doublePropertyManager->setValue(yProp, 0);
-    d_ptr->m_doublePropertyManager->setMinimum(yProp, 0);
     d_ptr->m_propertyToY[property] = yProp;
     d_ptr->m_yToProperty[yProp] = property;
     property->addSubProperty(yProp);

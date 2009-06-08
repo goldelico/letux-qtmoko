@@ -1007,6 +1007,11 @@ enum { MaximumParamCount = 11 }; // up to 10 arguments + 1 return value
        a QEvent will be sent and the member is invoked as soon as the application
        enters the main event loop.
 
+    \o If \a type is Qt::BlockingQueuedConnection, the method will be invoked in
+       the same way as for Qt::QueuedConnection, except that the current thread
+       will block until the event is delivered. Using this connection type to
+       communicate between objects in the same thread will lead to deadlocks.
+
     \o If \a type is Qt::AutoConnection, the member is invoked
        synchronously if \a obj lives in the same thread as the
        caller; otherwise it will invoke the member asynchronously.
@@ -1025,9 +1030,10 @@ enum { MaximumParamCount = 11 }; // up to 10 arguments + 1 return value
     const reference of that type; Q_RETURN_ARG() takes a type name
     and a non-const reference.
 
-    To asynchronously invoke the
-    \l{QPushButton::animateClick()}{animateClick()} slot on a
-    QPushButton:
+    You only need to pass the name of the signal or slot to this function,
+    not the entire signature. For example, to asynchronously invoke
+    the \l{QPushButton::animateClick()}{animateClick()} slot on a
+    QPushButton, use the following code:
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qmetaobject.cpp 2
 
@@ -1049,7 +1055,6 @@ enum { MaximumParamCount = 11 }; // up to 10 arguments + 1 return value
 
     If the "compute" slot does not take exactly one QString, one int
     and one double in the specified order, the call will fail.
-
 
     \sa Q_ARG(), Q_RETURN_ARG(), qRegisterMetaType(), QMetaMethod::invoke()
 */
@@ -1395,6 +1400,10 @@ QMetaMethod::MethodType QMetaMethod::methodType() const
     some arbitrary object \c obj retrieve its return value:
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qmetaobject.cpp 8
+
+    QMetaObject::normalizedSignature() is used here to ensure that the format 
+    of the signature is what invoke() expects.  E.g. extra whitespace is 
+    removed.
 
     If the "compute" slot does not take exactly one QString, one int
     and one double in the specified order, the call will fail.
@@ -1893,6 +1902,12 @@ static QByteArray qualifiedName(const QMetaEnum &e)
 
     \ingroup objectmodel
 
+    Property meta-data is obtained from an object's meta-object. See
+    QMetaObject::property() and QMetaObject::propertyCount() for
+    details.
+
+    \section1 Property Meta-Data
+
     A property has a name() and a type(), as well as various
     attributes that specify its behavior: isReadable(), isWritable(),
     isDesignable(), isScriptable(), and isStored().
@@ -1908,9 +1923,10 @@ static QByteArray qualifiedName(const QMetaEnum &e)
     functions. See QObject::setProperty() and QObject::property() for
     details.
 
-    You get property meta-data through an object's meta-object. See
-    QMetaObject::property() and QMetaObject::propertyCount() for
-    details.
+    \section1 Copying and Assignment
+
+    QMetaProperty objects can be copied by value. However, each copy will
+    refer to the same underlying property meta-data.
 
     \sa QMetaObject, QMetaEnum, QMetaMethod, {Qt's Property System}
 */

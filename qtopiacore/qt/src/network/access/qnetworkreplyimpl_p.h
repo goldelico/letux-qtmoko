@@ -56,7 +56,6 @@
 #include "qnetworkreply.h"
 #include "qnetworkreply_p.h"
 #include "qnetworkaccessmanager.h"
-#include "qnetworkaccessbackend_p.h"
 #include "qnetworkproxy.h"
 #include "QtCore/qmap.h"
 #include "QtCore/qqueue.h"

@@ -505,9 +505,9 @@ int main(int argc, char *argv[])
         QMap<QString, QString>::const_iterator it = config.aboutTextFiles().constBegin();
         QMap<QString, QByteArray> imgData;
 
-        QRegExp srcRegExp("src=(\"(.+)\"|([^\"\\s]+)).*>");
+        QRegExp srcRegExp(QLatin1String("src=(\"(.+)\"|([^\"\\s]+)).*>"));
         srcRegExp.setMinimal(true);
-        QRegExp imgRegExp("(<img[^>]+>)");
+        QRegExp imgRegExp(QLatin1String("(<img[^>]+>)"));
         imgRegExp.setMinimal(true);
 
         while (it != config.aboutTextFiles().constEnd()) {

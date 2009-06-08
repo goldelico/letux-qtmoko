@@ -18,7 +18,7 @@
  ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
  ** Contact: Qt Software Information (qt-info@nokia.com)
  **
- ** This file is part of the example classes of the Qt Toolkit.
+ ** This file is part of the examples of the Qt Toolkit.
  **
  ** $QT_BEGIN_LICENSE:LGPL$
  ** Commercial Usage
@@ -76,6 +76,7 @@
              DragLabel *wordLabel = new DragLabel(word, this);
              wordLabel-&gt;move(x, y);
              wordLabel-&gt;show();
+             wordLabel-&gt;setAttribute(Qt::WA_DeleteOnClose);
              x += wordLabel-&gt;width() + 2;
              if (x &gt;= 245) {
                  x = 5;
@@ -135,12 +136,12 @@
          QString text;
          QPoint offset;
          dataStream &gt;&gt; text &gt;&gt; offset;
-
          DragLabel *newLabel = new DragLabel(text, this);
          newLabel-&gt;move(event-&gt;pos() - offset);
          newLabel-&gt;show();
+         newLabel-&gt;setAttribute(Qt::WA_DeleteOnClose);
 
-         if (children().contains(event-&gt;source())) {
+         if (event-&gt;source() == this) {
              event-&gt;setDropAction(Qt::MoveAction);
              event-&gt;accept();
          } else {
@@ -155,6 +156,7 @@
              DragLabel *newLabel = new DragLabel(piece, this);
              newLabel-&gt;move(position);
              newLabel-&gt;show();
+             newLabel-&gt;setAttribute(Qt::WA_DeleteOnClose);
 
              position += QPoint(newLabel-&gt;width(), 0);
          }
@@ -163,11 +165,40 @@
      } else {
          event-&gt;ignore();
      }
+ }
+
+ void DragWidget::mousePressEvent(QMouseEvent *event)
+ {
+     DragLabel *child = static_cast&lt;DragLabel*&gt;(childAt(event-&gt;pos()));
+     if (!child)
+         return;
+
+     QPoint hotSpot = event-&gt;pos() - child-&gt;pos();
+
+     QByteArray itemData;
+     QDataStream dataStream(&amp;itemData, QIODevice::WriteOnly);
+     dataStream &lt;&lt; child-&gt;labelText() &lt;&lt; QPoint(hotSpot);
+
+     QMimeData *mimeData = new QMimeData;
+     mimeData-&gt;setData(&quot;application/x-fridgemagnet&quot;, itemData);
+     mimeData-&gt;setText(child-&gt;labelText());
+
+     QDrag *drag = new QDrag(this);
+     drag-&gt;setMimeData(mimeData);
+     drag-&gt;setPixmap(*child-&gt;pixmap());
+     drag-&gt;setHotSpot(hotSpot);
+
+     child-&gt;hide();
+
+     if (drag-&gt;exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction) == Qt::MoveAction)
+         child-&gt;close();
+     else
+         child-&gt;show();
  }</pre>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

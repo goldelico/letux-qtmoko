@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/concurrent/qtconcurrentmap.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/concurrent/qtconcurrentmap.cpp -->
 <head>
   <title>Qt 4.5: QtConcurrent Namespace Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -55,7 +55,7 @@
 <li><div class="fn"></div>QFuture&lt;T&gt; <b><a href="qtconcurrentmap.html#mapped-2">mapped</a></b> ( ConstIterator <i>begin</i>, ConstIterator <i>end</i>, MapFunction <i>function</i> )</li>
 <li><div class="fn"></div>QFuture&lt;T&gt; <b><a href="qtconcurrentmap.html#mappedReduced">mappedReduced</a></b> ( const Sequence &amp; <i>sequence</i>, MapFunction <i>mapFunction</i>, ReduceFunction <i>reduceFunction</i>, QtConcurrent::ReduceOptions <i>reduceOptions</i> = UnorderedReduce | SequentialReduce )</li>
 <li><div class="fn"></div>QFuture&lt;T&gt; <b><a href="qtconcurrentmap.html#mappedReduced-2">mappedReduced</a></b> ( ConstIterator <i>begin</i>, ConstIterator <i>end</i>, MapFunction <i>mapFunction</i>, ReduceFunction <i>reduceFunction</i>, QtConcurrent::ReduceOptions <i>reduceOptions</i> = UnorderedReduce | SequentialReduce )</li>
-<li><div class="fn"></div>QFuture&lt;T&gt; <b><a href="qtconcurrentrun.html#runx">run</a></b> ( Function <i>function</i>, ... )</li>
+<li><div class="fn"></div>QFuture&lt;T&gt; <b><a href="qtconcurrentrun.html#run">run</a></b> ( Function <i>function</i>, ... )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -154,7 +154,7 @@
 <p>Calls <i>mapFunction</i> once for each item from <i>begin</i> to <i>end</i>. The return value of each <i>mapFunction</i> is passed to <i>reduceFunction</i>.</p>
 <p>Note that while <i>mapFunction</i> is called concurrently, only one thread at a time will call <i>reduceFunction</i>. By default, the order in which <i>reduceFunction</i> is called is undefined.</p>
 <p><b>Note:</b> <a href="qtconcurrent.html#ReduceOption-enum">QtConcurrent::OrderedReduce</a> results in the ordered reduction.</p>
-<h3 class="fn"><a name="runx"></a><a href="qfuture.html">QFuture</a>&lt;T&gt; QtConcurrent::run ( Function <i>function</i>, ... )</h3>
+<h3 class="fn"><a name="run"></a><a href="qfuture.html">QFuture</a>&lt;T&gt; QtConcurrent::run ( Function <i>function</i>, ... )</h3>
 <p>Runs <i>function</i> in a separate thread. The thread is taken from the global <a href="qthreadpool.html">QThreadPool</a>. Note that the function may not run immediately; the function will only be run when a thread is available.</p>
 <p>T is the same type as the return value of <i>function</i>. Non-void return values can be accessed via the <a href="qfuture.html#result">QFuture::result</a>() function.</p>
 <p>Note that the <a href="qfuture.html">QFuture</a> returned by QtConcurrent::run() does not support canceling, pausing, or progress reporting. The <a href="qfuture.html">QFuture</a> returned can only be used to query for the running/finished status and the return value of the function.</p>
@@ -162,6 +162,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

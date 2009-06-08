@@ -307,6 +307,11 @@ bool QLinuxFbScreen::connect(const QString &displaySpec)
         return false;
     }
 
+    if (finfo.type == FB_TYPE_VGA_PLANES) {
+        qWarning("VGA16 video mode not supported");
+        return false;
+    }
+
     /* Get variable screen information */
     if (d_ptr->fd != -1 && ioctl(d_ptr->fd, FBIOGET_VSCREENINFO, &vinfo)) {
         perror("QLinuxFbScreen::connect");
@@ -337,8 +342,18 @@ bool QLinuxFbScreen::connect(const QString &displaySpec)
         }
         dw=w;
         dh=h;
-        xoff += (vinfo.xres - w)/2;
-        yoff += (vinfo.yres - h)/2;
+        int xxoff, yyoff;
+        if (sscanf(qwssize, "%*dx%*d+%d+%d", &xxoff, &yyoff) == 2) {
+            if (xxoff < 0 || xxoff + w > vinfo.xres)
+                xxoff = vinfo.xres - w;
+            if (yyoff < 0 || yyoff + h > vinfo.yres)
+                yyoff = vinfo.yres - h;
+            xoff += xxoff;
+            yoff += yyoff;
+        } else {
+            xoff += (vinfo.xres - w)/2;
+            yoff += (vinfo.yres - h)/2;
+        }
     } else {
         dw=w=vinfo.xres;
         dh=h=vinfo.yres;

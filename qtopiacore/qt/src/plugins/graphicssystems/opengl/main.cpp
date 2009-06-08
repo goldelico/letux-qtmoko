@@ -53,14 +53,12 @@ public:
 
 QStringList QGLGraphicsSystemPlugin::keys() const
 {
-    QStringList list;
-    list << "OpenGL";
-    return list;
+    return QStringList(QLatin1String("OpenGL"));
 }
 
 QGraphicsSystem* QGLGraphicsSystemPlugin::create(const QString& system)
 {
-    if (system.toLower() == "opengl")
+    if (system.toLower() == QLatin1String("opengl"))
         return new QGLGraphicsSystem;
 
     return 0;

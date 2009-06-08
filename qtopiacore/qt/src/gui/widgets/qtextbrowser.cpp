@@ -577,7 +577,7 @@ void QTextBrowserPrivate::restoreHistoryEntry(const HistoryEntry entry)
 }
 
 /*!
-    \class QTextBrowser qtextbrowser.h
+    \class QTextBrowser
     \brief The QTextBrowser class provides a rich text browser with hypertext navigation.
 
     \ingroup text

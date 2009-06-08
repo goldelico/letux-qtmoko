@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/q3sqlfieldinfo.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/q3sqlfieldinfo.qdoc -->
 <head>
   <title>Qt 4.5: Q3SqlFieldInfo Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -30,7 +30,7 @@
 <li><div class="fn"></div>bool <b><a href="q3sqlfieldinfo.html#isGenerated">isGenerated</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="q3sqlfieldinfo.html#isRequired">isRequired</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="q3sqlfieldinfo.html#isTrim">isTrim</a></b> () const</li>
-<li><div class="fn"></div>int <b><a href="q3sqlfieldinfo.html#lengthx">length</a></b> () const</li>
+<li><div class="fn"></div>int <b><a href="q3sqlfieldinfo.html#length">length</a></b> () const</li>
 <li><div class="fn"></div>QString <b><a href="q3sqlfieldinfo.html#name">name</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="q3sqlfieldinfo.html#precision">precision</a></b> () const</li>
 <li><div class="fn"></div>virtual void <b><a href="q3sqlfieldinfo.html#setCalculated">setCalculated</a></b> ( bool <i>calculated</i> )</li>
@@ -46,7 +46,7 @@
 <h2>Detailed Description</h2>
 <p>The Q3SqlFieldInfo class stores meta data associated with a SQL field.</p>
 <p>Q3SqlFieldInfo objects only store meta data; field values are stored in <a href="qsqlfield.html">QSqlField</a> objects.</p>
-<p>All values must be set in the constructor, and may be retrieved using <a href="q3sqlfieldinfo.html#isRequired">isRequired</a>(), <a href="q3sqlfieldinfo.html#type">type</a>(), <a href="q3sqlfieldinfo.html#lengthx">length</a>(), <a href="q3sqlfieldinfo.html#precision">precision</a>(), <a href="q3sqlfieldinfo.html#defaultValue">defaultValue</a>(), <a href="q3sqlfieldinfo.html#name">name</a>(), <a href="q3sqlfieldinfo.html#isGenerated">isGenerated</a>() and <a href="q3sqlfieldinfo.html#typeID">typeID</a>().</p>
+<p>All values must be set in the constructor, and may be retrieved using <a href="q3sqlfieldinfo.html#isRequired">isRequired</a>(), <a href="q3sqlfieldinfo.html#type">type</a>(), <a href="q3sqlfieldinfo.html#length">length</a>(), <a href="q3sqlfieldinfo.html#precision">precision</a>(), <a href="q3sqlfieldinfo.html#defaultValue">defaultValue</a>(), <a href="q3sqlfieldinfo.html#name">name</a>(), <a href="q3sqlfieldinfo.html#isGenerated">isGenerated</a>() and <a href="q3sqlfieldinfo.html#typeID">typeID</a>().</p>
 <p>See also <a href="q3sqlrecordinfo.html">Q3SqlRecordInfo</a>.</p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -81,7 +81,7 @@
 <h3 class="fn"><a name="isTrim"></a>bool Q3SqlFieldInfo::isTrim () const</h3>
 <p>Returns TRUE if trailing whitespace should be removed from character fields; otherwise returns FALSE.</p>
 <p>See also <a href="q3sqlfieldinfo.html#setTrim">setTrim</a>().</p>
-<h3 class="fn"><a name="lengthx"></a>int Q3SqlFieldInfo::length () const</h3>
+<h3 class="fn"><a name="length"></a>int Q3SqlFieldInfo::length () const</h3>
 <p>Returns the field's length. For fields storing text the return value is the maximum number of characters the field can hold. For non-character fields some database systems return the number of bytes needed or the number of digits allowed. If the length cannot be determined -1 is returned.</p>
 <h3 class="fn"><a name="name"></a><a href="qstring.html">QString</a> Q3SqlFieldInfo::name () const</h3>
 <p>Returns the name of the field in the SQL table.</p>
@@ -108,6 +108,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,6 +1,6 @@
 
 //![newstuff]
-    QFileInfo fi("c:/temp/foo"); => fi.absolutePath() => "C:/temp"
+    QFileInfo fi("c:/temp/foo"); => fi.absoluteFilePath() => "C:/temp/foo"
 //![newstuff]
 
 //! [0]

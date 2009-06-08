@@ -153,6 +153,9 @@
     background color to be specified. A handler that supports
     BackgroundColor initializes the background color to this option
     (a QColor) when reading an image.
+
+    \value ImageFormat The image's data format returned by the handler.
+    This can be any of the formats listed in QImage::Format.
 */
 
 /*!

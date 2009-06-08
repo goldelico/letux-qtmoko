@@ -49,7 +49,7 @@
     \section1 Introduction
 
     Qt uses the Phonon multimedia framework to provide functionality
-    for playback of the most common multimedia formats.The media can
+    for playback of the most common multimedia formats. The media can
     be read from files or streamed over a network, using a QURL to a
     file.
 
@@ -403,7 +403,7 @@
     it to a path, you can use the Phonon::createPath() as usual. After
     creating a media object, it is also possible to call its
     \l{Phonon::MediaObject::}{hasVideo()} function.
-    
+
     See also the \l{Capabilities Example}.
 
     \section1 Installing Phonon
@@ -428,7 +428,7 @@
     \section3 Windows XP and later Windows versions
 
     If you develop for Windows XP and up, you should download the Windows SDK
-    \l{http://www.microsoft.com/downloads/details.aspx?FamilyID=e6e1c3df-a74f-4207-8586-711ebe331cdc&DisplayLang=en}{here}.
+    \l{http://www.microsoft.com/downloads/details.aspx?FamilyID=e6e1c3df-a74f-4207-8586-711ebe331cdc&amp;DisplayLang=en}{here}.
     Before building Qt, just call the script: \c {C:\Program Files\Microsoft SDKs\Windows\v6.1\Bin\setenv.cmd}
 
     \note Visual C++ 2008 already contains the Windows SDK and doesn't
@@ -438,12 +438,12 @@
     \section3 Earlier Windows versions than Windows XP
 
     If you want to support previous Windows versions, you should download and install the Platform SDK. You find it
-    \l{http://www.microsoft.com/downloads/details.aspx?FamilyId=0BAF2B35-C656-4969-ACE8-E4C0C0716ADB&displaylang=en}{here}.
-    
+    \l{http://www.microsoft.com/downloads/details.aspx?FamilyId=0BAF2B35-C656-4969-ACE8-E4C0C0716ADB&amp;displaylang=en}{here}.
+
     \note The platform SDK provided with Visual C++ is not
     complete and
     you'll need this one to have DirectShow 9.0 support. You can download the DirectX SDK
-    \l{http://www.microsoft.com/downloads/details.aspx?familyid=09F7578C-24AA-4E0A-BF91-5FEC24C8C7BF&displaylang=en}{here}.
+    \l{http://www.microsoft.com/downloads/details.aspx?familyid=09F7578C-24AA-4E0A-BF91-5FEC24C8C7BF&amp;displaylang=en}{here}.
 
     \section3 Setting up the environment
 
@@ -566,7 +566,8 @@
     framework, but rather use exchangeable backends to do the work.
 
     See the \l{Phonon Module} page for general information about the
-    framework.
+    framework and the \l{Phonon Overview} for an introductory tour of its
+    features.
 */
 
 /*!

@@ -888,13 +888,14 @@ class QColorShower : public QWidget
 {
     Q_OBJECT
 public:
-    QColorShower(QWidget *parent);
+    QColorShower(QColorDialog *parent);
 
     //things that don't emit signals
     void setHsv(int h, int s, int v);
 
-    int currentAlpha() const { return alphaEd->isVisible() ? alphaEd->value() : 255; }
-    void setCurrentAlpha(int a) { alphaEd->setValue(a); }
+    int currentAlpha() const
+    { return (colorDialog->options() & QColorDialog::ShowAlphaChannel) ? alphaEd->value() : 255; }
+    void setCurrentAlpha(int a) { alphaEd->setValue(a); rgbEd(); }
     void showAlpha(bool b);
     bool isAlphaVisible() const;
 
@@ -934,6 +935,7 @@ private:
     QLabel *alphaLab;
     QColorShowLabel *lab;
     bool rgbOriginal;
+    QColorDialog *colorDialog;
 
     friend class QColorDialog;
     friend class QColorDialogPrivate;
@@ -1053,9 +1055,11 @@ void QColorShowLabel::mouseReleaseEvent(QMouseEvent *)
     mousePressed = false;
 }
 
-QColorShower::QColorShower(QWidget *parent)
+QColorShower::QColorShower(QColorDialog *parent)
     : QWidget(parent)
 {
+    colorDialog = parent;
+
     curCol = qRgb(255, 255, 255);
     curQColor = Qt::white;
 
@@ -1519,10 +1523,10 @@ static const Qt::WindowFlags DefaultWindowFlags =
     If you require a modeless dialog, use the QColorDialog constructor.
     \endomit
 
-    The static getColor() function shows the dialog, and allows the
-    user to specify a color. The getRgba() function does the same, but
-    also allows the user to specify a color with an alpha channel
-    (transparency) value.
+    The static getColor() function shows the dialog, and allows the user to
+    specify a color. This function can also be used to let users choose a
+    color with a level of transparency: pass the ShowAlphaChannel option as
+    an additional argument.
 
     The user can store customCount() different custom colors. The
     custom colors are shared by all color dialogs, and remembered

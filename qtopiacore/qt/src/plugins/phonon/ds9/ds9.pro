@@ -1,9 +1,9 @@
 DESTDIR = $$QT_BUILD_TREE/plugins/phonon_backend
 QT += phonon
-win32:!wince*:contains(QT_CONFIG,opengl):LIBS += opengl32.lib
-win32:!wince*:LIBS += gdi32.lib
+win32:!wince*:contains(QT_CONFIG,opengl):LIBS += -lopengl32
+win32:!wince*:LIBS += -lgdi32
 win32-msvc2005:DEFINES += _CRT_SECURE_NO_WARNINGS
-LIBS += strmiids.lib Dmoguids.lib uuid.lib msdmo.lib
+LIBS += -lstrmiids -ldmoguids -luuid -lmsdmo -lole32 -loleaut32
 TARGET = phonon_ds9
 
 DEFINES += PHONON_MAKE_QT_ONLY_BACKEND

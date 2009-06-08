@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -128,8 +128,10 @@ void Screenshot::shootScreen()
 //! [6]
 void Screenshot::updateCheckBox()
 {
-    if (delaySpinBox->value() == 0)
+    if (delaySpinBox->value() == 0) {
         hideThisWindowCheckBox->setDisabled(true);
+        hideThisWindowCheckBox->setChecked(false);
+    }
     else
         hideThisWindowCheckBox->setDisabled(false);
 }

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the QtXMLPatterns module of the Qt Toolkit.
+** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -392,7 +392,7 @@ namespace QPatternist
         static AtomicValue::Ptr fromValue(const NamePool::Ptr &np, const TemporaryStorageType num)
         {
             /* If we use minInclusive when calling lessThan(), we for some
-             * reason get a linker error with GCC. Using this this temporary
+             * reason get a linker error with GCC. Using this temporary
              * variable solves it. */
             const StorageType minimum = minInclusive;
 

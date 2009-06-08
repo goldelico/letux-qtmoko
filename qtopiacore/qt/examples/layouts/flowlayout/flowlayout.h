@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -49,11 +49,13 @@
 class FlowLayout : public QLayout
 {
 public:
-    FlowLayout(QWidget *parent, int margin = -1, int spacing = 0);
-    FlowLayout(int spacing = 0);
+    FlowLayout(QWidget *parent, int margin = -1, int hSpacing = -1, int vSpacing = -1);
+    FlowLayout(int margin = -1, int hSpacing = -1, int vSpacing = -1);
     ~FlowLayout();
 
     void addItem(QLayoutItem *item);
+    int horizontalSpacing() const;
+    int verticalSpacing() const;
     Qt::Orientations expandingDirections() const;
     bool hasHeightForWidth() const;
     int heightForWidth(int) const;
@@ -66,8 +68,11 @@ public:
 
 private:
     int doLayout(const QRect &rect, bool testOnly) const;
+    int smartSpacing(QStyle::PixelMetric pm) const;
 
     QList<QLayoutItem *> itemList;
+    int m_hSpace;
+    int m_vSpace;
 };
 
 #endif

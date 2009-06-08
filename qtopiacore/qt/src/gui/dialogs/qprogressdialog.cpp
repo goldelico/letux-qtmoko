@@ -295,8 +295,8 @@ QProgressDialog::QProgressDialog(QWidget *parent, Qt::WindowFlags f)
 
    The \a labelText is the text used to remind the user what is progressing.
 
-   The \a cancelButtonText is the text to display on the cancel button,
-   or 0 if no cancel button is to be shown.
+   The \a cancelButtonText is the text to display on the cancel button.  If 
+   QString() is passed then no cancel button is shown.
 
    The \a minimum and \a maximum is the number of steps in the operation for
    which this progress dialog shows progress.  For example, if the
@@ -400,7 +400,8 @@ void QProgressDialog::setLabelText(const QString &text)
   Sets the cancel button to the push button, \a cancelButton. The
   progress dialog takes ownership of this button which will be deleted
   when necessary, so do not pass the address of an object that is on
-  the stack, i.e. use new() to create the button.
+  the stack, i.e. use new() to create the button.  If 0 is passed then
+  no cancel button will be shown.
 
   \sa setCancelButtonText()
 */
@@ -434,7 +435,10 @@ void QProgressDialog::setCancelButton(QPushButton *cancelButton)
 }
 
 /*!
-  Sets the cancel button's text to \a cancelButtonText.
+  Sets the cancel button's text to \a cancelButtonText.  If the text
+  is set to QString() then it will cause the cancel button to be 
+  hidden and deleted.
+
   \sa setCancelButton()
 */
 

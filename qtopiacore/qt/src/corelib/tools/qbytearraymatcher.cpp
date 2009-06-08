@@ -123,6 +123,11 @@ QByteArrayMatcher::QByteArrayMatcher()
     qMemSet(p.q_skiptable, 0, sizeof(p.q_skiptable));
 }
 
+/*!
+  Constructs a byte array matcher from \a pattern. \a pattern
+  has the given \a length. \a pattern must remain in scope, but
+  the destructor does not delete \a pattern.
+ */
 QByteArrayMatcher::QByteArrayMatcher(const char *pattern, int length)
     : d(0)
 {
@@ -198,6 +203,13 @@ int QByteArrayMatcher::indexIn(const QByteArray &ba, int from) const
                    p.p, p.l, p.q_skiptable);
 }
 
+/*!
+    Searches the char string \a str, which has length \a len, from
+    byte position \a from (default 0, i.e. from the first byte), for
+    the byte array pattern() that was set in the constructor or in the
+    most recent call to setPattern(). Returns the position where the
+    pattern() matched in \a str, or -1 if no match was found.
+*/
 int QByteArrayMatcher::indexIn(const char *str, int len, int from) const
 {
     if (from < 0)

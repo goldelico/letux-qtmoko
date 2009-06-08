@@ -100,7 +100,6 @@ public:
     const QString officeNS, textNS, styleNS, foNS, tableNS, drawNS, xlinkNS, svgNS;
 private:
     const QTextDocument *m_document;
-    const QTextDocumentPrivate *m_docPrivate;
     QIODevice *m_device;
 
     QOutputStrategy *m_strategy;

@@ -45,7 +45,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3VBox qvbox.h
+    \class Q3VBox
     \brief The Q3VBox widget provides vertical geometry management of
     its child widgets.
 

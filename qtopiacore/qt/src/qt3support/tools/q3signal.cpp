@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Signal q3signal.h
+    \class Q3Signal
     \brief The Q3Signal class can be used to send signals for classes
     that don't inherit QObject.
 

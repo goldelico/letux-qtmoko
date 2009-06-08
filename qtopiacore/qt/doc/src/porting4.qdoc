@@ -4124,6 +4124,7 @@
     \o QWidget::showMaximized()
     \o QWidget::showMinimized()
     \o QWidget::showNormal()
+    \o QWidget::sizePolicy()
     \o QWidget::unsetCursor()
     \endlist
 

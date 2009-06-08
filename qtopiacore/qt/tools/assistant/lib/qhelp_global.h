@@ -98,7 +98,7 @@ public:
 
     static QString charsetFromData(const QByteArray &data)
     {
-        QString content = QString::fromUtf8(data);
+        QString content = QString::fromUtf8(data.constData(), data.size());
         int start =
             content.indexOf(QLatin1String("<meta"), 0, Qt::CaseInsensitive);
         if (start > 0) {

@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -64,6 +64,7 @@ DragWidget::DragWidget(QWidget *parent)
             DragLabel *wordLabel = new DragLabel(word, this);
             wordLabel->move(x, y);
             wordLabel->show();
+            wordLabel->setAttribute(Qt::WA_DeleteOnClose);
             x += wordLabel->width() + 2;
             if (x >= 245) {
                 x = 5;
@@ -136,17 +137,18 @@ void DragWidget::dropEvent(QDropEvent *event)
         QString text;
         QPoint offset;
         dataStream >> text >> offset;
-
+//! [10]
+//! [11]
         DragLabel *newLabel = new DragLabel(text, this);
         newLabel->move(event->pos() - offset);
         newLabel->show();
+        newLabel->setAttribute(Qt::WA_DeleteOnClose);
 
-        if (children().contains(event->source())) {
+        if (event->source() == this) {
             event->setDropAction(Qt::MoveAction);
             event->accept();
         } else {
             event->acceptProposedAction();
-//! [10] //! [11]
         }
 //! [11] //! [12]
     } else if (event->mimeData()->hasText()) {
@@ -158,6 +160,7 @@ void DragWidget::dropEvent(QDropEvent *event)
             DragLabel *newLabel = new DragLabel(piece, this);
             newLabel->move(position);
             newLabel->show();
+            newLabel->setAttribute(Qt::WA_DeleteOnClose);
 
             position += QPoint(newLabel->width(), 0);
         }
@@ -168,3 +171,42 @@ void DragWidget::dropEvent(QDropEvent *event)
     }
 }
 //! [12]
+
+//! [13]
+void DragWidget::mousePressEvent(QMouseEvent *event)
+{
+//! [13]
+//! [14]
+    DragLabel *child = static_cast<DragLabel*>(childAt(event->pos()));
+    if (!child)
+        return;
+
+    QPoint hotSpot = event->pos() - child->pos();
+
+    QByteArray itemData;
+    QDataStream dataStream(&itemData, QIODevice::WriteOnly);
+    dataStream << child->labelText() << QPoint(hotSpot);
+//! [14]
+
+//! [15]
+    QMimeData *mimeData = new QMimeData;
+    mimeData->setData("application/x-fridgemagnet", itemData);
+    mimeData->setText(child->labelText());
+//! [15]
+
+//! [16]
+    QDrag *drag = new QDrag(this);
+    drag->setMimeData(mimeData);
+    drag->setPixmap(*child->pixmap());
+    drag->setHotSpot(hotSpot);
+
+    child->hide();
+//! [16]
+
+//! [17]
+    if (drag->exec(Qt::MoveAction | Qt::CopyAction, Qt::CopyAction) == Qt::MoveAction)
+        child->close();
+    else
+        child->show();
+}
+//! [17]

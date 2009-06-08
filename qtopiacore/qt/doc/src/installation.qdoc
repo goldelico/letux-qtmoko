@@ -43,7 +43,8 @@
 ** Please remember to update the corresponding INSTALL files.
 ****************************************************************************/
 
-/*! \group installation
+/*!
+\group installation
 \title Installation
 \ingroup buildsystem
 \ingroup topics
@@ -71,12 +72,12 @@ in the \l{Qt for X11 Requirements} document.
     For the open source version you do not need a license file.
 
 \o  Unpack the archive if you have not done so already. For example,
-    if you have the \c{qt-x11-opensource-desktop-4.5.0.tar.gz}
+    if you have the \c{qt-x11-opensource-desktop-4.5.1.tar.gz}
     package, type the following commands at a command line prompt:
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 0
 
-    This creates the directory \c{/tmp/qt-x11-opensource-desktop-4.5.0}
+    This creates the directory \c{/tmp/qt-x11-opensource-desktop-4.5.1}
     containing the files from the archive. We only support the GNU version of
     the tar archiving utility. Note that on some systems it is called gtar.
 
@@ -86,7 +87,7 @@ in the \l{Qt for X11 Requirements} document.
     \c{./configure} script in the package directory.
 
     By default, Qt is configured for installation in the
-    \c{/usr/local/Trolltech/Qt-4.5.0} directory, but this can be
+    \c{/usr/local/Trolltech/Qt-4.5.1} directory, but this can be
     changed by using the \c{-prefix} option.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 1
@@ -138,7 +139,7 @@ in the \l{Qt for X11 Requirements} document.
 
     For compilers that do not support rpath you must also extended the
     \c LD_LIBRARY_PATH environment variable to include
-    \c{/usr/local/Trolltech/Qt-4.5.0/lib}. On Linux with GCC this step
+    \c{/usr/local/Trolltech/Qt-4.5.1/lib}. On Linux with GCC this step
     is not needed.
 
 \o  That's all. Qt is now installed.
@@ -146,7 +147,7 @@ in the \l{Qt for X11 Requirements} document.
     If you are new to Qt, we suggest that you take a look at the demos
     and examples to see Qt in action. Run the Qt Examples and Demos
     either by typing \c qtdemo on the command line or through the
-    desktop's Start menu.
+    desktop's Main menu.
 
     You might also want to try the following links:
 
@@ -198,7 +199,7 @@ as part of the \l{Qt Commercial Editions}.
     For the open source version you do not need a license file.
 
 \o  Uncompress the files into the directory you want Qt installed;
-    e.g. \c{C:\Qt\4.5.0}.
+    e.g. \c{C:\Qt\4.5.1}.
 
     \note The install path must not contain any spaces or Windows specific
     file system characters.
@@ -210,7 +211,7 @@ as part of the \l{Qt Commercial Editions}.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 7
 
-    This is done by adding \c{c:\Qt\4.5.0\bin} to the \c PATH variable.
+    This is done by adding \c{c:\Qt\4.5.1\bin} to the \c PATH variable.
 
     For newer versions of Windows, \c PATH can be extended through
     the \menu{Control Panel|System|Advanced|Environment variables} menu.
@@ -304,12 +305,12 @@ The following instructions describe how to install Qt from the source package.
     For the open source version you do not need a license file.
 
 \o  Unpack the archive if you have not done so already. For example,
-    if you have the \c{qt-mac-opensource-desktop-4.5.0.tar.gz}
+    if you have the \c{qt-mac-opensource-desktop-4.5.1.tar.gz}
     package, type the following commands at a command line prompt:
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 11
 
-    This creates the directory \c{/tmp/qt-mac-opensource-desktop-4.5.0}
+    This creates the directory \c{/tmp/qt-mac-opensource-desktop-4.5.1}
     containing the files from the archive.
 
 \o  Building
@@ -318,7 +319,7 @@ The following instructions describe how to install Qt from the source package.
     \c{./configure} script in the package directory.
 
     By default, Qt is configured for installation in the
-    \c{/usr/local/Trolltech/Qt-4.5.0} directory, but this can be
+    \c{/usr/local/Trolltech/Qt-4.5.1} directory, but this can be
     changed by using the \c{-prefix} option.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 12
@@ -411,7 +412,7 @@ in the \l{Qt for Windows CE Requirements} document.
 
 \list 1
     \o  Uncompress the files into the directory you want to install Qt into;
-        e.g., \c{C:\Qt\4.5.0}.
+        e.g., \c{C:\Qt\4.5.1}.
 
         \note The install path must not contain any spaces.
 
@@ -422,7 +423,7 @@ in the \l{Qt for Windows CE Requirements} document.
 
         \snippet doc/src/snippets/code/doc_src_installation.qdoc 18
 
-        This is done by adding \c{c:\Qt\4.5.0\bin} to the \c PATH variable.
+        This is done by adding \c{c:\Qt\4.5.1\bin} to the \c PATH variable.
 
         For newer versions of Windows, \c PATH can be extended through
         "Control Panel->System->Advanced->Environment variables" and for
@@ -536,7 +537,7 @@ in the \l{Qt for Windows CE Requirements} document.
 
     If you are using a binary version of Qt with Visual Studio 2005, you must
     first install the Visual Studio Service Pack 1 available
-    \l{http://www.microsoft.com/downloads/details.aspx?FamilyId=BB4A75AB-E2D4-4C96-B39D-37BAF6B5B1DC&displaylang=en}{here}
+    \l{http://www.microsoft.com/downloads/details.aspx?FamilyId=BB4A75AB-E2D4-4C96-B39D-37BAF6B5B1DC&amp;displaylang=en}{here}
     to avoid runtime conflicts.
 
     To build Qt with Phonon on Windows, you require:
@@ -546,10 +547,10 @@ in the \l{Qt for Windows CE Requirements} document.
         downloaded
         \l{http://msdn2.microsoft.com/en-us/directx/aa937788.aspx}{here}, and
         \o Microsoft's Windows Server 2003 R2 Platform SDK which is available
-        \l{http://www.microsoft.com/downloads/details.aspx?FamilyID=0baf2b35-c656-4969-ace8-e4c0c0716adb&DisplayLang=en}{here}.
+        \l{http://www.microsoft.com/downloads/details.aspx?FamilyID=0baf2b35-c656-4969-ace8-e4c0c0716adb&amp;DisplayLang=en}{here}.
     \endlist
 
-    \sa {Known Issues in 4.5.0}
+    \sa {Known Issues in 4.5.1}
 */
 
 /*!
@@ -559,7 +560,7 @@ in the \l{Qt for Windows CE Requirements} document.
     \brief Setting up the Mac OS X environment for Qt.
     \previouspage General Qt Requirements
 
-    \sa {Known Issues in 4.5.0}
+    \sa {Known Issues in 4.5.1}
 */
 
 /*!
@@ -613,7 +614,7 @@ in the \l{Qt for Windows CE Requirements} document.
     <td><tt>-xinerama</tt> or auto-detected</td><td>1.1.0</td>
     </tr><tr id="DefaultColor">
     <td> Xi </td><td> libXi </td><td> X11 Input Extensions</td>
-    <td>auto-detected</td><td>1.3.0</td>
+    <td><tt>-xinput</tt> or auto-detected</td><td>1.3.0</td>
     </tr><tr id="DefaultColor">
     <td> Xt </td><td> libXt </td><td> Xt Intrinsics</td><td></td><td>0.99</td>
     </tr><tr id="DefaultColor">
@@ -650,7 +651,7 @@ in the \l{Qt for Windows CE Requirements} document.
     distributions; try searching for \c gstreamer or \c libgstreamer in your
     distribution's package repository to find suitable packages.
 
-    \sa {Known Issues in 4.5.0}
+    \sa {Known Issues in 4.5.1}
 */
 
 /*!
@@ -676,13 +677,13 @@ in the \l{Qt for Windows CE Requirements} document.
     Below is a list of links to download the SDKs:
 
     \list
-        \o \l{http://www.microsoft.com/downloads/details.aspx?familyid=fa1a3d66-3f61-4ddc-9510-ae450e2318c3&displaylang=en}
+        \o \l{http://www.microsoft.com/downloads/details.aspx?familyid=fa1a3d66-3f61-4ddc-9510-ae450e2318c3&amp;displaylang=en}
             {Windows CE 5 Standard SDK}
-        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=83A52AF2-F524-4EC5-9155-717CBE5D25ED&displaylang=en}
+        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=83A52AF2-F524-4EC5-9155-717CBE5D25ED&amp;displaylang=en}
             {Windows Mobile 5 Pocket PC}
-        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=DC6C00CB-738A-4B97-8910-5CD29AB5F8D9&displaylang=en}
+        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=DC6C00CB-738A-4B97-8910-5CD29AB5F8D9&amp;displaylang=en}
             {Windows Mobile 5 Smartphone}
-        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=06111A3A-A651-4745-88EF-3D48091A390B&displaylang=en }
+        \o  \l{http://www.microsoft.com/downloads/details.aspx?familyid=06111A3A-A651-4745-88EF-3D48091A390B&amp;displaylang=en }
             {Windows Mobile 6 Professional/Standard}
     \endlist
 
@@ -704,7 +705,7 @@ in the \l{Qt for Windows CE Requirements} document.
     information on Windows CE Customization can be found
     \l{Windows CE - Working with Custom SDKs}{here}.
 
-    \sa {Known Issues in 4.5.0}
+    \sa {Known Issues in 4.5.1}
 */
 
 /*!
@@ -714,7 +715,7 @@ in the \l{Qt for Windows CE Requirements} document.
     \brief Setting up the Embedded Linux environment for Qt.
     \previouspage General Qt Requirements
 
-    \sa {Known Issues in 4.5.0}
+    \sa {Known Issues in 4.5.1}
 
     \section1 Building Qt for Embedded Linux with uclibc
 

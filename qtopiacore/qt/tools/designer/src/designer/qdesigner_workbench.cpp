@@ -901,11 +901,10 @@ QDesignerFormWindow * QDesignerWorkbench::loadForm(const QString &fileName,
 
     if (detectLineTermiantorMode) {
         if (file.open(QFile::ReadOnly)) {
-            QByteArray ba = file.readLine();
+            const QString text = QString::fromUtf8(file.readLine());
             file.close();
 
-            QString text(ba);
-            const int lf = text.indexOf('\n');
+            const int lf = text.indexOf(QLatin1Char('\n'));
             if (lf > 0 && text.at(lf-1) == QLatin1Char('\r')) {
                 mode = qdesigner_internal::FormWindowBase::CRLFLineTerminator;
             } else if (lf >= 0) {

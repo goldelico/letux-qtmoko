@@ -162,7 +162,7 @@ Q3ListBoxPrivate::~Q3ListBoxPrivate()
 
 
 /*!
-    \class Q3ListBoxItem qlistbox.h
+    \class Q3ListBoxItem
     \brief The Q3ListBoxItem class is the base class of all list box items.
 
     \compat
@@ -330,7 +330,7 @@ const QPixmap *Q3ListBoxItem::pixmap() const
 
 
 /*!
-    \class Q3ListBoxText qlistbox.h
+    \class Q3ListBoxText
     \brief The Q3ListBoxText class provides list box items that display text.
 
     \compat
@@ -438,7 +438,7 @@ int Q3ListBoxText::rtti() const
 }
 
 /*!
-    \class Q3ListBoxPixmap qlistbox.h
+    \class Q3ListBoxPixmap
     \brief The Q3ListBoxPixmap class provides list box items with a
     pixmap and optional text.
 
@@ -607,7 +607,7 @@ int Q3ListBoxPixmap::rtti() const
 }
 
 /*!
-    \class Q3ListBox qlistbox.h
+    \class Q3ListBox
     \brief The Q3ListBox widget provides a list of selectable, read-only items.
 
     \compat

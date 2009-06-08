@@ -136,7 +136,6 @@ private slots:
     void closeForm();
     void showDesignerHelp();
     void showWhatsNew();
-    void aboutPlugins();
     void aboutDesigner();
     void showWidgetSpecificHelp();
     void backupForms();

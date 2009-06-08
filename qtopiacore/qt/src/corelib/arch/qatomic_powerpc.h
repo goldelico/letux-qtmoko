@@ -193,7 +193,7 @@ inline bool QBasicAtomicInt::testAndSetRelease(int expectedValue, int newValue)
                  "lwarx  %[result]," _Q_VALUE "\n"
                  "xor.   %[result], %[result], %[expectedValue]\n"
                  "bne    $+12\n"
-                 "stwcx. %[newValue],0,%[_q_value]\n"
+                 "stwcx. %[newValue]," _Q_VALUE "\n"
                  "bne-   $-16\n"
                  : [result] "=&r" (result),
                    _Q_VALUE_MEMORY_OPERAND

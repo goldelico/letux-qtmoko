@@ -78,7 +78,7 @@ PreviewActionGroup::PreviewActionGroup(QDesignerFormEditorInterface *core, QObje
     }
     // Create separator at index MaxDeviceActions
     QAction *sep = new QAction(this);
-    sep->setObjectName("__qt_designer_deviceseparator");
+    sep->setObjectName(QLatin1String("__qt_designer_deviceseparator"));
     sep->setSeparator(true);
     sep->setVisible(false);
     addAction(sep);

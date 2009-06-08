@@ -1722,7 +1722,7 @@ class Q3CanvasItemExtra {
 
 
 /*!
-    \class Q3CanvasItem qcanvas.h
+    \class Q3CanvasItem
     \compat
     \brief The Q3CanvasItem class provides an abstract graphic object on a Q3Canvas.
 
@@ -2350,7 +2350,7 @@ static bool collision_double_dispatch(const Q3CanvasSprite* s1,
 
 
 /*!
-    \class Q3CanvasSprite qcanvas.h
+    \class Q3CanvasSprite
     \compat
     \brief The Q3CanvasSprite class provides an animated canvas item on a Q3Canvas.
 
@@ -2662,7 +2662,7 @@ QRect Q3CanvasItem::boundingRectAdvanced() const
 }
 
 /*!
-    \class Q3CanvasPixmap qcanvas.h
+    \class Q3CanvasPixmap
     \compat
     \brief The Q3CanvasPixmap class provides pixmaps for Q3CanvasSprites.
 
@@ -2786,7 +2786,7 @@ Q3CanvasPixmap::~Q3CanvasPixmap()
 */
 
 /*!
-    \class Q3CanvasPixmapArray qcanvas.h
+    \class Q3CanvasPixmapArray
     \compat
     \brief The Q3CanvasPixmapArray class provides an array of Q3CanvasPixmaps.
 
@@ -3307,7 +3307,7 @@ void Q3CanvasSprite::draw(QPainter& painter)
 }
 
 /*!
-    \class Q3CanvasView qcanvas.h
+    \class Q3CanvasView
     \compat
     \brief The Q3CanvasView class provides an on-screen view of a Q3Canvas.
 
@@ -3535,7 +3535,7 @@ QSize Q3CanvasView::sizeHint() const
 }
 
 /*!
-    \class Q3CanvasPolygonalItem qcanvas.h
+    \class Q3CanvasPolygonalItem
     \compat
     \brief The Q3CanvasPolygonalItem class provides a polygonal canvas item
     on a Q3Canvas.
@@ -3932,7 +3932,7 @@ void Q3CanvasPolygonalItem::setBrush(QBrush b)
 
 
 /*!
-    \class Q3CanvasPolygon qcanvas.h
+    \class Q3CanvasPolygon
     \compat
     \brief The Q3CanvasPolygon class provides a polygon on a Q3Canvas.
 
@@ -4021,7 +4021,7 @@ void Q3CanvasPolygon::moveBy(double dx, double dy)
 }
 
 /*!
-    \class Q3CanvasSpline qcanvas.h
+    \class Q3CanvasSpline
     \compat
     \brief The Q3CanvasSpline class provides multi-bezier splines on a Q3Canvas.
 
@@ -4173,7 +4173,7 @@ Q3PointArray Q3CanvasPolygon::areaPoints() const
 }
 
 /*!
-    \class Q3CanvasLine qcanvas.h
+    \class Q3CanvasLine
     \compat
     \brief The Q3CanvasLine class provides a line on a Q3Canvas.
 
@@ -4313,7 +4313,7 @@ void Q3CanvasLine::moveBy(double dx, double dy)
 }
 
 /*!
-    \class Q3CanvasRectangle qcanvas.h
+    \class Q3CanvasRectangle
     \compat
     \brief The Q3CanvasRectangle class provides a rectangle on a Q3Canvas.
 
@@ -4446,7 +4446,7 @@ void Q3CanvasRectangle::drawShape(QPainter & p)
 
 
 /*!
-    \class Q3CanvasEllipse qcanvas.h
+    \class Q3CanvasEllipse
     \compat
     \brief The Q3CanvasEllipse class provides an ellipse or ellipse segment on a Q3Canvas.
 

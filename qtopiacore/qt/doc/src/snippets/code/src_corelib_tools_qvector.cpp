@@ -48,7 +48,7 @@ QVector<QString> vector(0);
 vector.append("one");
 vector.append("two");
 vector.append("three");
-// vector: ["one", "two", three"]
+// vector: ["one", "two", "three"]
 //! [7]
 
 

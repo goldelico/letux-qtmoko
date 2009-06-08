@@ -54,6 +54,7 @@
 #ifdef QT_MAC_USE_COCOA
 #import <Cocoa/Cocoa.h>
 
+enum { QtMacCustomizeWindow = 1 << 21 }; // This will one day be run over by
 
 QT_FORWARD_DECLARE_CLASS(QWidget);
 
@@ -66,5 +67,6 @@ QT_FORWARD_DECLARE_CLASS(QWidget);
     bool leftButtonIsRightButton;
 }
 
++ (Class)frameViewClassForStyleMask:(NSUInteger)styleMask;
 @end
 #endif

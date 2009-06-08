@@ -1030,6 +1030,11 @@ void QMenuBar::setVisible(bool visible)
     if(d->mac_menubar)
         return;
 #endif
+#ifdef Q_OS_WINCE
+    Q_D(QMenuBar);
+    if(d->wce_menubar)
+        return;
+#endif
     QWidget::setVisible(visible);
 }
 
@@ -1609,6 +1614,8 @@ QSize QMenuBar::minimumSizeHint() const
     Q_D(const QMenuBar);
 #ifdef Q_WS_MAC
     const bool as_gui_menubar = !d->mac_menubar;
+#elif defined (Q_OS_WINCE)
+    const bool as_gui_menubar = !d->wce_menubar;
 #else
     const bool as_gui_menubar = true;
 #endif
@@ -1667,6 +1674,8 @@ QSize QMenuBar::sizeHint() const
     Q_D(const QMenuBar);
 #ifdef Q_WS_MAC
     const bool as_gui_menubar = !d->mac_menubar;
+#elif defined (Q_OS_WINCE)
+    const bool as_gui_menubar = !d->wce_menubar;
 #else
     const bool as_gui_menubar = true;
 #endif
@@ -1728,6 +1737,8 @@ int QMenuBar::heightForWidth(int) const
     Q_D(const QMenuBar);
 #ifdef Q_WS_MAC
     const bool as_gui_menubar = !d->mac_menubar;
+#elif defined (Q_OS_WINCE)
+    const bool as_gui_menubar = !d->wce_menubar;
 #else
     const bool as_gui_menubar = true;
 #endif

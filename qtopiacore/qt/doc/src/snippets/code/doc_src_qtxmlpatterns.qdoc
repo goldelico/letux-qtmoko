@@ -1,3 +1,7 @@
+
+void wrapInFunction()
+{
+
 //! [0]
 #include <QtXmlPatterns>
 //! [0]
@@ -340,3 +344,6 @@ for $a in doc('doc.txt')//p
     </recipe>
 </cookbook>
 //! [100]
+
+}
+

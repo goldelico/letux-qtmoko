@@ -9,3 +9,8 @@ target.path = $$[QT_INSTALL_EXAMPLES]/phonon/musicplayer
 sources.files = $$SOURCES $$HEADERS $$FORMS $$RESOURCES *.pro *.png images
 sources.path = $$[QT_INSTALL_EXAMPLES]/phonon/musicplayer
 INSTALLS += target sources
+
+wince*{
+DEPLOYMENT_PLUGIN += phonon_ds9 phonon_waveout
+}
+

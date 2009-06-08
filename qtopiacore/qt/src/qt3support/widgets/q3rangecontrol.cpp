@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3RangeControl qrangecontrol.h
+    \class Q3RangeControl
     \brief The Q3RangeControl class provides an integer value within a range.
 
     \compat

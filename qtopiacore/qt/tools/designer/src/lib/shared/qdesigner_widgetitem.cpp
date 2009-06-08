@@ -94,6 +94,23 @@ static QString sizePolicyToString(const QSizePolicy &p)
     return rc;
 }
 
+// Find the layout the item is contained in, recursing over
+// child layouts
+static const QLayout *findLayoutOfItem(const QLayout *haystack, const QLayoutItem *needle)
+{
+    const int count = haystack->count();
+    for (int i = 0; i < count; i++) {
+        QLayoutItem *item = haystack->itemAt(i);
+        if (item == needle)
+            return haystack;
+        if (QLayout *childLayout =  item->layout())
+            if (const QLayout *containing = findLayoutOfItem(childLayout, needle))
+                return containing;
+    }
+    return 0;
+}
+
+
 namespace qdesigner_internal {
 
 // ------------------ QDesignerWidgetItem
@@ -102,7 +119,7 @@ QDesignerWidgetItem::QDesignerWidgetItem(const QLayout *containingLayout, QWidge
     m_orientations(o),
     m_nonLaidOutMinSize(w->minimumSizeHint()),
     m_nonLaidOutSizeHint(w->sizeHint()),
-    m_containingLayout(containingLayout)
+    m_cachedContainingLayout(containingLayout)
 {
     // Initialize the minimum size to prevent nonlaid-out frames/widgets
     // from being slammed to zero
@@ -111,6 +128,8 @@ QDesignerWidgetItem::QDesignerWidgetItem(const QLayout *containingLayout, QWidge
         m_nonLaidOutMinSize = minimumSize;
     expand(&m_nonLaidOutMinSize);
     expand(&m_nonLaidOutSizeHint);
+    w->installEventFilter(this);
+    connect(containingLayout, SIGNAL(destroyed()), this, SLOT(layoutChanged()));
     if (DebugWidgetItem )
         qDebug() << "QDesignerWidgetItem"  << w <<  sizePolicyToString(w->sizePolicy()) << m_nonLaidOutMinSize << m_nonLaidOutSizeHint;
 }
@@ -129,7 +148,7 @@ QSize QDesignerWidgetItem::minimumSize() const
     // Just track the size in case we are laid-out or stretched.
     const QSize baseMinSize = QWidgetItemV2::minimumSize();
     QWidget * w = constWidget();
-    if (w->layout() || subjectToStretch(m_containingLayout, w)) {
+    if (w->layout() || subjectToStretch(containingLayout(), w)) {
         m_nonLaidOutMinSize = baseMinSize;
         return baseMinSize;
     }
@@ -145,7 +164,7 @@ QSize QDesignerWidgetItem::sizeHint()    const
     // Just track the size in case we are laid-out or stretched.
     const QSize baseSizeHint = QWidgetItemV2::sizeHint();
     QWidget * w = constWidget();
-    if (w->layout() || subjectToStretch(m_containingLayout, w)) {
+    if (w->layout() || subjectToStretch(containingLayout(), w)) {
         m_nonLaidOutSizeHint = baseSizeHint;
         return baseSizeHint;
     }
@@ -158,6 +177,8 @@ QSize QDesignerWidgetItem::sizeHint()    const
 
 bool QDesignerWidgetItem::subjectToStretch(const QLayout *layout, QWidget *w)
 {
+    if (!layout)
+        return false;
     // Are we under some stretch factor?
     if (const QBoxLayout *bl = qobject_cast<const QBoxLayout *>(layout)) {
         const int index = bl->indexOf(w);
@@ -266,6 +287,35 @@ void QDesignerWidgetItem::install()
 void QDesignerWidgetItem::deinstall()
 {
     QLayoutPrivate::widgetItemFactoryMethod = 0;
+}
+
+const QLayout *QDesignerWidgetItem::containingLayout() const
+{
+    if (!m_cachedContainingLayout) {
+        if (QWidget *parentWidget = constWidget()->parentWidget())
+            if (QLayout *parentLayout = parentWidget->layout()) {
+                m_cachedContainingLayout = findLayoutOfItem(parentLayout, this);
+                if (m_cachedContainingLayout)
+                    connect(m_cachedContainingLayout, SIGNAL(destroyed()), this, SLOT(layoutChanged()));
+            }
+        if (DebugWidgetItem)
+            qDebug() << Q_FUNC_INFO << " found " << m_cachedContainingLayout << " after reparenting " << constWidget();
+    }
+    return m_cachedContainingLayout;
+}
+
+void QDesignerWidgetItem::layoutChanged()        
+{
+    if (DebugWidgetItem)
+        qDebug() << Q_FUNC_INFO;
+    m_cachedContainingLayout = 0;
+}
+
+bool QDesignerWidgetItem::eventFilter(QObject * /* watched */, QEvent *event)
+{    
+    if (event->type() == QEvent::ParentChange)
+        layoutChanged();
+    return false;
 }
 
 // ------------------   QDesignerWidgetItemInstaller

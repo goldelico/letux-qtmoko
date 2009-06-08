@@ -1337,7 +1337,7 @@ void QAccessibleItemView::cellAtIndex(int index, int *row, int *column, int *rSp
 }
 
 /*!
-  \class QAccessibleHeader qaccessiblewidget.h
+  \class QAccessibleHeader
   \brief The QAccessibleHeader class implements the QAccessibleInterface for header widgets.
   \internal
 
@@ -1439,7 +1439,7 @@ QAccessible::State QAccessibleHeader::state(int child) const
 
 #ifndef QT_NO_TABBAR
 /*!
-  \class QAccessibleTabBar qaccessiblewidget.h
+  \class QAccessibleTabBar
   \brief The QAccessibleTabBar class implements the QAccessibleInterface for tab bars.
   \internal
 
@@ -1632,7 +1632,7 @@ QVector<int> QAccessibleTabBar::selection() const
 
 #ifndef QT_NO_COMBOBOX
 /*!
-  \class QAccessibleComboBox qaccessiblewidget.h
+  \class QAccessibleComboBox
   \brief The QAccessibleComboBox class implements the QAccessibleInterface for editable and read-only combo boxes.
   \internal
 

@@ -74,7 +74,8 @@ QT_BEGIN_NAMESPACE
   \sa QScriptClass::newIterator(), QScriptValueIterator
 */
 
-QScriptClassPropertyIteratorPrivate::QScriptClassPropertyIteratorPrivate()
+QScriptClassPropertyIteratorPrivate::QScriptClassPropertyIteratorPrivate(QScriptClassPropertyIterator *q)
+    : q_ptr(q)
 {
 }
 
@@ -89,9 +90,8 @@ QScriptClassPropertyIteratorPrivate::~QScriptClassPropertyIteratorPrivate()
   sequence of properties (before the first property).
 */
 QScriptClassPropertyIterator::QScriptClassPropertyIterator(const QScriptValue &object)
-    : d_ptr(new QScriptClassPropertyIteratorPrivate)
+    : d_ptr(new QScriptClassPropertyIteratorPrivate(this))
 {
-    d_ptr->q_ptr = this;
     d_ptr->object = object;
 }
 

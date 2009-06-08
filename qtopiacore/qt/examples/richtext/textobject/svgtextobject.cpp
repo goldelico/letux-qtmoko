@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -49,8 +49,8 @@
 QSizeF SvgTextObject::intrinsicSize(QTextDocument *doc, int posInDocument,
                                     const QTextFormat &format)
 {
-    QSvgRenderer renderer(format.property(Window::SvgData).toByteArray());
-    QSize size = renderer.defaultSize();
+    QImage bufferedImage = qVariantValue<QImage>(format.property(Window::SvgData));
+    QSize size = bufferedImage.size();
     
     if (size.height() > 25)
         size *= 25.0 / (double) size.height();
@@ -64,8 +64,9 @@ void SvgTextObject::drawObject(QPainter *painter, const QRectF &rect,
                                QTextDocument *doc, int posInDocument,
                                const QTextFormat &format)
 {
-    QSvgRenderer renderer(format.property(Window::SvgData).toByteArray());
-    renderer.render(painter, rect);
+    QImage bufferedImage = qVariantValue<QImage>(format.property(Window::SvgData));
+
+    painter->drawImage(rect, bufferedImage);
 }
 //![1]
 

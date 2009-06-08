@@ -79,7 +79,7 @@ void Q3SimpleRichTextData::adjustSize() {
 }
 
 /*!
-    \class Q3SimpleRichText qsimplerichtext.h
+    \class Q3SimpleRichText
     \brief The Q3SimpleRichText class provides a small displayable piece of rich text.
 
     \compat

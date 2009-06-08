@@ -21,8 +21,11 @@
 #include "audiodevice.h"
 #include "quicktimestreamreader.h"
 
-#include <QGLContext>
-#include <QtOpenGL/private/qgl_p.h>
+#include <QtCore/QCoreApplication>
+#include <QtCore/QEventLoop>
+#include <QtCore/QFileInfo>
+#include <QtCore/QUrl>
+#include <QtOpenGL/QGLContext>
 
 #import <QTKit/QTTrack.h>
 #import <QTKit/QTMedia.h>

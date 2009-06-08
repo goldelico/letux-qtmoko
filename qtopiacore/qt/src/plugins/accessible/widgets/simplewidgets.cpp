@@ -69,7 +69,7 @@ QString Q_GUI_EXPORT qt_accStripAmp(const QString &text);
 QString Q_GUI_EXPORT qt_accHotKey(const QString &text);
 
 /*!
-  \class QAccessibleButton qaccessible.h
+  \class QAccessibleButton
   \brief The QAccessibleButton class implements the QAccessibleInterface for button type widgets.
   \internal
 
@@ -211,7 +211,7 @@ QAccessible::State QAccessibleButton::state(int child) const
 
 #ifndef QT_NO_TOOLBUTTON
 /*!
-  \class QAccessibleToolButton qaccessible.h
+  \class QAccessibleToolButton
   \brief The QAccessibleToolButton class implements the QAccessibleInterface for tool buttons.
   \internal
 
@@ -414,7 +414,7 @@ bool QAccessibleToolButton::doAction(int action, int child, const QVariantList &
 #endif // QT_NO_TOOLBUTTON
 
 /*!
-  \class QAccessibleDisplay qaccessiblewidget.h
+  \class QAccessibleDisplay
   \brief The QAccessibleDisplay class implements the QAccessibleInterface for widgets that display information.
   \internal
 
@@ -548,7 +548,7 @@ int QAccessibleDisplay::navigate(RelationFlag rel, int entry, QAccessibleInterfa
 
 #ifndef QT_NO_LINEEDIT
 /*!
-  \class QAccessibleLineEdit qaccessiblewidget.h
+  \class QAccessibleLineEdit
   \brief The QAccessibleLineEdit class implements the QAccessibleInterface for widgets with editable text
   \internal
 

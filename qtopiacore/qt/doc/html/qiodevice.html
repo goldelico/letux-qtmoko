@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/corelib/io/qiodevice.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qiodevice.cpp -->
 <head>
   <title>Qt 4.5: QIODevice Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -112,7 +112,7 @@
 <li>Sequential devices don't support seeking to arbitrary positions. The data must be read in one pass. The functions <a href="qiodevice.html#pos">pos</a>() and <a href="qiodevice.html#size">size</a>() don't work for sequential devices. <a href="qtcpsocket.html">QTcpSocket</a> and <a href="qprocess.html">QProcess</a> are examples of sequential devices.</li>
 </ul>
 <p>You can use <a href="qiodevice.html#isSequential">isSequential</a>() to determine the type of device.</p>
-<p>QIODevice emits <a href="qiodevice.html#readyRead">readyRead</a>() when new data is available for reading; for example, if new data has arrived on the network or if additional data is appended to a file that you are reading from. You can call <a href="qiodevice.html#bytesAvailable">bytesAvailable</a>() to determine the number of bytes that currently available for reading. It's common to use <a href="qiodevice.html#bytesAvailable">bytesAvailable</a>() together with the <a href="qiodevice.html#readyRead">readyRead</a>() signal when programming with asynchronous devices such as <a href="qtcpsocket.html">QTcpSocket</a>, where fragments of data can arrive at arbitrary points in time. QIODevice emits the <a href="qiodevice.html#bytesWritten">bytesWritten</a>() signal every time a payload of data has been written to the device. Use <a href="qiodevice.html#bytesToWrite">bytesToWrite</a>() to determine the current amount of data waiting to be written.</p>
+<p>QIODevice emits <a href="qiodevice.html#readyRead">readyRead</a>() when new data is available for reading; for example, if new data has arrived on the network or if additional data is appended to a file that you are reading from. You can call <a href="qiodevice.html#bytesAvailable">bytesAvailable</a>() to determine the number of bytes that are currently available for reading. It's common to use <a href="qiodevice.html#bytesAvailable">bytesAvailable</a>() together with the <a href="qiodevice.html#readyRead">readyRead</a>() signal when programming with asynchronous devices such as <a href="qtcpsocket.html">QTcpSocket</a>, where fragments of data can arrive at arbitrary points in time. QIODevice emits the <a href="qiodevice.html#bytesWritten">bytesWritten</a>() signal every time a payload of data has been written to the device. Use <a href="qiodevice.html#bytesToWrite">bytesToWrite</a>() to determine the current amount of data waiting to be written.</p>
 <p>Certain subclasses of QIODevice, such as <a href="qtcpsocket.html">QTcpSocket</a> and <a href="qprocess.html">QProcess</a>, are asynchronous. This means that I/O functions such as <a href="qiodevice.html#write">write</a>() or <a href="qiodevice.html#read">read</a>() always return immediately, while communication with the device itself may happen when control goes back to the event loop. QIODevice provides functions that allow you to force these operations to be performed immediately, while blocking the calling thread and without entering the event loop. This allows QIODevice subclasses to be used without an event loop, or in a separate thread:</p>
 <ul>
 <li><a href="qiodevice.html#waitForReadyRead">waitForReadyRead</a>() - This function suspends operation in the calling thread until new data is available for reading.</li>
@@ -183,7 +183,7 @@
 <p>Returns true if a complete line of data can be read from the device; otherwise returns false.</p>
 <p>Note that unbuffered devices, which have no way of determining what can be read, always return false.</p>
 <p>This function is often called in conjunction with the <a href="qiodevice.html#readyRead">readyRead</a>() signal.</p>
-<p>Subclasses that reimplement this function must call the base implementation in order to include the size of the <a href="qiodevice.html">QIODevice</a>'s buffer. Example:</p>
+<p>Subclasses that reimplement this function must call the base implementation in order to include the contents of the <a href="qiodevice.html">QIODevice</a>'s buffer. Example:</p>
 <pre> bool CustomDevice::canReadLine() const
  {
      return buffer.contains('\n') || QIODevice::canReadLine();
@@ -372,6 +372,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

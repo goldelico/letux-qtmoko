@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/calculator.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/calculator.qdoc -->
 <head>
   <title>Qt 4.5: Calculator Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -55,12 +55,12 @@
      void setMemory();
      void addToMemory();</pre>
 <p>The <tt>Calculator</tt> class provides a simple calculator widget. It inherits from <a href="qdialog.html">QDialog</a> and has several private slots associated with the calculator's buttons. <a href="qobject.html#eventFilter">QObject::eventFilter</a>() is reimplemented to handle mouse events on the calculator's display.</p>
-<p>Buttons are grouped in categories according to their behavior. For example, all the digit buttons (labeled <b>0</b> to <b>9</b>) append a digit to the current operand. For these, we connect multiple buttons to the same slot (e.g&#x2e;, <tt>digitClicked()</tt>). The categories are digits, unary operators (<b>Sqrt</b>, <b>x²</b>, <b>1/x</b>), additive operators (<b>+</b>, <b>-</b>), and multiplicative operators (<b>×</b>, <b>÷</b>). The other buttons have their own slots.</p>
+<p>Buttons are grouped in categories according to their behavior. For example, all the digit buttons (labeled <b>0</b> to <b>9</b>) append a digit to the current operand. For these, we connect multiple buttons to the same slot (e.g&#x2e;, <tt>digitClicked()</tt>). The categories are digits, unary operators (<b>Sqrt</b>, <b>x&#xb2;</b>, <b>1/x</b>), additive operators (<b>+</b>, <b>-</b>), and multiplicative operators (<b>&#xd7;</b>, <b>&#xf7;</b>). The other buttons have their own slots.</p>
 <pre> private:
      Button *createButton(const QString &amp;text, const char *member);
      void abortOperation();
      bool calculate(double rightOperand, const QString &amp;pendingOperator);</pre>
-<p>The private <tt>createButton()</tt> function is used as part of the widget construction. <tt>abortOperation()</tt> is called whenever a division by zero occurs or when a square root operation is applied to a negative number. <tt>calculate()</tt> applies a binary operator (<b>+</b>, <b>-</b>, <b>×</b>, or <b>÷</b>).</p>
+<p>The private <tt>createButton()</tt> function is used as part of the widget construction. <tt>abortOperation()</tt> is called whenever a division by zero occurs or when a square root operation is applied to a negative number. <tt>calculate()</tt> applies a binary operator (<b>+</b>, <b>-</b>, <b>&#xd7;</b>, or <b>&#xf7;</b>).</p>
 <pre>     double sumInMemory;
      double sumSoFar;
      double factorSoFar;
@@ -76,7 +76,7 @@
 <li><tt>pendingMultiplicativeOperator</tt> stores the last multiplicative operator clicked by the user.</li>
 <li><tt>waitingForOperand</tt> is <tt>true</tt> when the calculator is expecting the user to start typing an operand.</li>
 </ul>
-<p>Additive and multiplicative operators are treated differently because they have different precedences. For example, <b>1 + 2 ÷ 3</b> is interpreted as <b>1 + (2 ÷ 3)</b> because <b>÷</b> has higher precedence than <b>+</b>.</p>
+<p>Additive and multiplicative operators are treated differently because they have different precedences. For example, <b>1 + 2 &#xf7; 3</b> is interpreted as <b>1 + (2 &#xf7; 3)</b> because <b>&#xf7;</b> has higher precedence than <b>+</b>.</p>
 <p>The table below shows the evolution of the calculator state as the user enters a mathematical expression.</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th>User Input</th><th>Display</th><th>Sum so Far</th><th>Add. Op.</th><th>Factor so Far</th><th>Mult. Op.</th><th>Waiting for Operand?</th></tr></thead>
@@ -84,11 +84,11 @@
 <tr valign="top" class="even"><td><b>1</b></td><td>1</td><td>0</td><td></td><td></td><td></td><td><tt>false</tt></td></tr>
 <tr valign="top" class="odd"><td><b>1 +</b></td><td>1</td><td>1</td><td><b>+</b></td><td></td><td></td><td><tt>true</tt></td></tr>
 <tr valign="top" class="even"><td><b>1 + 2</b></td><td>2</td><td>1</td><td><b>+</b></td><td></td><td></td><td><tt>false</tt></td></tr>
-<tr valign="top" class="odd"><td><b>1 + 2 ÷</b></td><td>2</td><td>1</td><td><b>+</b></td><td>2</td><td><b>÷</b></td><td><tt>true</tt></td></tr>
-<tr valign="top" class="even"><td><b>1 + 2 ÷ 3</b></td><td>3</td><td>1</td><td><b>+</b></td><td>2</td><td><b>÷</b></td><td><tt>false</tt></td></tr>
-<tr valign="top" class="odd"><td><b>1 + 2 ÷ 3 -</b></td><td>1.66667</td><td>1.66667</td><td><b>-</b></td><td></td><td></td><td><tt>true</tt></td></tr>
-<tr valign="top" class="even"><td><b>1 + 2 ÷ 3 - 4</b></td><td>4</td><td>1.66667</td><td><b>-</b></td><td></td><td></td><td><tt>false</tt></td></tr>
-<tr valign="top" class="odd"><td><b>1 + 2 ÷ 3 - 4 =</b></td><td>-2.33333</td><td>0</td><td></td><td></td><td></td><td><tt>true</tt></td></tr>
+<tr valign="top" class="odd"><td><b>1 + 2 &#xf7;</b></td><td>2</td><td>1</td><td><b>+</b></td><td>2</td><td><b>&#xf7;</b></td><td><tt>true</tt></td></tr>
+<tr valign="top" class="even"><td><b>1 + 2 &#xf7; 3</b></td><td>3</td><td>1</td><td><b>+</b></td><td>2</td><td><b>&#xf7;</b></td><td><tt>false</tt></td></tr>
+<tr valign="top" class="odd"><td><b>1 + 2 &#xf7; 3 -</b></td><td>1.66667</td><td>1.66667</td><td><b>-</b></td><td></td><td></td><td><tt>true</tt></td></tr>
+<tr valign="top" class="even"><td><b>1 + 2 &#xf7; 3 - 4</b></td><td>4</td><td>1.66667</td><td><b>-</b></td><td></td><td></td><td><tt>false</tt></td></tr>
+<tr valign="top" class="odd"><td><b>1 + 2 &#xf7; 3 - 4 =</b></td><td>-2.33333</td><td>0</td><td></td><td></td><td></td><td><tt>true</tt></td></tr>
 </table></p>
 <p>Unary operators, such as <b>Sqrt</b>, require no special handling; they can be applied immediately since the operand is already known when the operator button is clicked.</p>
 <pre>     QLineEdit *display;
@@ -242,7 +242,7 @@
          factorSoFar = 0.0;
          pendingMultiplicativeOperator.clear();
      }</pre>
-<p>If <b>×</b> or <b>÷</b> has been clicked earlier, without clicking <b>=</b> afterward, the current value in the display is the right operand of the <b>×</b> or <b>÷</b> operator and we can finally perform the operation and update the display.</p>
+<p>If <b>&#xd7;</b> or <b>&#xf7;</b> has been clicked earlier, without clicking <b>=</b> afterward, the current value in the display is the right operand of the <b>&#xd7;</b> or <b>&#xf7;</b> operator and we can finally perform the operation and update the display.</p>
 <pre>     if (!pendingAdditiveOperator.isEmpty()) {
          if (!calculate(operand, pendingAdditiveOperator)) {
              abortOperation();
@@ -452,6 +452,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

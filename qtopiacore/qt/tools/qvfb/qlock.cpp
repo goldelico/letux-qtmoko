@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the tools applications of the Qt Toolkit.
+** This file is part of the QtGui module of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -92,7 +92,7 @@ public:
 #endif // QT_NO_QWS_MULTIPROCESS
 
 /*!
-    \class QLock qlock_p.h
+    \class QLock
     \brief The QLock class is a wrapper for a System V shared semaphore.
 
     \ingroup qws

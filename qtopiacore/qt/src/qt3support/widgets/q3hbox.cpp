@@ -46,7 +46,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3HBox qhbox.h
+    \class Q3HBox
     \brief The Q3HBox widget provides horizontal geometry management
     for its child widgets.
 

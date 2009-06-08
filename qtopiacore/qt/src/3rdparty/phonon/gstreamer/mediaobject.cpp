@@ -14,7 +14,6 @@
     You should have received a copy of the GNU Lesser General Public License
     along with this library.  If not, see <http://www.gnu.org/licenses/>.
 */
-
 #include <cmath>
 #include <gst/interfaces/propertyprobe.h>
 #include "common.h"
@@ -24,7 +23,6 @@
 #include "backend.h"
 #include "streamreader.h"
 #include "phononsrc.h"
-
 #include <QtCore>
 #include <QtCore/QTimer>
 #include <QtCore/QVector>
@@ -55,6 +53,7 @@ MediaObject::MediaObject(Backend *backend, QObject *parent)
         , m_tickTimer(new QTimer(this))
         , m_prefinishMark(0)
         , m_transitionTime(0)
+        , m_posAtSeek(-1)
         , m_prefinishMarkReachedNotEmitted(true)
         , m_aboutToFinishEmitted(false)
         , m_loading(false)
@@ -77,6 +76,9 @@ MediaObject::MediaObject(Backend *backend, QObject *parent)
         , m_videoGraph(0)
         , m_previousTickTime(-1)
         , m_resetNeeded(false)
+        , m_autoplayTitles(true)
+        , m_availableTitles(0)
+        , m_currentTitle(1)
 {
     qRegisterMetaType<GstCaps*>("GstCaps*");
     qRegisterMetaType<State>("State");
@@ -140,9 +142,9 @@ void MediaObject::saveState()
     if (m_resumeState)
         return;
 
-    if (m_state == Phonon::PlayingState || m_state == Phonon::PausedState) {
+    if (m_pendingState == Phonon::PlayingState || m_pendingState == Phonon::PausedState) {
         m_resumeState = true;
-        m_oldState = m_state;
+        m_oldState = m_pendingState;
         m_oldPos = getPipelinePos();
     }
 }
@@ -267,6 +269,12 @@ void MediaObject::setVideoCaps(GstCaps *caps)
 
     if ((str = gst_caps_get_structure (caps, 0))) {
         if (gst_structure_get_int (str, "width", &width) && gst_structure_get_int (str, "height", &height)) {
+            gint aspectNum = 0;
+            gint aspectDenum = 0;
+            if (gst_structure_get_fraction(str, "pixel-aspect-ratio", &aspectNum, &aspectDenum)) {
+                if (aspectDenum > 0)
+                    width = width*aspectNum/aspectDenum;
+            }
             // Let child nodes know about our new video size
             QSize size(width, height);
             MediaNodeEvent event(MediaNodeEvent::VideoSizeChanged, &size);
@@ -297,6 +305,11 @@ void MediaObject::connectVideo(GstPad *pad)
             m_backend->logMessage("Video track connected", Backend::Info, this);
             // Note that the notify::caps _must_ be installed after linking to work with Dapper
             m_capsHandler = g_signal_connect(pad, "notify::caps", G_CALLBACK(notifyVideoCaps), this);
+ 
+            if (!m_loading && !m_hasVideo) {
+                m_hasVideo = m_videoStreamFound;
+                emit hasVideoChanged(m_hasVideo);
+            }
         }
         gst_object_unref (videopad);
     } else {
@@ -320,16 +333,23 @@ void MediaObject::connectAudio(GstPad *pad)
     }
 }
 
+void MediaObject::cb_pad_added(GstElement *decodebin,
+                               GstPad     *pad,
+                               gpointer    data)
+{
+    Q_UNUSED(decodebin);
+    GstPad *decodepad = static_cast<GstPad*>(data);
+    gst_pad_link (pad, decodepad);
+    gst_object_unref (decodepad);
+}
+
 /**
  * Create a media source from a given URL.
  *
  * returns true if successful
  */
-bool MediaObject::createPipefromURL(const QString &encodedUrl)
+bool MediaObject::createPipefromURL(const QUrl &url)
 {
-    // Convert back to URL
-    QUrl url(encodedUrl, QUrl::StrictMode);
-
     // Remove any existing data source
     if (m_datasource) {
         gst_bin_remove(GST_BIN(m_pipeline), m_datasource);
@@ -339,7 +359,7 @@ bool MediaObject::createPipefromURL(const QString &encodedUrl)
 
     // Verify that the uri can be parsed
     if (!url.isValid()) {
-        m_backend->logMessage(QString("%1 is not a valid URI").arg(encodedUrl));
+        m_backend->logMessage(QString("%1 is not a valid URI").arg(url.toString()));
         return false;
     }
 
@@ -352,9 +372,11 @@ bool MediaObject::createPipefromURL(const QString &encodedUrl)
     // Link data source into pipeline
     gst_bin_add(GST_BIN(m_pipeline), m_datasource);
     if (!gst_element_link(m_datasource, m_decodebin)) {
-        gst_bin_remove(GST_BIN(m_pipeline), m_datasource);
-        return false;
+        // For sources with dynamic pads (such as RtspSrc) we need to connect dynamically
+        GstPad *decodepad = gst_element_get_pad (m_decodebin, "sink");
+        g_signal_connect (m_datasource, "pad-added", G_CALLBACK (&cb_pad_added), decodepad);
     }
+
     return true;
 }
 
@@ -777,6 +799,8 @@ qint64 MediaObject::getPipelinePos() const
         return totalTime();
     if (m_atStartOfStream)
         return 0;
+    if (m_posAtSeek >= 0)
+        return m_posAtSeek;
 
     gint64 pos = 0;
     GstFormat format = GST_FORMAT_TIME;
@@ -848,21 +872,19 @@ void MediaObject::setSource(const MediaSource &source)
     m_metaData.clear();
 
     switch (source.type()) {
-    case MediaSource::Url: {
-            QString urlString = source.url().toEncoded();
-            if (!createPipefromURL(urlString)) {
+    case MediaSource::Url: {            
+            if (createPipefromURL(source.url()))
+                m_loading = true;
+            else
                 setError(tr("Could not open media source."));
-                return;
-            }
         }
         break;
 
     case MediaSource::LocalFile: {
-            QString urlString = QUrl::fromLocalFile(source.fileName()).toString();
-            if (!createPipefromURL(urlString)) {
+            if (createPipefromURL(QUrl::fromLocalFile(source.fileName())))
+                m_loading = true;
+            else
                 setError(tr("Could not open media source."));
-                return;
-            }
         }
         break;
 
@@ -874,31 +896,35 @@ void MediaObject::setSource(const MediaSource &source)
         break;
 
     case MediaSource::Stream:
-        if (!createPipefromStream(source)) {
+        if (createPipefromStream(source))
+            m_loading = true;
+        else
             setError(tr("Could not open media source."));
-            return;
-        }
         break;
 
     case MediaSource::Disc: // CD tracks can be specified by setting the url in the following way uri=cdda:4
-        m_backend->logMessage("Source type Disc not currently supported", Backend::Warning, this);
-        setError(tr("Could not open media source."), Phonon::NormalError);
+        {
+            QUrl cdurl(QLatin1String("cdda://"));
+            if (createPipefromURL(cdurl))
+                m_loading = true;
+            else
+                setError(tr("Could not open media source."));
+        }
         break;
 
     default:
         m_backend->logMessage("Source type not currently supported", Backend::Warning, this);
         setError(tr("Could not open media source."), Phonon::NormalError);
-        return;
+        break;
     }
 
-    // Setting to state paused will trigger fetching meta data and duration
     MediaNodeEvent event(MediaNodeEvent::SourceChanged);
     notify(&event);
 
     // We need to link this node to ensure that fake sinks are connected
     // before loading, otherwise the stream will be blocked
-    link();
-
+    if (m_loading)
+        link();
     beginLoad();
 }
 
@@ -934,6 +960,19 @@ void MediaObject::getStreamInfo()
         m_hasVideo = m_videoStreamFound;
         emit hasVideoChanged(m_hasVideo);
     }
+
+    m_availableTitles = 1;
+    gint64 titleCount;
+    GstFormat format = gst_format_get_by_nick("track");
+    if (gst_element_query_duration (m_pipeline, &format, &titleCount)) {
+        int oldAvailableTitles = m_availableTitles;
+        m_availableTitles = (int)titleCount;
+        if (m_availableTitles != oldAvailableTitles) {
+            emit availableTitlesChanged(m_availableTitles);
+            m_backend->logMessage(QString("Available titles changed: %0").arg(m_availableTitles), Backend::Info, this);
+        }
+    }
+
 }
 
 void MediaObject::setPrefinishMark(qint32 newPrefinishMark)
@@ -965,8 +1004,6 @@ void MediaObject::seek(qint64 time)
     if (!isValid())
         return;
 
-    Phonon::State oldState = state();
-
     if (isSeekable()) {
         switch (state()) {
         case Phonon::PlayingState:
@@ -980,11 +1017,12 @@ void MediaObject::seek(qint64 time)
             else
                 m_atStartOfStream = false;
 
-            // Go to buffering state, we resume paused state when ready
+            m_posAtSeek = getPipelinePos();
+            m_tickTimer->stop();
+
             if (gst_element_seek(m_pipeline, 1.0, GST_FORMAT_TIME,
                                  GST_SEEK_FLAG_FLUSH, GST_SEEK_TYPE_SET,
                                  time * GST_MSECOND, GST_SEEK_TYPE_NONE, GST_CLOCK_TIME_NONE))
-            setState(oldState);
             break;
         case Phonon::LoadingState:
         case Phonon::ErrorState:
@@ -1155,7 +1193,13 @@ void MediaObject::handleBusMessage(const Message &message)
 
             GstState oldState;
             GstState newState;
-            gst_message_parse_state_changed (gstMessage, &oldState, &newState, 0);
+            GstState pendingState;
+            gst_message_parse_state_changed (gstMessage, &oldState, &newState, &pendingState);
+
+            if (newState == pendingState)
+                return;
+
+            m_posAtSeek = -1;
 
             switch (newState) {
 
@@ -1318,10 +1362,20 @@ void MediaObject::handleEndOfStream()
 {
     // If the stream is not seekable ignore
     // otherwise chained radio broadcasts would stop
-    if (m_atEndOfStream || !isSeekable())
+
+
+    if (m_atEndOfStream)
         return;
 
-    m_atEndOfStream = true;
+    if (!m_seekable)
+        m_atEndOfStream = true;
+
+    if (m_autoplayTitles &&
+        m_availableTitles > 1 &&
+        m_currentTitle < m_availableTitles) {
+        _iface_setCurrentTitle(m_currentTitle + 1);
+        return;
+    }
 
     if (m_nextSource.type() != MediaSource::Invalid
         && m_nextSource.type() != MediaSource::Empty) {  // We only emit finish when the queue is actually empty
@@ -1329,10 +1383,17 @@ void MediaObject::handleEndOfStream()
     } else {
         m_pendingState = Phonon::PausedState;
         emit finished();
-        // Only emit paused if the finished signal
-        // did not result in a new state
-        if (m_pendingState == Phonon::PausedState)
-            setState(m_pendingState);
+        if (!m_seekable) {
+            setState(Phonon::StoppedState);
+            // Note the behavior for live streams is not properly defined
+            // But since we cant seek to 0, we don't have much choice other than stopping
+            // the stream
+        } else {
+            // Only emit paused if the finished signal
+            // did not result in a new state
+            if (m_pendingState == Phonon::PausedState)
+                setState(m_pendingState);
+        }
     }
 }
 
@@ -1342,6 +1403,72 @@ void MediaObject::notifyStateChange(Phonon::State newstate, Phonon::State oldsta
     Q_UNUSED(oldstate);
     MediaNodeEvent event(MediaNodeEvent::StateChanged, &newstate);
     notify(&event);
+}
+
+#ifndef QT_NO_PHONON_MEDIACONTROLLER
+//interface management
+bool MediaObject::hasInterface(Interface iface) const
+{
+    return iface == AddonInterface::TitleInterface;
+}
+
+QVariant MediaObject::interfaceCall(Interface iface, int command, const QList<QVariant> &params)
+{
+    if (hasInterface(iface)) {
+
+        switch (iface)
+        {
+        case TitleInterface:
+            switch (command)
+            {
+            case availableTitles:
+                return _iface_availableTitles();
+            case title:
+                return _iface_currentTitle();
+            case setTitle:
+                _iface_setCurrentTitle(params.first().toInt());
+                break;
+            case autoplayTitles:
+                return m_autoplayTitles;
+            case setAutoplayTitles:
+                m_autoplayTitles = params.first().toBool();
+                break;
+            }
+            break;
+                default:
+            break;
+        }
+    }
+    return QVariant();
+}
+#endif
+
+int MediaObject::_iface_availableTitles() const
+{
+    return m_availableTitles;
+}
+
+int MediaObject::_iface_currentTitle() const
+{
+    return m_currentTitle;
+}
+
+void MediaObject::_iface_setCurrentTitle(int title)
+{
+    GstFormat trackFormat = gst_format_get_by_nick("track");
+    m_backend->logMessage(QString("setCurrentTitle %0").arg(title), Backend::Info, this);
+    if ((title == m_currentTitle) || (title < 1) || (title > m_availableTitles))
+        return;
+
+    m_currentTitle = title;
+
+    //let's seek to the beginning of the song
+    if (gst_element_seek_simple(m_pipeline, trackFormat, GST_SEEK_FLAG_FLUSH, m_currentTitle - 1)) {
+        updateTotalTime();
+        m_atEndOfStream = false;
+        emit titleChanged(title);
+        emit totalTimeChanged(totalTime());
+    }
 }
 
 } // ns Gstreamer

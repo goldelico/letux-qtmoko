@@ -359,8 +359,8 @@ void QScriptCustomClassDataIterator::iteratorToMember(QScript::Member *member)
 
 
 
-QScriptClassPrivate::QScriptClassPrivate()
-    : m_classInfo(0)
+QScriptClassPrivate::QScriptClassPrivate(QScriptClass *q)
+    : engine(0), m_classInfo(0), q_ptr(q)
 {
 }
 
@@ -433,9 +433,8 @@ QScriptFunction *QScriptClassPrivate::newFunction()
   The engine does not take ownership of the QScriptClass object.
 */
 QScriptClass::QScriptClass(QScriptEngine *engine)
-    : d_ptr(new QScriptClassPrivate)
+    : d_ptr(new QScriptClassPrivate(this))
 {
-    d_ptr->q_ptr = this;
     d_ptr->engine = engine;
 }
 

@@ -57,8 +57,6 @@ class QGraphicsLinearLayoutPrivate;
 
 class Q_GUI_EXPORT QGraphicsLinearLayout : public QGraphicsLayout
 {
-    Q_PROPERTY(Qt::Orientation orientation READ orientation WRITE setOrientation)
-    Q_PROPERTY(qreal spacing READ spacing WRITE setSpacing)
 public:
     QGraphicsLinearLayout(QGraphicsLayoutItem *parent = 0);
     QGraphicsLinearLayout(Qt::Orientation orientation, QGraphicsLayoutItem *parent = 0);

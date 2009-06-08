@@ -40,8 +40,8 @@
 ****************************************************************************/
 
 /*!
-\title Topics
 \group topics
+\title Topics
 
 This page provides a collection of documents grouped by topic.
 
@@ -187,8 +187,8 @@ platform and tool-specific documentation.
 */
 
 /*!
-\title Text Processing
 \group text-processing
+\title Text Processing
 \ingroup topics
 \brief Text processing guides and classes.
 
@@ -201,34 +201,36 @@ system.
 */
 
 /*!
-\title Tutorials
-\group tutorials
-\ingroup topics
-\brief Tutorials, guides and overviews to help you learn Qt.
+    \group tutorials
+    \title Tutorials
+    \ingroup topics
+    \brief Tutorials, guides and overviews to help you learn Qt.
 
-A collection of tutorials and "walkthrough" guides are provided with Qt to
-help new users get started with Qt development. These documents cover a
-range of topics, from basic use of widgets to step-by-step tutorials that
-show how an application is put together.
+    A collection of tutorials and "walkthrough" guides are provided with Qt to
+    help new users get started with Qt development. These documents cover a
+    range of topics, from basic use of widgets to step-by-step tutorials that
+    show how an application is put together.
 
-\section1 \l{Widgets Tutorial}
+    \section1 \l{Widgets Tutorial}
 
-\inlineimage widget-examples.png
+    \inlineimage widget-examples.png
 
-A beginner's guide to getting started with widgets and layouts to create GUI
-applications.
+    A beginner's guide to getting started with widgets and layouts to create
+    GUI applications.
 
-\section1 \l{Address Book Tutorial}
+    \section1 \l{Address Book Tutorial}
 
-\inlineimage addressbook-tutorial.png
+    \inlineimage addressbook-tutorial.png
 
-A seven part guide to creating a fully-functioning address book application.
+    A seven part guide to creating a fully-functioning address book
+    application. This tutorial is also available with
+    \l{Tutoriel "Carnet d'adresses"}{French explanation}.
 
 */
 
 /*!
-\title Tools for ActiveQt
 \group activeqt-tools
+\title Tools for ActiveQt
 \ingroup topics
 \brief Tools to help integrate Qt applications with ActiveX components.
 
@@ -240,8 +242,8 @@ These tools provide support for integrating Qt with ActiveX components.
 */
 
 /*!
-\title Scripting with ECMAScript
 \group scripting
+\title Scripting with ECMAScript
 \ingroup topics
 \brief Guides and references covering application scripting with ECMAScript.
 
@@ -253,8 +255,8 @@ ECMAScript and Qt.
 */
 
 /*!
-\title Threading and Concurrent Programming
 \group threading
+\title Threading and Concurrent Programming
 \ingroup topics
 \brief Guides and references covering threading and concurrent programming.
 
@@ -267,9 +269,9 @@ level classes for concurrent programming.
 
 /*!
 \group qtce
+\title Qt for Windows CE
 \ingroup topics
 \ingroup qt-embedded
-\title Qt for Windows CE
 \brief Documents related to Qt on Windows CE
 
 Qt for Windows CE is a C++ framework for GUI and application development

@@ -54,7 +54,7 @@ PropertyDialog::PropertyDialog(QWidget *parent, Qt::WindowFlags f)
 
     buttonBox->setStandardButtons(QDialogButtonBox::Ok | QDialogButtonBox::Cancel);
     propertyTable->setColumnCount(2);
-    const QStringList labels = QStringList() << "Name" << "Value";
+    const QStringList labels = QStringList() << QLatin1String("Name") << QLatin1String("Value");
     propertyTable->setHorizontalHeaderLabels(labels);
     propertyTable->horizontalHeader()->setStretchLastSection(true);
     propertyTable->setEditTriggers(QAbstractItemView::AllEditTriggers);
@@ -80,8 +80,11 @@ void PropertyDialog::addProperty(const QString &aname, QVariant::Type type)
 
     QString name = aname;
     if (name.isEmpty())
-        name = "argument " + QString::number(rowCount + 1);
-    QTableWidgetItem *nameItem = new QTableWidgetItem(name + " (" + QVariant::typeToName(type) + ")");
+        name = QLatin1String("argument ") + QString::number(rowCount + 1);
+    name += QLatin1String(" (");
+    name += QLatin1String(QVariant::typeToName(type));
+    name += QLatin1String(")");
+    QTableWidgetItem *nameItem = new QTableWidgetItem(name);
     nameItem->setFlags(nameItem->flags() &
             ~(Qt::ItemIsEditable | Qt::ItemIsSelectable));
     propertyTable->setItem(rowCount, 0, nameItem);

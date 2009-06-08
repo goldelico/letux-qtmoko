@@ -181,6 +181,7 @@ struct QGLExtensionFuncs
         qt_glMultiTexCoord4f = 0;
         qt_glActiveTexture = 0;
 
+#if !defined(QT_OPENGL_ES_2)
         qt_glIsRenderbufferEXT = 0;
         qt_glBindRenderbufferEXT = 0;
         qt_glDeleteRenderbuffersEXT = 0;
@@ -198,6 +199,7 @@ struct QGLExtensionFuncs
         qt_glFramebufferRenderbufferEXT = 0;
         qt_glGetFramebufferAttachmentParameterivEXT = 0;
         qt_glGenerateMipmapEXT = 0;
+#endif
 
         qt_glBindBufferARB = 0;
         qt_glDeleteBuffersARB = 0;
@@ -242,6 +244,7 @@ struct QGLExtensionFuncs
     _glMultiTexCoord4f qt_glMultiTexCoord4f;
     _glActiveTexture qt_glActiveTexture;
 
+#if !defined(QT_OPENGL_ES_2)
     _glIsRenderbufferEXT qt_glIsRenderbufferEXT;
     _glBindRenderbufferEXT qt_glBindRenderbufferEXT;
     _glDeleteRenderbuffersEXT qt_glDeleteRenderbuffersEXT;
@@ -259,6 +262,7 @@ struct QGLExtensionFuncs
     _glFramebufferRenderbufferEXT qt_glFramebufferRenderbufferEXT;
     _glGetFramebufferAttachmentParameterivEXT qt_glGetFramebufferAttachmentParameterivEXT;
     _glGenerateMipmapEXT qt_glGenerateMipmapEXT;
+#endif
 
     _glBindBufferARB qt_glBindBufferARB;
     _glDeleteBuffersARB qt_glDeleteBuffersARB;
@@ -426,6 +430,8 @@ struct QGLExtensionFuncs
 #define glActiveTexture QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glActiveTexture
 #endif
 
+#if !defined(QT_OPENGL_ES_2)
+
 #define glIsRenderbufferEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glIsRenderbufferEXT
 #define glBindRenderbufferEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glBindRenderbufferEXT
 #define glDeleteRenderbuffersEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDeleteRenderbuffersEXT
@@ -443,6 +449,28 @@ struct QGLExtensionFuncs
 #define glFramebufferRenderbufferEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glFramebufferRenderbufferEXT
 #define glGetFramebufferAttachmentParameterivEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGetFramebufferAttachmentParameterivEXT
 #define glGenerateMipmapEXT QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glGenerateMipmapEXT
+
+#else // QT_OPENGL_ES_2
+
+#define glIsRenderbufferEXT glIsRenderbuffer
+#define glBindRenderbufferEXT glBindRenderbuffer
+#define glDeleteRenderbuffersEXT glDeleteRenderbuffers
+#define glGenRenderbuffersEXT glGenRenderbuffers
+#define glRenderbufferStorageEXT glRenderbufferStorage
+#define glGetRenderbufferParameterivEXT glGetRenderbufferParameteriv
+#define glIsFramebufferEXT glIsFramebuffer
+#define glBindFramebufferEXT glBindFramebuffer
+#define glDeleteFramebuffersEXT glDeleteFramebuffers
+#define glGenFramebuffersEXT glGenFramebuffers
+#define glCheckFramebufferStatusEXT glCheckFramebufferStatus
+#define glFramebufferTexture1DEXT glFramebufferTexture1D
+#define glFramebufferTexture2DEXT glFramebufferTexture2D
+#define glFramebufferTexture3DEXT glFramebufferTexture3D
+#define glFramebufferRenderbufferEXT glFramebufferRenderbuffer
+#define glGetFramebufferAttachmentParameterivEXT glGetFramebufferAttachmentParameteriv
+#define glGenerateMipmapEXT glGenerateMipmap
+
+#endif // QT_OPENGL_ES_2
 
 #define glBindBufferARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glBindBufferARB
 #define glDeleteBuffersARB QGLContextPrivate::qt_get_extension_funcs(ctx).qt_glDeleteBuffersARB

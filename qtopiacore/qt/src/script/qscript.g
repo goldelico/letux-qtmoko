@@ -331,7 +331,9 @@ QScriptParser::QScriptParser():
     stack_size(0),
     sym_stack(0),
     state_stack(0),
-    location_stack(0)
+    location_stack(0),
+    error_lineno(0),
+    error_column(0)
 {
 }
 

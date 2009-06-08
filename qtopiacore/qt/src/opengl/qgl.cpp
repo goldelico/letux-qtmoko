@@ -46,6 +46,7 @@
 
 #if defined(Q_WS_X11)
 #include "private/qt_x11_p.h"
+#include "private/qpixmap_x11_p.h"
 #define INT32 dummy_INT32
 #define INT8 dummy_INT8
 #if !defined(QT_OPENGL_ES)
@@ -2614,6 +2615,10 @@ const QGLContext* QGLContext::currentContext()
     QGLWidget. This will side-step the issue altogether, and is what
     we recommend for users that need this kind of functionality.
 
+    On Mac OS X, when Qt is built with Cocoa support, a QGLWidget
+    can't have any sibling widgets placed ontop of itself. This is due
+    to limitations in the Cocoa API and is not supported by Apple.
+
     \section1 Overlays
 
     The QGLWidget creates a GL overlay context in addition to the
@@ -3229,6 +3234,10 @@ bool QGLWidget::event(QEvent *e)
             update();
         }
         return true;
+#  if defined(QT_MAC_USE_COCOA)
+    } else if (e->type() == QEvent::MacGLClearDrawable) {
+        d->glcx->d_ptr->clearDrawable();
+#  endif
     }
 #endif
 
@@ -3313,7 +3322,10 @@ QPixmap QGLWidget::renderPixmap(int w, int h, bool useContext)
     extern int qt_x11_preferred_pixmap_depth;
     int old_depth = qt_x11_preferred_pixmap_depth;
     qt_x11_preferred_pixmap_depth = x11Info().depth();
-    QPixmap pm(sz);
+
+    QPixmapData *data = new QX11PixmapData(QPixmapData::PixmapType);
+    data->resize(sz.width(), sz.height());
+    QPixmap pm(data);
     qt_x11_preferred_pixmap_depth = old_depth;
     QX11Info xinfo = x11Info();
 
@@ -4144,6 +4156,10 @@ void QGLExtensions::init_extensions()
         glExtensions |= NVFloatBuffer;
     if (extensions.contains(QLatin1String("ARB_pixel_buffer_object")))
         glExtensions |= PixelBufferObject;
+#if defined(QT_OPENGL_ES_2)
+    glExtensions |= FramebufferObject;
+    glExtensions |= GenerateMipmap;
+#endif
 
     QGLContext cx(QGLFormat::defaultFormat());
     if (glExtensions & TextureCompression) {

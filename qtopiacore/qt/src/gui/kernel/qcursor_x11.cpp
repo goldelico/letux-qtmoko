@@ -92,6 +92,7 @@ QCursorData::~QCursorData()
     delete bmm;
 }
 
+#ifndef QT_NO_CURSOR
 QCursor::QCursor(Qt::HANDLE cursor)
 {
     if (!QCursorData::initialized)
@@ -99,6 +100,7 @@ QCursor::QCursor(Qt::HANDLE cursor)
     d = new QCursorData(Qt::CustomCursor);
     d->hcurs = cursor;
 }
+#endif
 
 QCursorData *QCursorData::setBitmap(const QBitmap &bitmap, const QBitmap &mask, int hotX, int hotY)
 {
@@ -132,6 +134,7 @@ QCursorData *QCursorData::setBitmap(const QBitmap &bitmap, const QBitmap &mask, 
 
 
 
+#ifndef QT_NO_CURSOR
 Qt::HANDLE QCursor::handle() const
 {
     if (!QCursorData::initialized)
@@ -140,6 +143,7 @@ Qt::HANDLE QCursor::handle() const
         d->update();
     return d->hcurs;
 }
+#endif
 
 QPoint QCursor::pos()
 {
@@ -159,6 +163,7 @@ QPoint QCursor::pos()
 
 /*! \internal
 */
+#ifndef QT_NO_CURSOR
 int QCursor::x11Screen()
 {
     Window root;
@@ -173,6 +178,7 @@ int QCursor::x11Screen()
     }
     return -1;
 }
+#endif
 
 void QCursor::setPos(int x, int y)
 {

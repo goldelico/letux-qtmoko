@@ -3,7 +3,7 @@
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
 **
-** This file is part of the example classes of the Qt Toolkit.
+** This file is part of the examples of the Qt Toolkit.
 **
 ** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
@@ -219,9 +219,11 @@ void MainWindow::createActions()
             copyAct, SLOT(setEnabled(bool)));
 }
 
+//! [implicit tr context]
 void MainWindow::createMenus()
 {
     fileMenu = menuBar()->addMenu(tr("&File"));
+//! [implicit tr context]
     fileMenu->addAction(newAct);
     fileMenu->addAction(openAct);
     fileMenu->addAction(saveAct);

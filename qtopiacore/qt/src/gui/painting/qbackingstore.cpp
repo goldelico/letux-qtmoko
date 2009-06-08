@@ -1139,6 +1139,8 @@ void QWidgetBackingStore::sync()
     for (int i = 0; i < dirtyWidgets.size(); ++i) {
         QWidget *w = dirtyWidgets.at(i);
         QWidgetPrivate *wd = w->d_func();
+        if (wd->data.in_destructor)
+            continue;
 
         // Clip with mask() and clipRect().
         wd->dirty &= wd->clipRect();

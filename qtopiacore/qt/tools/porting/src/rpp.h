@@ -228,7 +228,7 @@ protected:
 struct Token: public Item
 {
     inline Token(Item *parent = 0)
-        : m_parent(parent) {}
+        : m_tokenIndex(0), m_parent(parent) {}
 
     virtual Item *parent() const
     { return m_parent; }
@@ -416,15 +416,15 @@ struct PragmaDirective: public Directive
 
 struct IncludeDirective: public Directive
 {
+    enum IncludeType {QuoteInclude, AngleBracketInclude};
+
     IncludeDirective(Item *item)
-    : Directive(item) {}
+    : Directive(item), m_includeType(QuoteInclude) {}
 
     IncludeDirective() : Directive() {}
 
     virtual IncludeDirective *toIncludeDirective() const
     { return const_cast<IncludeDirective *>(this); }
-
-    enum IncludeType {QuoteInclude, AngleBracketInclude};
 
     void setFilenameTokens(const TokenEngine::TokenList &filenameTokens)
     { m_filenameTokens = filenameTokens; }

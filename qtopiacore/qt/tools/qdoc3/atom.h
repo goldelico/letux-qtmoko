@@ -48,6 +48,8 @@
 
 #include <qstring.h>
 
+#define QDOC_QML
+
 QT_BEGIN_NAMESPACE
 
 class Atom
@@ -69,6 +71,9 @@ class Atom
         CodeOld, 
         CodeQuoteArgument,
         CodeQuoteCommand,
+#ifdef QDOC_QML
+        EndQmlText,
+#endif
         FootnoteLeft,
         FootnoteRight,
         FormatElse, 
@@ -95,6 +100,10 @@ class Atom
         Nop, 
         ParaLeft,
         ParaRight, 
+#ifdef QDOC_QML
+        Qml,
+        QmlText,
+#endif
         QuotationLeft, 
         QuotationRight,
         RawString,
@@ -127,12 +136,12 @@ class Atom
     Atom(Atom *prev, Type type, const QString &string = "")
 	: nxt(prev->nxt), typ(type), str(string) { prev->nxt = this; }
 
-    void appendChar( QChar ch ) { str += ch; }
-    void appendString( const QString& string ) { str += string; }
+    void appendChar(QChar ch) { str += ch; }
+    void appendString(const QString& string) { str += string; }
     void chopString() { str.chop(1); }
     void setString(const QString &string) { str = string; }
     Atom *next() { return nxt; }
-    void setNext( Atom *newNext ) { nxt = newNext; }
+    void setNext(Atom *newNext) { nxt = newNext; }
 
     const Atom *next() const { return nxt; }
     const Atom *next(Type t) const;

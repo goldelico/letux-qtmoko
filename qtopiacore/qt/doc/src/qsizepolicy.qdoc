@@ -49,10 +49,10 @@
 
     The size policy of a widget is an expression of its willingness to
     be resized in various ways, and affects how the widget is treated
-    by the \l{Layout Management}{layout engine}. Widgets that
-    reimplement QWidget::sizePolicy() return a QSizePolicy that
-    describes the horizontal and vertical resizing policy they prefer
-    when being laid out.
+    by the \l{Layout Management}{layout engine}. Each widget returns a
+    QSizePolicy that describes the horizontal and vertical resizing
+    policy it prefers when being laid out. You can change this for
+    a specific widget by changing its QWidget::sizePolicy property.
 
     QSizePolicy contains two independent QSizePolicy::Policy values
     and two stretch factors; one describes the widgets's horizontal
@@ -85,7 +85,7 @@
     size policy to a given policy, as well as a QVariant operator
     storing this QSizePolicy as a QVariant object.
 
-    \sa QSize, QWidget::sizeHint(), QWidget::sizePolicy(),
+    \sa QSize, QWidget::sizeHint(), QWidget::sizePolicy,
     QLayoutItem::sizeHint()
 */
 

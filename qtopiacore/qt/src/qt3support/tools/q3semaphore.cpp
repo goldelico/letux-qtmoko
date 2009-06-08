@@ -47,7 +47,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3Semaphore q3semaphore.h
+    \class Q3Semaphore
     \threadsafe
     \brief The Q3Semaphore class provides a robust integer semaphore.
 

@@ -73,13 +73,13 @@
     Les chapitres du tutoriel:
 
     \list 1
-    \o \l{tutorials/addressbook-fr/part1}{Concevoir l'interface utilisateur}
+    \o \l{tutorials/addressbook-fr/part1}{Conception de l'interface utilisateur}
     \o \l{tutorials/addressbook-fr/part2}{Ajouter des adresses}
-    \o \l{tutorials/addressbook-fr/part3}{Naviguer entre les éléments}
-    \o \l{tutorials/addressbook-fr/part4}{Éditer et supprimer des adresses}
-    \o \l{tutorials/addressbook-fr/part5}{Ajouter une fonction de recherche}
+    \o \l{tutorials/addressbook-fr/part3}{Navigation entre les éléments}
+    \o \l{tutorials/addressbook-fr/part4}{éditer et supprimer des adresses}
+    \o \l{tutorials/addressbook-fr/part5}{Ajout d'une fonction de recherche}
     \o \l{tutorials/addressbook-fr/part6}{Sauvegarde et chargement}
-    \o \l{tutorials/addressbook-fr/part7}{Fonctionnalitées avancées}
+    \o \l{tutorials/addressbook-fr/part7}{Fonctionnalités avancées}
     \endlist
 
     La petite application que nous développerons ici ne possède pas tous les éléments
@@ -97,7 +97,7 @@
     \contentspage {Tutoriel "Carnet d'adresses"}{Sommaire}
     \nextpage {tutorials/addressbook-fr/part2}{Chapitre 2}
     \example tutorials/addressbook-fr/part1
-    \title Carnet d'adresses 1 - Concevoir l'interface utilisateur
+    \title Carnet d'adresses 1 - Conception de l'interface utilisateur
 
     La première partie de ce tutoriel traite de la conception d'une interface graphique
     (GUI) basique, que l'on utilisera pour l'application Carnet d'adresses.
@@ -155,7 +155,7 @@
 
     \section1 La classe AddressBook
 
-    Le fichier \l{tutorials/addressbook/part1/addressbook.h}{\c addressbook.h} permet de
+    Le fichier \l{tutorials/addressbook-fr/part1/addressbook.h}{\c addressbook.h} permet de
     définir la classe \c AddressBook.
 
     On commence par définir \c AddressBook comme une classe fille de QWidget et déclarer
@@ -163,7 +163,7 @@
     exploite les fonctionnalités de signaux et slots offertes par Qt ainsi que
     l'internationalisation, bien que nous ne les utilisions pas à ce stade.
 
-    \snippet tutorials/addressbook/part1/addressbook.h class definition
+    \snippet tutorials/addressbook-fr/part1/addressbook.h class definition
 
     La classe contient les déclarations de \c nameLine et \c addressText,
     les instances privées de QLineEdit et QTextEdit mentionnées précédemment.
@@ -182,9 +182,9 @@
     Nous en avons maintenant terminé avec le fichier \c addressbook.h et allons
     passer à l'implémentation du fichier \c addressbook.cpp.
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
-    Le constructeur de la classe \c{AddressBook} prend en paramètre un QWidget, \a parent.
+    Le constructeur de la classe \c{AddressBook} prend en paramètre un QWidget, \e parent.
     Par convention, on passe ce paramètre au constructeur de la classe mère.
     Ce concept de parenté, où un parent peut avoir un ou plusieurs enfants, est utile
     pour regrouper les Widgets avec Qt. Par exemple, si vous détruisez le parent,
@@ -193,11 +193,11 @@
 
     \snippet tutorials/addressbook/part1/addressbook.cpp constructor and input fields
 
-    À l'intérieur de ce constructeur, on déclare et instancie deux objets locaux
+    à l'intérieur de ce constructeur, on déclare et instancie deux objets locaux
     QLabel, \c nameLabel et \c addressLabel, de même on instancie \c nameLine et
     \c addressText. La méthode \l{QObject::tr()}{tr()} renvoie une version traduite
     de la chaîne de caractères, si elle existe; dans le cas contraire, elle renvoie
-    la chaîne elle même. On peut voir cette méthode comme un marqueur \c{<insérer
+    la chaîne elle même. On peut voir cette méthode comme un marqueur \tt{<insérer
     la traduction ici>}, permettant de repérer les objets QString à considérer
     pour traduire une application. Vous remarquerez, dans les chapitres à venir
     comme dans les \l{Qt Examples}{exemples Qt}, qu'elle est utilisée chaque fois
@@ -229,7 +229,7 @@
 
     Enfin, on initialise le titre du widget à "Simple Address Book"
 
-    \section1 Lancer l'application
+    \section1 Exécution de l'application
 
     Un fichier séparé, \c main.cpp, est utilisé pour la méthode \c main(). Dans cette
     fonction, on crée une instance de QApplication, \c app. QApplication se charge de
@@ -265,7 +265,7 @@
     cliquer pour ajouter un nouveau contact. Une structure de données est aussi
     nécessaire afin de pouvoir stocker les contacts en mémoire.
 
-    \section1 Définir la classe AddressBook
+    \section1 Définition de la classe AddressBook
 
     Maintenant que nous avons mis en place les labels et les champs de saisie,
     nous ajoutons les boutons pour compléter le processus d'ajout d'un contact.
@@ -299,7 +299,7 @@
     si l'utilisateur clique sur "Cancel", il est possible de revenir
     à l'affichage du dernier contact.
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
     Dans le constructeur de \c AddressBook, \c nameLine et
     \c addressText sont mis en mode lecture seule, de façon à autoriser l'affichage
@@ -351,7 +351,7 @@
 
     \image addressbook-tutorial-part2-labeled-layout.png
 
-    Dans la fonction \c addContact(), nous stockons les détails du dernier
+    Dans la méthode \c addContact(), nous stockons les détails du dernier
     contact affiché dans \c oldName et \c oldAddress. Ensuite, nous
     vidons ces champs de saisie et nous désactivons le mode
     lecture seule. Le focus est placé sur \c nameLine et on affiche
@@ -390,7 +390,7 @@
 
     \endlist
 
-    La capture d'écran ci-dessous montre l'affichage fourni par un objet
+    La capture d'écran ci-dessous montre l'affichage fournit par un objet
     QMessageBox, utilisé ici pour afficher un message d'information
     à l'utilisateur:
 
@@ -416,7 +416,7 @@
     \contentspage {Tutoriel "Carnet d'adresses"}{Sommaire}
     \nextpage {tutorials/addressbook-fr/part4}{Chapitre 4}
     \example tutorials/addressbook-fr/part3
-    \title Carnet d'adresses 3 - Naviguer entre les éléments
+    \title Carnet d'adresses 3 - Navigation entre les éléments
 
     L'application "Carnet d'adresses" est maintenant à moitié terminée. Il
     nous faut maintenant ajouter quelques fonctions pour naviguer entre
@@ -435,7 +435,7 @@
 
     \image addressbook-tutorial-part3-linkedlist.png
 
-    \section1 Définir la class AddressBook
+    \section1 Définition de la classe AddressBook
 
     Pour ajouter les fonctions de navigation au carnet d'adresses, nous avons
     besoin de deux slots supplémentaires dans notre classe \c AddressBook:
@@ -448,9 +448,9 @@
 
     \snippet tutorials/addressbook/part3/addressbook.h navigation pushbuttons
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
-    Dans le constructeur de \c AddressBook, dans \c addressbook.cpp, nous
+    A l'intérieur du constructeur de \c AddressBook, dans \c addressbook.cpp, nous
     instancions \c nextButton et \c previousButton et nous les désactivons
     par défaut. Nous faisons ceci car la navigation ne doit être activée
     que lorsqu'il y a plus d'un contact dans le carnet d'adresses.
@@ -482,16 +482,16 @@
     \c mainLayout.
     \image addressbook-tutorial-part3-labeled-layout.png
 
-    Dans notre fonction \c addContact(), nous avons desactivé ces boutons 
+    Dans notre méthode \c addContact(), nous avons desactivé ces boutons 
     pour être sûr que l'utilisateur n'utilise pas la navigation lors de 
     l'ajout d'un contact.
 
     \snippet tutorials/addressbook/part3/addressbook.cpp disabling navigation
 
-    Dans notre fonction \c submitContact(), nous activons les boutons de
+    Dans notre méthode \c submitContact(), nous activons les boutons de
     navigation, \c nextButton et \c previousButton, en fonction de la
-    taille de \c contacts. Comme mentionné plus tôt, la navigation n'est 
-    activée que si il y a plus d'un contact dans le carnet d'adresses. 
+    taille de \c contacts. Commen mentionné plus tôt, la navigation n'est 
+    activée que si il y a plus d'un contact dans le carnet d'adresses.
     Les lignes suivantes montrent comment faire cela:
 
     \snippet tutorials/addressbook/part3/addressbook.cpp enabling navigation
@@ -500,7 +500,7 @@
 
     Souvenez vous que nous voulons émuler une liste-liée ciruculaire à
     l'aide de l'objet QMap, \c contacts. Pour faire cela, nous obtenons un itérateur 
-    sur \c contact dans la fonction \c next(), et ensuite:
+    sur \c contact dans la méthode \c next(), et ensuite:
 
     \list
         \o Si l'itérateur n'est pas à la fin de \c contacts, nous l'incrémentons
@@ -511,10 +511,10 @@
 
     \snippet tutorials/addressbook/part3/addressbook.cpp next() function
 
-    Une fois que nous avons itéré jusqu'à l'objet recherché dans \c contacts, 
+    Une fois que nous avons itéré jusqu'à l'objet recherché dans \c contacts,
     nous affichons son contenu sur \c nameLine et \c addressText.
 
-    De la même façon, pour la fonction \c previous(), nous obtenons un 
+    De la même façon, pour la méthode \c previous(), nous obtenons un 
     itérateur sur \c contacts et ensuite:
 
     \list
@@ -527,7 +527,7 @@
 
     \snippet tutorials/addressbook/part3/addressbook.cpp previous() function
 
-    À nouveau, nous affichons le contenu de l'objet courant dans \c contacts.
+    à nouveau, nous affichons le contenu de l'objet courant dans \c contacts.
 
 */
 
@@ -538,7 +538,7 @@
     \contentspage {Tutoriel "Carnet d'adresses"}{Sommaire}
     \nextpage {tutorials/addressbook-fr/part5}{Chapitre 5}
     \example tutorials/addressbook-fr/part4
-    \title Carnet d'Adresses 4 - Éditer et supprimer des adresses
+    \title Carnet d'Adresses 4 - éditer et supprimer des adresses
 
 
     Dans ce chapitre, nous verrons comment modifier les données des contacts
@@ -566,7 +566,7 @@
         \o \c{EditingMode}.
     \endlist
 
-    \section1 Définition de la Classe AddressBook
+    \section1 Définition de la classe AddressBook
 
     Le fichier \c addressbook.h est mis a jour pour contenir l'énumération \c Mode :
 
@@ -592,7 +592,7 @@
     Enfin, on déclare \c currentMode pour garder une trace du mode 
     actuellement utilisé.
 
-    \section1 Implémentation de la Classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
     Il nous faut maintenant implémenter les fonctionnalités de changement de
     mode de l'application carnet d'adresses. Les boutons \c editButton et
@@ -658,13 +658,13 @@
 
     On a évoqué plus haut la méthode \c updateInterface() comme moyen
     d'activer et de désactiver les différents boutons de l'interface en
-    fonction du mode. Cette méthode met à jour le mode courant après
+    fonction du mode. Cette méthode met à jour le mode courant selon
     l'argument \c mode qui lui est passé, en l'assignant à \c currentMode,
     avant de tester sa valeur.
 
     Chacun des boutons est ensuite activé ou désactivé, en fonction du mode.
-    Le code source pour les cas \c AddingMode et \c EditingMode est visible ci-
-    dessous:
+    Le code source pour les cas \c AddingMode et \c EditingMode est visible 
+    ci-dessous:
 
     \snippet tutorials/addressbook/part4/addressbook.cpp update interface() part 1
 
@@ -679,7 +679,7 @@
 
     En effectuant les opérations de réglage du mode et de mise à jour de
     l'interface utilisateur au sein de la même méthode, on est à l'abri de
-    l'éventualité où l'interface utilisateur de "désynchronise" de l'état
+    l'éventualité où l'interface utilisateur se "désynchronise" de l'état
     interne de l'application.
 
 */
@@ -690,7 +690,7 @@
     \contentspage {Tutoriel "Carnet d'adresses"}{Sommaire}
     \nextpage {tutorials/addressbook-fr/part6}{Chapitre 6}
     \example tutorials/addressbook-fr/part5
-    \title Carnet d'adresse 5 - Ajouter une fonction de recherche
+    \title Carnet d'adresse 5 - Ajout d'une fonction de recherche
 
     Dans ce chapitre, nous allons voir les possibilités pour rechercher
     des contacts dans le carnet d'adresse.
@@ -709,7 +709,7 @@
     Qt fournit la classe QDialog, que nous sous-classons dans ce chapitre pour
     implémenter la class \c FindDialog.
 
-    \section1 Définir la classe FindDialog
+    \section1 Définition de la classe FindDialog
 
     \image addressbook-tutorial-part5-finddialog.png
 
@@ -719,8 +719,8 @@
     notre classe dialogue.
 
     Tout comme dans la classe \c AddressBook, la classe \c FindDialog utilise
-    la macro Q_OBJECT et son constructeur est définit de façon à accepter
-    un QWidget parent, même si cette boîte de dialogue sera affiché dans une
+    la macro Q_OBJECT et son constructeur est défini de façon à accepter
+    un QWidget parent, même si cette boîte de dialogue sera affichée dans une
     fenêtre séparée.
 
     \snippet tutorials/addressbook/part5/finddialog.h FindDialog header
@@ -737,7 +737,7 @@
     à rechercher, et à une variable interne stockant le texte pour une
     utilisation ultérieure.
 
-    \section1 Implémenter la classe FindDialog
+    \section1 Implémentation de la classe FindDialog
 
     Dans le constructeur de \c FindDialog, nous instancions les objets des
     variables privées \c lineEdit, \c findButton et \c findText. Nous utilisons ensuite
@@ -749,9 +749,9 @@
     nous connectons les signaux aux slots. Remarquez que le signal
     \l{QPushButton::clicked()}{clicked()} de \c{findButton} est connecté
     à \c findClicked() et \l{QDialog::accept()}{accept()}. Le slot
-    \l{QDialog::accept()}{accept()} fournit par le QDialog ferme
+    \l{QDialog::accept()}{accept()} fourni par le QDialog ferme
     la boîte de dialogue et lui donne le code de retour \l{QDialog::}{Accepted}.
-    Nous utilisons cette fonction pour aider la méthode \c findContact() de
+    Nous utilisons cette fonction pour aider la méthode \c findContact() de la classe
     \c{AddressBook} à savoir si l'objet \c FindDialog a été fermé. Ceci sera
     expliqué plus loin lorsque nous verrons la méthode \c findContact().
 
@@ -759,35 +759,35 @@
 
     Dans \c findClicked(), nous validons le champ de texte pour nous
     assurer que l'utilisateur n'a pas cliqué sur le bouton \gui Find sans
-    avoir entre un nom de contact. Ensuite, nous stockons le texte du champ
+    avoir entré un nom de contact. Ensuite, nous stockons le texte du champ
     d'entrée \c lineEdit dans \c findText. Et finalement nous vidons le
     contenu de \c lineEdit et cachons la boîte de dialogue.
 
     \snippet tutorials/addressbook/part5/finddialog.cpp findClicked() function
 
-    La variable \c findText a un getter publique associé: \c getFindText().
-    Étant donné que nous ne modifions \c findText que directement dans le
-    constructeur et la fonction \c findClicked(), nous ne créons pas
-    de setter pour accompagner \c getFindText().
+    La variable \c findText a un accesseur publique associé: \c getFindText().
+    Étant donné que nous ne modifions \c findText directement que dans le
+    constructeur et la méthode \c findClicked(), nous ne créons pas
+    de manipulateurs associé à \c getFindText().
     Puisque \c getFindText() est publique, les classes instanciant et
-    utilisant \c FindDialog peuvent toujours accéder la chaîne de
-    caractère que l'utilisateur a entré et accepté.
+    utilisant \c FindDialog peuvent toujours accéder à la chaîne de
+    caractères que l'utilisateur a entré et accepté.
 
     \snippet tutorials/addressbook/part5/finddialog.cpp getFindText() function
 
-    \section1 Définir la classe AddressBook
+    \section1 Définition de la classe AddressBook
 
-    Pour utiliser \c FindDialog depuis depuis la classe \c AddressBook, nous
+    Pour utiliser \c FindDialog depuis la classe \c AddressBook, nous
     incluons \c finddialog.h dans le fichier \c addressbook.h.
 
     \snippet tutorials/addressbook/part5/addressbook.h include finddialog's header
 
-    Jusque ici, toutes les fonctionnalités du carnet d'adresses ont un
+    Jusqu'ici, toutes les fonctionnalités du carnet d'adresses ont un
     QPushButton et un slot correspondant. De la même façon, pour la
-    foncitonnalité \gui Find, nous avons \c findButton et \c findContact().
+    fonctionnalité \gui Find, nous avons \c findButton et \c findContact().
 
-    Le \c findButton est déclarré comme une variable privée et la
-    fonction \c findContact() est déclaré comme un slot public.
+    Le \c findButton est déclaré comme une variable privée et la
+    méthode \c findContact() est déclarée comme un slot public.
 
     \snippet tutorials/addressbook/part5/addressbook.h findContact() declaration
     \dots
@@ -799,10 +799,10 @@
     \snippet tutorials/addressbook/part5/addressbook.h FindDialog declaration
 
     Une fois que nous avons instancié la boîte de dialogue, nous voulons l'utiliser
-    plus qu'une fois. Utiliser une variable privée nous permet de la référer
+    plus qu'une fois. Utiliser une variable privée nous permet d'y référer
     à plus d'un endroit dans la classe.
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
     Dans le constructeur de \c AddressBook, nous instancions nos objets privés,
     \c findbutton et \c findDialog:
@@ -830,7 +830,7 @@
     il s'agit ici de \c contactName obtenu à l'aide de la méthode \c getFindText()
     de \c FindDialog. Si le contact existe dans le carnet d'adresse, nous
     l'affichons directement. Sinon, nous affichons le QMessageBox suivant pour
-    indique que la recherche à échouée.
+    indiquer que la recherche à échouée.
 
     \image addressbook-tutorial-part5-notfound.png
 */
@@ -852,10 +852,10 @@
     Bien que la navigation et la recherche de contacts soient des
     fonctionnalités importantes, notre carnet d'adresses ne sera pleinement
     utilisable qu'une fois que l'on pourra sauvegarder les contacts existants
-    et les charger a nouveau par la suite.
+    et les charger à nouveau par la suite.
     Qt fournit de nombreuses classes pour gérer les \l{Input/Output and
-    Networking}{entrées et sorties}, mais nous avons choisi de nous contenter de
-    deux classes qui sont simple à utiliser ensemble: QFile et QDataStream.
+    Networking}{entrées et sorties}, mais nous avons choisi de nous contenter d'une
+    combinaison de deux classes simples à utiliser ensemble: QFile et QDataStream.
 
     Un objet QFile représente un fichier sur le disque qui peut être lu, et
     dans lequel on peut écrire. QFile est une classe fille de la classe plus
@@ -868,7 +868,7 @@
     flux, avec le périphérique approprié en paramètre, et d'y lire ou
     écrire.
 
-    \section1 Définir de la Classe AddressBook
+    \section1 Définition de la classe AddressBook
 
     On déclare deux slots publics, \c saveToFile() et \c loadFromFile(), 
     ainsi que deux objets QPushButton, \c loadButton et \c saveButton.
@@ -877,7 +877,7 @@
     \dots
     \snippet tutorials/addressbook/part6/addressbook.h save and load buttons declaration
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
     Dans notre constructeur, on instancie \c loadButton et \c saveButton.
     Idéalement, l'interface serait plus conviviale avec des boutons
@@ -885,14 +885,14 @@
     compte tenu de la dimension des autres boutons, on initialise les labels
     des boutons à \gui{Load...} et \gui{Save...}. Heureusement, Qt offre une
     façon simple d'ajouter des info-bulles avec
-    \l{QWidget::setToolTip()}{setToolTip()} et nous l'utilisons de la façon
+    \l{QWidget::setToolTip()}{setToolTip()}, et nous l'exploitons de la façon
     suivante pour nos boutons:
 
     \snippet tutorials/addressbook/part6/addressbook.cpp tooltip 1
     \dots
     \snippet tutorials/addressbook/part6/addressbook.cpp tooltip 2
 
-    Bien que nous ne le traitions pas ici, nous ajoutons ces deux boutons au
+    Bien qu'on ne cite pas le code correspondant ici, nous ajoutons ces deux boutons au
     layout de droite, \c button1Layout, comme pour les fonctionnalités précédentes, et 
     nous connectons leurs signaux
     \l{QPushButton::clicked()}{clicked()} à leurs slots respectifs.
@@ -912,7 +912,7 @@
 
     \image addressbook-tutorial-part6-save.png
 
-    Si \c fileName n'est pas vide, on crée un objet QFile, \c file, à partirZ
+    Si \c fileName n'est pas vide, on crée un objet QFile, \c file, à partir
     de \c fileName. QFile fonctionne avec QDataStream puisqu'il dérive de
     QIODevice.
 
@@ -950,7 +950,7 @@
     QFile, \c file, et on tente de l'ouvrir en lecture, avec le mode
     \l{QIODevice::}{ReadOnly}. De même que précédemment dans notre
     implémentation de \c saveToFile(), si cette tentative s'avère
-    infructueuse, on affiche en informe l'utilisateur par le biais d'une
+    infructueuse, on en informe l'utilisateur par le biais d'une
     QMessageBox.
 
     \snippet tutorials/addressbook/part6/addressbook.cpp loadFromFile() function part2
@@ -972,7 +972,6 @@
     cas, on affiche le premier contact; sinon on informe l'utilisateur du
     problème par une QMessageBox. Enfin, on met à jour l'interface afin
     d'activer et de désactiver les boutons de façon appropriée.
-
 */
 
 /*!
@@ -980,7 +979,7 @@
     \previouspage {tutorials/addressbook-fr/part6}{Chapitre 6}
     \contentspage {Tutoriel "Carnet d'adresses"}{Sommaire}
     \example tutorials/addressbook-fr/part7
-    \title Carnet d'adresse 7 - Fonctionnalitées avancées
+    \title Carnet d'adresse 7 - Fonctionnalités avancées
 
     Ce chapitre couvre quelques fonctionnalités additionnelles qui
     feront de notre carnet d'adresses une application plus pratique
@@ -995,7 +994,7 @@
     Dans ce chapitre, nous étendrons notre carnet d'adresses pour permettre
     d'exporter des contacts dans des fichiers vCard \c{.vcf}.
 
-    \section1 Définir la classe AddressBook
+    \section1 Définition de la classe AddressBook
 
     Nous ajoutons un objet QPushButton, \c exportButton, et un slot
     public correspondant, \c exportAsVCard(), à notre classe \c AddressBook 
@@ -1005,13 +1004,13 @@
     \dots
     \snippet tutorials/addressbook/part7/addressbook.h exportButton declaration
 
-    \section1 Implémenter la classe AddressBook
+    \section1 Implémentation de la classe AddressBook
 
     Dans le constructeur de \c AddressBook, nous connectons le signal
     \l{QPushButton::clicked()}{clicked()} de \c{exportButton} au slot
     \c exportAsVCard().
     Nous ajoutons aussi ce bouton à \c buttonLayout1, le layout responsable
-    du paneau de bouton sur la droite.
+    du groupe de boutons sur la droite.
 
     Dans la méthode \c exportAsVCard(), nous commençons par extraire le
     nom du contact dans \n name. Nous déclarons \c firstname, \c lastName et
@@ -1042,23 +1041,23 @@
     Nous écrivons ensuite un fichier vCard avec la balise \c{BEGIN:VCARD},
     suivit par \c{VERSION:2.1}.
     Le nom d'un contact est écrit à l'aide de la balise \c{N:}. Pour la balise
-    \c{FN:}, qui rempli le titre du contact, nous devons vérifier si le contact
-    à définit un nom de famille ou pas. Si oui, nous utilions les détails de
-    \c nameList pour remplir le champ, si non nous écrivons uniquement le contenu
+    \c{FN:}, qui remplit le titre du contact, nous devons vérifier si le contact
+    à un nom de famille défini ou non. Si oui, nous utilions les détails de
+    \c nameList pour remplir le champ, dans le cas contraire on écrit uniquement le contenu
     de \c firstName.
  
     \snippet tutorials/addressbook/part7/addressbook.cpp export function part3
 
-    Nous continuons par écrire l'adresse du contact. Les points-virgules
-    dans l'adresse sont échapés à l'aide de "\\", les retours de ligne sont
-    remplacés par des point-virgules, et les vigules sont remplacés par des espaces.
-    Finalement nous écrivons les balises  \c{ADR;HOME:;} suivit par l'addresse
+    Nous continuons en écrivant l'adresse du contact. Les points-virgules
+    dans l'adresse sont échappés à l'aide de "\\", les retours de ligne sont
+    remplacés par des points-virgules, et les vigules sont remplacées par des espaces.
+    Finalement nous écrivons les balises  \c{ADR;HOME:;} suivies par l'adresse
     et la balise \c{END:VCARD}.
 
     \snippet tutorials/addressbook/part7/addressbook.cpp export function part4
 
     À la fin de la méthode, un QMessageBox est affiché pour informer l'utilisateur
-    que la vCard a été exporté avec succès. 
+    que la vCard a été exportée avec succès. 
 
     \e{vCard est une marque déposée de \l{http://www.imc.org}
     {Internet Mail Consortium}}.

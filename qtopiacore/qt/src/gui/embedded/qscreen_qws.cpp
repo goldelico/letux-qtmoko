@@ -692,25 +692,7 @@ static void blit_18(QScreen *screen, const QImage &image,
 }
 #endif // QT_QWS_DEPTH_18
 
-#ifdef QT_QWS_DEPTH_16
-static void blit_16(QScreen *screen, const QImage &image,
-                    const QPoint &topLeft, const QRegion &region)
-{
-    switch (image.format()) {
-    case QImage::Format_RGB32:
-    case QImage::Format_ARGB32:
-    case QImage::Format_ARGB32_Premultiplied:
-        blit_template<quint16, quint32>(screen, image, topLeft, region);
-        return;
-    case QImage::Format_RGB16:
-        blit_template<quint16, quint16>(screen, image, topLeft, region);
-        return;
-    default:
-        qCritical("blit_16(): Image format %d not supported!", image.format());
-    }
-}
-
-#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+#if (Q_BYTE_ORDER == Q_BIG_ENDIAN) && (defined(QT_QWS_DEPTH_16) || defined(QT_QWS_DEPTH_15))
 class quint16LE
 {
 public:
@@ -726,6 +708,11 @@ public:
         data = ((v & 0xff00) >> 8) | ((v & 0x00ff) << 8);
     }
 
+    inline quint16LE(qrgb555 v) {
+        data = (( (quint16)v & 0xff00) >> 8) |
+               (( (quint16)v & 0x00ff) << 8);
+    }
+
     inline bool operator==(const quint16LE &v) const
     {
         return data == v.data;
@@ -734,7 +721,28 @@ public:
 private:
     quint16 data;
 };
+#endif
 
+#ifdef QT_QWS_DEPTH_16
+static void blit_16(QScreen *screen, const QImage &image,
+                    const QPoint &topLeft, const QRegion &region)
+{
+    switch (image.format()) {
+    case QImage::Format_RGB32:
+    case QImage::Format_ARGB32:
+    case QImage::Format_ARGB32_Premultiplied:
+        // ### This probably doesn't work but it's a case which should never happen
+        blit_template<quint16, quint32>(screen, image, topLeft, region);
+        return;
+    case QImage::Format_RGB16:
+        blit_template<quint16, quint16>(screen, image, topLeft, region);
+        return;
+    default:
+        qCritical("blit_16(): Image format %d not supported!", image.format());
+    }
+}
+
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
 static void blit_16_bigToLittleEndian(QScreen *screen, const QImage &image,
                                       const QPoint &topLeft,
                                       const QRegion &region)
@@ -755,23 +763,6 @@ static void blit_16_bigToLittleEndian(QScreen *screen, const QImage &image,
 
 #endif // Q_BIG_ENDIAN
 #endif // QT_QWS_DEPTH_16
-
-#ifdef QT_QWS_DEPTH_12
-static void blit_12(QScreen *screen, const QImage &image,
-                    const QPoint &topLeft, const QRegion &region)
-{
-    switch (image.format()) {
-    case QImage::Format_ARGB4444_Premultiplied:
-        blit_template<qrgb444, qargb4444>(screen, image, topLeft, region);
-        return;
-    case QImage::Format_RGB444:
-        blit_template<qrgb444, qrgb444>(screen, image, topLeft, region);
-        return;
-    default:
-        qCritical("blit_12(): Image format %d not supported!", image.format());
-    }
-}
-#endif // QT_QWS_DEPTH_12
 
 #ifdef QT_QWS_DEPTH_15
 static void blit_15(QScreen *screen, const QImage &image,
@@ -794,7 +785,39 @@ static void blit_15(QScreen *screen, const QImage &image,
     }
 }
 
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+static void blit_15_bigToLittleEndian(QScreen *screen, const QImage &image,
+                                      const QPoint &topLeft,
+                                      const QRegion &region)
+{
+    switch (image.format()) {
+    case QImage::Format_RGB555:
+        blit_template<quint16LE, qrgb555>(screen, image, topLeft, region);
+        return;
+    default:
+        qCritical("blit_15_bigToLittleEndian(): Image format %d not supported!", image.format());
+    }
+}
+#endif // Q_BIG_ENDIAN
 #endif // QT_QWS_DEPTH_15
+
+
+#ifdef QT_QWS_DEPTH_12
+static void blit_12(QScreen *screen, const QImage &image,
+                    const QPoint &topLeft, const QRegion &region)
+{
+    switch (image.format()) {
+    case QImage::Format_ARGB4444_Premultiplied:
+        blit_template<qrgb444, qargb4444>(screen, image, topLeft, region);
+        return;
+    case QImage::Format_RGB444:
+        blit_template<qrgb444, qrgb444>(screen, image, topLeft, region);
+        return;
+    default:
+        qCritical("blit_12(): Image format %d not supported!", image.format());
+    }
+}
+#endif // QT_QWS_DEPTH_12
 
 #ifdef QT_QWS_DEPTH_8
 static void blit_8(QScreen *screen, const QImage &image,
@@ -1187,17 +1210,22 @@ void qt_blit_setup(QScreen *screen, const QImage &image,
             screen->d_ptr->blit = blit_template<qbgr565, quint16>;
         break;
 #endif
-#ifdef QT_QWS_DEPTH_12
-    case 12:
-        screen->d_ptr->blit = blit_12;
-        break;
-#endif
 #ifdef QT_QWS_DEPTH_15
     case 15:
+#if Q_BYTE_ORDER == Q_BIG_ENDIAN
+        if (screen->d_ptr->fb_is_littleEndian)
+            screen->d_ptr->blit = blit_15_bigToLittleEndian;
+        else
+#endif // Q_BIG_ENDIAN
         if (screen->pixelType() == QScreen::NormalPixel)
             screen->d_ptr->blit = blit_15;
         else
             screen->d_ptr->blit = blit_template<qbgr555, qrgb555>;
+        break;
+#endif
+#ifdef QT_QWS_DEPTH_12
+    case 12:
+        screen->d_ptr->blit = blit_12;
         break;
 #endif
 #ifdef QT_QWS_DEPTH_8
@@ -2010,7 +2038,8 @@ QScreen::~QScreen()
 void QScreen::shutdownDevice()
 {
 #ifndef QT_NO_QWS_CURSOR
-    qt_screencursor->hide();
+    if (qt_screencursor)
+        qt_screencursor->hide();
 #endif
 }
 

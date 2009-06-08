@@ -133,6 +133,8 @@ class Doc
     DocPrivate *priv;
 };
 
+#ifdef QDOC2DOX
+
 class DoxWriter
 {
   public:
@@ -305,6 +307,8 @@ class DoxWriter
     static QStringMultiMap properties;
     static QStringMultiMap enums;
 };
+
+#endif
 
 QT_END_NAMESPACE
 

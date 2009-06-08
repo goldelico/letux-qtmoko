@@ -40,7 +40,9 @@
 ****************************************************************************/
 
 #include "qdesigner_formwindowmanager_p.h"
+#include "plugindialog_p.h"
 
+#include <QtDesigner/QDesignerFormEditorInterface>
 
 QT_BEGIN_NAMESPACE
 
@@ -133,6 +135,21 @@ QActionGroup *QDesignerFormWindowManager::actionGroupPreviewInStyle() const
 QAction *QDesignerFormWindowManager::actionShowFormWindowSettingsDialog() const
 {
     return 0;
+}
+
+/*!
+    \fn void QDesignerFormWindowManager::aboutPlugins()
+
+    Pops up an "About plugins" dialog.
+
+    \since 4.5
+    \internal
+  */
+
+void QDesignerFormWindowManager::aboutPlugins()
+{
+    PluginDialog dlg(core(), core()->topLevel());
+    dlg.exec();
 }
 
 /*!

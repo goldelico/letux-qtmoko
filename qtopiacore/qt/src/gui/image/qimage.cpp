@@ -4216,12 +4216,24 @@ QImage QImage::createMaskFromColor(QRgb color, Qt::MaskMode mode) const
     QImage maskImage(size(), QImage::Format_MonoLSB);
     maskImage.fill(0);
     uchar *s = maskImage.bits();
-    for (int h = 0; h < d->height; h++) {
-        for (int w = 0; w < d->width; w++) {
-            if ((uint) pixel(w, h) == color)
-                *(s + (w >> 3)) |= (1 << (w & 7));
+
+    if (depth() == 32) {
+        for (int h = 0; h < d->height; h++) {
+            const uint *sl = (uint *) scanLine(h);
+            for (int w = 0; w < d->width; w++) {
+                if (sl[w] == color)
+                    *(s + (w >> 3)) |= (1 << (w & 7));
+            }
+            s += maskImage.bytesPerLine();
         }
-        s += maskImage.bytesPerLine();
+    } else {
+        for (int h = 0; h < d->height; h++) {
+            for (int w = 0; w < d->width; w++) {
+                if ((uint) pixel(w, h) == color)
+                    *(s + (w >> 3)) |= (1 << (w & 7));
+            }
+            s += maskImage.bytesPerLine();
+        }
     }
     if  (mode == Qt::MaskOutColor)
         maskImage.invertPixels();
@@ -4925,10 +4937,12 @@ int QImage::dotsPerMeterY() const
     meter, to \a x.
 
     Together with dotsPerMeterY(), this number defines the intended
-    scale and aspect ratio of the image.
+    scale and aspect ratio of the image, and determines the scale
+    at which QPainter will draw graphics on the image. It does not
+    change the scale or aspect ratio of the image when it is rendered
+    on other paint devices.
 
-    \sa dotsPerMeterX(), {QImage#Image Information}{Image
-    Information}
+    \sa dotsPerMeterX(), {QImage#Image Information}{Image Information}
 */
 void QImage::setDotsPerMeterX(int x)
 {
@@ -4945,10 +4959,12 @@ void QImage::setDotsPerMeterX(int x)
     to \a y.
 
     Together with dotsPerMeterX(), this number defines the intended
-    scale and aspect ratio of the image.
+    scale and aspect ratio of the image, and determines the scale
+    at which QPainter will draw graphics on the image. It does not
+    change the scale or aspect ratio of the image when it is rendered
+    on other paint devices.
 
-    \sa dotsPerMeterY(), {QImage#Image Information}{Image
-    Information}
+    \sa dotsPerMeterY(), {QImage#Image Information}{Image Information}
 */
 void QImage::setDotsPerMeterY(int y)
 {

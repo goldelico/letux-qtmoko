@@ -145,7 +145,7 @@ void QFileInfoPrivate::initFileEngine(const QString &file)
 
 bool QFileInfoPrivate::hasAccess(Access access) const
 {
-    if (!(data->fileEngine->fileFlags() & QAbstractFileEngine::LocalDiskFlag)) {
+    if (!(getFileFlags(QAbstractFileEngine::FileInfoAll) & QAbstractFileEngine::LocalDiskFlag)) {
         switch (access) {
         case ReadAccess:
             return getFileFlags(QAbstractFileEngine::ReadUserPerm);
@@ -412,6 +412,9 @@ QFileInfo::QFileInfo(const QFile &file) : d_ptr(new QFileInfoPrivate())
     If \a dir has a relative path, the QFileInfo will also have a
     relative path.
 
+    If \a file is an absolute path, then the directory specified
+    by \a dir will be disregarded.
+
     \sa isRelative()
 */
 
@@ -595,7 +598,6 @@ void QFileInfo::setFile(const QDir &dir, const QString &file)
 
     \sa filePath(), canonicalFilePath(), isRelative()
 */
-
 QString QFileInfo::absoluteFilePath() const
 {
     Q_D(const QFileInfo);
@@ -605,12 +607,13 @@ QString QFileInfo::absoluteFilePath() const
 }
 
 /*!
-    Returns the canonical path including the file name,
-    i.e. an absolute path without symbolic links or redundant "." or ".." elements.
+  Returns the canonical path including the file name, i.e. an absolute
+  path without symbolic links or redundant "." or ".." elements.
 
-    If the file does not exist, canonicalFilePath() returns an empty string.
+  If the file does not exist, canonicalFilePath() returns an empty
+  string.
 
-    \sa filePath(), absoluteFilePath(), dir()
+  \sa filePath(), absoluteFilePath(), dir()
 */
 
 QString QFileInfo::canonicalFilePath() const
@@ -631,9 +634,8 @@ QString QFileInfo::canonicalFilePath() const
     drive letter, except for network shares that are not mapped to a
     drive letter, in which case the path will begin '//sharename/'.
 
-    This function returns the same as filePath(), unless isRelative()
-    is true. In contrast to canonicalPath() symbolic links or
-    redundant "." or ".." elements are not necessarily removed.
+    In contrast to canonicalPath() symbolic links or redundant "." or
+    ".." elements are not necessarily removed.
 
     \warning If the QFileInfo object was created with an empty QString,
               the behavior of this function is undefined.

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qtestlib.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qtestlib.qdoc -->
 <head>
   <title>Qt 4.5: QTestLib Manual</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -149,6 +149,7 @@
 <tr valign="top" class="even"><td>Event Counter</td><td>-eventcounter</td><td>All platforms</td></tr>
 </table></p>
 <p>In short, walltime is always available but requires many repetitions to get a useful result. Tick counters are usually available and can provide results with fewer repetitions, but can be susceptible to CPU frequency scaling issues. Valgrind provides exact results, but does not take I/O waits into account, and is only available on a limited number of platforms. Event counting is available on all platforms and it provides the number of events that were received by the event loop before they are sent to their corresponding targets (this might include non-Qt events).</p>
+<p><b>Note:</b> Depending on the device configuration, Tick counters on the Windows CE platform may not be as fine-grained, compared to other platforms. Devices that do not support high-resolution timers default to one-millisecond granularity.</p>
 <p>See the chapter 5 in the <a href="qtestlib-tutorial.html">QTestLib Tutorial</a> for more benchmarking examples.</p>
 <a name="using-qtestlib-remotely-on-windows-ce"></a>
 <h3>Using QTestLib remotely on Windows CE</h3>
@@ -203,6 +204,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

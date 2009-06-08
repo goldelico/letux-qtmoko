@@ -637,14 +637,6 @@ bool loadJava(Translator &translator, QIODevice &dev, ConversionData &cd)
     return true;
 }
 
-bool saveJava(const Translator &translator, QIODevice &dev, ConversionData &cd) 
-{
-    Q_UNUSED(dev);
-    Q_UNUSED(translator);
-    cd.appendError(QLatin1String("Cannot save .java files"));
-    return false;
-}
-
 int initJava()
 {
     Translator::FileFormat format;
@@ -653,7 +645,7 @@ int initJava()
     format.priority = 0;
     format.description = QObject::tr("Java source files");
     format.loader = &loadJava;
-    format.saver = &saveJava;
+    format.saver = 0;
     Translator::registerFileFormat(format);
     return 1;
 }

@@ -64,12 +64,14 @@ public:
     }
 };
 
-QDBusViewer::QDBusViewer(const QDBusConnection &connection, QWidget *parent)
-    : QWidget(parent), c(connection), objectPathRegExp("\\[ObjectPath: (.*)\\]")
+QDBusViewer::QDBusViewer(const QDBusConnection &connection, QWidget *parent)  :
+    QWidget(parent),
+    c(connection),
+    objectPathRegExp(QLatin1String("\\[ObjectPath: (.*)\\]"))
 {
     services = new QTreeWidget;
     services->setRootIsDecorated(false);
-    services->setHeaderLabels(QStringList("Services"));
+    services->setHeaderLabels(QStringList(QLatin1String("Services")));
 
     tree = new QTreeView;
     tree->setContextMenuPolicy(Qt::CustomContextMenu);
@@ -103,7 +105,7 @@ QDBusViewer::QDBusViewer(const QDBusConnection &connection, QWidget *parent)
     QMetaObject::invokeMethod(this, "refresh", Qt::QueuedConnection);
 
     if (c.isConnected()) {
-        logMessage("Connected to D-Bus.");
+        logMessage(QLatin1String("Connected to D-Bus."));
         QDBusConnectionInterface *iface = c.interface();
         connect(iface, SIGNAL(serviceRegistered(QString)),
                 this, SLOT(serviceRegistered(QString)));
@@ -112,7 +114,7 @@ QDBusViewer::QDBusViewer(const QDBusConnection &connection, QWidget *parent)
         connect(iface, SIGNAL(serviceOwnerChanged(QString,QString,QString)),
                 this, SLOT(serviceOwnerChanged(QString,QString,QString)));
     } else {
-        logError("Cannot connect to D-Bus: " + c.lastError().message());
+        logError(QLatin1String("Cannot connect to D-Bus: ") + c.lastError().message());
     }
 
     objectPathRegExp.setMinimal(true);
@@ -121,12 +123,12 @@ QDBusViewer::QDBusViewer(const QDBusConnection &connection, QWidget *parent)
 
 void QDBusViewer::logMessage(const QString &msg)
 {
-    log->append(msg + "\n");
+    log->append(msg + QLatin1Char('\n'));
 }
 
 void QDBusViewer::logError(const QString &msg)
 {
-    log->append("<font color=\"red\">Error: </font>" + Qt::escape(msg) + "<br>");
+    log->append(QLatin1String("<font color=\"red\">Error: </font>") + Qt::escape(msg) + QLatin1String("<br>"));
 }
 
 void QDBusViewer::refresh()
@@ -170,7 +172,7 @@ void QDBusViewer::activate(const QModelIndex &item)
 
 void QDBusViewer::getProperty(const BusSignature &sig)
 {
-    QDBusMessage message = QDBusMessage::createMethodCall(sig.mService, sig.mPath, "org.freedesktop.DBus.Properties", "Get");
+    QDBusMessage message = QDBusMessage::createMethodCall(sig.mService, sig.mPath, QLatin1String("org.freedesktop.DBus.Properties"), QLatin1String("Get"));
     QList<QVariant> arguments;
     arguments << sig.mInterface << sig.mName;
     message.setArguments(arguments);
@@ -183,21 +185,21 @@ void QDBusViewer::setProperty(const BusSignature &sig)
     QMetaProperty prop = iface.metaObject()->property(iface.metaObject()->indexOfProperty(sig.mName.toLatin1()));
 
     bool ok;
-    QString input = QInputDialog::getText(this, "Arguments",
-                    QString("Please enter the value of the property %1 (type %2)").arg(
-                        sig.mName).arg(prop.typeName()),
+    QString input = QInputDialog::getText(this, tr("Arguments"),
+                    tr("Please enter the value of the property %1 (type %2)").arg(
+                        sig.mName, QString::fromLatin1(prop.typeName())),
                     QLineEdit::Normal, QString(), &ok);
     if (!ok)
         return;
 
     QVariant value = input;
     if (!value.convert(prop.type())) {
-        QMessageBox::warning(this, "Unable to marshall",
-                "Value conversion failed, unable to set property");
+        QMessageBox::warning(this, tr("Unable to marshall"),
+                tr("Value conversion failed, unable to set property"));
         return;
     }
 
-    QDBusMessage message = QDBusMessage::createMethodCall(sig.mService, sig.mPath, "org.freedesktop.DBus.Properties", "Set");
+    QDBusMessage message = QDBusMessage::createMethodCall(sig.mService, sig.mPath, QLatin1String("org.freedesktop.DBus.Properties"), QLatin1String("Set"));
     QList<QVariant> arguments;
     arguments << sig.mInterface << sig.mName << qVariantFromValue(QDBusVariant(value));
     message.setArguments(arguments);
@@ -214,12 +216,12 @@ void QDBusViewer::callMethod(const BusSignature &sig)
     QMetaMethod method;
     for (int i = 0; i < mo->methodCount(); ++i) {
         const QString signature = QString::fromLatin1(mo->method(i).signature());
-        if (signature.startsWith(sig.mName) && signature.at(sig.mName.length()) == '(')
+        if (signature.startsWith(sig.mName) && signature.at(sig.mName.length()) == QLatin1Char('('))
             method = mo->method(i);
     }
     if (!method.signature()) {
-        QMessageBox::warning(this, "Unable to find method",
-                QString("Unable to find method %1 on path %2 in interface %3").arg(
+        QMessageBox::warning(this, tr("Unable to find method"),
+                tr("Unable to find method %1 on path %2 in interface %3").arg(
                     sig.mName).arg(sig.mPath).arg(sig.mInterface));
         return;
     }
@@ -241,7 +243,7 @@ void QDBusViewer::callMethod(const BusSignature &sig)
     }
 
     if (!types.isEmpty()) {
-        dialog.setInfo("Please enter parameters for the method \"" + sig.mName + "\"");
+        dialog.setInfo(tr("Please enter parameters for the method \"%1\"").arg(sig.mName));
 
         if (dialog.exec() != QDialog::Accepted)
             return;
@@ -281,19 +283,19 @@ void QDBusViewer::showContextMenu(const QPoint &point)
 
     switch (model->itemType(item)) {
     case QDBusModel::SignalItem: {
-        QAction *action = new QAction("&Connect", &menu);
+        QAction *action = new QAction(tr("&Connect"), &menu);
         action->setData(1);
         menu.addAction(action);
         break; }
     case QDBusModel::MethodItem: {
-        QAction *action = new QAction("&Call", &menu);
+        QAction *action = new QAction(tr("&Call"), &menu);
         action->setData(2);
         menu.addAction(action);
         break; }
     case QDBusModel::PropertyItem: {
-        QAction *actionSet = new QAction("&Set value", &menu);
+        QAction *actionSet = new QAction(tr("&Set value"), &menu);
         actionSet->setData(3);
-        QAction *actionGet = new QAction("&Get value", &menu);
+        QAction *actionGet = new QAction(tr("&Get value"), &menu);
         actionGet->setData(4);
         menu.addAction(actionSet);
         menu.addAction(actionGet);
@@ -326,7 +328,7 @@ void QDBusViewer::connectionRequested(const BusSignature &sig)
 {
     if (!c.connect(sig.mService, QString(), sig.mInterface, sig.mName, this,
               SLOT(dumpMessage(QDBusMessage)))) {
-        logError(QString("Unable to connect to service %1, path %2, interface %3, signal %4").arg(
+        logError(tr("Unable to connect to service %1, path %2, interface %3, signal %4").arg(
                     sig.mService).arg(sig.mPath).arg(sig.mInterface).arg(sig.mName));
     }
 }
@@ -334,42 +336,42 @@ void QDBusViewer::connectionRequested(const BusSignature &sig)
 void QDBusViewer::dumpMessage(const QDBusMessage &message)
 {
     QList<QVariant> args = message.arguments();
-    QString out = "Received ";
+    QString out = QLatin1String("Received ");
 
     switch (message.type()) {
     case QDBusMessage::SignalMessage:
-        out += "signal ";
+        out += QLatin1String("signal ");
         break;
     case QDBusMessage::ErrorMessage:
-        out += "error message ";
+        out += QLatin1String("error message ");
         break;
     case QDBusMessage::ReplyMessage:
-        out += "reply ";
+        out += QLatin1String("reply ");
         break;
     default:
-        out += "message ";
+        out += QLatin1String("message ");
         break;
     }
 
-    out += "from ";
+    out += QLatin1String("from ");
     out += message.service();
     if (!message.path().isEmpty())
-        out += ", path " + message.path();
+        out += QLatin1String(", path ") + message.path();
     if (!message.interface().isEmpty())
-        out += ", interface <i>" + message.interface() + "</i>";
+        out += QLatin1String(", interface <i>") + message.interface() + QLatin1String("</i>");
     if (!message.member().isEmpty())
-        out += ", member " + message.member();
-    out += "<br>";
+        out += QLatin1String(", member ") + message.member();
+    out += QLatin1String("<br>");
     if (args.isEmpty()) {
-        out += "&nbsp;&nbsp;(no arguments)";
+        out += QLatin1String("&nbsp;&nbsp;(no arguments)");
     } else {
-        out += "&nbsp;&nbsp;Arguments: ";
+        out += QLatin1String("&nbsp;&nbsp;Arguments: ");
         foreach (QVariant arg, args) {
             QString str = Qt::escape(QDBusUtil::argumentToString(arg));
             // turn object paths into clickable links
-            str.replace(objectPathRegExp, "[ObjectPath: <a href=\"qdbus://bus\\1\">\\1</a>]");
+            str.replace(objectPathRegExp, QLatin1String("[ObjectPath: <a href=\"qdbus://bus\\1\">\\1</a>]"));
             out += str;
-            out += ", ";
+            out += QLatin1String(", ");
         }
         out.chop(2);
     }
@@ -438,22 +440,11 @@ void QDBusViewer::refreshChildren()
 void QDBusViewer::about()
 {
     QMessageBox box(this);
-#if QT_EDITION == QT_EDITION_OPENSOURCE
-    QString edition = tr("Open Source Edition");
-    QString info = tr("This version of Qt's D-Bus Viewer is part of the Qt Open Source Edition. "
-            "Qt is a comprehensive C++ framework for cross-platform application "
-            "development.");
-    QString moreInfo = tr("You need a commercial Qt license for development of proprietary (closed "
-            "source) applications. Please see <a href=\"http://qtsoftware.com/company/model"
-            ".html\">qtsoftware.com/company/model.html</a> for an overview of Qt licensing.");
-#else
+
+    // TODO: Remove these variables for 4.6.0.  Must keep this way for 4.5.x due to string freeze.
     QString edition;
     QString info;
-    QString moreInfo(tr("This program is licensed to you under the terms of the "
-                "Qt Commercial License Agreement. For details, see the file LICENSE "
-                "that came with this software distribution."));
-
-#endif
+    QString moreInfo;
 
     box.setText(QString::fromLatin1("<center><img src=\":/trolltech/qdbusviewer/images/qdbusviewer-128.png\">"
                 "<h3>%1</h3>"
@@ -471,7 +462,7 @@ void QDBusViewer::about()
 
 void QDBusViewer::anchorClicked(const QUrl &url)
 {
-    if (url.scheme() != "qdbus")
+    if (url.scheme() != QLatin1String("qdbus"))
         // not ours
         return;
 

@@ -49,7 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 /*
-    \class QWinEventNotifier qwineventnotifier.h
+    \class QWinEventNotifier
     \brief The QWinEventNotifier class provides support for the Windows Wait functions.
 
     \ingroup io

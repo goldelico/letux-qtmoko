@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/porting4.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/porting4.qdoc -->
 <head>
   <title>Qt 4.5: Porting to Qt 4</title>
   <link rel="prev" href="porting.html" />
@@ -935,14 +935,14 @@
 <li>QByteArray::contains(const char *)</li>
 </ul>
 <p>In both cases, the solution is to convert the <tt>QCString</tt> to a <a href="qstring.html">QString</a> and use the corresponding <a href="qstring.html">QString</a> functions instead.</p>
-<p>Also be aware that <tt>QCString::size()</tt> (inherited from <a href="qbytearray.html">QByteArray</a>) used to return the size of the character data <i>including</i> the '\0'-terminator, whereas the new <a href="qbytearray.html#size">QByteArray::size</a>() is just a synonym for <a href="qbytearray.html#lengthx">QByteArray::length</a>(). This brings <a href="qbytearray.html">QByteArray</a> in line with <a href="qstring.html">QString</a>.</p>
+<p>Also be aware that <tt>QCString::size()</tt> (inherited from <a href="qbytearray.html">QByteArray</a>) used to return the size of the character data <i>including</i> the '\0'-terminator, whereas the new <a href="qbytearray.html#size">QByteArray::size</a>() is just a synonym for <a href="qbytearray.html#length">QByteArray::length</a>(). This brings <a href="qbytearray.html">QByteArray</a> in line with <a href="qstring.html">QString</a>.</p>
 <p>When porting to Qt 4, occurrences of <tt>QCString</tt> should be replaced with <a href="qbytearray.html">QByteArray</a> or <a href="qstring.html">QString</a>. The following table summarizes the API differences between the <a href="q3cstring.html">Q3CString</a> class and the Qt 4 <a href="qbytearray.html">QByteArray</a> and <a href="qstring.html">QString</a> classes:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
 <thead><tr valign="top" class="qt-style"><th><a href="q3cstring.html">Q3CString</a> function</th><th>Qt 4 equivalent</th></tr></thead>
 <tr valign="top" class="odd"><td>Q3CString::Q3CString(const char *, uint)</td><td>See remark below</td></tr>
 <tr valign="top" class="even"><td>Q3CString::Q3CString(int)</td><td>QByteArray::QByteArray(int, char)</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#leftJustify">Q3CString::leftJustify</a>()</td><td><a href="qstring.html#leftJustified">QString::leftJustified</a>()</td></tr>
-<tr valign="top" class="even"><td><a href="qbytearray.html#lengthx">Q3CString::length</a>()</td><td><a href="qbytearray.html#lengthx">QByteArray::length</a>() or <a href="qbytearray.html#size">QByteArray::size</a>() (equivalent)</td></tr>
+<tr valign="top" class="even"><td><a href="qbytearray.html#length">Q3CString::length</a>()</td><td><a href="qbytearray.html#length">QByteArray::length</a>() or <a href="qbytearray.html#size">QByteArray::size</a>() (equivalent)</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#lower">Q3CString::lower</a>()</td><td><a href="qbytearray.html#toLower">QByteArray::toLower</a>()</td></tr>
 <tr valign="top" class="even"><td><a href="q3cstring.html#rightJustify">Q3CString::rightJustify</a>()</td><td><a href="qstring.html#rightJustified">QString::rightJustified</a>()</td></tr>
 <tr valign="top" class="odd"><td><a href="q3cstring.html#setExpand">Q3CString::setExpand</a>()</td><td>See remark below</td></tr>
@@ -2578,6 +2578,7 @@
 <li><a href="qwidget.html#showMaximized">QWidget::showMaximized</a>()</li>
 <li><a href="qwidget.html#showMinimized">QWidget::showMinimized</a>()</li>
 <li><a href="qwidget.html#showNormal">QWidget::showNormal</a>()</li>
+<li><a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>()</li>
 <li><a href="qwidget.html#cursor-prop">QWidget::unsetCursor</a>()</li>
 </ul>
 <p>The internal clearWState() function was removed. Use <a href="qwidget.html#setAttribute">QWidget::setAttribute</a>() instead.</p>
@@ -2615,6 +2616,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

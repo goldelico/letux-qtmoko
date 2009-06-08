@@ -223,7 +223,8 @@ QT_USE_NAMESPACE
         QFileInfo info(*mCurrentSelection);
         NSString *filename = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.fileName());
         NSString *filepath = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.filePath());
-        bool selectable = [self panel:nil shouldShowFilename:filepath];
+        bool selectable = (mAcceptMode == QFileDialog::AcceptSave)
+            || [self panel:nil shouldShowFilename:filepath];
         [mOpenPanel 
             beginForDirectory:mCurrentDir
             file:selectable ? filename : nil
@@ -239,7 +240,8 @@ QT_USE_NAMESPACE
     QFileInfo info(*mCurrentSelection);
     NSString *filename = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.fileName());
     NSString *filepath = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.filePath());
-    bool selectable = [self panel:nil shouldShowFilename:filepath];
+    bool selectable = (mAcceptMode == QFileDialog::AcceptSave)
+        || [self panel:nil shouldShowFilename:filepath];
     mReturnCode = [mSavePanel 
         runModalForDirectory:mCurrentDir
         file:selectable ? filename : @"untitled"];
@@ -257,7 +259,8 @@ QT_USE_NAMESPACE
     QFileInfo info(*mCurrentSelection);
     NSString *filename = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.fileName());
     NSString *filepath = QT_PREPEND_NAMESPACE(qt_mac_QStringToNSString)(info.filePath());
-    bool selectable = [self panel:nil shouldShowFilename:filepath];
+    bool selectable = (mAcceptMode == QFileDialog::AcceptSave)
+        || [self panel:nil shouldShowFilename:filepath];
     [mSavePanel 
         beginSheetForDirectory:mCurrentDir
         file:selectable ? filename : nil
@@ -275,7 +278,7 @@ QT_USE_NAMESPACE
 {
     Q_UNUSED(sender);
     QString qtFileName = QT_PREPEND_NAMESPACE(qt_mac_NSStringToQString)(filename);
-    QFileInfo info(qtFileName);
+    QFileInfo info(qtFileName.normalized(QT_PREPEND_NAMESPACE(QString::NormalizationForm_C)));
     QString path = info.absolutePath();
     if (path != *mLastFilterCheckPath){
         *mLastFilterCheckPath = path;
@@ -761,8 +764,12 @@ void QFileDialogPrivate::qt_mac_filedialog_event_proc(const NavEventCallbackMess
         fileDialogPrivate->mDialogStarted = true;
         // Set selected file:
         QModelIndexList indexes = fileDialogPrivate->qFileDialogUi->listView->selectionModel()->selectedRows();
+        QString selected;
         if (!indexes.isEmpty())
-            fileDialogPrivate->selectFile_sys(indexes.at(0).data(QFileSystemModel::FilePathRole).toString());
+            selected = indexes.at(0).data(QFileSystemModel::FilePathRole).toString();
+        else
+            selected = fileDialogPrivate->typedFiles().value(0);
+        fileDialogPrivate->selectFile_sys(selected);
         fileDialogPrivate->selectNameFilter_sys(fileDialogPrivate->qFileDialogUi->fileTypeCombo->currentText());
         break; }
     case kNavCBSelectEntry:{

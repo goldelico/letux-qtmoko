@@ -174,8 +174,12 @@ bool QTextUndoCommand::tryMerge(const QTextUndoCommand &other)
 }
 
 QTextDocumentPrivate::QTextDocumentPrivate()
-    : wasUndoAvailable(false)
-    , wasRedoAvailable(false)
+    : wasUndoAvailable(false),
+    wasRedoAvailable(false),
+    docChangeOldLength(0),
+    docChangeLength(0),
+    framesDirty(true),
+    initialBlockCharFormatIndex(-1) // set correctly later in init()
 {
     editBlock = 0;
     docChangeFrom = -1;
@@ -1480,7 +1484,6 @@ QTextObject *QTextDocumentPrivate::createObject(const QTextFormat &f, int object
     QTextObject *obj = document()->createObject(f);
 
     if (obj) {
-        obj->d_func()->pieceTable = this;
         obj->d_func()->objectIndex = objectIndex == -1 ? formats.createObjectIndex(f) : objectIndex;
         objects[obj->d_func()->objectIndex] = obj;
     }

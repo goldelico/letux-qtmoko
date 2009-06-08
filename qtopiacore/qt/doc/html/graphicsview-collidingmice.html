@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/examples/collidingmice-example.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/collidingmice-example.qdoc -->
 <head>
   <title>Qt 4.5: Colliding Mice Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -28,11 +28,9 @@
 <p>We will first review the <tt>Mouse</tt> class to see how to animate items and detect item collision, and then we will review the <tt>main()</tt> function to see how to put the items into a scene and how to implement the corresponding view.</p>
 <a name="mouse-class-definition"></a>
 <h2>Mouse Class Definition</h2>
-<p>The <tt>mouse</tt> class inherits both <a href="qobject.html">QObject</a> and <a href="qgraphicsitem.html">QGraphicsItem</a>. The <a href="qgraphicsitem.html">QGraphicsItem</a> class is the base class for all graphical items in the Graphics View framework, and provides a light-weight foundation for writing your own custom items.</p>
-<pre> class Mouse : public QObject, public QGraphicsItem
+<p>The <tt>mouse</tt> class inherits from <a href="qgraphicsitem.html">QGraphicsItem</a>. The <a href="qgraphicsitem.html">QGraphicsItem</a> class is the base class for all graphical items in the Graphics View framework, and provides a light-weight foundation for writing your own custom items.</p>
+<pre> class Mouse : public QGraphicsItem
  {
-     Q_OBJECT
-
  public:
      Mouse();
 
@@ -42,7 +40,7 @@
                 QWidget *widget);
 
  protected:
-     void timerEvent(QTimerEvent *event);
+     void advance(int step);
 
  private:
      qreal angle;
@@ -50,8 +48,7 @@
      qreal mouseEyeDirection;
      QColor color;
  };</pre>
-<p>When writing a custom graphics item, you must implement <a href="qgraphicsitem.html">QGraphicsItem</a>'s two pure virtual public functions: <a href="qgraphicsitem.html#boundingRect">boundingRect()</a>, which returns an estimate of the area painted by the item, and <a href="qgraphicsitem.html#paint">paint()</a>, which implements the actual painting. In addition, we reimplement the <a href="qgraphicsitem.html#shape">shape()</a> function to return an accurate shape of our mouse item; the default implementation simply returns the item's bounding rectangle.</p>
-<p>The rationale for deriving from <a href="qobject.html">QObject</a> in addition to <a href="qgraphicsitem.html">QGraphicsItem</a> is to be able to animate our items by reimplementing <a href="qobject.html">QObject</a>'s <a href="qobject.html#timerEvent">timerEvent()</a> function and use <a href="qobject.html#startTimer">QObject::startTimer</a>() to generate timer events.</p>
+<p>When writing a custom graphics item, you must implement <a href="qgraphicsitem.html">QGraphicsItem</a>'s two pure virtual public functions: <a href="qgraphicsitem.html#boundingRect">boundingRect()</a>, which returns an estimate of the area painted by the item, and <a href="qgraphicsitem.html#paint">paint()</a>, which implements the actual painting. In addition, we reimplement the <a href="qgraphicsitem.html#shape">shape()</a> and <a href="qgraphicsitem.html#advance">advance()</a>. We reimplement <a href="qgraphicsitem.html#shape">shape()</a> to return an accurate shape of our mouse item; the default implementation simply returns the item's bounding rectangle. We reimplement <a href="qgraphicsitem.html#advance">advance()</a> to handle the animation so it all happens on one update.</p>
 <a name="mouse-class-definition"></a>
 <h2>Mouse Class Definition</h2>
 <p>When constructing a mouse item, we first ensure that all the item's private variables are properly initialized:</p>
@@ -60,13 +57,14 @@
        color(qrand() % 256, qrand() % 256, qrand() % 256)
  {
      rotate(qrand() % (360 * 16));
-     startTimer(1000 / 33);
  }</pre>
 <p>To calculate the various components of the mouse's color, we use the global <a href="qtglobal.html#qrand">qrand</a>() function which is a thread-safe version of the standard C++ rand() function.</p>
 <p>Then we call the <a href="qgraphicsitem.html#rotate">rotate()</a> function inherited from <a href="qgraphicsitem.html">QGraphicsItem</a>. Items live in their own local coordinate system. Their coordinates are usually centered around (0, 0), and this is also the center for all transformations. By calling the item's <a href="qgraphicsitem.html#rotate">rotate()</a> function we alter the direction in which the mouse will start moving.</p>
-<p>In the end we call <a href="qobject.html">QObject</a>'s <a href="qobject.html#startTimer">startTimer()</a> function, emitting a timer event every 1000/33 millisecond. This enables us to animate our mouse item using our reimplementation of the <a href="qobject.html#timerEvent">timerEvent()</a> function; whenever a mouse receives a timer event it will trigger <a href="qobject.html#timerEvent">timerEvent()</a>:</p>
-<pre> void Mouse::timerEvent(QTimerEvent *)
+<p>When the <a href="qgraphicsscene.html">QGraphicsScene</a> decides to advance the scene a frame it will call <a href="qgraphicsitem.html#advance">QGraphicsItem::advance</a>() on each of the items. This enables us to animate our mouse using our reimplementation of the advance() function.</p>
+<pre> void Mouse::advance(int step)
  {
+     if (!step)
+         return;
      QLineF lineToCenter(QPointF(0, 0), mapFromScene(0, 0));
      if (lineToCenter.length() &gt; 150) {
          qreal angleToCenter = ::acos(lineToCenter.dx() / lineToCenter.length());
@@ -86,7 +84,7 @@
      } else if (::sin(angle) &gt; 0) {
          angle -= 0.25;
      }</pre>
-<p>First we ensure that the mice stays within a circle with a radius of 150 pixels.</p>
+<p>First, we don't bother doing any advance if the step is 0 since we want to our advance in the actual advance (advance() is called twice, once with step == 0 indicating that items are about to advance and with step == 1 for the actual advance). We also ensure that the mice stays within a circle with a radius of 150 pixels.</p>
 <p>Note the <a href="qgraphicsitem.html#mapFromScene">mapFromScene()</a> function provided by <a href="qgraphicsitem.html">QGraphicsItem</a>. This function maps a position given in <i>scene</i> coordinates, to the item's coordinate system.</p>
 <pre>     QList&lt;QGraphicsItem *&gt; dangerMice = scene()-&gt;items(QPolygonF()
                                                         &lt;&lt; mapToScene(0, 0)
@@ -214,13 +212,18 @@
      view.resize(400, 300);
      view.show();
 
+     QTimer timer;
+     QObject::connect(&amp;timer, SIGNAL(timeout()), &amp;scene, SLOT(advance()));
+     timer.start(1000 / 33);
+
      return app.exec();
  }</pre>
 <p>In the end, we set the application window's title and size before we enter the main event loop using the <a href="qapplication.html#exec">QApplication::exec</a>() function.</p>
+<p>Finally, we create a <a href="qtimer.html">QTimer</a> and connect its timeout() signal to the advance() slot of the scene. Every time the timer fires, the scene will advance one frame. We then tell the timer to fire every 1000/33 millisecond. This will give us a frame rate of 30 frames a second, which is fast enough for most animations. Doing the animation with a single timer connect to advance the scene ensures that all the mice are moved at one point and, more importantly, only one update is sent to the screen after all the mice have moved.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

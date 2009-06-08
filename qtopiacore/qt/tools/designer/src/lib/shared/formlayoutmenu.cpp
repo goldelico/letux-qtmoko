@@ -66,11 +66,12 @@
 #include <QtCore/QCoreApplication>
 #include <QtCore/QRegExp>
 #include <QtCore/QMultiHash>
+#include <QtCore/QDebug>
 
 static const char *buddyPropertyC = "buddy";
 static const char *fieldWidgetBaseClasses[] = {
     "QLineEdit", "QComboBox", "QSpinBox", "QDoubleSpinBox", "QCheckBox",
-    "QDateEdit", "QTimeEdit", "QDateTimeEdit", "QDial"
+    "QDateEdit", "QTimeEdit", "QDateTimeEdit", "QDial", "QWidget"
 };
 
 QT_BEGIN_NAMESPACE
@@ -128,8 +129,6 @@ private:
     void updateObjectNames(bool updateLabel, bool updateField);
     void updateOkButton();
 
-    // Regexp to edit a label text to be a suitable object name prefix
-    const QRegExp m_prefixRegExp;
     // Check for buddy marker in string
     const QRegExp m_buddyMarkerRegexp;
 
@@ -142,13 +141,12 @@ private:
 FormLayoutRowDialog::FormLayoutRowDialog(QDesignerFormEditorInterface *core,
                                          QWidget *parent) :
     QDialog(parent),
-    m_prefixRegExp(QLatin1String("[^a-zA-Z0-9_]")),
     m_buddyMarkerRegexp(QLatin1String("\\&[^&]")),
     m_labelNameEdited(false),
     m_fieldNameEdited(false),
     m_buddyClicked(false)
 {
-    Q_ASSERT(m_prefixRegExp.isValid() && m_buddyMarkerRegexp.isValid());
+    Q_ASSERT(m_buddyMarkerRegexp.isValid());
 
     setWindowFlags(windowFlags() & ~Qt::WindowContextHelpButtonHint);
     setModal(true);
@@ -265,6 +263,66 @@ static inline QString postFixFromClassName(QString className)
     return className;
 }
 
+// Helper routines to filter out characters for converting texts into
+// class name prefixes. Only accepts ASCII characters/digits and underscores.
+
+enum PrefixCharacterKind { PC_Digit, PC_UpperCaseLetter, PC_LowerCaseLetter,
+                           PC_Other, PC_Invalid };
+
+static inline PrefixCharacterKind prefixCharacterKind(const QChar &c)
+{
+    switch (c.category()) {
+    case QChar::Number_DecimalDigit:
+        return PC_Digit;
+    case QChar::Letter_Lowercase: {
+            const char a = c.toAscii();
+            if (a >= 'a' && a <= 'z')
+                return PC_LowerCaseLetter;
+        }
+        break;
+    case QChar::Letter_Uppercase: {
+            const char a = c.toAscii();
+            if (a >= 'A' && a <= 'Z')
+                return PC_UpperCaseLetter;
+        }
+        break;
+    case QChar::Punctuation_Connector:
+        if (c.toAscii() == '_')
+            return PC_Other;
+        break;
+    default:
+        break;
+    }
+    return PC_Invalid;
+}
+
+// Convert the text the user types into a usable class name prefix by filtering
+// characters, lower-casing the first character and camel-casing subsequent
+// words. ("zip code:") --> ("zipCode").
+
+static QString prefixFromLabel(const QString &prefix)
+{
+    QString rc;
+    const int length = prefix.size();
+    bool lastWasAcceptable = false;
+    for (int i = 0 ; i < length; i++) {
+        const QChar c = prefix.at(i);
+        const PrefixCharacterKind kind = prefixCharacterKind(c);
+        const bool acceptable = kind != PC_Invalid;
+        if (acceptable) {
+            if (rc.isEmpty()) {
+                // Lower-case first character
+                rc += kind == PC_UpperCaseLetter ? c.toLower() : c;
+            } else {
+                // Camel-case words
+                rc += !lastWasAcceptable && kind == PC_LowerCaseLetter ? c.toUpper() : c;
+            }
+        }
+        lastWasAcceptable = acceptable;
+    }
+    return rc;
+}
+
 void FormLayoutRowDialog::updateObjectNames(bool updateLabel, bool updateField)
 {
     // Generate label + field object names from the label text, that is,
@@ -275,10 +333,7 @@ void FormLayoutRowDialog::updateObjectNames(bool updateLabel, bool updateField)
     if (!doUpdateLabel && !doUpdateField)
         return;
 
-    QString prefix = labelText();
-    prefix.remove(m_prefixRegExp);
-    if (!prefix.isEmpty() && prefix.at(0).isUpper())
-        prefix[0] = prefix.at(0).toLower();
+    const QString prefix = prefixFromLabel(labelText());
     // Set names
     if (doUpdateLabel)
         m_ui.labelNameLineEdit->setText(prefix + QLatin1String("Label"));

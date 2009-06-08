@@ -108,10 +108,11 @@ class QTornOffMenu : public QMenu
 public:
     QTornOffMenu(QMenu *p) : QMenu(*(new QTornOffMenuPrivate(p)))
     {
+        Q_D(QTornOffMenu);
         // make the torn-off menu a sibling of p (instead of a child)
-        QWidget *parentWidget = p->parentWidget();
-        if (!parentWidget)
-            parentWidget = p;
+        QWidget *parentWidget = d->causedStack.isEmpty() ? p : d->causedStack.last();
+        if (parentWidget->parentWidget())
+            parentWidget = parentWidget->parentWidget();
         setParent(parentWidget, Qt::Window | Qt::Tool);
 	setAttribute(Qt::WA_DeleteOnClose, true);
         setAttribute(Qt::WA_X11NetWmWindowTypeMenu, true);
@@ -577,7 +578,8 @@ void QMenuPrivate::setCurrentAction(QAction *action, int popup, SelectionReason 
                     //when the action has no QWidget, the QMenu itself should
                     // get the focus
                     // Since the menu is a pop-up, it uses the popup reason.
-                    q->setFocus(Qt::PopupFocusReason);
+                    if (!q->hasFocus())
+                        q->setFocus(Qt::PopupFocusReason);
                 }
             }
         } else { //action is a separator
@@ -958,13 +960,13 @@ void QMenuPrivate::activateCausedStack(const QList<QPointer<QWidget> > &causedSt
 {
     Q_ASSERT(!activationRecursionGuard);
     activationRecursionGuard = true;
-    if(self)
-        action->activate(action_e);
-
 #ifdef QT3_SUPPORT
     const int actionId = q_func()->findIdForAction(action);
 #endif
-   for(int i = 0; i < causedStack.size(); ++i) {
+    if(self)
+        action->activate(action_e);
+
+    for(int i = 0; i < causedStack.size(); ++i) {
         QPointer<QWidget> widget = causedStack.at(i);
         if (!widget)
             continue;
@@ -2887,8 +2889,8 @@ void QMenu::internalDelayedPopup()
     int subMenuOffset = style()->pixelMetric(QStyle::PM_SubMenuOverlap, 0, this);
     const QRect actionRect(d->actionRect(d->currentAction));
     const QSize menuSize(d->activeMenu->sizeHint());
-    const QPoint rightPos(mapToGlobal(QPoint(rect().right() + subMenuOffset + 1, actionRect.top())));
-    const QPoint leftPos(mapToGlobal(QPoint(rect().left() - subMenuOffset - menuSize.width(), actionRect.top())));
+    const QPoint rightPos(mapToGlobal(QPoint(actionRect.right() + subMenuOffset + 1, actionRect.top())));
+    const QPoint leftPos(mapToGlobal(QPoint(actionRect.left() - subMenuOffset - menuSize.width(), actionRect.top())));
 
     QPoint pos(rightPos);
     QMenu *caused = qobject_cast<QMenu*>(d->activeMenu->d_func()->causedPopup.widget);
@@ -2965,14 +2967,18 @@ void QMenu::internalDelayedPopup()
 /*!
     \fn void QMenu::triggered(QAction *action)
 
-    This signal is emitted when an action in this menu is triggered; \a action
-    is the action that caused the signal to be emitted.
+    This signal is emitted when an action in this menu is triggered.
 
-    Normally, you connect each menu action's \l{QAction::}{triggered()} signal to its
-    own custom slot, but sometimes you will want to connect several
-    actions to a single slot, for example, when you have a group of
-    closely related actions, such as "left justify", "center", "right
-    justify".
+    \a action is the action that caused the signal to be emitted.
+
+    Normally, you connect each menu action's \l{QAction::}{triggered()} signal
+    to its own custom slot, but sometimes you will want to connect several
+    actions to a single slot, for example, when you have a group of closely
+    related actions, such as "left justify", "center", "right justify".
+
+    \note This signal is emitted for the main parent menu in a hierarchy.
+    Hence, only the parent menu needs to be connected to a slot; sub-menus need
+    not be connected.
 
     \sa hovered(), QAction::triggered()
 */

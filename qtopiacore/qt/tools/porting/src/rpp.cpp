@@ -51,6 +51,7 @@ namespace Rpp
 {
 
 Preprocessor::Preprocessor()
+    : lexerTokenIndex(0), numTokens(0)
 {
 
 }

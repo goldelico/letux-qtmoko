@@ -98,6 +98,7 @@ public:
         QString text;
         QBitArray selectedChars;
         bool composing;
+        bool preeditEmpty;
         void clear();
     };
 
@@ -129,7 +130,7 @@ private:
 
     QString _language;
     XIM xim;
-    QHash<QWidget *, ICData *> ximData;
+    QHash<WId, ICData *> ximData;
 
     ICData *createICData(QWidget *w);
 };

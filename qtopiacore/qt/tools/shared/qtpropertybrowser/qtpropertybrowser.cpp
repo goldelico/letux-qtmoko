@@ -629,6 +629,14 @@ void QtAbstractPropertyManagerPrivate::propertyInserted(QtProperty *property,
 */
 
 /*!
+    \fn void QtAbstractPropertyBrowser::currentItemChanged(QtBrowserItem *current)
+
+    This signal is emitted when the current item changes. The current item is specified by \a current.
+
+    \sa QtAbstractPropertyBrowser::setCurrentItem()
+*/
+
+/*!
     Creates an abstract property manager with the given \a parent.
 */
 QtAbstractPropertyManager::QtAbstractPropertyManager(QObject *parent)
@@ -1927,11 +1935,21 @@ void QtAbstractPropertyBrowser::unsetFactoryForManager(QtAbstractPropertyManager
     }
 }
 
+/*!
+    Returns the current item in the property browser.
+
+    \sa setCurrentItem()
+*/
 QtBrowserItem *QtAbstractPropertyBrowser::currentItem() const
 {
     return d_ptr->m_currentItem;
 }
 
+/*!
+    Sets the current item in the property browser to \a item.
+
+    \sa currentItem(), currentItemChanged()
+*/
 void QtAbstractPropertyBrowser::setCurrentItem(QtBrowserItem *item)
 {
     QtBrowserItem *oldItem = d_ptr->m_currentItem;

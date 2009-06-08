@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/src/gui/dialogs/qabstractprintdialog.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/dialogs/qabstractprintdialog.cpp -->
 <head>
   <title>Qt 4.5: QPrintDialog Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -71,7 +71,7 @@
 <li><div class="fn"></div>1 public slot inherited from <a href="qobject.html#public-slots">QObject</a></li>
 <li><div class="fn"></div>4 static public members inherited from <a href="qwidget.html#static-public-members">QWidget</a></li>
 <li><div class="fn"></div>5 static public members inherited from <a href="qobject.html#static-public-members">QObject</a></li>
-<li><div class="fn"></div>38 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
+<li><div class="fn"></div>37 protected functions inherited from <a href="qwidget.html#protected-functions">QWidget</a></li>
 <li><div class="fn"></div>7 protected functions inherited from <a href="qobject.html#protected-functions">QObject</a></li>
 <li><div class="fn"></div>1 protected function inherited from <a href="qpaintdevice.html#protected-functions">QPaintDevice</a></li>
 <li><div class="fn"></div>1 protected slot inherited from <a href="qwidget.html#protected-slots">QWidget</a></li>
@@ -124,6 +124,7 @@
 <p>This signal is emitted when the user accepts the values set in the print dialog. The <i>printer</i> parameter includes the printer that the settings were applied to.</p>
 <h3 class="fn"><a name="addButton"></a>void QPrintDialog::addButton ( <a href="qpushbutton.html">QPushButton</a> * <i>button</i> )</h3>
 <p>Adds the <i>button</i> to the layout of the print dialog. The added buttons are arranged from the left to the right below the last groupbox of the printdialog.</p>
+<p>This function is available for Unix platforms only.</p>
 <h3 class="fn"><a name="done"></a>void QPrintDialog::done ( int <i>result</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Closes the dialog and sets its result code to <i>result</i>. If this dialog is shown with <a href="qabstractprintdialog.html#exec">exec</a>(), done() causes the local event loop to finish, and <a href="qabstractprintdialog.html#exec">exec</a>() to return <i>result</i>.</p>
 <p>Reimplemented from <a href="qdialog.html#done">QDialog</a>.</p>
@@ -135,6 +136,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="printer"></a><a href="qprinter.html">QPrinter</a> * QPrintDialog::printer () const</h3>
 <p>Returns a pointer to the printer this dialog configures, or 0 if this dialog does not operate on any printer.</p>
+<p>This function is available for Unix platforms only.</p>
 <p>See also <a href="qprintdialog.html#setPrinter">setPrinter</a>().</p>
 <h3 class="fn"><a name="printer-2"></a><a href="qprinter.html">QPrinter</a> * QPrintDialog::printer ()</h3>
 <p>Returns the printer that this printer dialog operates on. This can be useful when using the <a href="qprintdialog.html#open">QPrintDialog::open</a>() method.</p>
@@ -143,6 +145,7 @@
 <p>See also <a href="qprintdialog.html#options-prop">options</a> and <a href="qprintdialog.html#testOption">testOption</a>().</p>
 <h3 class="fn"><a name="setPrinter"></a>void QPrintDialog::setPrinter ( <a href="qprinter.html">QPrinter</a> * <i>printer</i>, bool <i>pickupSettings</i> = false )</h3>
 <p>Sets this dialog to configure printer <i>printer</i>, or no printer if <i>printer</i> is null. If <i>pickupSettings</i> is true, the dialog reads most of its settings from <i>printer</i>. If <i>pickupSettings</i> is false (the default) the dialog keeps its old settings.</p>
+<p>This function is available for Unix platforms only.</p>
 <p>See also <a href="qprintdialog.html#printer">printer</a>().</p>
 <h3 class="fn"><a name="setVisible"></a>void QPrintDialog::setVisible ( bool <i>visible</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <h3 class="fn"><a name="testOption"></a>bool QPrintDialog::testOption ( <a href="qabstractprintdialog.html#PrintDialogOption-enum">PrintDialogOption</a> <i>option</i> ) const</h3>
@@ -152,6 +155,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

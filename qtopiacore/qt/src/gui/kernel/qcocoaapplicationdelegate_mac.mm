@@ -1,11 +1,11 @@
 /****************************************************************************
- **
- ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
+**
+** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
 ** Contact: Qt Software Information (qt-info@nokia.com)
- **
- ** This file is part of the QtGui module of the Qt Toolkit.
- **
- ** $QT_BEGIN_LICENSE:LGPL$
+**
+** This file is part of the QtGui module of the Qt Toolkit.
+**
+** $QT_BEGIN_LICENSE:LGPL$
 ** Commercial Usage
 ** Licensees holding valid Qt Commercial licenses may use this file in
 ** accordance with the Qt Commercial License Agreement provided with the
@@ -36,11 +36,11 @@
 ** If you are unsure which license is appropriate for your use, please
 ** contact the sales department at qt-sales@nokia.com.
 ** $QT_END_LICENSE$
- **
- ** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
- ** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
- **
- ****************************************************************************/
+**
+** This file is provided AS IS with NO WARRANTY OF ANY KIND, INCLUDING THE
+** WARRANTY OF DESIGN, MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+**
+****************************************************************************/
 
 /****************************************************************************
  **
@@ -107,6 +107,8 @@ static void cleanupCocoaApplicationDelegate()
 - (id)init
 {
     self = [super init];
+    if (self)
+        inLaunch = true;
     return self;
 }
 
@@ -198,14 +200,26 @@ static void cleanupCocoaApplicationDelegate()
     return reply;
 }
 
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+    Q_UNUSED(aNotification);
+    inLaunch = false;
+}
+
 - (void)application:(NSApplication *)sender openFiles:(NSArray *)filenames
-{    
-    unsigned int ix;
-    for( ix = 0; ix < [filenames count]; ix++) {
-        NSString *fileName = [filenames objectAtIndex:ix];
-        
-        QFileOpenEvent ev( QCFString::toQString( (CFStringRef)fileName ));
-        qt_sendSpontaneousEvent(qAppInstance(), &ev);
+{
+    for (NSString *fileName in filenames) {
+        QString qtFileName = qt_mac_NSStringToQString(fileName);
+        if (inLaunch) {
+            // We need to be careful because Cocoa will be nice enough to take
+            // command line arguments and send them to us as events. Given the history
+            // of Qt Applications, this will result in behavior people don't want, as
+            // they might be doing the opening themselves with the command line parsing.
+            if (qApp->arguments().contains(qtFileName))
+                continue;
+        }
+        QFileOpenEvent foe(qtFileName);
+        qt_sendSpontaneousEvent(qAppInstance(), &foe);
     }
 
     if (reflectionDelegate &&

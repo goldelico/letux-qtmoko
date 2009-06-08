@@ -41,9 +41,9 @@
 
 /*!
     \group i18n
+    \title Internationalization with Qt
     \ingroup topics
 
-    \title Internationalization with Qt
     \brief Information about Qt's support for internationalization and multiple languages.
 
     \keyword internationalization

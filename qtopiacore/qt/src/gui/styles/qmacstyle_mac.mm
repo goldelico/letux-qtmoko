@@ -529,6 +529,7 @@ public:
     QPointer<QFocusFrame> focusWidget;
     CFAbsoluteTime defaultButtonStart;
     QMacStyle *q;
+    bool mouseDown;
 };
 
 QT_BEGIN_INCLUDE_NAMESPACE
@@ -1477,7 +1478,7 @@ void QMacStylePrivate::getSliderInfo(QStyle::ComplexControl cc, const QStyleOpti
 #endif
 
 QMacStylePrivate::QMacStylePrivate(QMacStyle *style)
-    : timerID(-1), progressFrame(0), q(style)
+    : timerID(-1), progressFrame(0), q(style), mouseDown(false)
 {
     defaultButtonStart = CFAbsoluteTimeGetCurrent();
     memset(&buttonState, 0, sizeof(ButtonState));
@@ -1494,7 +1495,7 @@ bool QMacStylePrivate::animatable(QMacStylePrivate::Animates as, const QWidget *
 {
     if (as == AquaPushButton) {
         QPushButton *pb = const_cast<QPushButton *>(static_cast<const QPushButton *>(w));
-        if (w->window()->isActiveWindow() && pb) {
+        if (w->window()->isActiveWindow() && pb && !mouseDown) {
             if (static_cast<const QPushButton *>(w) != defaultButton) {
                 // Changed on its own, update the value.
                 const_cast<QMacStylePrivate *>(this)->stopAnimate(as, defaultButton);
@@ -1514,8 +1515,7 @@ void QMacStylePrivate::stopAnimate(QMacStylePrivate::Animates as, QWidget *w)
     if (as == AquaPushButton && defaultButton) {
         QPushButton *tmp = defaultButton;
         defaultButton = 0;
-        if (tmp->isVisible())
-            tmp->update();
+        tmp->update();
     } else if (as == AquaProgressBar) {
         progressBars.removeAll(w);
     }
@@ -1841,10 +1841,15 @@ bool QMacStylePrivate::eventFilter(QObject *o, QEvent *e)
             break;
         case QEvent::MouseButtonPress:
             // It is very confusing to keep the button pulsing, so just stop the animation.
+            if (static_cast<QMouseEvent *>(e)->button() == Qt::LeftButton)
+                mouseDown = true;
             stopAnimate(AquaPushButton, btn);
             break;
-        case QEvent::FocusOut:
         case QEvent::MouseButtonRelease:
+            if (static_cast<QMouseEvent *>(e)->button() == Qt::LeftButton)
+                mouseDown = false;
+            // fall through
+        case QEvent::FocusOut:
         case QEvent::Show:
         case QEvent::WindowActivate: {
             QList<QPushButton *> list = qFindChildren<QPushButton *>(btn->window());
@@ -2184,7 +2189,7 @@ void QMacStyle::polish(QWidget* w)
     }
 
     if (qobject_cast<QMenu*>(w) || qobject_cast<QComboBoxPrivateContainer *>(w)) {
-        w->setWindowOpacity(0.94);
+        w->setWindowOpacity(QSysInfo::MacintoshVersion >= QSysInfo::MV_10_5 ? 0.985 : 0.94);
         if (!w->testAttribute(Qt::WA_SetPalette)) {
             QPixmap px(64, 64);
             HIThemeMenuDrawInfo mtinfo;
@@ -2809,10 +2814,10 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w
                 srow = sptr+((y*sbpl)/4);
                 drow = dptr+((y*dbpl)/4);
                 for (int x = 0; x < w; ++x) {
-                    const int diff = (((qRed(*srow)-qRed(fillR))*(qRed(*srow)-qRed(fillR))) +
-                                      ((qGreen(*srow)-qGreen(fillG))*((qGreen(*srow)-qGreen(fillG)))) +
-                                      ((qBlue(*srow)-qBlue(fillB))*((qBlue(*srow)-qBlue(fillB)))));
-                    (*drow++) = (diff < 100) ? Qt::black : Qt::white;
+                    const int diff = (((qRed(*srow)-fillR)*(qRed(*srow)-fillR)) +
+                                      ((qGreen(*srow)-fillG)*((qGreen(*srow)-fillG))) +
+                                      ((qBlue(*srow)-fillB)*((qBlue(*srow)-fillB))));
+                    (*drow++) = (diff < 100) ? 0xffffffff : 0xff000000;
                     ++srow;
                 }
             }
@@ -3849,13 +3854,16 @@ void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter
         }
         break;
     case CE_TabBarTabShape:
-        if (const QStyleOptionTabV3 *tabOpt = qstyleoption_cast<const QStyleOptionTabV3 *>(opt)) {
-            if (tabOpt->documentMode) {
-                p->save();
-                QRect tabRect = tabOpt->rect;
-                drawTabShape(p, tabOpt);
-                p->restore();
-                return;
+        if (const QStyleOptionTab *tabOpt = qstyleoption_cast<const QStyleOptionTab *>(opt)) {
+
+            if (const QStyleOptionTabV3 *tabOptV3 = qstyleoption_cast<const QStyleOptionTabV3 *>(opt)) {
+                if (tabOptV3->documentMode) {
+                    p->save();
+                    QRect tabRect = tabOptV3->rect;
+                    drawTabShape(p, tabOptV3);
+                    p->restore();
+                    return;
+                }
             }
 
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
@@ -4566,7 +4574,7 @@ QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt,
     case SE_HeaderLabel:
         if (qstyleoption_cast<const QStyleOptionHeader *>(opt)) {
             rect = QWindowsStyle::subElementRect(sr, opt, widget);
-            if (widget->height() <= qt_mac_aqua_get_metric(kThemeMetricListHeaderHeight)){
+            if (widget && widget->height() <= qt_mac_aqua_get_metric(kThemeMetricListHeaderHeight)){
                 // We need to allow the text a bit more space when the header is as
                 // small as kThemeMetricListHeaderHeight, otherwise it gets clipped:
                 rect.setY(0);

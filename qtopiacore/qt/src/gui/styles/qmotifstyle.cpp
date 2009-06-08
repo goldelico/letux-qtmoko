@@ -90,7 +90,7 @@ static const int motifCheckMarkSpace    = 16;
 
 
 /*!
-  \class QMotifStyle qmotifstyle.h
+  \class QMotifStyle
   \brief The QMotifStyle class provides Motif look and feel.
 
   \ingroup appearance

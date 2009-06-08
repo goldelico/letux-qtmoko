@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/qt4-intro.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qt4-intro.qdoc -->
 <head>
   <title>Qt 4.5: What's New in Qt 4.5</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -16,6 +16,7 @@
 </h1>
 <p>Qt 4.5 provides many improvements and enhancements over the previous releases in the Qt 4 series. This document covers the most important features in this release, separated by category.</p>
 <p>A comprehensive list of changes between Qt 4.4 and Qt 4.5 is included in the <tt>changes-4.5.0</tt> file <a href="http://www.qtsoftware.com/developer/changes/changes-4.5.0">available online</a>. A <a href="known-issues.html">list of known issues</a> for this release is also available.</p>
+<p>Changes between this release and the previous release are provided in the <tt>changes-4.5.1</tt> file (also <a href="http://www.qtsoftware.com/developer/changes/changes-4.5.1">available online</a>).</p>
 <p>A list of other Qt 4 features can be found on the <b><a href="qt4-intro.html">What's New in Qt 4</a></b> page.</p>
 <p><b>Highlights</b></p>
 <ul><li><a href="#qt-webkit-integration">Qt WebKit Integration</a></li>
@@ -32,7 +33,7 @@
 </ul>
 <a name="qt-webkit-integration"></a>
 <h2>Qt WebKit Integration</h2>
-<p>The WebKit browser engine included with Qt has been upgraded to the latest upstream (trunk) version of WebKit, bringing the latest features and improvements to Qt applications. These include:</p>
+<p align="center"><img src="images/webkit-netscape-plugin.png" /></p><p>The WebKit browser engine included with Qt has been upgraded to the latest upstream (trunk) version of WebKit, bringing the latest features and improvements to Qt applications. These include:</p>
 <ul>
 <li>Support for full page zooming, with appropriate rescaling of images and fonts.</li>
 <li>The CSS-based transformation and animation features provided by a WebKit extension.</li>
@@ -47,7 +48,7 @@
 <p>Qt now features a pluggable graphics system, making it possible for users and developers to select raster, OpenGL or native graphics systems to take into account the specific needs of their applications and get the best performance out of them.</p>
 <a name="mac-os-x-cocoa-support"></a>
 <h2>Mac OS X Cocoa Support</h2>
-<p>Qt for Mac OS X has been substantially rewritten to use Apple's Cocoa API, enabling Qt applications to be deployed on 64-bit Macintosh hardware. In addition, the new QMacCocoaViewContainer and QMacNativeWidget classes provide integration with Cocoa's own features and controls.</p>
+<p align="center"><img src="images/mac-cocoa.png" /></p><p>Qt for Mac OS X has been substantially rewritten to use Apple's Cocoa API, enabling Qt applications to be deployed on 64-bit Macintosh hardware. In addition, the new QMacCocoaViewContainer and QMacNativeWidget classes provide integration with Cocoa's own features and controls.</p>
 <p>For many applications, a simple recompilation is all that is required to produce an executable for 64-bit systems. Applications that use specific features may require a few changes first.</p>
 <a name="windows-ce-feature-parity"></a>
 <h2>Windows CE Feature Parity</h2>
@@ -64,17 +65,17 @@
 <p>XSLT makes it simple to reformat XML content without changing data structures, removes the need for an intermediate DOM layer for presentation, and enables rapid solutions to be created; for example, creating reports as HTML or PDF.</p>
 <a name="qt-script-debugger"></a>
 <h2>Qt Script Debugger</h2>
-<p>Developers using Qt Script in their applications can take advantage of the new <a href="qtscriptdebugger-manual.html">Qt Script Debugger</a> to provide error reporting for scripts, and to let users track down bugs in their own scripts.</p>
+<p align="center"><img src="images/qtscript-debugger-small.png" /></p><p>Developers using Qt Script in their applications can take advantage of the new <a href="qtscriptdebugger-manual.html">Qt Script Debugger</a> to provide error reporting for scripts, and to let users track down bugs in their own scripts.</p>
 <p>Many standard features of GUI debugging tools are present, allowing the developer to step through running script code, inspect variables, automatically catch exceptions, and set conditional breakpoints.</p>
 <a name="opendocument-file-format-support"></a>
 <h2>OpenDocument File Format Support</h2>
 <p>Qt 4.5 includes support for writing rich text documents as OpenDocument files via the newly-introduced <a href="qtextdocumentwriter.html">QTextDocumentWriter</a> class. This provides an generic mechanism for file export that can be used to introduce support for additional formats in future releases.</p>
 <a name="improved-network-proxy-support"></a>
 <h2>Improved Network Proxy Support</h2>
-<p>Qt's networking classes have been updated with improved proxy support. This includes improved integration with system proxy settings and the added ability to handle non-trivial proxy cases.</p>
+<p>Qt's networking classes have been updated with <a href="qtnetwork.html#support-for-network-proxies">improved proxy support</a>. This includes improved integration with system proxy settings and the added ability to handle non-trivial proxy cases.</p>
 <a name="qt-designer-improvements"></a>
 <h2>Qt Designer Improvements</h2>
-<p>Qt Designer 4.5 boasts some improvements on usability, for example:</p>
+<p align="center"><img src="images/designer-screenshot-small.png" /></p><p>Qt Designer 4.5 boasts some improvements on usability, for example:</p>
 <ul>
 <li><b>Icon Mode</b> for the widget box which substantially reduces scrolling.</li>
 <li><b>Morphing Widgets</b> which lets you morph similar widget types, e.g&#x2e;, a <a href="qwidget.html">QWidget</a> to a <a href="qframe.html">QFrame</a>, types via the context menu's <i>Morph into</i> entry.</li>
@@ -95,11 +96,11 @@
 <p>In addition to the performance improvements in this release, a number of graphics enhancements extend support for existing features to more platforms and expand Qt's core set of features with successful add-ons.</p>
 <p>Widget style sheets can now be used on Mac OS X, making this approach to theming and styling viable for truly cross-platform applications.</p>
 <p>Support for ARGB top-level widgets, previously available as a separate solution, is now provided as an integral part of Qt. This makes it possible to create windows with translucent regions on systems with the appropriate support from the user's window system. See the <a href="qwidget.html#creating-translucent-windows">Creating Translucent Windows</a> section of the <a href="qwidget.html">QWidget</a> documentation for details of this feature.</p>
-<p align="center"><img src="images/gtk-style-screenshot.png" /></p><p>Improved GTK integration provided by the <a href="qgtkstyle.html">QGtkStyle</a> class improves the look and feel of Qt applications in GNOME and other GTK-based environments. The screenshot above illustrates this clearly.</p>
+<p align="center"><img src="images/gtk-style-screenshot.png" /></p><p>Improved GTK+ integration provided by the <a href="qgtkstyle.html">QGtkStyle</a> class improves the look and feel of Qt applications in GNOME and other GTK-based environments. The screenshot above illustrates this clearly.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

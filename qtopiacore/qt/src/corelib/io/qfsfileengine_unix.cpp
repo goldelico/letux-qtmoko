@@ -168,6 +168,15 @@ bool QFSFileEnginePrivate::nativeOpen(QIODevice::OpenMode openMode)
             return false;
         }
 
+        QT_STATBUF statBuf;
+        if (QT_FSTAT(fd, &statBuf) != -1) {
+            if ((statBuf.st_mode & S_IFMT) == S_IFDIR) {
+                q->setError(QFile::OpenError, QLatin1String("file to open is a directory"));
+                QT_CLOSE(fd);
+                return false;
+            }
+        }
+
 #ifndef O_CLOEXEC
         // not needed on Linux >= 2.6.23
         setCloseOnExec(fd);     // ignore failure
@@ -201,6 +210,15 @@ bool QFSFileEnginePrivate::nativeOpen(QIODevice::OpenMode openMode)
             q->setError(errno == EMFILE ? QFile::ResourceError : QFile::OpenError,
                         qt_error_string(int(errno)));
             return false;
+        }
+
+        QT_STATBUF statBuf;
+        if (QT_FSTAT(fileno(fh), &statBuf) != -1) {
+            if ((statBuf.st_mode & S_IFMT) == S_IFDIR) {
+                q->setError(QFile::OpenError, QLatin1String("file to open is a directory"));
+                fclose(fh);
+                return false;
+            }
         }
 
         setCloseOnExec(fileno(fh)); // ignore failure

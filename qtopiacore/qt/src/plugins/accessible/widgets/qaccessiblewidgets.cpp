@@ -213,7 +213,7 @@ static inline QWidget *mdiAreaNavigate(QWidget *area,
 #ifndef QT_NO_TEXTEDIT
 
 /*!
-  \class QAccessibleTextEdit qaccessiblewidget.h
+  \class QAccessibleTextEdit
   \brief The QAccessibleTextEdit class implements the QAccessibleInterface for richtext editors.
   \internal
 */

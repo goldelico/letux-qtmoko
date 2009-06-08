@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-embedded-linux-opensource-src-4.5.0/doc/src/exportedfunctions.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/exportedfunctions.qdoc -->
 <head>
   <title>Qt 4.5: Special-Purpose Global Functions Exported by Qt</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -58,7 +58,7 @@
 <a name="void-qt-mac-set-dock-menu-qmenu-menu"></a>
 <h2>void qt_mac_set_dock_menu(QMenu *<i>menu</i>)</h2>
 <p>Sets the menu to display in the Mac OS X Dock for the application. This menu is shown when the user attempts a press-and-hold operation on the application's dock icon or <b>Ctrl</b>-clicks on it while the application is running.</p>
-<p>The menu will be turned into a Mac menu which will be merged with Mac OS X built-in commands.</p>
+<p>The menu will be turned into a Mac menu and the items added to the default Dock menu. There is no merging of the Qt menu items with the items that are in the Dock menu (i.e&#x2e;, it is not recommended to include actions that duplicate functionality of items already in the Dock menu).</p>
 <a name="void-qt-mac-set-menubar-icons-bool-enable"></a>
 <h2>void qt_mac_set_menubar_icons(bool <i>enable</i>)</h2>
 <p>Specifies whether icons associated to menu items for the application's menu bar should be shown on Mac OS X. By default, icons are shown on Mac OS X just like on the other platforms.</p>
@@ -76,6 +76,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

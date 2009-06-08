@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.0-1235596081/qt-all-opensource-src-4.5.0/src/activeqt/control/qaxbindable.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-all-opensource-src-4.5.1/src/activeqt/control/qaxbindable.cpp -->
 <head>
   <title>Qt 4.5: QAxAggregated Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -22,7 +22,7 @@
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
 <ul>
-<li><div class="fn"></div>virtual long <b><a href="qaxaggregated.html#queryInterfacex">queryInterface</a></b> ( const QUuid &amp; <i>iid</i>, void ** <i>iface</i> ) = 0</li>
+<li><div class="fn"></div>virtual long <b><a href="qaxaggregated.html#queryInterface">queryInterface</a></b> ( const QUuid &amp; <i>iid</i>, void ** <i>iface</i> ) = 0</li>
 </ul>
 <a name="protected-functions"></a>
 <h3>Protected Functions</h3>
@@ -36,7 +36,7 @@
 <hr />
 <h2>Detailed Description</h2>
 <p>The QAxAggregated class is an abstract base class for implementations of additional COM interfaces.</p>
-<p>Create a subclass of QAxAggregated and reimplement <a href="qaxaggregated.html#queryInterfacex">queryInterface</a>() to support additional COM interfaces. Use multiple inheritance from those COM interfaces. Implement the IUnknown interface of those COM interfaces by delegating the calls to <tt>QueryInterface()</tt>, <tt>AddRef()</tt> and <tt>Release()</tt> to the interface provided by <a href="qaxaggregated.html#controllingUnknown">controllingUnknown</a>().</p>
+<p>Create a subclass of QAxAggregated and reimplement <a href="qaxaggregated.html#queryInterface">queryInterface</a>() to support additional COM interfaces. Use multiple inheritance from those COM interfaces. Implement the IUnknown interface of those COM interfaces by delegating the calls to <tt>QueryInterface()</tt>, <tt>AddRef()</tt> and <tt>Release()</tt> to the interface provided by <a href="qaxaggregated.html#controllingUnknown">controllingUnknown</a>().</p>
 <p>Use the <a href="qaxaggregated.html#widget">widget</a>() method if you need to make calls to the <a href="qwidget.html">QWidget</a> implementing the ActiveX control. You must not store that pointer in your subclass (unless you use <a href="qpointer.html">QPointer</a>), as the <a href="qwidget.html">QWidget</a> can be destroyed by the <a href="activeqt.html#activeqt">ActiveQt</a> framework at any time.</p>
 <p>See also <a href="qaxbindable.html">QAxBindable</a>, <a href="qaxfactory.html">QAxFactory</a>, and <a href="activeqt.html">ActiveQt Framework</a>.</p>
 <hr />
@@ -67,7 +67,7 @@
 <p>Returns a pointer to the <a href="qobject.html">QObject</a> subclass implementing the COM object. This function might return 0.</p>
 <p><b>Warning:</b> You must not store the returned pointer, unless you use a <a href="qpointer.html">QPointer</a>, since the <a href="qobject.html">QObject</a> can be destroyed by <a href="activeqt.html#activeqt">ActiveQt</a> at any time.</p>
 <a name="//apple_ref/cpp/instm/QAxAggregated/queryInterface" />
-<h3 class="fn"><a name="queryInterfacex"></a>long QAxAggregated::queryInterface ( const <a href="quuid.html">QUuid</a> &amp; <i>iid</i>, void ** <i>iface</i> )&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
+<h3 class="fn"><a name="queryInterface"></a>long QAxAggregated::queryInterface ( const <a href="quuid.html">QUuid</a> &amp; <i>iid</i>, void ** <i>iface</i> )&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
 <p>Reimplement this pure virtual function to support additional COM interfaces. Set the value of <i>iface</i> to point to this object to support the interface <i>iid</i>. Note that you must cast the <tt>this</tt> pointer to the appropriate superclass.</p>
 <pre> long AxImpl::queryInterface(const QUuid &amp;iid, void **iface)
  {
@@ -90,6 +90,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.0</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
 </tr></table></div></address></body>
 </html>

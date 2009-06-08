@@ -18,7 +18,8 @@ FORMS += $$PWD/addlinkdialog.ui \
     $$PWD/qtresourceeditordialog.ui \
     $$PWD/newformwidget.ui \
     $$PWD/selectsignaldialog.ui \
-    $$PWD/formlayoutrowdialog.ui
+    $$PWD/formlayoutrowdialog.ui \
+    $$PWD/plugindialog.ui
 
 HEADERS += \
     $$PWD/shared_global_p.h \
@@ -101,7 +102,8 @@ HEADERS += \
     $$PWD/qdesigner_formwindowmanager_p.h \
     $$PWD/shared_settings_p.h \
     $$PWD/newformwidget_p.h \
-    $$PWD/filterwidget_p.h
+    $$PWD/filterwidget_p.h \
+    $$PWD/plugindialog_p.h
 
 SOURCES += \
     $$PWD/spacer_widget.cpp \
@@ -181,6 +183,7 @@ SOURCES += \
     $$PWD/qdesigner_formwindowmanager.cpp \
     $$PWD/shared_settings.cpp \
     $$PWD/newformwidget.cpp \
-    $$PWD/filterwidget.cpp
+    $$PWD/filterwidget.cpp \
+    $$PWD/plugindialog.cpp
 
 RESOURCES += $$PWD/shared.qrc

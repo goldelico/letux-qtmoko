@@ -27,7 +27,6 @@ along with this library.  If not, see <http://www.gnu.org/licenses/>.
 #include <objbase.h>
 #include <initguid.h>
 #include <qnetwork.h>
-#include <comdef.h>
 #include <evcode.h>
 
 #include "mediaobject.h"
@@ -852,7 +851,7 @@ namespace Phonon
                 if (getErrorText && getErrorText(hr, (WCHAR*)buffer, MAX_ERROR_TEXT_LEN)) {
                     m_errorString = QString::fromUtf16(buffer);
                 } else {
-                    m_errorString = QString::fromUtf16((ushort*)_com_error(hr).ErrorMessage());
+                    m_errorString = QString::fromLatin1("Unknown error");
                 }
                 const QString comError = QString::number(uint(hr), 16);
                 if (!m_errorString.toLower().contains(comError.toLower())) {

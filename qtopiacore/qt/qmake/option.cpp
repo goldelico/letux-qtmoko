@@ -180,6 +180,8 @@ bool usage(const char *a0)
             "                 parsed after [files]\n"
             "  -norecursive   Don't do a recursive search\n"
             "  -recursive     Do a recursive search\n"
+            "  -set <prop> <value> Set persistent property\n"
+            "  -query <prop>  Query persistent property. Show all if <prop> is empty.\n"
             "  -cache file    Use file as cache           [makefile mode only]\n"
             "  -spec spec     Use spec as QMAKESPEC       [makefile mode only]\n"
             "  -nocache       Don't use a cache file      [makefile mode only]\n"

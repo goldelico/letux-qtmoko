@@ -2148,7 +2148,7 @@ bool QFtp::hasPendingCommands() const
 /*!
     Deletes all pending commands from the list of scheduled commands.
     This does not affect the command that is being executed. If you
-    want to stop this this as well, use abort().
+    want to stop this as well, use abort().
 
     \sa hasPendingCommands() abort()
 */

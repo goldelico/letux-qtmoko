@@ -65,7 +65,10 @@ static void printUsage()
     printOut(QCoreApplication::tr(
         "Usage:\n"
         "    lrelease [options] project-file\n"
-        "    lrelease [options] ts-files [-qm qm-file]\n"
+        "    lrelease [options] ts-files [-qm qm-file]\n\n"
+        "lrelease is part of Qt's Linguist tool chain. It can be used as a\n"
+        "stand-alone tool to convert XML based translations files in the .ts\n"
+        "format into the 'compiled' .qm format used by QTranslator objects.\n\n"
         "Options:\n"
         "    -help  Display this information and exit\n"
         "    -compress\n"
@@ -91,19 +94,6 @@ static bool loadTsFile(Translator &tor, const QString &tsFileName, bool /* verbo
     } else {
         if (!cd.errors().isEmpty())
             printOut(cd.error());
-        const QList<TranslatorMessage> dupes = tor.findDuplicates();
-        if (!dupes.isEmpty()) {
-            qWarning("lrelease error: duplicate messages found in '%s':",
-                     qPrintable(tsFileName));
-            foreach (const TranslatorMessage &msg, dupes) {
-                qWarning("\n* Context: %s\n* Source: %s",
-                        qPrintable(msg.context()),
-                        qPrintable(msg.sourceText()));
-                if (!msg.comment().isEmpty())
-                    qWarning("\n* Comment: %s", qPrintable(msg.comment()));
-            }
-            ok = false;
-        }
     }
     return ok;
 }
@@ -112,6 +102,8 @@ static bool releaseTranslator(Translator &tor, const QString &qmFileName,
     bool verbose, bool ignoreUnfinished,
     bool removeIdentical, TranslatorSaveMode mode)
 {
+    Translator::reportDuplicates(tor.resolveDuplicates(), qmFileName, verbose);
+
     if (verbose)
         printOut(QCoreApplication::tr( "Updating '%1'...\n").arg(qmFileName));
     if (removeIdentical) {

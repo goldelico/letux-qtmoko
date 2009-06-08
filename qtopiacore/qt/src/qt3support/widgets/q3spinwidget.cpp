@@ -80,7 +80,7 @@ public:
 };
 
 /*!
-    \class Q3SpinWidget qspinwidget.h
+    \class Q3SpinWidget
     \brief The Q3SpinWidget class is an internal range control related class.
 
     \internal

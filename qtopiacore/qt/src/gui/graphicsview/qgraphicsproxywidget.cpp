@@ -1021,6 +1021,7 @@ void QGraphicsProxyWidget::dragMoveEvent(QGraphicsSceneDragDropEvent *event)
     if (!d->widget)
         return;
     QPointF p = event->pos();
+    event->ignore();
     QPointer<QWidget> subWidget = d->widget->childAt(p.toPoint());
     QPointer<QWidget> receiver =  subWidget ? subWidget : d->widget;
     bool eventDelivered = false;

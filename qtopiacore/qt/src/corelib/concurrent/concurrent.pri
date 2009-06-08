@@ -1,6 +1,3 @@
-INCLUDEPATH += $$PWD
-DEPENDPATH += $$PWD
-
 SOURCES += \
         concurrent/qfuture.cpp \
         concurrent/qfutureinterface.cpp \

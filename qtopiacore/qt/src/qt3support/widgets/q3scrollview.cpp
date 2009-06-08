@@ -352,7 +352,7 @@ void Q3ScrollViewData::viewportResized(int w, int h)
 
 
 /*!
-    \class Q3ScrollView qscrollview.h
+    \class Q3ScrollView
     \brief The Q3ScrollView widget provides a scrolling area with on-demand scroll bars.
 
     \compat

@@ -7,8 +7,8 @@ WORKDIR=$3
 
 touch xarch.c
 
-if "$COMPILER" -c xarch.c -Xarch_i386 -mmmx ; then
-    if "$COMPILER" -c xarch.c -Xarch_i386 -mmmx  2>&1 | grep "unrecognized" ; then
+if "$COMPILER" -c xarch.c -Xarch_i386 -mmmx 2>/dev/null 1>&2; then
+    if "$COMPILER" -c xarch.c -Xarch_i386 -mmmx  2>&1 | grep "unrecognized" >/dev/null ; then
         true
     else
         XARCH_SUPPORT=yes

@@ -1,3 +1,119 @@
+2009-04-06  Tor Arne Vestbø  <tor.arne.vestbo@nokia.com>
+
+        Reviewed by Simon Hausmann.
+
+        [Qt] Don't show and hide the platformPluginWidget, as it's our QWebView
+
+        * plugins/mac/PluginViewMac.cpp:
+        (WebCore::PluginView::show):
+        (WebCore::PluginView::hide):
+        (WebCore::PluginView::setParentVisible):
+
+2009-04-06  Mike Belshe <mike@belshe.com>
+
+        Reviewed by Eric Seidel.
+
+        HTMLCanvasElement crash when ImageBuffer creation fails.
+        https://bugs.webkit.org/show_bug.cgi?id=23212
+
+        Check for NULL before using the ImageBuffer as we might
+        be low on memory and creation may have failed.
+
+        Test case creation blocked by:
+        https://bugs.webkit.org/show_bug.cgi?id=25055
+
+        * html/HTMLCanvasElement.cpp:
+        (WebCore::HTMLCanvasElement::createImageBuffer):
+
+2009-04-05  Erik L. Bunce  <elbunce@xendom.com>
+
+        Reviewed by Simon Hausmann.
+
+        https://bugs.webkit.org/show_bug.cgi?id=25050
+
+        Fix an assert failure when dropping an 'empty' text/uri-list on a QWebView. 
+
+        * platform/qt/DragDataQt.cpp:
+        (WebCore::DragData::asURL):
+
+2009-03-27  Zack Rusin <zack@kde.org>
+
+        Reviewed by Simon Hausmann.
+
+        https://bugs.webkit.org/show_bug.cgi?id=24280
+
+        Fix propagation of fill rules when rendering paths in the Qt build.
+
+        * platform/graphics/qt/GraphicsContextQt.cpp:
+        (WebCore::toQtFillRule):
+        (WebCore::GraphicsContext::fillPath):
+        (WebCore::GraphicsContext::strokePath):
+
+2009-03-27  Zack Rusin <zack@kde.org>
+
+        Reviewed by Tor Arne Vestbø.
+
+        https://bugs.webkit.org/show_bug.cgi?id=24275
+
+        Fix text field theming in the Qt build with the KDE 4 Oxygen
+        style by adjusting the size vertically and horizontally to
+        set padding on the element equal to the width of the style painted border.
+
+        * platform/qt/RenderThemeQt.cpp:
+        (WebCore::RenderThemeQt::RenderThemeQt):
+        (WebCore::RenderThemeQt::computeSizeBasedOnStyle):
+        (WebCore::RenderThemeQt::adjustTextFieldStyle):
+        (WebCore::RenderThemeQt::paintTextField):
+        * platform/qt/RenderThemeQt.h:
+
+2009-02-06  Dirk Schulze  <krit@webkit.org>
+
+        Reviewed by Simon Hausmann.
+
+        Fix bug in clearRect(). Use fillRect() instead of eraseRect() to get
+        the context transparent.
+
+        [QT] clearRect fill's a given rect with white
+        https://bugs.webkit.org/show_bug.cgi?id=23728
+
+        * platform/graphics/qt/GraphicsContextQt.cpp:
+        (WebCore::GraphicsContext::clearRect):
+
+2009-03-19  Simon Hausmann  <simon.hausmann@nokia.com>
+
+        Reviewed by Tor Arne Vestbø.
+
+        Fixed support for doing calls from JavaScript into NPAPI Plugins for the Qt port on Windows.
+
+        Removed dead code for distinguishing between Widget and PluginView in the Qt port.
+
+        * bindings/js/ScriptControllerQt.cpp:
+        (WebCore::ScriptController::createScriptInstanceForWidget): Removed incorrect isNPAPI check.
+        * plugins/PluginView.cpp:
+        (WebCore::PluginView::PluginView): Removed m_isNPAPIPlugin variable.
+        * plugins/PluginView.h: Removed setter/getter.
+        * plugins/mac/PluginViewMac.cpp:
+        (WebCore::PluginView::init): Removed call to setIsNPAPIPlugin.
+        * plugins/qt/PluginViewQt.cpp:
+        (WebCore::PluginView::init): Ditto.
+
+2009-02-26  Benjamin Meyer  <benjamin.meyer@torchmobile.com>
+
+        Reviewed by George Staikos.
+
+        https://bugs.webkit.org/show_bug.cgi?id=24062
+        QNetworkCookieJar expects the url and not the policy url.  Sending the
+        policy url will cause QNetworkCookieJar to behave incorrectly.  One
+        example would be a cookie that does not have a path or domain.
+        QNetworkCookieJar will use the url it is given to fill in default values.
+        This allows setting cookies on the url of the main frame from an iFrame
+        when the cookie should be set on the url of the iFrame.
+
+        Originally noticed on http://writer.zoho.com/jsp/home.jsp?serviceurl=/index.do
+
+        * platform/qt/CookieJarQt.cpp:
+        (WebCore::setCookies):
+
 2009-02-23  Thiago Macieira  <thiago.macieira@nokia.com>
 
         Reviewed by Simon Hausmann.

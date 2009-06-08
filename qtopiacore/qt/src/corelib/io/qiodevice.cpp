@@ -173,7 +173,7 @@ QIODevicePrivate::~QIODevicePrivate()
     reading; for example, if new data has arrived on the network or if
     additional data is appended to a file that you are reading
     from. You can call bytesAvailable() to determine the number of
-    bytes that currently available for reading. It's common to use
+    bytes that are currently available for reading. It's common to use
     bytesAvailable() together with the readyRead() signal when
     programming with asynchronous devices such as QTcpSocket, where
     fragments of data can arrive at arbitrary points in
@@ -1183,7 +1183,7 @@ qint64 QIODevice::readLineData(char *data, qint64 maxSize)
     signal.
 
     Subclasses that reimplement this function must call the base
-    implementation in order to include the size of the QIODevice's buffer. Example:
+    implementation in order to include the contents of the QIODevice's buffer. Example:
 
     \snippet doc/src/snippets/code/src_corelib_io_qiodevice.cpp 3
 

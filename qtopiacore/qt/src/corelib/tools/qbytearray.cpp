@@ -1722,7 +1722,7 @@ QByteArray &QByteArray::remove(int pos, int len)
 
 QByteArray &QByteArray::replace(int pos, int len, const QByteArray &after)
 {
-    if (len == after.d->size) {
+    if (len == after.d->size && (pos + len <= d->size)) {
         detach();
         memmove(d->data + pos, after.d->data, len*sizeof(char));
         return *this;
@@ -1741,7 +1741,7 @@ QByteArray &QByteArray::replace(int pos, int len, const QByteArray &after)
 QByteArray &QByteArray::replace(int pos, int len, const char *after)
 {
     int alen = qstrlen(after);
-    if (len == alen) {
+    if (len == alen && (pos + len <= d->size)) {
         detach();
         memcpy(d->data + pos, after, len*sizeof(char));
         return *this;
@@ -3817,11 +3817,11 @@ QByteArray QByteArray::fromBase64(const QByteArray &base64)
 QByteArray QByteArray::fromHex(const QByteArray &hexEncoded)
 {
     QByteArray res;
-    res.resize(hexEncoded.size() / 2);
-    uchar *result = (uchar *)res.data();
+    res.resize((hexEncoded.size() + 1)/ 2);
+    uchar *result = (uchar *)res.data() + res.size();
 
-    bool first = true;
-    for (int i = 0; i < hexEncoded.size(); ++i) {
+    bool odd_digit = true;
+    for (int i = hexEncoded.size() - 1; i >= 0; --i) {
         int ch = hexEncoded.at(i);
         int tmp;
         if (ch >= '0' && ch <= '9')
@@ -3832,17 +3832,17 @@ QByteArray QByteArray::fromHex(const QByteArray &hexEncoded)
             tmp = ch - 'A' + 10;
         else
             continue;
-        if (first) {
-            *result = tmp << 4;
-            first = false;
+        if (odd_digit) {
+            --result;
+            *result = tmp;
+            odd_digit = false;
         } else {
-            *result |= tmp;
-            ++result;
-            first = true;
+            *result |= tmp << 4;
+            odd_digit = true;
         }
     }
 
-    res.truncate(result - (const uchar *)res.constData());
+    res.remove(0, result - (const uchar *)res.constData());
     return res;
 }
 

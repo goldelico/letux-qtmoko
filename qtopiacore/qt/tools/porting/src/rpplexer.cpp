@@ -50,6 +50,7 @@ using namespace TokenEngine;
 
 namespace Rpp {
 RppLexer::RppLexer()
+    : m_buffer(0), m_ptr(0), m_len(0)
 {
     setupScanTable();
 }

@@ -514,7 +514,7 @@ bool Q3IconDragData::operator==(const Q3IconDragData &i) const
 
 
 /*!
-    \class Q3IconDrag qiconview.h
+    \class Q3IconDrag
     \brief The Q3IconDrag class supports drag and drop operations
     within a Q3IconView.
 
@@ -725,7 +725,7 @@ void Q3IconDragData::setTextRect(const QRect &r)
 
 
 /*!
-    \class Q3IconViewItem qiconview.h
+    \class Q3IconViewItem
     \brief The Q3IconViewItem class provides a single item in a Q3IconView.
 
     \compat

@@ -57,7 +57,7 @@ public:
 
 
 /*!
-    \class Q3ServerSocket qserversocket.h
+    \class Q3ServerSocket
     \brief The Q3ServerSocket class provides a TCP-based server.
 
     \compat

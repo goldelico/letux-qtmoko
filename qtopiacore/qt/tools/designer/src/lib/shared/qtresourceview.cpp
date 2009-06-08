@@ -184,6 +184,7 @@ QtResourceViewPrivate::QtResourceViewPrivate(QDesignerFormEditorInterface *core)
     m_toolBar(new QToolBar),
     m_treeWidget(new QTreeWidget),
     m_listWidget(new ResourceListWidget),
+    m_splitter(0),
     m_editResourcesAction(0),
     m_reloadResourcesAction(0),
     m_copyResourcePathAction(0),

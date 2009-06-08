@@ -56,7 +56,7 @@ public:
 
 
 /*!
-    \class Q3DataView qdataview.h
+    \class Q3DataView
     \brief The Q3DataView class provides read-only SQL forms.
 
     \compat

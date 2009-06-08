@@ -49,7 +49,7 @@
 QT_BEGIN_NAMESPACE
 
 /*!
-    \class Q3SyntaxHighlighter qsyntaxhighlighter.h
+    \class Q3SyntaxHighlighter
     \brief The Q3SyntaxHighlighter class is a base class for
     implementing Q3TextEdit syntax highlighters.
 

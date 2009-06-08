@@ -400,7 +400,7 @@ int main(int argc, char **argv)
     args.takeFirst();
 
     bool connectionOpened = false;
-    while (!args.isEmpty() && args.at(0).startsWith('-')) {
+    while (!args.isEmpty() && args.at(0).startsWith(QLatin1Char('-'))) {
         QString arg = args.takeFirst();
         if (arg == QLatin1String("--system")) {
             connection = QDBusConnection::systemBus();

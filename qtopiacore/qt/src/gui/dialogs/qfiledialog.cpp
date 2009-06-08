@@ -216,8 +216,9 @@ Q_GUI_EXPORT _qt_filedialog_save_filename_hook qt_filedialog_save_filename_hook 
     are resolved.
     \value DontConfirmOverwrite Don't ask for confirmation if an existing file is selected.
     By default confirmation is requested.
-    \value DontUseNativeDialog Don't use the native file dialog.  By default on Mac OS X and Windows,
-    the native file dialog is used.
+    \value DontUseNativeDialog Don't use the native file dialog. By default on Mac OS X and Windows,
+    the native file dialog is used unless you use a subclass of QFileDialog that contains the
+    Q_OBJECT macro.
     \value ReadOnly Indicates that the model is readonly.
     \value HideNameFilterDetails Indicates if the is hidden or not.
 
@@ -549,6 +550,21 @@ void QFileDialogPrivate::emitFilesSelected(const QStringList &files)
         emit q->fileSelected(files.first());
 }
 
+bool QFileDialogPrivate::canBeNativeDialog()
+{
+    Q_Q(QFileDialog);
+    if (nativeDialogInUse)
+        return true;
+    if (q->testAttribute(Qt::WA_DontShowOnScreen))
+        return false;
+    if (opts & QFileDialog::DontUseNativeDialog)
+        return false;
+
+    QLatin1String staticName(QFileDialog::staticMetaObject.className());
+    QLatin1String dynamicName(q->metaObject()->className());
+    return (staticName == dynamicName);
+}
+
 /*!
     Sets the given \a option to be enabled if \a on is true;
     otherwise, clears the given \a option.
@@ -653,8 +669,7 @@ void QFileDialog::setVisible(bool visible)
     } else if (testAttribute(Qt::WA_WState_ExplicitShowHide) && testAttribute(Qt::WA_WState_Hidden))
         return;
 
-    if (d->nativeDialogInUse
-            || !(testAttribute(Qt::WA_DontShowOnScreen) || (d->opts & DontUseNativeDialog))){
+    if (d->canBeNativeDialog()){
         if (d->setVisible_sys(visible)){
             d->nativeDialogInUse = true;
             // Set WA_DontShowOnScreen so that QDialog::setVisible(visible) below
@@ -765,6 +780,13 @@ void QFileDialog::selectFile(const QString &filename)
         if (QFileInfo(filename).isAbsolute()) {
             QString current = d->rootPath();
             text.remove(current);
+            if (text.at(0) == QDir::separator()
+#ifdef Q_OS_WIN
+                //On Windows both cases can happen
+                || text.at(0) == QLatin1Char('/')
+#endif
+                )
+                text = text.remove(0,1);
         }
         if (!isVisible() || !d->lineEdit()->hasFocus())
             d->lineEdit()->setText(text);
@@ -1381,6 +1403,12 @@ QStringList QFileDialog::history() const
     Doing so can cause incorrect or unintuitive editing behavior since each
     view connected to a given delegate may receive the \l{QAbstractItemDelegate::}{closeEditor()}
     signal, and attempt to access, modify or close an editor that has already been closed.
+
+    Note that the model used is QFileSystemModel. It has custom item data roles, which is
+    described by the \l{QFileSystemModel::}{Roles} enum. You can use a QFileIconProvider if
+    you only want custom icons.
+
+    \sa itemDelegate(), setIconProvider(), QFileSystemModel
 */
 void QFileDialog::setItemDelegate(QAbstractItemDelegate *delegate)
 {
@@ -2096,6 +2124,7 @@ void QFileDialogPrivate::createWidgets()
 #ifndef QT_NO_COMPLETER
     completer = new QFSCompletor(model, q);
     qFileDialogUi->fileNameEdit->setCompleter(completer);
+    completer->sourceModel = model;
     QObject::connect(qFileDialogUi->fileNameEdit, SIGNAL(textChanged(QString)),
             q, SLOT(_q_autoCompleteFileName(QString)));
 #endif // QT_NO_COMPLETER
@@ -2218,12 +2247,21 @@ void QFileDialog::setProxyModel(QAbstractProxyModel *proxyModel)
         proxyModel->setSourceModel(d->model);
         d->qFileDialogUi->listView->setModel(d->proxyModel);
         d->qFileDialogUi->treeView->setModel(d->proxyModel);
+#ifndef QT_NO_COMPLETER
+        d->completer->setModel(d->proxyModel);
+        d->completer->proxyModel = d->proxyModel;
+#endif
         connect(d->proxyModel, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
             this, SLOT(_q_rowsInserted(const QModelIndex &)));
     } else {
         d->proxyModel = 0;
         d->qFileDialogUi->listView->setModel(d->model);
         d->qFileDialogUi->treeView->setModel(d->model);
+#ifndef QT_NO_COMPLETER
+        d->completer->setModel(d->model);
+        d->completer->sourceModel = d->model;
+        d->completer->proxyModel = 0;
+#endif
         connect(d->model, SIGNAL(rowsInserted(const QModelIndex &, int, int)),
             this, SLOT(_q_rowsInserted(const QModelIndex &)));
     }
@@ -2736,8 +2774,9 @@ void QFileDialogPrivate::_q_enterDirectory(const QModelIndex &index)
 {
     Q_Q(QFileDialog);
     // My Computer or a directory
-    QString path = index.data(QFileSystemModel::FilePathRole).toString();
-    if (path.isEmpty() || model->isDir(index)) {
+    QModelIndex sourceIndex = mapToSource(index);
+    QString path = sourceIndex.data(QFileSystemModel::FilePathRole).toString();
+    if (path.isEmpty() || model->isDir(sourceIndex)) {
         q->setDirectory(path);
         emit q->directoryEntered(path);
         if (fileMode == QFileDialog::Directory
@@ -3111,7 +3150,11 @@ void QFileDialogLineEdit::keyPressEvent(QKeyEvent *e)
 
 QString QFSCompletor::pathFromIndex(const QModelIndex &index) const
 {
-    const QFileSystemModel *dirModel = static_cast<const QFileSystemModel *>(model());
+    const QFileSystemModel *dirModel;
+    if (proxyModel)
+        dirModel = qobject_cast<const QFileSystemModel *>(proxyModel->sourceModel());
+    else
+        dirModel = sourceModel;
     QString currentLocation = dirModel->rootPath();
     QString path = index.data(QFileSystemModel::FilePathRole).toString();
     if (!currentLocation.isEmpty() && path.startsWith(currentLocation)) {
@@ -3157,7 +3200,11 @@ QStringList QFSCompletor::splitPath(const QString &path) const
     bool startsFromRoot = path[0] == sep[0];
 #endif
     if (parts.count() == 1 || (parts.count() > 1 && !startsFromRoot)) {
-        const QFileSystemModel *dirModel = static_cast<const QFileSystemModel *>(model());
+        const QFileSystemModel *dirModel;
+        if (proxyModel)
+            dirModel = qobject_cast<const QFileSystemModel *>(proxyModel->sourceModel());
+        else
+            dirModel = sourceModel;
         QString currentLocation = QDir::toNativeSeparators(dirModel->rootPath());
         if (currentLocation.contains(sep) && path != currentLocation) {
             QStringList currentLocationList = splitPath(currentLocation);

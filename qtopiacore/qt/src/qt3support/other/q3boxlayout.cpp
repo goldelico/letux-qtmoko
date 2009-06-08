@@ -40,7 +40,7 @@
 ****************************************************************************/
 
 /*!
-    \class Q3HBoxLayout q3boxlayout.h
+    \class Q3HBoxLayout
     \compat
 
     \brief The Q3HBoxLayout class lines up widgets horizontally.
@@ -86,7 +86,7 @@
 */
 
 /*!
-    \class Q3VBoxLayout q3boxlayout.h
+    \class Q3VBoxLayout
     \compat
 
     \brief The Q3VBoxLayout class lines up widgets vertically.

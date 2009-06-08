@@ -67,19 +67,21 @@ class Q3DataTablePrivate
 {
 public:
     Q3DataTablePrivate()
-	: nullTxtChanged( false ),
-	  haveAllRows( false ),
-	  continuousEdit( false ),
-	  editorFactory( 0 ),
-	  propertyMap( 0 ),
-	  editRow( -1 ),
-	  editCol( -1 ),
-	  insertRowLast( -1 ),
-	  insertPreRows( -1 ),
-	  editBuffer( 0 ),
-	  cancelMode( false ),
-	  cancelInsert( false ),
-	  cancelUpdate( false )
+        : nullTxtChanged( false ),
+          haveAllRows( false ),
+          continuousEdit( false ),
+          editorFactory( 0 ),
+          propertyMap( 0 ),
+          datefmt( Qt::TextDate ),
+          editRow( -1 ),
+          editCol( -1 ),
+          insertRowLast( -1 ),
+          insertPreRows( -1 ),
+          editBuffer( 0 ),
+          cancelMode( false ),
+          cancelInsert( false ),
+          cancelUpdate( false ),
+          lastAt( -1 )
     {}
     ~Q3DataTablePrivate() { if ( propertyMap ) delete propertyMap; }
 
@@ -138,7 +140,7 @@ void qt_debug_buffer( const QString& msg, QSqlRecord* cursor )
 
 
 /*!
-    \class Q3DataTable qdatatable.h
+    \class Q3DataTable
     \brief The Q3DataTable class provides a flexible SQL table widget that supports browsing and editing.
 
     \compat

@@ -1725,7 +1725,7 @@ static void qt_painterpath_isect_curve(const QBezier &bezier, const QPointF &pt,
 */
 bool QPainterPath::contains(const QPointF &pt) const
 {
-    if (isEmpty())
+    if (isEmpty() || !controlPointRect().contains(pt))
         return false;
 
     QPainterPathData *d = d_func();
@@ -2387,21 +2387,13 @@ void qt_path_stroke_cubic_to(qfixed c1x, qfixed c1y,
     \sa QPen, QBrush
 */
 
-class QPainterPathStrokerPrivate
+QPainterPathStrokerPrivate::QPainterPathStrokerPrivate()
+    : dashOffset(0)
 {
-public:
-    QPainterPathStrokerPrivate()
-        : dashOffset(0)
-    {
-        stroker.setMoveToHook(qt_path_stroke_move_to);
-        stroker.setLineToHook(qt_path_stroke_line_to);
-        stroker.setCubicToHook(qt_path_stroke_cubic_to);
-    }
-
-    QStroker stroker;
-    QVector<qfixed> dashPattern;
-    qreal dashOffset;
-};
+    stroker.setMoveToHook(qt_path_stroke_move_to);
+    stroker.setLineToHook(qt_path_stroke_line_to);
+    stroker.setCubicToHook(qt_path_stroke_cubic_to);
+}
 
 /*!
    Creates a new stroker.
@@ -2445,6 +2437,7 @@ QPainterPath QPainterPathStroker::createStroke(const QPainterPath &path) const
         QDashStroker dashStroker(&d->stroker);
         dashStroker.setDashPattern(d->dashPattern);
         dashStroker.setDashOffset(d->dashOffset);
+        dashStroker.setClipRect(d->stroker.clipRect());
         dashStroker.strokePath(path, &stroke, QTransform());
     }
     stroke.setFillRule(Qt::WindingFill);
@@ -3104,6 +3097,9 @@ void QPainterPath::addRoundRect(const QRectF &r, int xRnd, int yRnd)
 
     Returns a path which is the union of this path's fill area and \a p's fill area.
 
+    Set operations on paths will treat the paths as areas. Non-closed
+    paths will be treated as implicitly closed.
+
     \sa intersected(), subtracted(), subtractedInverted()
 */
 QPainterPath QPainterPath::united(const QPainterPath &p) const
@@ -3131,6 +3127,10 @@ QPainterPath QPainterPath::intersected(const QPainterPath &p) const
     \since 4.3
 
     Returns a path which is \a p's fill area subtracted from this path's fill area.
+
+    Set operations on paths will treat the paths as areas. Non-closed
+    paths will be treated as implicitly closed.
+
 */
 QPainterPath QPainterPath::subtracted(const QPainterPath &p) const
 {
@@ -3174,6 +3174,9 @@ QPainterPath QPainterPath::simplified() const
   Returns true if the current path intersects at any point the given path \a p.
   Also returns true if the current path contains or is contained by any part of \a p.
 
+  Set operations on paths will treat the paths as areas. Non-closed
+  paths will be treated as implicitly closed.
+
   \sa contains()
  */
 bool QPainterPath::intersects(const QPainterPath &p) const
@@ -3192,6 +3195,9 @@ bool QPainterPath::intersects(const QPainterPath &p) const
   Returns true if the given path \a p is contained within
   the current path. Returns false if any edges of the current path and
   \a p intersect.
+
+  Set operations on paths will treat the paths as areas. Non-closed
+  paths will be treated as implicitly closed.
 
   \sa intersects()
  */

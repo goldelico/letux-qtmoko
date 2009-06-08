@@ -858,9 +858,12 @@ void qt_event_request_activate(QWidget *w)
 
 
 /* menubars */
+#ifndef QT_MAC_USE_COCOA
 static EventRef request_menubarupdate_pending = 0;
+#endif
 void qt_event_request_menubarupdate()
 {
+#ifndef QT_MAC_USE_COCOA
     if (request_menubarupdate_pending) {
         if (IsEventInQueue(GetMainEventQueue(), request_menubarupdate_pending))
             return;
@@ -872,6 +875,11 @@ void qt_event_request_menubarupdate()
     CreateEvent(0, kEventClassQt, kEventQtRequestMenubarUpdate, GetCurrentEventTime(),
                 kEventAttributeUserEvent, &request_menubarupdate_pending);
     PostEventToQueue(GetMainEventQueue(), request_menubarupdate_pending, kEventPriorityHigh);
+#else
+    // Just call this. The request has the benefit that we don't call this multiple times, but
+    // we can optimize this.
+    QMenuBar::macUpdateMenuBar();
+#endif
 }
 
 #ifndef QT_MAC_USE_COCOA
@@ -1124,7 +1132,7 @@ void qt_init(QApplicationPrivate *priv, int)
             if (qbundlePath.endsWith(QLatin1String(".app")))
                 QDir::setCurrent(qbundlePath.section(QLatin1Char('/'), 0, -2));
         }
-    }
+   }
 
     QMacPasteboardMime::initialize();
 
@@ -1366,18 +1374,6 @@ bool QApplicationPrivate::modalState()
 }
 
 #ifdef QT_MAC_USE_COCOA
-static void qt_mac_setChildDialogsResponsive(QWidget *widget, bool responsive)
-{
-    QList<QDialog *> dialogs = widget->findChildren<QDialog *>();
-    for (int i=0; i<dialogs.size(); ++i){
-        NSWindow *window = qt_mac_window_for(dialogs[i]);
-        if (window && [window isKindOfClass:[NSPanel class]]) {
-            [static_cast<NSPanel *>(window) setWorksWhenModal:responsive];
-            if (responsive && dialogs[i]->isVisible())
-                [window orderFront:window];
-        }
-    }
-}
 #endif
 
 void QApplicationPrivate::enterModal_sys(QWidget *widget)
@@ -1401,15 +1397,11 @@ void QApplicationPrivate::enterModal_sys(QWidget *widget)
 
 #ifdef QT_MAC_USE_COCOA
     if (!qt_mac_is_macsheet(widget)) {
-        // Add a new, empty (null), NSModalSession to the stack:
+        // Add a new, empty (null), NSModalSession to the stack.
+        // The next time we spin the event dispatcher, it will
+        // check the stack, and recurse into a modal session for it:
         QCocoaModalSessionInfo info = {widget, 0};
         QEventDispatcherMacPrivate::cocoaModalSessionStack.push(info);
-        // If the widget got a window, we start the session immidiatly so that
-        // any child dialogs will be raised above it when making them responsive:
-        QEventDispatcherMacPrivate::activeModalSession();
-        for (int i=1; i<qt_modal_stack->size(); ++i)
-            qt_mac_setChildDialogsResponsive(qt_modal_stack->at(i), false);
-        qt_mac_setChildDialogsResponsive(widget, true);
     }
 #endif
 }
@@ -1435,20 +1427,8 @@ void QApplicationPrivate::leaveModal_sys(QWidget *widget)
             qt_mouseover = w;
         }
 #ifdef QT_MAC_USE_COCOA
-        if (!qt_mac_is_macsheet(widget)) {
-            // The dialog children of the previous modal dialog (the one that is
-            // about to re-enter modal) should now receive mouse and keyboard events again.
-            // The dialog children of the dialog that is about to leave modal
-            // should not receive mouse and keyboard events anymore:
-            QMacCocoaAutoReleasePool pool;
-            qt_mac_setChildDialogsResponsive(widget, false);
-            if (qt_modal_stack) {
-                for (int i=1; i<qt_modal_stack->size(); ++i)
-                    qt_mac_setChildDialogsResponsive(qt_modal_stack->at(i), false);
-                qt_mac_setChildDialogsResponsive(qt_modal_stack->first(), true);
-            }
+        if (!qt_mac_is_macsheet(widget))
             QEventDispatcherMacPrivate::rebuildModalSessionStack(true);
-        }
 #endif
     }
 #ifdef DEBUG_MODAL_EVENTS
@@ -1519,14 +1499,6 @@ static bool qt_try_modal(QWidget *widget, EventRef event)
     qDebug("%s:%d -- final decision! (%s)", __FILE__, __LINE__, block_event ? "false" : "true");
 #endif
     return !block_event;
-}
-
-QWidget *qt_mac_modal_blocked(QWidget *widget)
-{
-    QWidget *top;
-    if (QApplicationPrivate::tryModalHelper(widget, &top))
-        return 0;
-    return top == widget ? 0 : top;
 }
 
 OSStatus QApplicationPrivate::tabletProximityCallback(EventHandlerCallRef, EventRef carbonEvent,
