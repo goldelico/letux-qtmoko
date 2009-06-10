@@ -1,0 +1,47 @@
+
+  QNetWalk 1.2 (Qt4)
+
+  QNetWalk is a game for system administrators.
+  Copyright (C) 2004, Andi Peredri <andi@ukr.net>
+
+  Requirements: - Qt >= 4.2
+		- Network Audio System (optional for sound)
+
+  Installation: - qmake
+		- make
+		- make install  (optional)
+		
+  License:	QNetWalk is distributed under the GNU General Public License.
+		See COPYING for details.
+
+  Features:	- Built-in levels generator.
+		- Novice, Amateur, Expert, and Master skill levels.
+		- Auto saving of settings.
+		- Turn animation.
+		- Highscores.
+		- Sound support.
+		- Command line support.
+		- International languages support (now Brazilian Portuguese,
+		  German, Dutch, English, French, Polish, Russian, and Spanish).
+
+  Environment:	- USER    - default user name.
+		- BROWSER - default browser.
+
+  Development:	For porting the QNetwalk to Qt/Embedded platforms, change
+		the enumeration BoardSize in mainwindow.h.
+
+  Translation:	- Add new entry in the TRANSLATIONS section of the project file
+		- lupdate qnetwalk.pro
+		- linguist qnetwalk_xx.ts
+		- lrelease qnetwalk.pro
+  
+  Sounds:	Current sounds have been taken from LBreakout2 game:
+		http://www.lgames.org
+		If you have some free and interesting sounds for this game,
+		feel free to send it to me.
+
+  Homepage:	If you find a bug, please, report it to andi@ukr.net.
+                For further information and recent versions of QNetWalk,
+                visit QNetWalk homepage at
+
+                http://qt.osdn.org.ua/qnetwalk.html

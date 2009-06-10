@@ -14,7 +14,7 @@ LOG=1
 LOG_FILE="/tmp/qtopia-network.log"
 TMP_FILE="/tmp/lan-intern-network.temp";
 RESOLVCONF="/etc/resolv.conf"
-QPEDIR=/opt/Trolltech/Qtopia
+QPEDIR=/opt/qtmoko
 WPA_CONF=/etc/wpa_supplicant/wpa_supplicant.conf
 
 ###############################

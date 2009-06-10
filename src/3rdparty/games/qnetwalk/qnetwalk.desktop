@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name[]=QNetWalk
+Comment[]=Admin the network
+Exec=qnetwalk
+Icon=qnetwalk/qnetwalk

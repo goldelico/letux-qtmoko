@@ -1845,9 +1845,15 @@ void ThemedCallScreenView::callDropped(const QPhoneCall &)
     if (control->hasActiveCalls()) {
         setItemActive("hold", true);
         setItemActive("endcall", true);
+        setItemActive("resume", false);
+        setItemActive("answer", false);
+        setItemActive("sendbusy", false);
     } else if (control->hasCallsOnHold()) {
         setItemActive("resume", true);
-        setItemActive("answer", true);
+        setItemActive("answer", false);
+        setItemActive("hold", false);
+        setItemActive("endcall", true);
+        setItemActive("sendbusy", false);
     } else {
         setItemActive("menu-box", false);
     }

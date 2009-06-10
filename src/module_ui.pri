@@ -5,7 +5,9 @@ PROJECTS*=\
     libraries/qtopiapim \
     settings/appearance \
     settings/homescreen \
-    settings/speeddial 
+    settings/speeddial\ 
+    ../examples/scribble \
+    ../examples/whereabouts/mappingdemo
 
 # homeui library - enabled for everything until other .pro files have been fixed
 equals(QTOPIA_UI,home) {

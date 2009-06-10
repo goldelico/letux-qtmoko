@@ -1,0 +1,18 @@
+Qt Extended README
+
+Overview
+This is Trolltech's Qt Extended Open Source edition. See the LICENSE.GPL file for the licensing information of this software.
+This package contains source code for Qt Extended plus parts of the source code of Qt. Apart from this source package it should not be necessery to install any other Trolltech package to be able to compile Qt Extended.
+
+Documentation
+The package contains the Qt Extended reference documentation including all relevant Qt documentation. The documentation includes the following:
+ - doc/html/index.html: the starting page for all documentation.
+ - doc/html/getting-started.html: for help with installing, building and running Qt Extended.
+ - doc/html/building-guide.html: for detailed help with building Qt Extended from source.
+For the most up-to-date information, please refer to the http://doc.trolltech.com/
+
+Licenses
+You can only develop GPL licensed applications using the Qt Extended Open Source edition. If you wish to develop a commercial application, please go to http://www.trolltech.com/downloads to purchase the commercial package.
+For questions regarding licensing terms, email qt-sales@nokia.com.
+
+Copyright C 2009 Trolltech ASA

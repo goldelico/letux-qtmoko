@@ -4,6 +4,6 @@ Context=Snake
 [Desktop Entry]
 Comment[]=A Snake Game
 Exec=snake
-Icon=snake/Snake
+Icon=snake/snake
 Type=Application
 Name[]=Snake

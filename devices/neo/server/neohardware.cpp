@@ -57,6 +57,7 @@
 
 QTOPIA_TASK(NeoHardware, NeoHardware);
 
+
 NeoHardware::NeoHardware()
     : vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
       vsoUsbCable("/Hardware/UsbGadget"),
@@ -64,7 +65,6 @@ NeoHardware::NeoHardware()
 {
     struct sockaddr_nl snl;
     adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
-
     qLog(Hardware) << "neohardware";
 
     memset(&snl, 0x00, sizeof(struct sockaddr_nl));
@@ -76,15 +76,15 @@ NeoHardware::NeoHardware()
     int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
     if (hotplug_sock == -1) {
         qLog(Hardware) << "error getting uevent socket: "<< strerror(errno);
-    }else{ 
-      if ( bind(hotplug_sock, (struct sockaddr *) &snl, sizeof(struct sockaddr_nl)) < 0) {
-        qLog(Hardware) << "uevent bind failed: "<< strerror(errno);
-        hotplug_sock = -1;
-      }else{
-	    ueventSocket = new QTcpSocket(this);
-	    ueventSocket->setSocketDescriptor(hotplug_sock);
-	    connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
-      }
+    } else {
+       if ( bind(hotplug_sock, (struct sockaddr *) &snl, sizeof(struct sockaddr_nl)) < 0) {
+         qLog(Hardware) << "uevent bind failed: "<< strerror(errno);
+         hotplug_sock = -1;
+       }else {
+         ueventSocket = new QTcpSocket(this);
+         ueventSocket->setSocketDescriptor(hotplug_sock);
+         connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+       }
     }
 
     cableConnected(getCableStatus());
@@ -134,27 +134,25 @@ char *value;
   ueventSocket->read(&buffer[0],readCount);
   if(strcmp(buffer,"change@/class/power_supply/usb")==0)
   {
-    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
-    qDebug()<<"usb change event; online='"<<value<<"'";
+    qLog(PowerManagement)<<"usb change event";
     cableConnected(getCableStatus());
   }else if(strcmp(buffer,"change@/class/power_supply/ac")==0)
   {
-    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
-    qDebug()<<"ac change event; online="<<value;
+    qLog(PowerManagement)<<"ac change event";
     cableConnected(getCableStatus());
   }else if(strcmp(buffer,"change@/class/power_supply/adapter")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
-    qDebug()<<"power_supply change event; online="<<value;
+    qLog(PowerManagement)<<"power_supply change event; online="<<value;
   }else if(strcmp(buffer,"change@/class/power_supply/battery")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_CAPACITY=");
-    qDebug()<<"battery change event charge%="<<value<<"%";
+    qLog(PowerManagement)<<"battery change event charge%="<<value<<"%";
   }else if(strcmp(buffer,"change@/class/switch/headset")==0)
   {
     value=findAttribute(buffer,readCount,"SWITCH_STATE=");
     qDebug()<<"headset change event, switch_state="<<value;
- }
+  }
 }
 
 void NeoHardware::findHardwareVersion()
@@ -265,7 +263,7 @@ bool NeoHardware::getCableStatus()
     // Charging  Discharging  Not charging
     // ac        battery      ac/full
     chargeState.close();
-    return (charge != "Discharging");
+    return (charge != ("Discharging"));
 }
 
 #endif // QT_QWS_NEO

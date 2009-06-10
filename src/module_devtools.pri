@@ -6,7 +6,7 @@ PROJECTS*=\
     tools/vsexplorer \
     settings/logging \
     3rdparty/applications/micro_httpd \
-    settings/appservices \
+    settings/appservices
 
 SERVER_PROJECTS*=\
     server/memory/base \                        #OOM component

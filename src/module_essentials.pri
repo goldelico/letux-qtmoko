@@ -1,6 +1,12 @@
 #This file contains projects that make up the Essentials module.
 
 PROJECTS*=\
+    3rdparty/applications/qmplayer \
+    3rdparty/applications/simplefm \
+    3rdparty/applications/screenshot \
+    3rdparty/applications/qterminal \
+    3rdparty/applications/shopper \
+    3rdparty/applications/gqsync \
     settings/light-and-power \
     settings/security \
     applications/calculator \

@@ -27,18 +27,12 @@
 
 void SavePhoneNumberDialog::savePhoneNumber(const QString &number, QWidget *parent)
 {
-    QAbstractMessageBox *box = QAbstractMessageBox::messageBox( parent, 
+    if ( QAbstractMessageBox::warning( parent, 
             qApp->translate("SavePhoneNumberDialog", "Save to Contacts"),
             "<qt>" + qApp->translate("SavePhoneNumberDialog", "Create a new contact?") + "</qt>",
-            QAbstractMessageBox::Warning,
-            QAbstractMessageBox::Yes, QAbstractMessageBox::No );
-
-    if (!box) {
-        qLog(Component) << "SavePhoneNumberDialog: No message box available";
-        return;
-    }
-
-    if (QtopiaApplication::execDialog(box) == QAbstractMessageBox::Yes) {
+            QAbstractMessageBox::Yes, QAbstractMessageBox::No )
+	    == QAbstractMessageBox::Yes)
+    {
         QtopiaServiceRequest req( "Contacts", "createNewContact(QString)" );
         req << number;
         req.send();
@@ -47,6 +41,4 @@ void SavePhoneNumberDialog::savePhoneNumber(const QString &number, QWidget *pare
         req << number;
         req.send();
     }
-
-    delete box;
 }

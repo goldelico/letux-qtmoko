@@ -1,5 +1,5 @@
 TEMPLATE=app
-CONFIG+=qtopia quicklaunch
+CONFIG+=qtopia no_quicklaunch no_singleexec
 TARGET=qterminal
 
 DEFINES+=\
@@ -8,8 +8,8 @@ DEFINES+=\
 LIBS+=-lutil
 
 # I18n info
-STRING_LANGUAGE=en_US
-LANGUAGES=en_US
+#STRING_LANGUAGE=en_US
+############LANGUAGES=en_US
 
 # Package info
 pkg [

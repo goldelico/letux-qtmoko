@@ -4,11 +4,12 @@ PROJECTS*=\
     settings/netsetup \
     plugins/network/lan \           #LAN/WLAN support
     plugins/network/dialing \       #Dialup/GPRS support
+    3rdparty/applications/keypebble
 
 
 SERVER_PROJECTS*=\
     server/infrastructure/signalstrength \      #QSignalSource backend
-    server/net/netserver \                      #base net server
+    server/net/netserver                       #base net server
 
 
 enable_vpn:SERVER_PROJECTS*=server/net/vpn             #VPN backend

@@ -30,6 +30,7 @@ HEADERS=\
     qcallvolume.h\
     qmessagewaiting.h\
     qtelephonytones.h\
+    qpresence.h\
     wap/qwsppdu.h\
     wap/qwbxmlreader.h\
     wap/qotareader.h\
@@ -58,6 +59,7 @@ SOURCES=\
     qcallvolume.cpp\
     qmessagewaiting.cpp\
     qtelephonytones.cpp\
+    qpresence.cpp\
     wap/qwsppdu.cpp\
     wap/qwbxmlreader.cpp\
     wap/qotareader.cpp\

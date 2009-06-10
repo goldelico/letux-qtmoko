@@ -402,7 +402,10 @@ void Alarm::changeAlarmDays()
 void Alarm::setSnooze()
 {
     if (snooze > 0) {
-        setAlarm(QDateTime::currentDateTime().addSecs(snooze*60), true);
+        //setAlarm(QDateTime::currentDateTime().addSecs(snooze*60), true);
+	Qtopia::addAlarm(QDateTime::currentDateTime().addSecs(snooze*60),
+                         "QPE/Application/clock",
+                         "alarm(QDateTime,int)", magic_daily);
     }
 }
 

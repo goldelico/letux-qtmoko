@@ -56,7 +56,7 @@ Unpack the downloaded rootfs:
 
 Add the Qt Extended build to the rootfs:
 
-	sudo cp -a ~/build/fic/image/* rootfs/opt/Trolltech/Qtopia
+	sudo cp -a ~/build/fic/image/* rootfs/opt/qtmoko
 
 and finally, create the jffs2 file system:
 

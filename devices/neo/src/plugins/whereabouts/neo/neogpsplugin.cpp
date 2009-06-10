@@ -37,13 +37,13 @@ NeoGpsPlugin::NeoGpsPlugin(QObject *parent)
     : QWhereaboutsPlugin(parent)
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
-    system("echo 1 > /sys/class/i2c-adapter/i2c-0/0-0073/neo1973-pm-gps.0/pwron");
+    system("/opt/qtmoko/bin/gps-poweron.sh");
     system("stty -F /dev/ttySAC1 -echo");
 }
 
 NeoGpsPlugin::~NeoGpsPlugin()
 {
-    system("echo 0 > /sys/class/i2c-adapter/i2c-0/0-0073/neo1973-pm-gps.0/pwron");
+    system("/opt/qtmoko/bin/gps-poweroff.sh");
 }
 
 QWhereabouts *NeoGpsPlugin::create(const QString &source)

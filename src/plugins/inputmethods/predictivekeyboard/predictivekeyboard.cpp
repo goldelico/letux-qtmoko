@@ -81,13 +81,18 @@ static KeyboardWidget::Config createKeyboardConfig(QSettings& cfg)
 
     config.keySize.setWidth(cfg.value("KeySizeWidth", swidth).toInt());
     config.keySize.setHeight(cfg.value("KeySizeHeight",
-        sheight > swidth ? sheight / 4 : sheight / 3).toInt());
+        sheight / 3).toInt());
 
+// LM
+//    config.keySize.setHeight(cfg.value("KeySizeHeight",
+//        sheight > swidth ? sheight / 4 : sheight / 3).toInt());
     config.keyMargin =
-        cfg.value("KeyMargin", swidth / 15).toInt();
+        cfg.value("KeyMargin", swidth / 20).toInt();
 
     config.bottomMargin =
-        cfg.value("BottomMargin", swidth / 24).toInt();
+        cfg.value("BottomMargin", swidth / 20).toInt();
+// LM
+//        cfg.value("BottomMargin", swidth / 24).toInt();
     config.maxGuesses =
         cfg.value("MaxGuesses", 5).toInt();
     config.optionWordSpacing =
@@ -100,6 +105,8 @@ static KeyboardWidget::Config createKeyboardConfig(QSettings& cfg)
         cfg.value("MoveSensitivity", config.maximumClickStutter).toInt();
     config.excludeDistance =
         cfg.value("ExcludeDistance", (swidth * 10) / 48).toInt();
+    config.unpredictive =
+        cfg.value("unpredictive", 1).toInt();
 
     return config;
 }

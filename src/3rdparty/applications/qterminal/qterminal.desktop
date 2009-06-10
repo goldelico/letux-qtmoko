@@ -6,6 +6,6 @@ Comment[Desktop Entry/Name]=Terminal
 CanFastload=0
 Type=Application
 Exec=qterminal
-Icon=qterminal/konsole
+Icon=qterminal/qterminal
 Name[]=Terminal
 CanFastload=0

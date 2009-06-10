@@ -44,6 +44,8 @@ NeoCallProvider::NeoCallProvider( QModemService *service )
         ( "%CPI:", this, SLOT(cpiNotification(QString)) );
     service->primaryAtChat()->registerNotificationType
         ( "%CNAP:", this, SLOT(cnapNotification(QString)) );
+    setUseMissedTimer(false);
+    setUseDetectTimer(false);
 }
 
 NeoCallProvider::~NeoCallProvider()
@@ -52,9 +54,10 @@ NeoCallProvider::~NeoCallProvider()
 
 QModemCallProvider::AtdBehavior NeoCallProvider::atdBehavior() const
 {
-    // When ATD reports OK, it indicates that it is back in command
-    // mode and a %CPI notification will indicate when we are connected.
-    return AtdOkIsDialingWithStatus;
+    // When ATD reports OK or NO CARRIER, it indicates that it is
+    // back in command mode. We just want to ignore these in QModemCall
+    // as we will have %CPI that is going to give us the right state.
+    return AtdOkIgnore;
 }
 
 void NeoCallProvider::abortDial( uint id, QPhoneCall::Scope scope )
@@ -82,10 +85,15 @@ void NeoCallProvider::cpiNotification( const QString& msg )
     // 0 = SETUP, 1 = DISCONNECT, 2 = ALERT, 3 = PROCEED,
     // 4 = SYNCHRONIZATION, 5 = PROGRESS, 6 = CONNECTED,
     // 7 = RELEASE, 8 = REJECT
+    // dir: 0 = mobile originated, 1 = mobile terminated, 2 = network initiaited mobile
+    // originated call, 3 = redialing mobile originated
     uint posn = 5;
     uint identifier = QAtUtils::parseNumber( msg, posn );
 
     uint status = QAtUtils::parseNumber( msg, posn );
+    QAtUtils::skipField( msg, posn );
+    QAtUtils::skipField( msg, posn );
+    uint direction = QAtUtils::parseNumber( msg, posn );
     QModemCall *call = callForIdentifier( identifier );
 
     if ( status == 6 && call &&
@@ -122,12 +130,13 @@ void NeoCallProvider::cpiNotification( const QString& msg )
         // This is an indication that an incoming call was missed.
         call->setState( QPhoneCall::Missed );
 
-    } else if ( ( status == 2 || status == 4 ) && !call ) {
+    } else if ( ( status == 2 || status == 4 || status == 0) && !call && direction == 1) {
+        // only for incoming calls
+        // if you make an outgoing call, these states can occur, but
+        // we don't want an aborted outgoing call to be registered as missed
+        // therefore we use the direction parameter
 
         // This is a newly waiting call.  Treat it the same as "RING".
-        QAtUtils::skipField( msg, posn );
-        QAtUtils::skipField( msg, posn );
-        QAtUtils::skipField( msg, posn );
         uint mode = QAtUtils::parseNumber( msg, posn );
         QString callType;
         if ( mode == 1 || mode == 6 || mode == 7 )
@@ -140,6 +149,8 @@ void NeoCallProvider::cpiNotification( const QString& msg )
         uint type = QAtUtils::parseNumber( msg, posn );
         ringing( QAtUtils::decodeNumber( number, type ), callType, identifier );
 
+	// We got everything we need, indicate the call to the outside world
+	announceCall();
     }
 }
 
@@ -270,6 +281,24 @@ void NeoSimToolkit::sataNotification( const QString& msg )
 void NeoSimToolkit::satnNotification( const QString& )
 {
     // Nothing to do here at present.  Just ignore the %SATN notifications.
+}
+
+/*
+ * Reimplementation because we don't want the standard notifications
+ * as we have a CPI which should give us everything that we need.
+ * We don't need:
+ *    +CRING (CPI gives us the calltype)
+ *    +CLIP  (CPI gives us the number)
+ *    RING
+ */
+void NeoCallProvider::resetModem()
+{
+    // We don't want RING, CRING, CLIP, COLP, COWA  but callNotification
+    // disable all of these and do not call the base class
+    atchat()->chat( "AT+CRC=0" );
+    service()->retryChat( "AT+CLIP=0" );
+    service()->retryChat( "AT+COLP=0" );
+    service()->retryChat( "AT+CCWA=1" );
 }
 
 NeoPhoneBook::NeoPhoneBook( QModemService *service )
@@ -552,12 +581,22 @@ NeoModemService::NeoModemService
         ( "%CTZV:", this, SLOT(ctzu(QString)), true );
     chat( "AT%CTZV=1" );
 
-// Turn on call progress indications, with phone number information.
+    // Turn on call progress indications, with phone number information.
     chat( "AT%CPI=2" );
 
     //  chat("AT%CMGRS=1"); //message transmission to get any failed sms during suspend
 
-   chat("AT%SLEEP=2"); //makes my Moko8 not respond to calls during sosuend
+    QString deepsleep="adaptive";
+    QSettings cfg("Trolltech", "Modem");
+    cfg.beginGroup("DeepSleep");
+    deepsleep = cfg.value("Active",deepsleep).toString();
+    qLog(Modem) << "DeepSleep value:" << deepsleep;
+
+    if (deepsleep == "never")
+        chat("AT%SLEEP=2"); 
+    else 
+        chat("AT%SLEEP=4");
+
     // Turn cell id information back on.
     chat( "AT+CREG=2" );
     chat( "AT+CGREG=2" );
@@ -607,14 +646,17 @@ void NeoModemService::initialize()
    if ( !supports<QVibrateAccessory>() )
         addInterface( new NeoVibrateAccessory( this ) );
 
+   if ( !supports<QServiceNumbers>() )
+        addInterface( new NeoServiceNumbers( this ) );
+
     if ( !supports<QCallVolume>() )
         addInterface( new NeoCallVolume(this));
 
     if ( !supports<QPreferredNetworkOperators>() )
         addInterface( new NeoPreferredNetworkOperators(this));
 
-    if ( ! supports <QModemNetworkRegistration>())
-        addInterface( new NeoModemNetworkRegistration(this));
+//    if ( ! supports <QModemNetworkRegistration>())
+//        addInterface( new NeoModemNetworkRegistration(this));
 
    QModemService::initialize();
 }
@@ -771,13 +813,13 @@ NeoVibrateAccessory::~NeoVibrateAccessory()
 
 void NeoVibrateAccessory::setVibrateOnRing( const bool value )
 {
-    qLog(Modem)<<"setVibrateOnRing";
+    qLog(Modem)<<"setVibrateOnRing "<<value;
     setVibrateNow(value);
 }
 
 void NeoVibrateAccessory::setVibrateNow( const bool value )
 {
-    qLog(Modem)<<"setVibrateNow";
+    qLog(Modem)<<"setVibrateNow "<<value;
     QString vibFile;
     if (QFileInfo("/sys/class/leds/gta01:vibrator").exists())
         vibFile = "/sys/class/leds/gta01:vibrator";
@@ -814,6 +856,35 @@ void NeoVibrateAccessory::setVibrateNow( const bool value )
     QVibrateAccessoryProvider::setVibrateNow( value );
 }
 
+NeoServiceNumbers::NeoServiceNumbers( QModemService *service )
+    : QModemServiceNumbers( service )
+{
+    this->service = service;
+}
+
+NeoServiceNumbers::~NeoServiceNumbers()
+{
+}
+
+void NeoServiceNumbers::requestServiceNumber
+        ( QServiceNumbers::NumberId id )
+{
+    if ( id == QServiceNumbers::VoiceMail ) {
+        QModemServiceNumbers::requestServiceNumberFromFile( id );
+    } else {
+        QModemServiceNumbers::requestServiceNumber( id );
+    }
+}
+
+void NeoServiceNumbers::setServiceNumber
+        ( QServiceNumbers::NumberId id, const QString& number )
+{
+    if ( id == QServiceNumbers::VoiceMail ) {
+        QModemServiceNumbers::setServiceNumberInFile( id, number );
+    } else {
+        QModemServiceNumbers::setServiceNumber( id, number );
+    }
+}
 
 NeoCallVolume::NeoCallVolume(NeoModemService *service)
     : QModemCallVolume(service)
@@ -1009,44 +1080,4 @@ NeoPreferredNetworkOperators::NeoPreferredNetworkOperators( QModemService *servi
 NeoPreferredNetworkOperators::~NeoPreferredNetworkOperators()
 {
 }
-
-NeoModemNetworkRegistration::NeoModemNetworkRegistration( QModemService *service )
-    : QModemNetworkRegistration( service )
-{
-    qLog(Modem) << __PRETTY_FUNCTION__;
-}
-
-QString NeoModemNetworkRegistration::setCurrentOperatorCommand
-( QTelephony::OperatorMode mode,   const QString& id, const QString& technology )
-{
-    qLog(AtChat) << __PRETTY_FUNCTION__ << mode << id << technology;
-
-    QString cmd = "AT+COPS=";                       // No tr
-    switch ( mode ) {
-    case QTelephony::OperatorModeAutomatic:         cmd += "0"; break;
-    case QTelephony::OperatorModeManual:            cmd += "1"; break;
-    case QTelephony::OperatorModeDeregister:        cmd += "2"; break;
-    case QTelephony::OperatorModeManualAutomatic:   cmd += "4"; break;
-    }
-    QString name = operatorNameForId( id );
-    if ( mode == QTelephony::OperatorModeManual ||
-         mode == QTelephony::OperatorModeManualAutomatic ) {
-        if ( id.startsWith( "2" ) ) {
-         // Short or long operator identifier.
-         // apparently calypso needs quotes for both operator id and name
-            cmd += "," + id.left(1) + ",\"" + QAtUtils::quote( name ) + "\"";
-        }
-        if ( supportsOperatorTechnology() ) {
-            if ( technology == "GSM" )             // No tr
-                cmd += ",0";
-            else if ( technology == "GSMCompact" ) // No tr
-                cmd += ",1";
-            else if ( technology == "UTRAN" )      // No tr
-                cmd += ",2";
-        }
-    }
-    return cmd;
-}
-
-
 

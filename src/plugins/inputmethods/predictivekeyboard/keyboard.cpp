@@ -94,7 +94,7 @@ Board::Board(const QStringList &lines,
              KeyboardWidget::BoardType type, int lowerboard)
 : m_size(boardSize), m_lines(lines), m_type(type), m_lowerboard(lowerboard)
 {
-  initBoard();
+    initBoard();
 }
 
 void Board::initBoard()
@@ -291,7 +291,7 @@ public:
     enum ClearType { ClearImmediate, ClearSoon, ClearEventually };
     void clear(ClearType = ClearImmediate);
 
-    QString acceptWord(bool animate = true);
+    QString acceptWord(bool animate = true, bool addtodict = true);
     void setAcceptDest(const QPoint &);
     QString selectedWord() const;
 
@@ -586,23 +586,25 @@ QString OptionsWindow::selectedWord() const
         return m_words.at(m_selectedWord).first;
 }
 
-QString OptionsWindow::acceptWord(bool animate)
+QString OptionsWindow::acceptWord(bool animate, bool addtodict)
 {
     QString word = m_words.at(m_selectedWord).first;
 
-    bool newword = !Qtopia::isWord(word.toLower()) && !Qtopia::isWord(word);
-    for (int i=0; i<word.length() && newword; ++i)
-        newword = newword && word[i].isLetter();
-    if (newword)
-        Qtopia::addWords(QStringList() << word);
+    if (addtodict) {
+        bool newword = !Qtopia::isWord(word.toLower()) && !Qtopia::isWord(word);
+        for (int i=0; i<word.length() && newword; ++i)
+            newword = newword && word[i].isLetter();
+        if (newword)
+            Qtopia::addWords(QStringList() << word);
 
-    QRect startRect = wordRect(m_selectedWord);
+        QRect startRect = wordRect(m_selectedWord);
 
-    if(animate) {
-        AcceptWindow *win = new AcceptWindow(500 /* XXX */, newword);
-        win->accept(word,
+        if(animate) {
+            AcceptWindow *win = new AcceptWindow(500 /* XXX */, newword);
+            win->accept(word,
                 QRect(mapToGlobal(startRect.topLeft()), startRect.size()));
-        m_lastAccept = win;
+            m_lastAccept = win;
+        }
     }
     m_words.clear();
     update();
@@ -1021,6 +1023,7 @@ void KeyboardWidget::dumpPossibleMotion()
     if(m_possibleMotion & Left) res += "Left ";
     if(m_possibleMotion & Up) res += "Up ";
     if(m_possibleMotion & Down) res += "Down ";
+    if(m_possibleMotion & MainDiag) res += "MainDiag ";
 }
 
 KeyboardWidget::KeyboardWidget(const Config &config,
@@ -1111,12 +1114,14 @@ void KeyboardWidget::addBoard(BoardType type, const QStringList &rows, const QSt
     Board *board = new Board(rows, m_boardRect.size(), type, -1);
 
     if (type==Words || type==Letters) {
-        QString chars = board->characters();
-        for(int ii = 0; ii < chars.length(); ++ii) {
-            if (!chars.at(ii).isSpace())
-                m_predict->setLetter(chars.at(ii), board->rect(chars.at(ii)).center());
+        if(!m_config.unpredictive) {
+            QString chars = board->characters();
+            for(int ii = 0; ii < chars.length(); ++ii) {
+                if (!chars.at(ii).isSpace())
+                    m_predict->setLetter(chars.at(ii), board->rect(chars.at(ii)).center());
+            }
+            m_predict->setEquivalences(equivalences);
         }
-        m_predict->setEquivalences(equivalences);
         if (m_currentBoard < 0 || m_boards.at(m_currentBoard)->type() != Words)
             m_currentBoard = m_boards.count()+1;
         if (caps.count())
@@ -1179,7 +1184,7 @@ void KeyboardWidget::mousePressEvent(QMouseEvent *e)
     m_mousePressPoint = e->pos();
     m_lastSamplePoint = m_mousePressPoint;
     m_mouseMovePoint = m_mousePressPoint;
-    m_possibleMotion = (Motion)(Left | Right | Up | Down);
+    m_possibleMotion = (Motion)(Left | Right | Up | Down | MainDiag);
 
     m_pressAndHold = false;
     m_mouseClick = true;
@@ -1225,10 +1230,17 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
 
     stopMouseTimer();
 
+
+// LM do we need slides gestures also if board is empty ?
     if(m_boards.isEmpty())
         return;
 
+
     QPoint rp = e->pos();
+    QScreen *screen;
+    screen = QScreen::instance();
+    int sWidth = screen->width();
+    int sHeight = screen->height();
 
     if(m_mouseClick) {
         QPoint p((rp.x() + m_mousePressPoint.x()) / 2,
@@ -1246,15 +1258,20 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
 
 
     Stroke updown = NoStroke;
+    Stroke diag = NoStroke;
+    Stroke leftright = NoStroke;
+
     int y_delta = e->pos().y() - m_mousePressPoint.y();
     int x_delta = e->pos().x() - m_mousePressPoint.x();
 
-    Stroke leftright = NoStroke;
 
     if(m_possibleMotion & Down && y_delta > (m_boardRect.height() / 3))
         updown = StrokeDown;
     else if(m_possibleMotion & Up && -y_delta > (m_boardRect.height() / 3))
         updown = StrokeUp;
+    if(m_possibleMotion & MainDiag && -y_delta > sWidth * 0.3 &&
+        -x_delta > sHeight * 0.3)
+        diag = StrokeMainDiag;
 
     if(m_possibleMotion & Right && x_delta > (m_boardRect.width() / 3))
         leftright = StrokeRight;
@@ -1272,9 +1289,19 @@ void KeyboardWidget::mouseReleaseEvent(QMouseEvent *e)
         }
     }
 
-    if(updown != NoStroke) {
-        stroke(updown);
-    } else if(leftright != NoStroke) {
+    if(diag != NoStroke) 
+    {
+    //    emit commit(QString("Diag"));
+        stroke(diag);
+    }
+    else if(updown != NoStroke) 
+    {   
+    //    emit commit(QString("down"));
+         stroke(updown);
+    }
+    else if(leftright != NoStroke) 
+    {
+    //    emit commit(QString("left"));
         stroke(leftright);
     }
 
@@ -1346,6 +1373,10 @@ void KeyboardWidget::timerEvent(QTimerEvent *)
         if((m_lastSamplePoint.y() - m_mouseMovePoint.y()) < m_config.minimumStrokeMotionPerPeriod)
             m_possibleMotion = (Motion)(m_possibleMotion & ~Up);
     }
+    if(!(m_possibleMotion & Left && m_possibleMotion & Up)) {
+        m_possibleMotion = (Motion)(m_possibleMotion & ~MainDiag);
+    }
+
 
     m_lastSamplePoint = m_mouseMovePoint;
 
@@ -1489,6 +1520,12 @@ void KeyboardWidget::mouseClick(const QPoint &p)
         }
     }
 
+
+// LM trying to move prediction away
+   if(m_config.unpredictive)
+        pressAndHoldChar(closestCharacter(p, m_boards.at(m_currentBoard)));
+   else 
+   {
     if(m_boards.at(m_currentBoard)->type() == Numeric) {
         pressAndHoldChar(closestCharacter(p, m_boards.at(m_currentBoard)));
         return;
@@ -1511,6 +1548,7 @@ void KeyboardWidget::mouseClick(const QPoint &p)
     m_predict->addTouch(point);
 
     updateWords();
+    }
 }
 
 void KeyboardWidget::pressAndHoldChar(const QChar &c)
@@ -1539,8 +1577,19 @@ void KeyboardWidget::pressAndHoldChar(const QChar &c)
         m_dontAddPreeditSpace = false;
         emit commit("\n");
         clear();
-    }
-    else {
+    } else if(c == QChar(0x2190)) {// backspace key
+        doBackspace();
+    } else if(c == QChar(0x21D1)) {// uppercase
+        setBoardCaps(true);
+    } else if(c == QChar(0x21D3)) {// lowercase
+        setBoardCaps(false);
+    } else if(c == QChar(0x00B1)) {// Other
+        setBoardByType(Other);
+    } else if(c == QChar(0x2205)) {// Numeric
+        setBoardByType(Numeric);
+    } else if(c == QChar(0x2200)) {// Words
+        setBoardByType(Words);
+    } else {
         KeyOccurance occurance;
         occurance.type = KeyOccurance::CharSelect;
         // Special-case carriage returns
@@ -1747,6 +1796,9 @@ void KeyboardWidget::stroke(Stroke s)
             acceptWord();
             break;
 
+        case StrokeMainDiag:
+            m_config.unpredictive = !m_config.unpredictive;
+            break;
         case NoStroke:
             break;
     }
@@ -1833,8 +1885,16 @@ void KeyboardWidget::acceptWord()
         return;
     }
 
-    QString word = m_options->acceptWord(m_animate_accept /* XXX microfocushint */);
-    m_options->clear(OptionsWindow::ClearEventually);
+    bool addtodict;
+    if(m_config.unpredictive) {
+       m_animate_accept = false;
+       addtodict = false;
+       m_options->clear(OptionsWindow::ClearImmediate);
+    } else {
+       m_options->clear(OptionsWindow::ClearEventually);
+       addtodict = true;
+    }
+    QString word = m_options->acceptWord(m_animate_accept /* XXX microfocushint */, addtodict);
     clear();
     m_autoCap = m_autoCapitaliseEveryWord;
 
@@ -1856,12 +1916,14 @@ void KeyboardWidget::resizeEvent(QResizeEvent *event)
     int sWidth = screen->width();
     int sHeight = screen->height();
 
+/* LM
     if (sHeight > sWidth) //portrait
         m_config.keySize.setHeight(sHeight / 4);
     else //landscape
+*/ 
         m_config.keySize.setHeight(sHeight / 3 );
 
-    m_config.keyMargin = sWidth / 10;
+    m_config.keyMargin = sWidth / 20;
 
     m_boardRect = QRect(m_config.keyMargin,
                         m_config.bottomMargin,

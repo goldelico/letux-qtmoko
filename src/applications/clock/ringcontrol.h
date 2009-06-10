@@ -57,6 +57,7 @@ private:
     void stopNoise();
     void startVibrate();
     void stopVibrate();
+    void stopVibrate_notimer();
     void timerEvent( QTimerEvent *e );
     void startTimer( int &timer, int timeout );
     void stopTimer( int &timer );

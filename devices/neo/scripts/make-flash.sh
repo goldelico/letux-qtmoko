@@ -35,16 +35,16 @@ make_flash()
 				sudo tar -C rootfs -xpzf $file
         rm $file
    
-		if [ -e rootfs/opt/Trolltech/Qtopia ]; then
-				rm -rf rootfs/opt/Trolltech/Qtopia
+		if [ -e rootfs/opt/qtmoko ]; then
+				rm -rf rootfs/opt/qtmoko
 		fi
 
-    mkdir -p rootfs/opt/Trolltech/Qtopia
+    mkdir -p rootfs/opt/qtmoko
 
 		if [ ! -e /opt/Qtopia/SDK/${QPEVER}/$DEVICE/image ]; then
-        cp -a /opt/Qtopia/SDK/${QPEVER}/$DEVICE/image/* rootfs/opt/Trolltech/Qtopia
+        cp -a /opt/Qtopia/SDK/${QPEVER}/$DEVICE/image/* rootfs/opt/qtmoko
      else
-        cp -a image/* rootfs/opt/Trolltech/Qtopia
+        cp -a image/* rootfs/opt/qtmoko
      fi
 
     if [ "$file" == "rootfs-gta01.tgz" ]; then

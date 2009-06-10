@@ -46,7 +46,8 @@ public:
         AtdOkIsConnect,
         AtdOkIsDialing,
         AtdOkIsDialingWithStatus,
-        AtdUnknown
+        AtdUnknown,
+	AtdOkIgnore
     };
 
     QModemService *service() const;
@@ -87,6 +88,11 @@ protected:
     virtual QString deflectCallCommand( const QString& number ) const;
     virtual QStringList gprsSetupCommands() const;
 
+    bool useDetectTimer() const;
+    void setUseDetectTimer(bool);
+    bool useMissedTimer() const;
+    void setUseMissedTimer(bool);
+
 protected slots:
     virtual void resetModem();
 
@@ -101,12 +107,14 @@ private slots:
     void missedTimeout();
     void clccIncoming( bool, const QAtResult& );
 
+protected:
+    void announceCall();
+
 private:
     QModemCallProviderPrivate *d;
 
     void missedTimeout(QModemCall *call);
     void stopRingTimers();
-    void announceCall();
     void useModemIdentifier( uint id );
     void releaseModemIdentifier( uint id );
     bool otherActiveCalls( QModemCall *notThis=0 );

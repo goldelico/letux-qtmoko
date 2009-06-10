@@ -1,0 +1,6 @@
+[Desktop Entry]
+Comment[]=A  Shopping List Program
+Exec=shopper
+Icon=shopper/shopper
+Type=Application
+Name[]=Shopper

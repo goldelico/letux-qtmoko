@@ -3,7 +3,7 @@
 export QWS_MOUSE_PROTO="tslib"
 export QWS_KEYBOARD="neokbdhandler"
 export QTOPIA_PHONE_DEVICE="/dev/ttySAC0:115200"
-export QPEDIR=/opt/Trolltech/Qtopia
+export QPEDIR=/opt/qtmoko
 export PATH=$QPEDIR/bin:$PATH
 export LD_LIBRARY_PATH=$QPEDIR/lib:$LD_LIBRARY_PATH
 
@@ -124,7 +124,7 @@ poweron_modem
 poweron_bluetooth
 
 # fix for gta02 bt
-if [ -e /sys/devices/platform/s3c2440-i2c ]; then
+if [ -e /sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073 ]; then
     echo 3300 > /sys/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/voltage_ldo4
     echo 1 > /sys/bus/platform/drivers/neo1973-pm-bt/neo1973-pm-bt.0/reset
     echo 0 > /sys/bus/platform/drivers/neo1973-pm-bt/neo1973-pm-bt.0/reset

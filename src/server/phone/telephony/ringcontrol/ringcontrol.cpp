@@ -409,10 +409,11 @@ void RingControl::startRinging(RingType t)
     d->ringtime.start();
 
     QPhoneProfile profile = d->profileManager->activeProfile();
+    QString ringToneDoc;
 
     // try contact ringtone
+
     if (t == Call) {
-        QString ringToneDoc;
 
         // try personalized ring tone
         ringToneDoc = findRingTone();
@@ -451,7 +452,6 @@ void RingControl::startRinging(RingType t)
             d->msgTid = startTimer(msgRingTime());
         }
 
-        QString ringToneDoc;
         ringToneDoc = profile.messageTone().fileName();
 
         // fall back if above settings lead to non-existent ringtone.
@@ -480,14 +480,15 @@ void RingControl::startRinging(RingType t)
         initSound();
 #ifdef MEDIA_SERVER
         if ( !d->videoTone ) {
-            if(d->soundcontrol) {
+            if(d->soundcontrol && d->soundcontrol->sound()->fileName() != ringToneDoc) {
                 delete d->soundcontrol->sound();
                 delete d->soundcontrol;
+                d->soundcontrol = 0;
             }
-
-            d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
-            connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
-
+            if (!d->soundcontrol) {
+                d->soundcontrol = new QSoundControl(new QSound(d->curRingTone));
+                connect(d->soundcontrol, SIGNAL(done()), this, SLOT(nextRing()) );
+          }
             d->soundcontrol->setPriority(QSoundControl::RingTone);
             d->soundcontrol->setVolume(volmap[d->lastRingVolume]);
 

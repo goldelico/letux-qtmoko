@@ -1,0 +1,26 @@
+2008-03-07  * QNetWalk 1.2 (Qtopia4) Alessandro Briosi
+            * Ported to Qtopia
+	    * modified rotation click
+	    * added key bindings
+	    * changed to better adapt to small screens
+
+2007-07-22  * QNetWalk 1.2 (QT4) released.
+	    * Ported to Qt4
+	    * Some fixes and optimizations
+
+2005-04-10  * QNetWalk 1.2 released.
+	    * Added German translation by Thomas Loeber <ifp@loeber1.de>
+	    * Added Spanish translation by Ismael Asensio <iasefue@ribera.tel.uva.es>
+	    * Added Polish translation by Aleksander Wojdyga <awojdyga@liza.umcs.lublin.pl>
+	    * Added Brazilian Portuguese translation by Paulo Vitor <paulovitorls@globo.com>
+	    * Added the desktop file.
+
+2004-12-28  * QNetWalk 1.1 released.
+	    * Added French translation by Habana <abcdelasecurite@free.fr>
+	    * Added Dutch translation by Tom Scheper <scheper@gmail.com>
+	    * Added command line support.
+	    * Added the manual page.
+	    * Improved performance.
+
+2004-09-14  * Initial Release.
+
