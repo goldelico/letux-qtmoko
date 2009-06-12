@@ -7,7 +7,7 @@ PROJECTS*=\
         games/minesweep \
         games/mindbreaker \
         games/parashoot \
-	3rdparty/games/cutemaze \
+#	3rdparty/games/cutemaze \
 #	3rdparty/games/gottet \
 	3rdparty/games/qnetwalk
 #	3rdparty/games/qsamegame
