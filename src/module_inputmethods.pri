@@ -3,7 +3,7 @@
 !x11 {
     PROJECTS*=\
         plugins/inputmethods/predictivekeyboard \
-        plugins/inputmethods/keyboard \
+#        plugins/inputmethods/keyboard \
         plugins/inputmethods/fingerkeyboard \
         plugins/inputmethods/dockedkeyboard \
         3rdparty/plugins/inputmethods/pkim
