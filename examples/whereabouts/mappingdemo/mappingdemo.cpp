@@ -245,7 +245,7 @@ MappingDemo::MappingDemo(QWidget *parent, Qt::WFlags f)
 
 QWhereabouts *MappingDemo::chooseWhereabouts(int *dialogResult)
 {
-    QRadioButton *buttonDefault = new QRadioButton(tr("Default GPS source"));
+/*    QRadioButton *buttonDefault = new QRadioButton(tr("Default GPS source"));
     buttonDefault->setChecked(true);
     QRadioButton *buttonNmea = new QRadioButton(tr("Sample NMEA log"));
 
@@ -263,12 +263,12 @@ QWhereabouts *MappingDemo::chooseWhereabouts(int *dialogResult)
     if (*dialogResult == QDialog::Rejected)
         return 0;
 
-    if (buttonDefault->isChecked()) {
+    if (buttonDefault->isChecked()) {*/
         QWhereabouts *whereabouts = QWhereaboutsFactory::create();
         if (whereabouts)
             whereabouts->setParent(this);
         return whereabouts;
-
+/*
     } else {
         QFile *sampleFile =
                 new QFile(Qtopia::qtopiaDir() + "etc/whereabouts/nmea_sample.txt", this);
@@ -277,7 +277,7 @@ QWhereabouts *MappingDemo::chooseWhereabouts(int *dialogResult)
         whereabouts->setUpdateMode(QNmeaWhereabouts::SimulationMode);
         whereabouts->setSourceDevice(sampleFile);
         return whereabouts;
-    }
+    }*/
 }
 
 #include "mappingdemo.moc"
