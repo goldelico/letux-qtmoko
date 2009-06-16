@@ -1,0 +1,8 @@
+* disable_libmad.patch - use this patch to disable compiling libmad. Libmad is
+  used for playing mp3 files. Disabling may desirable if you want to distribute
+  images without patented stuff.
+
+* qt45_passwd.patch - this patch is applied on top of QT to enable virtual
+  keyboard in password input fields. This patch (or modified version) should go
+  to upstream QT and then we can delete it. Now we have to apply it always when
+  updating QT.
