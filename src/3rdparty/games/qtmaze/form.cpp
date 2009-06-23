@@ -597,20 +597,19 @@ bool Form::eventFilter(QObject *target, QEvent *event)
 //---------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------
 
-/*
+
 void Form::CheckLoadedPictures()
 {
-    if (prev_lbl->pixmap()->isNull()) prev_lbl->setPixmap(QPixmap(":image/prev.png"));
-    if (next_lbl->pixmap()->isNull()) next_lbl->setPixmap(QPixmap(":image/next.png"));
-    if (reset_lbl->pixmap()->isNull()) reset_lbl->setPixmap(QPixmap(":image/reset.png"));
-    if (exit_lbl->pixmap()->isNull()) exit_lbl->setPixmap(QPixmap(":image/close.png"));
+    if (prev_lbl->pixmap()->isNull()) prev_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/prev.png"));
+    if (next_lbl->pixmap()->isNull()) next_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/next.png"));
+    if (reset_lbl->pixmap()->isNull()) reset_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/reset.png"));
+    if (exit_lbl->pixmap()->isNull()) exit_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/close.png"));
 
-    if (ball_lbl->pixmap()->isNull()) ball_lbl->setPixmap(QPixmap(":image/ball.png"));
+    if (ball_lbl->pixmap()->isNull()) ball_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/ball.png"));
 
-    if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load(":image/hole.png");
-    if (renderArea->fin_pixmap.isNull()) renderArea->fin_pixmap.load(":image/fin.png");
+    if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load("/opt/qtmoko/pics/qtmaze/hole.png");
+    if (renderArea->fin_pixmap.isNull()) renderArea->fin_pixmap.load("/opt/qtmoko/pics/qtmaze/fin.png");
 }
-*/
 
 /*
  *  Constructs a Example which is a child of 'parent', with the
@@ -645,7 +644,7 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     // read the Help documentation for this application.
     QSoftMenuBar::setHelpEnabled(this,true);
 
-    //CheckLoadedPictures();
+    CheckLoadedPictures();
 
     SetMenuVis(false);
     info1_lbl->setText( "<font color=\"#e0bc70\">Touch the screen to continue</font>" );
