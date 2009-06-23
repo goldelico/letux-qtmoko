@@ -40,7 +40,7 @@ int game_levels_count;
 int vibro_enabled;
 char *exec_init, *exec_final;
 
-#define DATADIR_LOCAL "etc/qtmaze/"
+#define DATADIR_LOCAL "/opt/qtmoko/etc/qtmaze/"
 //#define DATADIR_INSTALLED ":/data/"
 #define SAVE_DIR ".mokomaze"
 #define SAVE_FILE "user.json"
