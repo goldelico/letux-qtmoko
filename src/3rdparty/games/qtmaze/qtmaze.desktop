@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name[]=QtMaze
+Comment[]=Ball-in-the-labyrinth game
+Exec=qtmaze
+Terminal=false
+Type=Application
+Categories=Game;
+Icon=qtmaze/qtmaze

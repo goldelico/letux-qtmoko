@@ -1,0 +1,6 @@
+<!DOCTYPE RCC><RCC version="1.0">
+<qresource>
+  <file alias="etc/qtmaze/config.json">etc/qtmaze/config.json</file>
+  <file alias="etc/qtmaze/main.levelpack.json">etc/qtmaze/main.levelpack.json</file>
+</qresource>
+</RCC>

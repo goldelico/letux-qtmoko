@@ -1,0 +1,33 @@
+                                QtMaze
+
+                  Copyright (C) 2009 Anton Olkhovik
+                         <ant007h@gmail.com>
+======================================================================
+
+QtMaze is a Qt port of Mokomaze 0.2.
+
+> Mokomaze is the opensource implementation of the classic game where
+> you control a steel ball by tilting a wooden labyrinth. It is
+> written in C using SDL and adapted for Neo Freerunner.
+>
+> Benefits:
+>  * controlled by accelerometer
+>  * simulates (by vibration) feedback from ball hits against the walls
+>  * high performance and low resource consumption
+>  * simple levelpack file format
+
+Building:
+---------
+  $ cd qtmaze
+  $ qbuild
+For cross-compiling set up the environment first.
+
+Playing:
+--------
+Control the ball by tilting your Freerunner. Reach the exit, marked by
+Qt logo, avoiding other holes.
+
+No Warranty
+-----------
+QtMaze comes with ABSOLUTELY NO WARRANTY. See the COPYING file for
+details.
