@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -95,9 +95,19 @@ protected:
     }
 };
 
+void *qt_mac_nsCursorForQCursor(const QCursor &c)
+{
+    c.d->update();
+    return [[static_cast<NSCursor *>(c.d->curs.cp.nscursor) retain] autorelease];
+}
+
 static QCursorData *currentCursor = 0; //current cursor
 void qt_mac_set_cursor(const QCursor *c, const QPoint &)
 {
+#ifdef QT_MAC_USE_COCOA
+    Q_UNUSED(c);
+    return;
+#else
     if (!c) {
         currentCursor = 0;
         return;
@@ -128,10 +138,15 @@ void qt_mac_set_cursor(const QCursor *c, const QPoint &)
         }
     }
     currentCursor = c->d;
+#endif
 }
 
 void qt_mac_update_cursor_at_global_pos(const QPoint &globalPos)
 {
+#ifdef QT_MAC_USE_COCOA
+    Q_UNUSED(globalPos);
+    return;
+#else
     QCursor cursor(Qt::ArrowCursor);
     if (QApplication::overrideCursor()) {
         cursor = *QApplication::overrideCursor();
@@ -144,6 +159,7 @@ void qt_mac_update_cursor_at_global_pos(const QPoint &globalPos)
         }
     }
     qt_mac_set_cursor(&cursor, globalPos);
+#endif
 }
 
 void qt_mac_update_cursor()

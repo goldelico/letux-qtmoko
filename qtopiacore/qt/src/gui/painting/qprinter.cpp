@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -284,8 +284,8 @@ void QPrinterPrivate::addToManualSetList(QPrintEngine::PrintEnginePropertyKey ke
   to send PostScript or PDF output to the printer. As an alternative,
   the printProgram() function can be used to specify the command or utility
   to use instead of the system default.
-  
-  Note that setting parameters like paper size and resolution on an 
+
+  Note that setting parameters like paper size and resolution on an
   invalid printer is undefined. You can use QPrinter::isValid() to
   verify this before changing any parameters.
 
@@ -744,7 +744,7 @@ void QPrinter::setOutputFormat(OutputFormat format)
 
 #ifndef QT_NO_PDF
     Q_D(QPrinter);
-    if (d->outputFormat == format)
+    if (d->validPrinter && d->outputFormat == format)
         return;
     d->outputFormat = format;
 
@@ -773,8 +773,8 @@ void QPrinter::setOutputFormat(OutputFormat format)
     if (def_engine)
         delete oldPrintEngine;
 
-    d->validPrinter = d->outputFormat == QPrinter::PdfFormat || d->outputFormat == QPrinter::PostScriptFormat;
-
+    if (d->outputFormat == QPrinter::PdfFormat || d->outputFormat == QPrinter::PostScriptFormat)
+        d->validPrinter = true;
 #else
     Q_UNUSED(format);
 #endif

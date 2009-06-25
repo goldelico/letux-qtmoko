@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -89,7 +89,12 @@
     and QWidget::setCursor(), and it also has a \c RESET function,
     QWidget::unsetCursor(), since no call to QWidget::setCursor() can
     mean \e {reset to the context specific cursor}. The \c RESET
-    function musrt return void and take no parameters.
+    function must return void and take no parameters.
+
+    \o A \c NOTIFY signal is optional. If defined, the signal will be
+    emitted whenever the value of the property changes. The signal must
+    take one parameter, which must be of the same type as the property; the
+    parameter will take the new value of the property.
 
     \o The \c DESIGNABLE attribute indicates whether the property
     should be visible in the property editor of GUI design tool (e.g.,

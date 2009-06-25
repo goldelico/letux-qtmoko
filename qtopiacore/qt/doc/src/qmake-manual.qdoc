@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -932,6 +932,7 @@
     \o \l{qmake Variable Reference#QT}{QT}
     \o \l{qmake Variable Reference#RCC_DIR}{RCC_DIR}
     \o \l{qmake Variable Reference#REQUIRES}{REQUIRES}
+    \o \l{qmake Variable Reference#RESOURCES}{RESOURCES}
     \o \l{qmake Variable Reference#SOURCES}{SOURCES}
     \o \l{qmake Variable Reference#SUBDIRS}{SUBDIRS}
     \o \l{qmake Variable Reference#TARGET}{TARGET}
@@ -2419,6 +2420,12 @@
     missing.
 
     This is mainly used in Qt's build system for building the examples.
+
+    \section1 RESOURCES
+
+    This variable contains the name of the resource collection file (qrc) 
+    for the application. Further information about the resource collection
+    file can be found at \l{The Qt Resource System}.
 
     \section1 RES_FILE
 

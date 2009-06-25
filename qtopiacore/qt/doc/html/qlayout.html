@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qlayout.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/kernel/qlayout.cpp -->
 <head>
   <title>Qt 4.5: QLayout Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -246,7 +246,7 @@
 <p>Sets the alignment of this item to <i>alignment</i>.</p>
 <p>See also <a href="qlayoutitem.html#setAlignment">QLayoutItem::setAlignment</a>().</p>
 <h3 class="fn"><a name="setAlignment-3"></a>bool QLayout::setAlignment ( QLayout * <i>l</i>, <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> <i>alignment</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the alignment for the layout <i>l</i> to <i>alignment</i> and returns true if <i>l</i> is found in this layout (not including child layouts); otherwise returns false.</p>
 <h3 class="fn"><a name="setContentsMargins"></a>void QLayout::setContentsMargins ( int <i>left</i>, int <i>top</i>, int <i>right</i>, int <i>bottom</i> )</h3>
 <p>Sets the <i>left</i>, <i>top</i>, <i>right</i>, and <i>bottom</i> margins to use around the layout.</p>
@@ -262,7 +262,7 @@
 <p>Tells the geometry manager to place the menu bar <i>widget</i> at the top of <a href="qlayout.html#parentWidget">parentWidget</a>(), outside QWidget::contentsMargins(). All child widgets are placed below the bottom edge of the menu bar.</p>
 <p>See also <a href="qlayout.html#menuBar">menuBar</a>().</p>
 <h3 class="fn"><a name="takeAt"></a><a href="qlayoutitem.html">QLayoutItem</a> * QLayout::takeAt ( int <i>index</i> )&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
-<p>Must be implemented in subclasses to remove the layout item at <i>index</i> from the layout, and return the item. If there is no such item, the function must do nothing and return 0. Items are numbered consecutively from 0. If an item is deleted, other items will be renumbered.</p>
+<p>Must be implemented in subclasses to remove the layout item at <i>index</i> from the layout, and return the item. If there is no such item, the function must do nothing and return 0. Items are numbered consecutively from 0. If an item is removed, other items will be renumbered.</p>
 <p>The following code fragment shows a safe way to remove all items from a layout:</p>
 <pre> QLayoutItem *child;
  while ((child = layout-&gt;takeAt(0)) != 0) {
@@ -278,6 +278,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

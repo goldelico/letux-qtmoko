@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/access/qnetworkaccessmanager.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/access/qnetworkaccessmanager.cpp -->
 <head>
   <title>Qt 4.5: QNetworkAccessManager Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -79,7 +79,7 @@
 <h2>Detailed Description</h2>
 <p>The QNetworkAccessManager class allows the application to post network requests and receive replies</p>
 <p>The Network Access API is constructed around one QNetworkAccessManager object, which holds the common configuration and settings for the requests it sends. It contains the proxy and cache configuration, as well as the signals related to such issues, and reply signals that can be used to monitor the progress of a network operation.</p>
-<p>Once a QNetworkAccessManager object has been created, the application can use it to send requests over the network. A group of standard functions are supplied that take a request and optional data, and each return a <a href="qnetworkreply.html">QNetworkReply</a> object. The returned object is used to obtain any data returned in response to the corresponding request. the reply to is where most of the signals as well as the downloaded data are posted.</p>
+<p>Once a QNetworkAccessManager object has been created, the application can use it to send requests over the network. A group of standard functions are supplied that take a request and optional data, and each return a <a href="qnetworkreply.html">QNetworkReply</a> object. The returned object is used to obtain any data returned in response to the corresponding request.</p>
 <p>A simple download off the network could be accomplished with:</p>
 <pre> QNetworkAccessManager *manager = new QNetworkAccessManager(this);
  connect(manager, SIGNAL(finished(QNetworkReply*)),
@@ -87,7 +87,7 @@
 
  manager-&gt;get(QNetworkRequest(QUrl(&quot;http:<span class="comment">//qtsoftware.com&quot;)));</span></pre>
 <p>When the <tt>replyFinished</tt> slot above is called, the parameter it takes is the <a href="qnetworkreply.html">QNetworkReply</a> object containing the downloaded data as well as meta-data (headers, etc.)&#x2e;</p>
-<p><b>Note:</b> The slot is responsible for deleting the object at that point.</p>
+<p><b>Note:</b> After the request has finished, it is the responsibility of the user to delete the <a href="qnetworkreply.html">QNetworkReply</a> object at an appropriate time.</p>
 <p>A more involved example, assuming the manager is already existent, can be:</p>
 <pre> QNetworkRequest request;
  request.setUrl(QUrl(&quot;http:<span class="comment">//qtsoftware.com&quot;));</span>
@@ -149,7 +149,7 @@
 <p>Note: sending a POST request on protocols other than HTTP and HTTPS is undefined and will probably fail.</p>
 <p>See also <a href="qnetworkaccessmanager.html#get">get</a>() and <a href="qnetworkaccessmanager.html#put">put</a>().</p>
 <h3 class="fn"><a name="post-2"></a><a href="qnetworkreply.html">QNetworkReply</a> * QNetworkAccessManager::post ( const <a href="qnetworkrequest.html">QNetworkRequest</a> &amp; <i>request</i>, const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function sends the contents of the <i>data</i> byte array to the destination specified by <i>request</i>.</p>
 <h3 class="fn"><a name="proxy"></a><a href="qnetworkproxy.html">QNetworkProxy</a> QNetworkAccessManager::proxy () const</h3>
 <p>Returns the <a href="qnetworkproxy.html">QNetworkProxy</a> that the requests sent using this <a href="qnetworkaccessmanager.html">QNetworkAccessManager</a> object will use. The default value for the proxy is <a href="qnetworkproxy.html#ProxyType-enum">QNetworkProxy::DefaultProxy</a>.</p>
@@ -171,7 +171,7 @@
 <p>For HTTP, this request will send a PUT request, which most servers do not allow. Form upload mechanisms, including that of uploading files through HTML forms, use the POST mechanism.</p>
 <p>See also <a href="qnetworkaccessmanager.html#get">get</a>() and <a href="qnetworkaccessmanager.html#post">post</a>().</p>
 <h3 class="fn"><a name="put-2"></a><a href="qnetworkreply.html">QNetworkReply</a> * QNetworkAccessManager::put ( const <a href="qnetworkrequest.html">QNetworkRequest</a> &amp; <i>request</i>, const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function sends the contents of the <i>data</i> byte array to the destination specified by <i>request</i>.</p>
 <h3 class="fn"><a name="setCache"></a>void QNetworkAccessManager::setCache ( <a href="qabstractnetworkcache.html">QAbstractNetworkCache</a> * <i>cache</i> )</h3>
 <p>Sets the manager's network cache to be the <i>cache</i> specified. The cache is used for all requests dispatched by the manager.</p>
@@ -214,6 +214,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

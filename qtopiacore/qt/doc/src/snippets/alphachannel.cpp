@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -47,11 +47,8 @@
 #include <qfile.h>
 #include <qdir.h>
 #include <qfileinfo.h>
-
-#if (QT_VERSION) >= 0x040000
 #include <QtGui>
 #include <QtCore>
-#endif
 
 class MyClass : public QWidget
 {
@@ -95,11 +92,9 @@ protected:
 //! [0]
     }
 
-    QPixmap channelImage, pixmap; 
+    QPixmap channelImage, pixmap;
     QSize sizeHint() const { return QSize(500, 500); }
 };
-
-    
 
 int main(int argc, char **argv)
 {

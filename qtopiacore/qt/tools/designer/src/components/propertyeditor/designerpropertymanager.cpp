@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -271,7 +271,7 @@ void TextEditor::fileActionActivated()
     const QString newPath = m_core->dialogGui()->getOpenFileName(this, tr("Choose a File"), oldPath);
     if (newPath.isEmpty() || newPath == oldPath)
         return;
-    const QString newText = QLatin1String("file:") + newPath;
+    const QString newText = QUrl::fromLocalFile(newPath).toString();
     m_editor->setText(newText);
     emit textChanged(newText);
 }

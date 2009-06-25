@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/socket/qabstractsocket.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/socket/qabstractsocket.cpp -->
 <head>
   <title>Qt 4.5: QAbstractSocket Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -230,7 +230,8 @@
 <p>Reimplemented from <a href="qiodevice.html#canReadLine">QIODevice</a>.</p>
 <p>See also <a href="qiodevice.html#readLine">readLine</a>().</p>
 <h3 class="fn"><a name="close"></a>void QAbstractSocket::close ()&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>Disconnects the socket's connection with the host.</p>
+<p>Closes the I/O device for the socket, disconnects the socket's connection with the host, closes the socket, and resets the name, address, port number and underlying socket descriptor.</p>
+<p>See <a href="qiodevice.html#close">QIODevice::close</a>() for a description of the actions that occur when an I/O device is closed.</p>
 <p>Reimplemented from <a href="qiodevice.html#close">QIODevice</a>.</p>
 <p>See also <a href="qabstractsocket.html#abort">abort</a>().</p>
 <h3 class="fn"><a name="connectToHost"></a>void QAbstractSocket::connectToHost ( const <a href="qstring.html">QString</a> &amp; <i>hostName</i>, <a href="qtglobal.html#quint16-typedef">quint16</a> <i>port</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>openMode</i> = ReadWrite )</h3>
@@ -240,7 +241,7 @@
 <p><i>hostName</i> may be an IP address in string form (e.g&#x2e;, &quot;43.195.83.32&quot;), or it may be a host name (e.g&#x2e;, &quot;qtsoftware.com&quot;). <a href="qabstractsocket.html">QAbstractSocket</a> will do a lookup only if required. <i>port</i> is in native byte order.</p>
 <p>See also <a href="qabstractsocket.html#state">state</a>(), <a href="qabstractsocket.html#peerName">peerName</a>(), <a href="qabstractsocket.html#peerAddress">peerAddress</a>(), <a href="qabstractsocket.html#peerPort">peerPort</a>(), and <a href="qabstractsocket.html#waitForConnected">waitForConnected</a>().</p>
 <h3 class="fn"><a name="connectToHost-2"></a>void QAbstractSocket::connectToHost ( const <a href="qhostaddress.html">QHostAddress</a> &amp; <i>address</i>, <a href="qtglobal.html#quint16-typedef">quint16</a> <i>port</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>openMode</i> = ReadWrite )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Attempts to make a connection to <i>address</i> on port <i>port</i>.</p>
 <h3 class="fn"><a name="connectToHostImplementation"></a>void QAbstractSocket::connectToHostImplementation ( const <a href="qstring.html">QString</a> &amp; <i>hostName</i>, <a href="qtglobal.html#quint16-typedef">quint16</a> <i>port</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>openMode</i> = ReadWrite )&nbsp;&nbsp;<tt> [protected slot]</tt></h3>
 <p>Contains the implementation of <a href="qabstractsocket.html#connectToHost">connectToHost</a>().</p>
@@ -264,8 +265,8 @@
 <p>See also <a href="qabstractsocket.html#state">state</a>() and <a href="qiodevice.html#errorString">errorString</a>().</p>
 <h3 class="fn"><a name="error-2"></a>void QAbstractSocket::error ( <a href="qabstractsocket.html#SocketError-enum">QAbstractSocket::SocketError</a> <i>socketError</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted after an error occurred. The <i>socketError</i> parameter describes the type of error that occurred.</p>
-<p><a href="qabstractsocket.html#SocketError-enum">QAbstractSocket::SocketError</a> is not a registered metatype, so for queued connections, you will have to register it with Q_REGISTER_METATYPE.</p>
-<p>See also <a href="qabstractsocket.html#error">error</a>() and <a href="qiodevice.html#errorString">errorString</a>().</p>
+<p><a href="qabstractsocket.html#SocketError-enum">QAbstractSocket::SocketError</a> is not a registered metatype, so for queued connections, you will have to register it with <a href="qmetatype.html#Q_DECLARE_METATYPE">Q_DECLARE_METATYPE</a>() and <a href="qmetatype.html#qRegisterMetaType">qRegisterMetaType</a>().</p>
+<p>See also <a href="qabstractsocket.html#error">error</a>(), <a href="qiodevice.html#errorString">errorString</a>(), and <a href="custom-types.html">Creating Custom Qt Types</a>.</p>
 <h3 class="fn"><a name="flush"></a>bool QAbstractSocket::flush ()</h3>
 <p>This function writes as much as possible from the internal write buffer to the underlying network socket, without blocking. If any data was written, this function returns true; otherwise false is returned.</p>
 <p>Call this function if you need <a href="qabstractsocket.html">QAbstractSocket</a> to start sending buffered data immediately. The number of bytes successfully written depends on the operating system. In most cases, you do not need to call this function, because <a href="qabstractsocket.html">QAbstractSocket</a> will start sending data automatically once control goes back to the event loop. In the absence of an event loop, call <a href="qiodevice.html#waitForBytesWritten">waitForBytesWritten</a>() instead.</p>
@@ -369,8 +370,8 @@
 <p>See also <a href="qabstractsocket.html#error">error</a>().</p>
 <h3 class="fn"><a name="stateChanged"></a>void QAbstractSocket::stateChanged ( <a href="qabstractsocket.html#SocketState-enum">QAbstractSocket::SocketState</a> <i>socketState</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted whenever <a href="qabstractsocket.html">QAbstractSocket</a>'s state changes. The <i>socketState</i> parameter is the new state.</p>
-<p><a href="qabstractsocket.html#SocketState-enum">QAbstractSocket::SocketState</a> is not a registered metatype, so for queued connections, you will have to register it with Q_REGISTER_METATYPE.</p>
-<p>See also <a href="qabstractsocket.html#state">state</a>().</p>
+<p><a href="qabstractsocket.html#SocketState-enum">QAbstractSocket::SocketState</a> is not a registered metatype, so for queued connections, you will have to register it with Q_REGISTER_METATYPE() and <a href="qmetatype.html#qRegisterMetaType">qRegisterMetaType</a>().</p>
+<p>See also <a href="qabstractsocket.html#state">state</a>() and <a href="custom-types.html">Creating Custom Qt Types</a>.</p>
 <h3 class="fn"><a name="waitForConnected"></a>bool QAbstractSocket::waitForConnected ( int <i>msecs</i> = 30000 )</h3>
 <p>Waits until the socket is connected, up to <i>msecs</i> milliseconds. If the connection has been established, this function returns true; otherwise it returns false. In the case where it returns false, you can call <a href="qabstractsocket.html#error">error</a>() to determine the cause of the error.</p>
 <p>The following example waits up to one second for a connection to be established:</p>
@@ -398,6 +399,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

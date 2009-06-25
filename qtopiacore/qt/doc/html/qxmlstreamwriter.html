@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/xml/qxmlstream.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/xml/qxmlstream.cpp -->
 <head>
   <title>Qt 4.5: QXmlStreamWriter Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -83,7 +83,7 @@
      ...
      stream.writeStartElement(&quot;bookmark&quot;);
      stream.writeAttribute(&quot;href&quot;, &quot;http:<span class="comment">//www.qtsoftware.com/&quot;);</span>
-     stream.writeTextElement(&quot;title&quot;, &quot;Qt Software&quot;);
+     stream.writeTextElement(&quot;title&quot;, &quot;Qt Home&quot;);
      stream.writeEndElement(); <span class="comment">// bookmark</span>
      ...
      stream.writeEndDocument();</pre>
@@ -147,11 +147,11 @@
 <p>Writes an attribute with <i>name</i> and <i>value</i>, prefixed for the specified <i>namespaceUri</i>. If the namespace has not been declared yet, <a href="qxmlstreamwriter.html">QXmlStreamWriter</a> will generate a namespace declaration for it.</p>
 <p>This function can only be called after <a href="qxmlstreamwriter.html#writeStartElement">writeStartElement</a>() before any content is written, or after <a href="qxmlstreamwriter.html#writeEmptyElement">writeEmptyElement</a>().</p>
 <h3 class="fn"><a name="writeAttribute-2"></a>void QXmlStreamWriter::writeAttribute ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i>, const <a href="qstring.html">QString</a> &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes an attribute with <i>qualifiedName</i> and <i>value</i>.</p>
 <p>This function can only be called after <a href="qxmlstreamwriter.html#writeStartElement">writeStartElement</a>() before any content is written, or after <a href="qxmlstreamwriter.html#writeEmptyElement">writeEmptyElement</a>().</p>
 <h3 class="fn"><a name="writeAttribute-3"></a>void QXmlStreamWriter::writeAttribute ( const <a href="qxmlstreamattribute.html">QXmlStreamAttribute</a> &amp; <i>attribute</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes the <i>attribute</i>.</p>
 <p>This function can only be called after <a href="qxmlstreamwriter.html#writeStartElement">writeStartElement</a>() before any content is written, or after <a href="qxmlstreamwriter.html#writeEmptyElement">writeEmptyElement</a>().</p>
 <h3 class="fn"><a name="writeAttributes"></a>void QXmlStreamWriter::writeAttributes ( const <a href="qxmlstreamattributes.html">QXmlStreamAttributes</a> &amp; <i>attributes</i> )</h3>
@@ -180,7 +180,7 @@
 <p>Writes an empty element with <i>name</i>, prefixed for the specified <i>namespaceUri</i>. If the namespace has not been declared, <a href="qxmlstreamwriter.html">QXmlStreamWriter</a> will generate a namespace declaration for it. Subsequent calls to <a href="qxmlstreamwriter.html#writeAttribute">writeAttribute</a>() will add attributes to this element.</p>
 <p>See also <a href="qxmlstreamwriter.html#writeNamespace">writeNamespace</a>().</p>
 <h3 class="fn"><a name="writeEmptyElement-2"></a>void QXmlStreamWriter::writeEmptyElement ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes an empty element with qualified name <i>qualifiedName</i>. Subsequent calls to <a href="qxmlstreamwriter.html#writeAttribute">writeAttribute</a>() will add attributes to this element.</p>
 <h3 class="fn"><a name="writeEndDocument"></a>void QXmlStreamWriter::writeEndDocument ()</h3>
 <p>Closes all remaining open start elements and writes a newline.</p>
@@ -204,7 +204,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qxmlstreamwriter.html#writeEndDocument">writeEndDocument</a>().</p>
 <h3 class="fn"><a name="writeStartDocument-3"></a>void QXmlStreamWriter::writeStartDocument ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes a document start with XML version number &quot;1.0&quot;. This also writes the encoding information.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qxmlstreamwriter.html#writeEndDocument">writeEndDocument</a>() and <a href="qxmlstreamwriter.html#setCodec">setCodec</a>().</p>
@@ -212,7 +212,7 @@
 <p>Writes a start element with <i>name</i>, prefixed for the specified <i>namespaceUri</i>. If the namespace has not been declared yet, <a href="qxmlstreamwriter.html">QXmlStreamWriter</a> will generate a namespace declaration for it. Subsequent calls to <a href="qxmlstreamwriter.html#writeAttribute">writeAttribute</a>() will add attributes to this element.</p>
 <p>See also <a href="qxmlstreamwriter.html#writeNamespace">writeNamespace</a>(), <a href="qxmlstreamwriter.html#writeEndElement">writeEndElement</a>(), and <a href="qxmlstreamwriter.html#writeEmptyElement">writeEmptyElement</a>().</p>
 <h3 class="fn"><a name="writeStartElement-2"></a>void QXmlStreamWriter::writeStartElement ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes a start element with <i>qualifiedName</i>. Subsequent calls to <a href="qxmlstreamwriter.html#writeAttribute">writeAttribute</a>() will add attributes to this element.</p>
 <p>See also <a href="qxmlstreamwriter.html#writeEndElement">writeEndElement</a>() and <a href="qxmlstreamwriter.html#writeEmptyElement">writeEmptyElement</a>().</p>
 <h3 class="fn"><a name="writeTextElement"></a>void QXmlStreamWriter::writeTextElement ( const <a href="qstring.html">QString</a> &amp; <i>namespaceUri</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
@@ -222,7 +222,7 @@
          writeCharacters(text);
          writeEndElement();</pre>
 <h3 class="fn"><a name="writeTextElement-2"></a>void QXmlStreamWriter::writeTextElement ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes a text element with <i>qualifiedName</i> and <i>text</i>.</p>
 <p>This is a convenience function equivalent to:</p>
 <pre>         writeStartElement(qualifiedName);
@@ -232,6 +232,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

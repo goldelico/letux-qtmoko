@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/tutorials/addressbook.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/tutorials/addressbook.qdoc -->
 <head>
   <title>Qt 4.5: Address Book 3 - Navigating between Entries</title>
   <link rel="prev" href="tutorials-addressbook-part2.html" />
@@ -50,7 +50,7 @@
 <p>We then connect these push buttons to their respective slots:</p>
 <pre>     connect(nextButton, SIGNAL(clicked()), this, SLOT(next()));
      connect(previousButton, SIGNAL(clicked()), this, SLOT(previous()));</pre>
-<p>The image below is our expected graphical user interface. Notice that it is getting closer to our expected final output.</p>
+<p>The image below is our expected graphical user interface. Notice that it is getting closer to our final application.</p>
 <p align="center"><img src="images/addressbook-tutorial-part3-screenshot.png" /></p><p>We follow basic conventions for <tt>next()</tt> and <tt>previous()</tt> functions by placing the <tt>nextButton</tt> on the right and the <tt>previousButton</tt> on the left. In order to achieve this intuitive layout, we use <a href="qhboxlayout.html">QHBoxLayout</a> to place the widgets side-by-side:</p>
 <pre>     QHBoxLayout *buttonLayout2 = new QHBoxLayout;
      buttonLayout2-&gt;addWidget(previousButton);
@@ -89,7 +89,7 @@
 <p>Similarly, for the <tt>previous()</tt> function, we obtain an iterator for <tt>contacts</tt> and then:</p>
 <ul>
 <li>If the iterator is at the end of <tt>contacts</tt>, we clear the display and return.</li>
-<li>If the iterator is the beginning of <tt>contacts</tt>, we move it to the end.</li>
+<li>If the iterator is at the beginning of <tt>contacts</tt>, we move it to the end.</li>
 <li>We then decrement the iterator by one.</li>
 </ul>
 <pre> void AddressBook::previous()
@@ -120,6 +120,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

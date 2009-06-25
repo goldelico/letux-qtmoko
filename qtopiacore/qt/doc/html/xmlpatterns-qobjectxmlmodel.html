@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/qobjectxmlmodel.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/examples/qobjectxmlmodel.qdoc -->
 <head>
   <title>Qt 4.5: QObject XML Model Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -43,7 +43,7 @@
 <h2>Introduction</h2>
 <p>This example illustrates two important points about using XQuery to query non-XML data modeled to look like XML. The first point is that a custom node model class doesn't always have to actually build the node model. Sometimes the node model can be an already existing data structure, like the <a href="qobject.html">QObject</a> tree used in this example. The second point is to explain what is required to make non-XML data look like XML.</p>
 <p>In this example, we want to model a <a href="qobject.html">QObject</a> tree to look like XML. That is easy to do because a <a href="qobject.html">QObject</a> tree maps to the XML tree structure in a staightforward way. Each <a href="qobject.html">QObject</a> node is modeled as an XML element node. However, when we want to add the <a href="qmetaobject.html">QMetaObject</a> tree to the <a href="qobject.html">QObject</a> tree node model, we are trying to add a second tree to the node model. The <a href="qmetaobject.html">QMetaObject</a> tree exists <i>behind</i> the <a href="qobject.html">QObject</a> tree. Adding the <a href="qmetaobject.html">QMetaObject</a> tree to the node model changes the two dimensional tree into a three dimensional tree.</p>
-<p>The query engine can only traverse two dimensional trees, because an XML document is always a two dimensional tree. If we want to add the <a href="qmetaobject.html">QMetaObject</a> tree to the node model, we have to somehow flatten it into the the same plane as the <a href="qobject.html">QObject</a> tree. This requires that the node model class must build an auxiliary data structure and make it part of the two dimensional <a href="qobject.html">QObject</a> node model. How to do this is explained in <a href="#including-the-qmetaobject-tree">Including The QMetaObject Tree</a>.</p>
+<p>The query engine can only traverse two dimensional trees, because an XML document is always a two dimensional tree. If we want to add the <a href="qmetaobject.html">QMetaObject</a> tree to the node model, we have to somehow flatten it into the same plane as the <a href="qobject.html">QObject</a> tree. This requires that the node model class must build an auxiliary data structure and make it part of the two dimensional <a href="qobject.html">QObject</a> node model. How to do this is explained in <a href="#including-the-qmetaobject-tree">Including The QMetaObject Tree</a>.</p>
 <a name="the-user-interface"></a>
 <h3>The User Interface</h3>
 <p>The UI for this example was created using Qt Designer:</p>
@@ -350,6 +350,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

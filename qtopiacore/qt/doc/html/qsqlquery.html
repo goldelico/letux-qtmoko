@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/sql/kernel/qsqlquery.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/sql/kernel/qsqlquery.cpp -->
 <head>
   <title>Qt 4.5: QSqlQuery Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -304,7 +304,7 @@
 <h3 class="fn"><a name="nextResult"></a>bool QSqlQuery::nextResult ()</h3>
 <p>Discards the current result set and navigates to the next if available.</p>
 <p>Some databases are capable of returning multiple result sets for stored procedures or SQL batches (a query strings that contains multiple statements). If multiple result sets are available after executing a query this function can be used to navigate to the next result set(s).</p>
-<p>If a new result set is available this function will return true. The query will be repositioned on an <i>invalid</i> record in the new result set and must be navigated to a valid record before data values can be retrieved. If a new result set isn't available the function returns false and the the query is set to inactive. In any case the old result set will be discarded.</p>
+<p>If a new result set is available this function will return true. The query will be repositioned on an <i>invalid</i> record in the new result set and must be navigated to a valid record before data values can be retrieved. If a new result set isn't available the function returns false and the query is set to inactive. In any case the old result set will be discarded.</p>
 <p>When one of the statements is a non-select statement a count of affected rows may be available instead of a result set.</p>
 <p>Note that some databases, i.e&#x2e; Microsoft SQL Server, requires non-scrollable cursors when working with multiple result sets. Some databases may execute all statements at once while others may delay the execution until the result set is actually accessed, and some databases may have restrictions on which statements are allowed to be used in a SQL batch.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -396,6 +396,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

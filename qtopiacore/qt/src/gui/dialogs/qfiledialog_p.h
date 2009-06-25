@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -97,7 +97,7 @@ class Ui_QFileDialog;
   */
 class QFSCompletor :  public QCompleter {
 public:
-    QFSCompletor(QAbstractItemModel *model, QObject *parent = 0) : QCompleter(model, parent), proxyModel(0), sourceModel(0)
+    QFSCompletor(QFileSystemModel *model, QObject *parent = 0) : QCompleter(model, parent), proxyModel(0), sourceModel(model)
     {
 #ifdef Q_OS_WIN
         setCaseSensitivity(Qt::CaseInsensitive);

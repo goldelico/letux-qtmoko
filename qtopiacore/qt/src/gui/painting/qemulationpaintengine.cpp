@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -123,14 +123,30 @@ void QEmulationPaintEngine::stroke(const QVectorPath &path, const QPen &pen)
         real_engine->stroke(path, bgPen);
     }
 
-
     QBrush brush = pen.brush();
+    QPen copy = pen;
     Qt::BrushStyle style = qbrush_style(brush);
     if (style >= Qt::LinearGradientPattern && style <= Qt::ConicalGradientPattern) {
         const QGradient *g = brush.gradient();
+
         if (g->coordinateMode() > QGradient::LogicalMode) {
-            QPaintEngineEx::stroke(path, pen);
-            return;
+            if (g->coordinateMode() == QGradient::StretchToDeviceMode) {
+                QTransform mat = brush.transform();
+                mat.scale(real_engine->painter()->device()->width(), real_engine->painter()->device()->height());
+                brush.setTransform(mat);
+                copy.setBrush(brush);
+                real_engine->stroke(path, copy);
+                return;
+            } else if (g->coordinateMode() == QGradient::ObjectBoundingMode) {
+                QTransform mat = brush.transform();
+                QRealRect r = path.controlPointRect();
+                mat.translate(r.x1, r.y1);
+                mat.scale(r.x2 - r.x1, r.y2 - r.y1);
+                brush.setTransform(mat);
+                copy.setBrush(brush);
+                real_engine->stroke(path, copy);
+                return;
+            }
         }
     }
 

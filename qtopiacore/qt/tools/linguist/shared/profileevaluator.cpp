@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -274,6 +274,9 @@ void ProFileEvaluator::Private::finalizeBlock()
 void ProFileEvaluator::Private::insertVariable(const QString &line, int *i)
 {
     ProVariable::VariableOperator opkind;
+
+    if (m_proitem.isEmpty()) // Line starting with '=', like a conflict marker
+        return;
 
     switch (m_proitem.at(m_proitem.length() - 1).unicode()) {
         case '+':
@@ -1473,7 +1476,13 @@ ProFile *ProFileEvaluator::parsedProFile(const QString &fileName)
 {
     QFileInfo fi(fileName);
     if (fi.exists()) {
-        ProFile *pro = new ProFile(fi.absoluteFilePath());
+        QString fn = QDir::cleanPath(fi.absoluteFilePath());
+        foreach (const ProFile *pf, d->m_profileStack)
+            if (pf->fileName() == fn) {
+                errorMessage(d->format("circular inclusion of %1").arg(fn));
+                return 0;
+            }
+        ProFile *pro = new ProFile(fn);
         if (d->read(pro))
             return pro;
         delete pro;

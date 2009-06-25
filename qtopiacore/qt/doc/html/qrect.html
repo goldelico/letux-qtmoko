@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qrect.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qrect.cpp -->
 <head>
   <title>Qt 4.5: QRect Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -94,10 +94,10 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>Q_CORE_EXPORT_INLINE <b><a href="qrect.html#operator-not-eq-20">operator!=</a></b> ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qrect.html#operator-lt-lt-97">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QRect &amp; <i>rectangle</i> )</li>
-<li><div class="fn"></div>Q_CORE_EXPORT_INLINE <b><a href="qrect.html#operator-eq-eq-37">operator==</a></b> ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qrect.html#operator-gt-gt-55">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>Q_CORE_EXPORT_INLINE <b><a href="qrect.html#operator-not-eq-28">operator!=</a></b> ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qrect.html#operator-lt-lt-99">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QRect &amp; <i>rectangle</i> )</li>
+<li><div class="fn"></div>Q_CORE_EXPORT_INLINE <b><a href="qrect.html#operator-eq-eq-39">operator==</a></b> ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qrect.html#operator-gt-gt-53">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QRect &amp; <i>rectangle</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -176,16 +176,16 @@
 <p>Returns the center point of the rectangle.</p>
 <p>See also <a href="qrect.html#moveCenter">moveCenter</a>().</p>
 <h3 class="fn"><a name="contains"></a>bool QRect::contains ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i>, bool <i>proper</i> = false ) const</h3>
-<p>Returns true if the the given <i>point</i> is inside or on the edge of the rectangle, otherwise returns false. If <i>proper</i> is true, this function only returns true if the given <i>point</i> is <i>inside</i> the rectangle (i.e&#x2e;, not on the edge).</p>
+<p>Returns true if the given <i>point</i> is inside or on the edge of the rectangle, otherwise returns false. If <i>proper</i> is true, this function only returns true if the given <i>point</i> is <i>inside</i> the rectangle (i.e&#x2e;, not on the edge).</p>
 <p>See also <a href="qrect.html#intersects">intersects</a>().</p>
 <h3 class="fn"><a name="contains-2"></a>bool QRect::contains ( int <i>x</i>, int <i>y</i>, bool <i>proper</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the point (<i>x</i>, <i>y</i>) is inside or on the edge of the rectangle, otherwise returns false. If <i>proper</i> is true, this function only returns true if the point is entirely inside the rectangle(not on the edge).</p>
 <h3 class="fn"><a name="contains-3"></a>bool QRect::contains ( int <i>x</i>, int <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the point (<i>x</i>, <i>y</i>) is inside this rectangle, otherwise returns false.</p>
 <h3 class="fn"><a name="contains-4"></a>bool QRect::contains ( const QRect &amp; <i>rectangle</i>, bool <i>proper</i> = false ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the given <i>rectangle</i> is inside this rectangle. otherwise returns false. If <i>proper</i> is true, this function only returns true if the <i>rectangle</i> is entirely inside this rectangle (not on the edge).</p>
 <h3 class="fn"><a name="getCoords"></a>void QRect::getCoords ( int * <i>x1</i>, int * <i>y1</i>, int * <i>x2</i>, int * <i>y2</i> ) const</h3>
 <p>Extracts the position of the rectangle's top-left corner to *<i>x1</i> and *<i>y1</i>, and the position of the bottom-right corner to *<i>x2</i> and *<i>y2</i>.</p>
@@ -326,13 +326,13 @@
 <p>Moves the rectangle <i>dx</i> along the x axis and <i>dy</i> along the y axis, relative to the current position. Positive values move the rectangle to the right and down.</p>
 <p>See also <a href="qrect.html#moveTopLeft">moveTopLeft</a>(), <a href="qrect.html#moveTo">moveTo</a>(), and <a href="qrect.html#translated">translated</a>().</p>
 <h3 class="fn"><a name="translate-2"></a>void QRect::translate ( const <a href="qpoint.html">QPoint</a> &amp; <i>offset</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Moves the rectangle <i>offset</i>.<a href="qpoint.html#x">x()</a> along the x axis and <i>offset</i>.<a href="qpoint.html#y">y()</a> along the y axis, relative to the current position.</p>
 <h3 class="fn"><a name="translated"></a>QRect QRect::translated ( int <i>dx</i>, int <i>dy</i> ) const</h3>
 <p>Returns a copy of the rectangle that is translated <i>dx</i> along the x axis and <i>dy</i> along the y axis, relative to the current position. Positive values move the rectangle to the right and down.</p>
 <p>See also <a href="qrect.html#translate">translate</a>().</p>
 <h3 class="fn"><a name="translated-2"></a>QRect QRect::translated ( const <a href="qpoint.html">QPoint</a> &amp; <i>offset</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a copy of the rectangle that is translated <i>offset</i>.<a href="qpoint.html#x">x()</a> along the x axis and <i>offset</i>.<a href="qpoint.html#y">y()</a> along the y axis, relative to the current position.</p>
 <h3 class="fn"><a name="united"></a>QRect QRect::united ( const QRect &amp; <i>rectangle</i> ) const</h3>
 <p>Returns the bounding rectangle of this rectangle and the given <i>rectangle</i>.</p>
@@ -361,20 +361,20 @@
 <p>See also <a href="qrect.html#united">united</a>() and <a href="qrect.html#operator-7c">operator|</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-not-eq-20"></a>Q_CORE_EXPORT_INLINE operator!= ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</h3>
+<h3 class="fn"><a name="operator-not-eq-28"></a>Q_CORE_EXPORT_INLINE operator!= ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</h3>
 <p>Returns true if the rectangles <i>r1</i> and <i>r2</i> are different, otherwise returns false.</p>
-<h3 class="fn"><a name="operator-lt-lt-97"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QRect &amp; <i>rectangle</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-99"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QRect &amp; <i>rectangle</i> )</h3>
 <p>Writes the given <i>rectangle</i> to the given <i>stream</i>, and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-eq-eq-37"></a>Q_CORE_EXPORT_INLINE operator== ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</h3>
+<h3 class="fn"><a name="operator-eq-eq-39"></a>Q_CORE_EXPORT_INLINE operator== ( const QRect &amp; <i>r1</i>, const QRect &amp; <i>r2</i> )</h3>
 <p>Returns true if the rectangles <i>r1</i> and <i>r2</i> are equal, otherwise returns false.</p>
-<h3 class="fn"><a name="operator-gt-gt-55"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QRect &amp; <i>rectangle</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-53"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QRect &amp; <i>rectangle</i> )</h3>
 <p>Reads a rectangle from the given <i>stream</i> into the given <i>rectangle</i>, and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

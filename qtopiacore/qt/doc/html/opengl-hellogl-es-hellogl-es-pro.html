@@ -35,11 +35,13 @@
  RESOURCES += texture.qrc
  QT += opengl
 
- contains(QT_CONFIG,opengles1) {
-         QMAKE_LIBS += &quot;libGLES_CM.lib&quot;
- }
- contains(QT_CONFIG,opengles1cl) {
-         QMAKE_LIBS += &quot;libGLES_CL.lib&quot;
+ wince*:{
+     contains(QT_CONFIG,opengles1) {
+             QMAKE_LIBS += &quot;libGLES_CM.lib&quot;
+     }
+     contains(QT_CONFIG,opengles1cl) {
+             QMAKE_LIBS += &quot;libGLES_CL.lib&quot;
+     }
  }
 
  # install
@@ -51,6 +53,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -316,6 +316,10 @@ Qt::Alignment variantToAlignment(const QVariant & q)
 // find changed subproperties of a variant
 unsigned compareSubProperties(const QVariant & q1, const QVariant & q2, qdesigner_internal::SpecialProperty specialProperty)
 {
+    // Do not clobber new value in the comparison function in
+    // case someone sets a QString on a PropertySheetStringValue.
+    if (q1.type() != q2.type())
+        return SubPropertyAll;
     switch (q1.type()) {
     case QVariant::Rect:
         return compareSubProperties(q1.toRect(), q2.toRect());

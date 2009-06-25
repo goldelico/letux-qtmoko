@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the qmake application of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -432,9 +432,21 @@ void Win32MakefileGenerator::processRcFileVar()
             writeRcFile = rcFile.readAll() != rcString;
             rcFile.close();
         }
-        if (writeRcFile && rcFile.open(QFile::WriteOnly)) {
-            rcFile.write(rcString);
-            rcFile.close();
+        if (writeRcFile) {
+	    bool ok;
+	    ok = rcFile.open(QFile::WriteOnly);
+	    if (!ok) {
+		// The file can't be opened... try creating the containing
+		// directory first (needed for clean shadow builds)
+		QDir().mkpath(QFileInfo(rcFile).path());
+		ok = rcFile.open(QFile::WriteOnly);
+	    }
+	    if (!ok) {
+		::fprintf(stderr, "Cannot open for writing: %s", rcFile.fileName().toLatin1().constData());
+		::exit(1);
+	    }
+	    rcFile.write(rcString);
+	    rcFile.close();
         }
         if (project->values("QMAKE_WRITE_DEFAULT_RC").isEmpty())
             project->values("RC_FILE").insert(0, rcFile.fileName());

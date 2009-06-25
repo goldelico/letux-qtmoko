@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/text/q3textedit.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/text/q3textedit.cpp -->
 <head>
   <title>Qt 4.5: Q3TextEdit Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -130,7 +130,7 @@
 <li><div class="fn"></div>13 public functions inherited from <a href="qframe.html#public-functions">QFrame</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -674,7 +674,7 @@
 <p>This function is called to create a right mouse button popup menu at the document position <i>pos</i>. If you want to create a custom popup menu, reimplement this function and return the created popup menu. Ownership of the popup menu is transferred to the caller.</p>
 <p><b>Warning:</b> The <a href="porting4.html#qpopupmenu">QPopupMenu</a> ID values 0-7 are reserved, and they map to the standard operations. When inserting items into your custom popup menu, be sure to specify ID values larger than 7.</p>
 <h3 class="fn"><a name="createPopupMenu-2"></a><a href="q3popupmenu.html">Q3PopupMenu</a> * Q3TextEdit::createPopupMenu ()&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is called to create a right mouse button popup menu. If you want to create a custom popup menu, reimplement this function and return the created popup menu. Ownership of the popup menu is transferred to the caller.</p>
 <p>This function is only called if createPopupMenu(const <a href="qpoint.html">QPoint</a> &amp;) returns 0.</p>
 <h3 class="fn"><a name="currentAlignmentChanged"></a>void Q3TextEdit::currentAlignmentChanged ( int <i>a</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -696,7 +696,7 @@
 <p>This signal is emitted if the vertical alignment of the current format has changed.</p>
 <p>The new vertical alignment is <i>a</i>.</p>
 <h3 class="fn"><a name="cursorPositionChanged"></a>void Q3TextEdit::cursorPositionChanged ( int <i>para</i>, int <i>pos</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted if the position of the cursor has changed. <i>para</i> contains the paragraph index and <i>pos</i> contains the character position within the paragraph.</p>
 <p>See also <a href="q3textedit.html#setCursorPosition">setCursorPosition</a>().</p>
 <h3 class="fn"><a name="cut"></a>void Q3TextEdit::cut ()&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
@@ -917,14 +917,14 @@
 <p>Zooms in on the text by making the base font size <i>range</i> points larger and recalculating all font sizes to be the new size. This does not change the size of any images.</p>
 <p>See also <a href="q3textedit.html#zoomOut">zoomOut</a>().</p>
 <h3 class="fn"><a name="zoomIn-2"></a>void Q3TextEdit::zoomIn ()&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Zooms in on the text by making the base font size one point larger and recalculating all font sizes to be the new size. This does not change the size of any images.</p>
 <p>See also <a href="q3textedit.html#zoomOut">zoomOut</a>().</p>
 <h3 class="fn"><a name="zoomOut"></a>void Q3TextEdit::zoomOut ( int <i>range</i> )&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
 <p>Zooms out on the text by making the base font size <i>range</i> points smaller and recalculating all font sizes to be the new size. This does not change the size of any images.</p>
 <p>See also <a href="q3textedit.html#zoomIn">zoomIn</a>().</p>
 <h3 class="fn"><a name="zoomOut-2"></a>void Q3TextEdit::zoomOut ()&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Zooms out on the text by making the base font size one point smaller and recalculating all font sizes to be the new size. This does not change the size of any images.</p>
 <p>See also <a href="q3textedit.html#zoomIn">zoomIn</a>().</p>
 <h3 class="fn"><a name="zoomTo"></a>void Q3TextEdit::zoomTo ( int <i>size</i> )&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
@@ -933,6 +933,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -101,6 +101,7 @@
     </section>
     <section ref="qlist-const-iterator.html" title="const_iterator Class Reference">
         <keyword ref="qlist-const-iterator.html">const_iterator</keyword>
+        <keyword ref="qlist-const-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qlist-const-iterator.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qlist-const-iterator.html#operator-2a">operator*</keyword>
         <keyword ref="qlist-const-iterator.html#operator-2b">operator+</keyword>
@@ -120,6 +121,7 @@
     </section>
     <section ref="qmap-const-iterator.html" title="const_iterator Class Reference">
         <keyword ref="qmap-const-iterator.html">const_iterator</keyword>
+        <keyword ref="qmap-const-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qmap-const-iterator.html#key">key</keyword>
         <keyword ref="qmap-const-iterator.html#value">value</keyword>
         <keyword ref="qmap-const-iterator.html#operator-not-eq">operator!=</keyword>
@@ -137,6 +139,7 @@
     </section>
     <section ref="qset-const-iterator.html" title="const_iterator Class Reference">
         <keyword ref="qset-const-iterator.html">const_iterator</keyword>
+        <keyword ref="qset-const-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qset-const-iterator.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qset-const-iterator.html#operator-2a">operator*</keyword>
         <keyword ref="qset-const-iterator.html#operator-2b">operator+</keyword>
@@ -196,7 +199,7 @@
         <keyword ref="qpainterpath-element.html#operator-QPointF">operator QPointF</keyword>
         <keyword ref="qpainterpath-element.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qpainterpath-element.html#operator-eq-eq">operator==</keyword>
-        <keyword ref="qpainterpath-element.html#type-var">type</keyword>
+        <keyword ref="qpainterpath-element.html#type-varx">type</keyword>
         <keyword ref="qpainterpath-element.html#x-var">x</keyword>
         <keyword ref="qpainterpath-element.html#y-var">y</keyword>
         <section ref="qpainterpath-element-members.html" title="List of all members"/>
@@ -286,6 +289,7 @@
     </section>
     <section ref="qlist-iterator.html" title="iterator Class Reference">
         <keyword ref="qlist-iterator.html">iterator</keyword>
+        <keyword ref="qlist-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qlist-iterator.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qlist-iterator.html#operator-2a">operator*</keyword>
         <keyword ref="qlist-iterator.html#operator-2b">operator+</keyword>
@@ -305,6 +309,7 @@
     </section>
     <section ref="qmap-iterator.html" title="iterator Class Reference">
         <keyword ref="qmap-iterator.html">iterator</keyword>
+        <keyword ref="qmap-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qmap-iterator.html#key">key</keyword>
         <keyword ref="qmap-iterator.html#value">value</keyword>
         <keyword ref="qmap-iterator.html#operator-not-eq">operator!=</keyword>
@@ -322,6 +327,7 @@
     </section>
     <section ref="qset-iterator.html" title="iterator Class Reference">
         <keyword ref="qset-iterator.html">iterator</keyword>
+        <keyword ref="qset-iterator.html#iterator_category-typedef">iterator_category</keyword>
         <keyword ref="qset-iterator.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qset-iterator.html#operator-2a">operator*</keyword>
         <keyword ref="qset-iterator.html#operator-2b">operator+</keyword>
@@ -772,7 +778,7 @@
         <keyword ref="qabstractfileengineiterator.html#hasNext">hasNext</keyword>
         <keyword ref="qabstractfileengineiterator.html#nameFilters">nameFilters</keyword>
         <keyword ref="qabstractfileengineiterator.html#next">next</keyword>
-        <keyword ref="qabstractfileengineiterator.html#pathx">path</keyword>
+        <keyword ref="qabstractfileengineiterator.html#path">path</keyword>
         <section ref="qabstractfileengineiterator-members.html" title="List of all members"/>
     </section>
     <section ref="qabstractfontengine.html" title="QAbstractFontEngine Class Reference">
@@ -1902,8 +1908,6 @@
         <keyword ref="qapplication.html#topLevelWidgets">topLevelWidgets</keyword>
         <keyword ref="qapplication.html#type">type</keyword>
         <keyword ref="qapplication.html#widgetAt">widgetAt</keyword>
-        <keyword ref="qapplication.html#winFocus">winFocus</keyword>
-        <keyword ref="qapplication.html#winMouseButtonUp">winMouseButtonUp</keyword>
         <keyword ref="qapplication.html#x11EventFilter">x11EventFilter</keyword>
         <keyword ref="qapplication.html#x11ProcessEvent">x11ProcessEvent</keyword>
         <keyword ref="qapplication.html#qApp">qApp</keyword>
@@ -2238,7 +2242,6 @@
         <keyword ref="qbytearray.html#qstrnicmp">qstrnicmp</keyword>
         <keyword ref="qbytearray.html#qstrnlen">qstrnlen</keyword>
         <keyword ref="qbytearray.html#qvsnprintf">qvsnprintf</keyword>
-        <keyword ref="qbytearray.html#operator-2b">operator+</keyword>
         <keyword ref="qbytearray.html#QT_NO_CAST_FROM_BYTEARRAY">QT_NO_CAST_FROM_BYTEARRAY</keyword>
         <section ref="qbytearray-members.html" title="List of all members"/>
         <section ref="qbytearray-qt3.html" title="Qt 3 support members"/>
@@ -2475,10 +2478,6 @@
         <keyword ref="qchar.html#toUpper">toUpper</keyword>
         <keyword ref="qchar.html#unicode">unicode</keyword>
         <keyword ref="qchar.html#unicodeVersion">unicodeVersion</keyword>
-        <keyword ref="qchar.html#operator-lt">operator&lt;</keyword>
-        <keyword ref="qchar.html#operator-lt-eq">operator&lt;=</keyword>
-        <keyword ref="qchar.html#operator-gt">operator&gt;</keyword>
-        <keyword ref="qchar.html#operator-gt-eq">operator&gt;=</keyword>
         <section ref="qchar-members.html" title="List of all members"/>
         <section ref="qchar-qt3.html" title="Qt 3 support members"/>
     </section>
@@ -3212,7 +3211,7 @@
         <keyword ref="qdbusabstractinterface.html#interface">interface</keyword>
         <keyword ref="qdbusabstractinterface.html#isValid">isValid</keyword>
         <keyword ref="qdbusabstractinterface.html#lastError">lastError</keyword>
-        <keyword ref="qdbusabstractinterface.html#pathx">path</keyword>
+        <keyword ref="qdbusabstractinterface.html#path">path</keyword>
         <keyword ref="qdbusabstractinterface.html#service">service</keyword>
         <section ref="qdbusabstractinterface-members.html" title="List of all members"/>
     </section>
@@ -3388,7 +3387,7 @@
         <keyword ref="qdbusmessage.html#isDelayedReply">isDelayedReply</keyword>
         <keyword ref="qdbusmessage.html#isReplyRequired">isReplyRequired</keyword>
         <keyword ref="qdbusmessage.html#member">member</keyword>
-        <keyword ref="qdbusmessage.html#pathx">path</keyword>
+        <keyword ref="qdbusmessage.html#path">path</keyword>
         <keyword ref="qdbusmessage.html#service">service</keyword>
         <keyword ref="qdbusmessage.html#setArguments">setArguments</keyword>
         <keyword ref="qdbusmessage.html#setDelayedReply">setDelayedReply</keyword>
@@ -3400,7 +3399,7 @@
     </section>
     <section ref="qdbusobjectpath.html" title="QDBusObjectPath Class Reference">
         <keyword ref="qdbusobjectpath.html">QDBusObjectPath</keyword>
-        <keyword ref="qdbusobjectpath.html#pathx">path</keyword>
+        <keyword ref="qdbusobjectpath.html#path">path</keyword>
         <keyword ref="qdbusobjectpath.html#setPath">setPath</keyword>
         <keyword ref="qdbusobjectpath.html#operator-eq">operator=</keyword>
         <section ref="qdbusobjectpath-members.html" title="List of all members"/>
@@ -3987,7 +3986,7 @@
         <keyword ref="qdir.html#mkdir">mkdir</keyword>
         <keyword ref="qdir.html#mkpath">mkpath</keyword>
         <keyword ref="qdir.html#nameFilters">nameFilters</keyword>
-        <keyword ref="qdir.html#pathx">path</keyword>
+        <keyword ref="qdir.html#path">path</keyword>
         <keyword ref="qdir.html#refresh">refresh</keyword>
         <keyword ref="qdir.html#relativeFilePath">relativeFilePath</keyword>
         <keyword ref="qdir.html#remove">remove</keyword>
@@ -4058,7 +4057,7 @@
         <keyword ref="qdiriterator.html#filePath">filePath</keyword>
         <keyword ref="qdiriterator.html#hasNext">hasNext</keyword>
         <keyword ref="qdiriterator.html#next">next</keyword>
-        <keyword ref="qdiriterator.html#pathx">path</keyword>
+        <keyword ref="qdiriterator.html#path">path</keyword>
         <section ref="qdiriterator-members.html" title="List of all members"/>
     </section>
     <section ref="qdirmodel.html" title="QDirModel Class Reference">
@@ -4909,7 +4908,7 @@
         <keyword ref="qfileinfo.html#makeAbsolute">makeAbsolute</keyword>
         <keyword ref="qfileinfo.html#owner">owner</keyword>
         <keyword ref="qfileinfo.html#ownerId">ownerId</keyword>
-        <keyword ref="qfileinfo.html#pathx">path</keyword>
+        <keyword ref="qfileinfo.html#path">path</keyword>
         <keyword ref="qfileinfo.html#permission">permission</keyword>
         <keyword ref="qfileinfo.html#permissions">permissions</keyword>
         <keyword ref="qfileinfo.html#refresh">refresh</keyword>
@@ -5436,22 +5435,12 @@
         <keyword ref="qfsfileengine.html#copy">copy</keyword>
         <keyword ref="qfsfileengine.html#currentPath">currentPath</keyword>
         <keyword ref="qfsfileengine.html#drives">drives</keyword>
-        <keyword ref="qfsfileengine.html#fileName">fileName</keyword>
-        <keyword ref="qfsfileengine.html#fileTime">fileTime</keyword>
         <keyword ref="qfsfileengine.html#homePath">homePath</keyword>
-        <keyword ref="qfsfileengine.html#isRelativePath">isRelativePath</keyword>
         <keyword ref="qfsfileengine.html#link">link</keyword>
-        <keyword ref="qfsfileengine.html#mkdir">mkdir</keyword>
         <keyword ref="qfsfileengine.html#open">open</keyword>
-        <keyword ref="qfsfileengine.html#owner">owner</keyword>
         <keyword ref="qfsfileengine.html#ownerId">ownerId</keyword>
-        <keyword ref="qfsfileengine.html#remove">remove</keyword>
-        <keyword ref="qfsfileengine.html#rename">rename</keyword>
-        <keyword ref="qfsfileengine.html#rmdir">rmdir</keyword>
         <keyword ref="qfsfileengine.html#rootPath">rootPath</keyword>
         <keyword ref="qfsfileengine.html#setCurrentPath">setCurrentPath</keyword>
-        <keyword ref="qfsfileengine.html#setPermissions">setPermissions</keyword>
-        <keyword ref="qfsfileengine.html#setSize">setSize</keyword>
         <keyword ref="qfsfileengine.html#tempPath">tempPath</keyword>
         <section ref="qfsfileengine-members.html" title="List of all members"/>
     </section>
@@ -5823,7 +5812,6 @@
         <keyword ref="qglwidget.html#doneCurrent">doneCurrent</keyword>
         <keyword ref="qglwidget.html#doubleBuffer">doubleBuffer</keyword>
         <keyword ref="qglwidget.html#drawTexture">drawTexture</keyword>
-        <keyword ref="qglwidget.html#event">event</keyword>
         <keyword ref="qglwidget.html#format">format</keyword>
         <keyword ref="qglwidget.html#glDraw">glDraw</keyword>
         <keyword ref="qglwidget.html#glInit">glInit</keyword>
@@ -6238,7 +6226,7 @@
     </section>
     <section ref="qgraphicspathitem.html" title="QGraphicsPathItem Class Reference">
         <keyword ref="qgraphicspathitem.html">QGraphicsPathItem</keyword>
-        <keyword ref="qgraphicspathitem.html#pathx">path</keyword>
+        <keyword ref="qgraphicspathitem.html#path">path</keyword>
         <keyword ref="qgraphicspathitem.html#setPath">setPath</keyword>
         <section ref="qgraphicspathitem-members.html" title="List of all members"/>
     </section>
@@ -6765,7 +6753,6 @@
         <keyword ref="qhash.html#operator-eq">operator=</keyword>
         <keyword ref="qhash.html#operator-eq-eq">operator==</keyword>
         <keyword ref="qhash.html#operator-5b-5d">operator[]</keyword>
-        <keyword ref="qhash.html#qHash">qHash</keyword>
         <section ref="qhash-members.html" title="List of all members"/>
     </section>
     <section ref="qhashiterator.html" title="QHashIterator Class Reference">
@@ -7170,7 +7157,7 @@
         <keyword ref="qhttprequestheader.html#majorVersion">majorVersion</keyword>
         <keyword ref="qhttprequestheader.html#method">method</keyword>
         <keyword ref="qhttprequestheader.html#minorVersion">minorVersion</keyword>
-        <keyword ref="qhttprequestheader.html#pathx">path</keyword>
+        <keyword ref="qhttprequestheader.html#path">path</keyword>
         <keyword ref="qhttprequestheader.html#setRequest">setRequest</keyword>
         <keyword ref="qhttprequestheader.html#operator-eq">operator=</keyword>
         <section ref="qhttprequestheader-members.html" title="List of all members"/>
@@ -9940,6 +9927,8 @@
         <keyword ref="qnetworkcachemetadata.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qnetworkcachemetadata.html#operator-eq">operator=</keyword>
         <keyword ref="qnetworkcachemetadata.html#operator-eq-eq">operator==</keyword>
+        <keyword ref="qnetworkcachemetadata.html#operator-lt-lt">operator&lt;&lt;</keyword>
+        <keyword ref="qnetworkcachemetadata.html#operator-gt-gt">operator&gt;&gt;</keyword>
         <section ref="qnetworkcachemetadata-members.html" title="List of all members"/>
     </section>
     <section ref="qnetworkcookie.html" title="QNetworkCookie Class Reference">
@@ -9954,7 +9943,7 @@
         <keyword ref="qnetworkcookie.html#isSessionCookie">isSessionCookie</keyword>
         <keyword ref="qnetworkcookie.html#name">name</keyword>
         <keyword ref="qnetworkcookie.html#parseCookies">parseCookies</keyword>
-        <keyword ref="qnetworkcookie.html#pathx">path</keyword>
+        <keyword ref="qnetworkcookie.html#path">path</keyword>
         <keyword ref="qnetworkcookie.html#setDomain">setDomain</keyword>
         <keyword ref="qnetworkcookie.html#setExpirationDate">setExpirationDate</keyword>
         <keyword ref="qnetworkcookie.html#setHttpOnly">setHttpOnly</keyword>
@@ -10256,7 +10245,6 @@
         <keyword ref="qpagesetupdialog.html#open">open</keyword>
         <keyword ref="qpagesetupdialog.html#printer">printer</keyword>
         <keyword ref="qpagesetupdialog.html#setOption">setOption</keyword>
-        <keyword ref="qpagesetupdialog.html#setVisible">setVisible</keyword>
         <keyword ref="qpagesetupdialog.html#testOption">testOption</keyword>
         <section ref="qpagesetupdialog-members.html" title="List of all members"/>
         <section ref="qpagesetupdialog-obsolete.html" title="Obsolete members"/>
@@ -10275,7 +10263,6 @@
         <keyword ref="qpaintdevice.html#PaintDeviceMetric-enum">QPaintDevice::PdmDpiY</keyword>
         <keyword ref="qpaintdevice.html#PaintDeviceMetric-enum">QPaintDevice::PdmNumColors</keyword>
         <keyword ref="qpaintdevice.html#depth">depth</keyword>
-        <keyword ref="qpaintdevice.html#getDC">getDC</keyword>
         <keyword ref="qpaintdevice.html#height">height</keyword>
         <keyword ref="qpaintdevice.html#heightMM">heightMM</keyword>
         <keyword ref="qpaintdevice.html#logicalDpiX">logicalDpiX</keyword>
@@ -10286,7 +10273,6 @@
         <keyword ref="qpaintdevice.html#paintingActive">paintingActive</keyword>
         <keyword ref="qpaintdevice.html#physicalDpiX">physicalDpiX</keyword>
         <keyword ref="qpaintdevice.html#physicalDpiY">physicalDpiY</keyword>
-        <keyword ref="qpaintdevice.html#releaseDC">releaseDC</keyword>
         <keyword ref="qpaintdevice.html#width">width</keyword>
         <keyword ref="qpaintdevice.html#widthMM">widthMM</keyword>
         <section ref="qpaintdevice-members.html" title="List of all members"/>
@@ -10636,6 +10622,12 @@
         <keyword ref="qpair.html#first-var">first</keyword>
         <keyword ref="qpair.html#second-var">second</keyword>
         <keyword ref="qpair.html#qMakePair">qMakePair</keyword>
+        <keyword ref="qpair.html#operator-not-eq">operator!=</keyword>
+        <keyword ref="qpair.html#operator-lt">operator&lt;</keyword>
+        <keyword ref="qpair.html#operator-lt-eq">operator&lt;=</keyword>
+        <keyword ref="qpair.html#operator-eq-eq">operator==</keyword>
+        <keyword ref="qpair.html#operator-gt">operator&gt;</keyword>
+        <keyword ref="qpair.html#operator-gt-eq">operator&gt;=</keyword>
         <section ref="qpair-members.html" title="List of all members"/>
     </section>
     <section ref="qpalette.html" title="QPalette Class Reference">
@@ -10812,6 +10804,9 @@
     <section ref="qpixmap.html" title="QPixmap Class Reference">
         <keyword ref="qpixmap.html">QPixmap</keyword>
         <keyword ref="qpixmap.html#HBitmapFormat-enum">HBitmapFormat</keyword>
+        <keyword ref="qpixmap.html#HBitmapFormat-enum">QPixmap::PremultipliedAlpha</keyword>
+        <keyword ref="qpixmap.html#HBitmapFormat-enum">QPixmap::NoAlpha</keyword>
+        <keyword ref="qpixmap.html#HBitmapFormat-enum">QPixmap::Alpha</keyword>
         <keyword ref="qpixmap.html#ShareMode-enum">ShareMode</keyword>
         <keyword ref="qpixmap.html#ShareMode-enum">QPixmap::ImplicitlyShared</keyword>
         <keyword ref="qpixmap.html#ShareMode-enum">QPixmap::ExplicitlyShared</keyword>
@@ -11000,7 +10995,6 @@
         <keyword ref="qpoint.html#operator-2b-eq">operator+=</keyword>
         <keyword ref="qpoint.html#operator--eq">operator-=</keyword>
         <keyword ref="qpoint.html#operator-2f-eq">operator/=</keyword>
-        <keyword ref="qpoint.html#operator-">operator-</keyword>
         <keyword ref="qpoint.html#operator-2f">operator/</keyword>
         <section ref="qpoint-members.html" title="List of all members"/>
     </section>
@@ -12567,6 +12561,9 @@
         <keyword ref="qsize.html#operator-2b-eq">operator+=</keyword>
         <keyword ref="qsize.html#operator--eq">operator-=</keyword>
         <keyword ref="qsize.html#operator-2f-eq">operator/=</keyword>
+        <keyword ref="qsize.html#operator-2a">operator*</keyword>
+        <keyword ref="qsize.html#operator-2b">operator+</keyword>
+        <keyword ref="qsize.html#operator-">operator-</keyword>
         <section ref="qsize-members.html" title="List of all members"/>
     </section>
     <section ref="qsizef.html" title="QSizeF Class Reference">
@@ -12739,6 +12736,7 @@
         <keyword ref="qsourcelocation.html#operator-not-eq">operator!=</keyword>
         <keyword ref="qsourcelocation.html#operator-eq">operator=</keyword>
         <keyword ref="qsourcelocation.html#operator-eq-eq">operator==</keyword>
+        <keyword ref="qsourcelocation.html#qHash">qHash</keyword>
         <section ref="qsourcelocation-members.html" title="List of all members"/>
     </section>
     <section ref="qspaceritem.html" title="QSpacerItem Class Reference">
@@ -14418,7 +14416,7 @@
         <keyword ref="qstylehintreturn.html#StyleOptionType-enum">QStyleHintReturn::Type</keyword>
         <keyword ref="qstylehintreturn.html#StyleOptionVersion-enum">StyleOptionVersion</keyword>
         <keyword ref="qstylehintreturn.html#StyleOptionVersion-enum">QStyleHintReturn::Version</keyword>
-        <keyword ref="qstylehintreturn.html#type-var">type</keyword>
+        <keyword ref="qstylehintreturn.html#type-varx">type</keyword>
         <keyword ref="qstylehintreturn.html#version-var">version</keyword>
         <section ref="qstylehintreturn-members.html" title="List of all members"/>
     </section>
@@ -14483,7 +14481,7 @@
         <keyword ref="qstyleoption.html#palette-var">palette</keyword>
         <keyword ref="qstyleoption.html#rect-var">rect</keyword>
         <keyword ref="qstyleoption.html#state-var">state</keyword>
-        <keyword ref="qstyleoption.html#type-var">type</keyword>
+        <keyword ref="qstyleoption.html#type-varx">type</keyword>
         <keyword ref="qstyleoption.html#version-var">version</keyword>
         <keyword ref="qstyleoption.html#qstyleoption_cast">qstyleoption_cast</keyword>
         <section ref="qstyleoption-members.html" title="List of all members"/>
@@ -18114,7 +18112,6 @@
         <keyword ref="qtransform.html#operator-2f-eq">operator/=</keyword>
         <keyword ref="qtransform.html#operator-eq">operator=</keyword>
         <keyword ref="qtransform.html#operator-eq-eq">operator==</keyword>
-        <keyword ref="qtransform.html#operator-2a">operator*</keyword>
         <section ref="qtransform-members.html" title="List of all members"/>
     </section>
     <section ref="qtranslator.html" title="QTranslator Class Reference">
@@ -18529,7 +18526,7 @@
         <keyword ref="qurl.html#isRelative">isRelative</keyword>
         <keyword ref="qurl.html#isValid">isValid</keyword>
         <keyword ref="qurl.html#password">password</keyword>
-        <keyword ref="qurl.html#pathx">path</keyword>
+        <keyword ref="qurl.html#path">path</keyword>
         <keyword ref="qurl.html#port">port</keyword>
         <keyword ref="qurl.html#queryItemValue">queryItemValue</keyword>
         <keyword ref="qurl.html#queryItems">queryItems</keyword>
@@ -18767,8 +18764,6 @@
         <keyword ref="qvariant.html#qVariantSetValue">qVariantSetValue</keyword>
         <keyword ref="qvariant.html#qVariantValue">qVariantValue</keyword>
         <keyword ref="qvariant.html#qvariant_cast">qvariant_cast</keyword>
-        <keyword ref="qvariant.html#operator-not-eq">operator!=</keyword>
-        <keyword ref="qvariant.html#operator-eq-eq">operator==</keyword>
         <section ref="qvariant-members.html" title="List of all members"/>
         <section ref="qvariant-qt3.html" title="Qt 3 support members"/>
     </section>
@@ -21715,7 +21710,7 @@
         <keyword ref="q3httprequestheader.html#majorVersion">majorVersion</keyword>
         <keyword ref="q3httprequestheader.html#method">method</keyword>
         <keyword ref="q3httprequestheader.html#minorVersion">minorVersion</keyword>
-        <keyword ref="q3httprequestheader.html#pathx">path</keyword>
+        <keyword ref="q3httprequestheader.html#path">path</keyword>
         <keyword ref="q3httprequestheader.html#setRequest">setRequest</keyword>
         <section ref="q3httprequestheader-members.html" title="List of all members"/>
     </section>
@@ -23919,7 +23914,7 @@
         <keyword ref="q3url.html#isValid">isValid</keyword>
         <keyword ref="q3url.html#parse">parse</keyword>
         <keyword ref="q3url.html#password">password</keyword>
-        <keyword ref="q3url.html#pathx">path</keyword>
+        <keyword ref="q3url.html#path">path</keyword>
         <keyword ref="q3url.html#port">port</keyword>
         <keyword ref="q3url.html#protocol">protocol</keyword>
         <keyword ref="q3url.html#query">query</keyword>
@@ -24132,7 +24127,7 @@
         <keyword ref="qtextoption-tab.html#operator-eq-eq">operator==</keyword>
         <keyword ref="qtextoption-tab.html#delimiter-var">delimiter</keyword>
         <keyword ref="qtextoption-tab.html#position-var">position</keyword>
-        <keyword ref="qtextoption-tab.html#type-var">type</keyword>
+        <keyword ref="qtextoption-tab.html#type-varx">type</keyword>
         <section ref="qtextoption-tab-members.html" title="List of all members"/>
     </section>
     <section ref="qtconcurrent-unhandledexception.html" title="UnhandledException Class Reference">
@@ -24699,8 +24694,8 @@
     <section ref="focus.html" title="Keyboard Focus">
         <keyword ref="focus.html">Keyboard Focus</keyword>
     </section>
-    <section ref="known-issues.html" title="Known Issues in 4.5&#x2e;1">
-        <keyword ref="known-issues.html">Known Issues in 4.5&#x2e;1</keyword>
+    <section ref="known-issues.html" title="Known Issues in 4.5&#x2e;2">
+        <keyword ref="known-issues.html">Known Issues in 4.5&#x2e;2</keyword>
     </section>
     <section ref="layout.html" title="Layout Classes">
         <keyword ref="layout.html">Layout Classes</keyword>
@@ -25571,6 +25566,9 @@
     <section ref="dialogs-extension.html" title="Extension Example">
         <keyword ref="dialogs-extension.html">Extension Example</keyword>
     </section>
+    <section ref="webkit-fancybrowser.html" title="Fancy Browser Example">
+        <keyword ref="webkit-fancybrowser.html">Fancy Browser Example</keyword>
+    </section>
     <section ref="itemviews-fetchmore.html" title="Fetch More Example">
         <keyword ref="itemviews-fetchmore.html">Fetch More Example</keyword>
     </section>
@@ -25606,6 +25604,12 @@
     </section>
     <section ref="network-ftp.html" title="FTP Example">
         <keyword ref="network-ftp.html">FTP Example</keyword>
+    </section>
+    <section ref="webkit-googlechat.html" title="Google Chat Example">
+        <keyword ref="webkit-googlechat.html">Google Chat Example</keyword>
+    </section>
+    <section ref="network-googlesuggest.html" title="Google Suggest Example">
+        <keyword ref="network-googlesuggest.html">Google Suggest Example</keyword>
     </section>
     <section ref="opengl-grabber.html" title="Grabber Example">
         <keyword ref="opengl-grabber.html">Grabber Example</keyword>

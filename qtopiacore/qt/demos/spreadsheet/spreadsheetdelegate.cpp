@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -51,7 +51,7 @@ QWidget *SpreadSheetDelegate::createEditor(QWidget *parent,
 {
     if (index.column() == 1) {
         QDateTimeEdit *editor = new QDateTimeEdit(parent);
-        editor->setDisplayFormat("dd/M/yyy");
+        editor->setDisplayFormat("dd/M/yyyy");
         editor->setCalendarPopup(true);
         return editor;
     }
@@ -93,7 +93,7 @@ void SpreadSheetDelegate::setEditorData(QWidget *editor,
         if (dateEditor) {
             dateEditor->setDate(QDate::fromString(
             index.model()->data(index, Qt::EditRole).toString(),
-            "d/M/yy"));
+            "d/M/yyyy"));
         }
     }
 }
@@ -107,7 +107,7 @@ void SpreadSheetDelegate::setModelData(QWidget *editor,
     } else {
         QDateTimeEdit *dateEditor = qobject_cast<QDateTimeEdit *>(editor);
         if (dateEditor) {
-            model->setData(index, dateEditor->date().toString("dd/M/yyy"));
+            model->setData(index, dateEditor->date().toString("dd/M/yyyy"));
         }
     }
 }

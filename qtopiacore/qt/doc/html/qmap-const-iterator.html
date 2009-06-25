@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qmap.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qmap.cpp -->
 <head>
   <title>Qt 4.5: const_iterator Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -18,6 +18,11 @@
 <pre> #include &lt;<a href="qmap.html">QMap</a>&gt;</pre><ul>
 <li><a href="qmap-const-iterator-members.html">List of all members, including inherited members</a></li>
 <li><a href="qmap-const-iterator-qt3.html">Qt 3 support members</a></li>
+</ul>
+<a name="public-types"></a>
+<h3>Public Types</h3>
+<ul>
+<li><div class="fn"></div>typedef <b><a href="qmap-const-iterator.html#iterator_category-typedef">iterator_category</a></b></li>
 </ul>
 <a name="public-functions"></a>
 <h3>Public Functions</h3>
@@ -59,6 +64,10 @@
 <p>Multiple iterators can be used on the same map. If you add items to the map, existing iterators will remain valid. If you remove items from the map, iterators that point to the removed items will become dangling iterators.</p>
 <p>See also <a href="qmap-iterator.html">QMap::iterator</a> and <a href="qmapiterator.html">QMapIterator</a>.</p>
 <hr />
+<h2>Member Type Documentation</h2>
+<h3 class="fn"><a name="iterator_category-typedef"></a>typedef const_iterator::iterator_category</h3>
+<p>A synonym for <i>std::bidirectional_iterator_tag</i> indicating this iterator is a bidirectional iterator.</p>
+<hr />
 <h2>Member Function Documentation</h2>
 <h3 class="fn"><a name="const_iterator"></a>const_iterator::const_iterator ()</h3>
 <p>Constructs an uninitialized iterator.</p>
@@ -88,7 +97,7 @@
 <p>Calling this function on <a href="qmap.html#end">QMap::end</a>() leads to undefined results.</p>
 <p>See also <a href="qmap-const-iterator.html#operator--">operator--</a>().</p>
 <h3 class="fn"><a name="operator-2b-2b-2"></a>const_iterator const_iterator::operator++ ( int )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The postfix ++ operator (<tt>i++</tt>) advances the iterator to the next item in the map and returns an iterator to the previously current item.</p>
 <h3 class="fn"><a name="operator-2b-eq"></a>const_iterator &amp; const_iterator::operator+= ( int <i>j</i> )</h3>
 <p>Advances the iterator by <i>j</i> items. (If <i>j</i> is negative, the iterator goes backward.)</p>
@@ -103,7 +112,7 @@
 <p>Calling this function on <a href="qmap.html#begin">QMap::begin</a>() leads to undefined results.</p>
 <p>See also <a href="qmap-const-iterator.html#operator-2b-2b">operator++</a>().</p>
 <h3 class="fn"><a name="operator---2"></a>const_iterator const_iterator::operator-- ( int )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The postfix -- operator (<tt>i--</tt>) makes the preceding item current and returns an iterator pointing to the previously current item.</p>
 <h3 class="fn"><a name="operator--eq"></a>const_iterator &amp; const_iterator::operator-= ( int <i>j</i> )</h3>
 <p>Makes the iterator go back by <i>j</i> items. (If <i>j</i> is negative, the iterator goes forward.)</p>
@@ -119,6 +128,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

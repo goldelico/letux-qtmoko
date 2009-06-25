@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/access/qhttp.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/access/qhttp.cpp -->
 <head>
   <title>Qt 4.5: QHttp Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -307,7 +307,7 @@
 <p>When the request is started the <a href="qhttp.html#requestStarted">requestStarted</a>() signal is emitted. When it is finished the <a href="qhttp.html#requestFinished">requestFinished</a>() signal is emitted.</p>
 <p>See also <a href="qhttp.html#setHost">setHost</a>(), <a href="qhttp.html#get">get</a>(), <a href="qhttp.html#head">head</a>(), <a href="qhttp.html#request">request</a>(), <a href="qhttp.html#requestStarted">requestStarted</a>(), <a href="qhttp.html#requestFinished">requestFinished</a>(), and <a href="qhttp.html#done">done</a>().</p>
 <h3 class="fn"><a name="post-2"></a>int QHttp::post ( const <a href="qstring.html">QString</a> &amp; <i>path</i>, const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i>, <a href="qiodevice.html">QIODevice</a> * <i>to</i> = 0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p><i>data</i> is used as the content data of the HTTP request.</p>
 <h3 class="fn"><a name="proxyAuthenticationRequired"></a>void QHttp::proxyAuthenticationRequired ( const <a href="qnetworkproxy.html">QNetworkProxy</a> &amp; <i>proxy</i>, <a href="qauthenticator.html">QAuthenticator</a> * <i>authenticator</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal can be emitted when a <i>proxy</i> that requires authentication is used. The <i>authenticator</i> object can then be filled in with the required details to allow authentication and continue the connection.</p>
@@ -336,7 +336,7 @@
 <p>When the request is started the <a href="qhttp.html#requestStarted">requestStarted</a>() signal is emitted. When it is finished the <a href="qhttp.html#requestFinished">requestFinished</a>() signal is emitted.</p>
 <p>See also <a href="qhttp.html#setHost">setHost</a>(), <a href="qhttp.html#get">get</a>(), <a href="qhttp.html#post">post</a>(), <a href="qhttp.html#head">head</a>(), <a href="qhttp.html#requestStarted">requestStarted</a>(), <a href="qhttp.html#requestFinished">requestFinished</a>(), and <a href="qhttp.html#done">done</a>().</p>
 <h3 class="fn"><a name="request-2"></a>int QHttp::request ( const <a href="qhttprequestheader.html">QHttpRequestHeader</a> &amp; <i>header</i>, const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i>, <a href="qiodevice.html">QIODevice</a> * <i>to</i> = 0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p><i>data</i> is used as the content data of the HTTP request.</p>
 <h3 class="fn"><a name="requestFinished"></a>void QHttp::requestFinished ( int <i>id</i>, bool <i>error</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when processing the request identified by <i>id</i> has finished. <i>error</i> is true if an error occurred during the processing; otherwise <i>error</i> is false.</p>
@@ -378,7 +378,7 @@
 <p><b>Note:</b> setProxy() has to be called before <a href="qhttp.html#setHost">setHost</a>() for it to take effect. If setProxy() is called after <a href="qhttp.html#setHost">setHost</a>(), then it will not apply until after <a href="qhttp.html#setHost">setHost</a>() is called again.</p>
 <p>See also <a href="qftp.html#setProxy">QFtp::setProxy</a>().</p>
 <h3 class="fn"><a name="setProxy-2"></a>int QHttp::setProxy ( const <a href="qnetworkproxy.html">QNetworkProxy</a> &amp; <i>proxy</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Enables HTTP proxy support using the proxy settings from <i>proxy</i>. If <i>proxy</i> is a transparent proxy, <a href="qhttp.html">QHttp</a> will call <a href="qabstractsocket.html#setProxy">QAbstractSocket::setProxy</a>() on the underlying socket. If the type is <a href="qnetworkproxy.html#ProxyType-enum">QNetworkProxy::HttpCachingProxy</a>, <a href="qhttp.html">QHttp</a> will behave like the previous function.</p>
 <p><b>Note:</b> for compatibility with Qt 4.3, if the proxy type is <a href="qnetworkproxy.html#ProxyType-enum">QNetworkProxy::HttpProxy</a> and the request type is unencrypted (that is, <a href="qhttp.html#ConnectionMode-enum">ConnectionModeHttp</a>), <a href="qhttp.html">QHttp</a> will treat the proxy as a caching proxy.</p>
 <h3 class="fn"><a name="setSocket"></a>int QHttp::setSocket ( <a href="qtcpsocket.html">QTcpSocket</a> * <i>socket</i> )</h3>
@@ -406,6 +406,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

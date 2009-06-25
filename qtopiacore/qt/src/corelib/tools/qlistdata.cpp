@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -764,6 +764,10 @@ void **QListData::erase(void **xi)
     This function requires the value type to have an implementation of
     \c operator==().
 
+    Note that QList uses 0-based indexes, just like C++ arrays. Negative
+    indexes are not supported with the exception of the value mentioned
+    above.
+
     \sa lastIndexOf(), contains()
 */
 
@@ -779,6 +783,10 @@ void **QListData::erase(void **xi)
 
     This function requires the value type to have an implementation of
     \c operator==().
+
+    Note that QList uses 0-based indexes, just like C++ arrays. Negative 
+    indexes are not supported with the exception of the value mentioned
+    above.
 
     \sa indexOf()
 */
@@ -1165,7 +1173,8 @@ void **QListData::erase(void **xi)
 
 /*! \typedef QList::iterator::iterator_category
 
-    \internal
+  A synonym for \e {std::random_access_iterator_tag} indicating
+  this iterator is a random access iterator.
 */
 
 /*! \typedef QList::iterator::difference_type
@@ -1424,7 +1433,8 @@ void **QListData::erase(void **xi)
 
 /*! \typedef QList::const_iterator::iterator_category
 
-    \internal
+  A synonym for \e {std::random_access_iterator_tag} indicating
+  this iterator is a random access iterator.
 */
 
 /*! \typedef QList::const_iterator::difference_type

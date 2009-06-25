@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/q3ptrlist.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/q3ptrlist.qdoc -->
 <head>
   <title>Qt 4.5: Q3PtrList Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -165,7 +165,7 @@
 <p>This function is very efficient. It starts scanning from the first item, last item, or current item, whichever is closest to <i>index</i>.</p>
 <p>See also <a href="q3ptrlist.html#current">current</a>().</p>
 <h3 class="fn"><a name="at-2"></a>int Q3PtrList::at () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the index of the current list item. The returned value is -1 if the current item is 0.</p>
 <p>See also <a href="q3ptrlist.html#current">current</a>().</p>
 <h3 class="fn"><a name="clear"></a>void Q3PtrList::clear ()&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -287,7 +287,7 @@
 <p>All list iterators that refer to the removed item will be set to point to the new current item.</p>
 <p>See also <a href="q3ptrlist.html#take">take</a>(), <a href="q3ptrlist.html#clear">clear</a>(), <a href="q3ptrcollection.html#setAutoDelete">setAutoDelete</a>(), <a href="q3ptrlist.html#current">current</a>(), and <a href="q3ptrlist.html#removeRef">removeRef</a>().</p>
 <h3 class="fn"><a name="remove-2"></a>bool Q3PtrList::remove ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Removes the current list item.</p>
 <p>Returns TRUE if successful, i.e&#x2e; if the current item isn't 0; otherwise returns FALSE.</p>
 <p>The removed item is deleted if <a href="q3ptrcollection.html#setAutoDelete">auto-deletion</a> is enabled.</p>
@@ -295,7 +295,7 @@
 <p>All list iterators that refer to the removed item will be set to point to the new current item.</p>
 <p>See also <a href="q3ptrlist.html#take">take</a>(), <a href="q3ptrlist.html#clear">clear</a>(), <a href="q3ptrcollection.html#setAutoDelete">setAutoDelete</a>(), <a href="q3ptrlist.html#current">current</a>(), and <a href="q3ptrlist.html#removeRef">removeRef</a>().</p>
 <h3 class="fn"><a name="remove-3"></a>bool Q3PtrList::remove ( const type * <i>item</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Removes the first occurrence of <i>item</i> from the list.</p>
 <p>Returns TRUE if successful, i.e&#x2e; if <i>item</i> is in the list; otherwise returns FALSE.</p>
 <p>The removed item is deleted if <a href="q3ptrcollection.html#setAutoDelete">auto-deletion</a> is enabled.</p>
@@ -350,7 +350,7 @@
 <p>All list iterators that refer to the taken item will be set to point to the new current item.</p>
 <p>See also <a href="q3ptrlist.html#remove">remove</a>(), <a href="q3ptrlist.html#clear">clear</a>(), and <a href="q3ptrlist.html#current">current</a>().</p>
 <h3 class="fn"><a name="take-2"></a>type * Q3PtrList::take ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Takes the current item out of the list without deleting it (even if <a href="q3ptrcollection.html#setAutoDelete">auto-deletion</a> is enabled).</p>
 <p>Returns a pointer to the item taken out of the list, or 0 if the current item is 0.</p>
 <p>The item after the removed item becomes the new current list item if the removed item is not the last item in the list. If the last item is removed, the new last item becomes the current item. The current item is set to 0 if the list becomes empty.</p>
@@ -381,6 +381,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

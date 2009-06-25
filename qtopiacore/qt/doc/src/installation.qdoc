@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -72,12 +72,12 @@ in the \l{Qt for X11 Requirements} document.
     For the open source version you do not need a license file.
 
 \o  Unpack the archive if you have not done so already. For example,
-    if you have the \c{qt-x11-opensource-desktop-4.5.1.tar.gz}
+    if you have the \c{qt-x11-opensource-desktop-4.5.2.tar.gz}
     package, type the following commands at a command line prompt:
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 0
 
-    This creates the directory \c{/tmp/qt-x11-opensource-desktop-4.5.1}
+    This creates the directory \c{/tmp/qt-x11-opensource-desktop-4.5.2}
     containing the files from the archive. We only support the GNU version of
     the tar archiving utility. Note that on some systems it is called gtar.
 
@@ -87,7 +87,7 @@ in the \l{Qt for X11 Requirements} document.
     \c{./configure} script in the package directory.
 
     By default, Qt is configured for installation in the
-    \c{/usr/local/Trolltech/Qt-4.5.1} directory, but this can be
+    \c{/usr/local/Trolltech/Qt-4.5.2} directory, but this can be
     changed by using the \c{-prefix} option.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 1
@@ -139,7 +139,7 @@ in the \l{Qt for X11 Requirements} document.
 
     For compilers that do not support rpath you must also extended the
     \c LD_LIBRARY_PATH environment variable to include
-    \c{/usr/local/Trolltech/Qt-4.5.1/lib}. On Linux with GCC this step
+    \c{/usr/local/Trolltech/Qt-4.5.2/lib}. On Linux with GCC this step
     is not needed.
 
 \o  That's all. Qt is now installed.
@@ -199,7 +199,7 @@ as part of the \l{Qt Commercial Editions}.
     For the open source version you do not need a license file.
 
 \o  Uncompress the files into the directory you want Qt installed;
-    e.g. \c{C:\Qt\4.5.1}.
+    e.g. \c{C:\Qt\4.5.2}.
 
     \note The install path must not contain any spaces or Windows specific
     file system characters.
@@ -211,7 +211,7 @@ as part of the \l{Qt Commercial Editions}.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 7
 
-    This is done by adding \c{c:\Qt\4.5.1\bin} to the \c PATH variable.
+    This is done by adding \c{c:\Qt\4.5.2\bin} to the \c PATH variable.
 
     For newer versions of Windows, \c PATH can be extended through
     the \menu{Control Panel|System|Advanced|Environment variables} menu.
@@ -305,12 +305,12 @@ The following instructions describe how to install Qt from the source package.
     For the open source version you do not need a license file.
 
 \o  Unpack the archive if you have not done so already. For example,
-    if you have the \c{qt-mac-opensource-desktop-4.5.1.tar.gz}
+    if you have the \c{qt-mac-opensource-desktop-4.5.2.tar.gz}
     package, type the following commands at a command line prompt:
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 11
 
-    This creates the directory \c{/tmp/qt-mac-opensource-desktop-4.5.1}
+    This creates the directory \c{/tmp/qt-mac-opensource-desktop-4.5.2}
     containing the files from the archive.
 
 \o  Building
@@ -319,7 +319,7 @@ The following instructions describe how to install Qt from the source package.
     \c{./configure} script in the package directory.
 
     By default, Qt is configured for installation in the
-    \c{/usr/local/Trolltech/Qt-4.5.1} directory, but this can be
+    \c{/usr/local/Trolltech/Qt-4.5.2} directory, but this can be
     changed by using the \c{-prefix} option.
 
 \snippet doc/src/snippets/code/doc_src_installation.qdoc 12
@@ -412,7 +412,7 @@ in the \l{Qt for Windows CE Requirements} document.
 
 \list 1
     \o  Uncompress the files into the directory you want to install Qt into;
-        e.g., \c{C:\Qt\4.5.1}.
+        e.g., \c{C:\Qt\4.5.2}.
 
         \note The install path must not contain any spaces.
 
@@ -423,7 +423,7 @@ in the \l{Qt for Windows CE Requirements} document.
 
         \snippet doc/src/snippets/code/doc_src_installation.qdoc 18
 
-        This is done by adding \c{c:\Qt\4.5.1\bin} to the \c PATH variable.
+        This is done by adding \c{c:\Qt\4.5.2\bin} to the \c PATH variable.
 
         For newer versions of Windows, \c PATH can be extended through
         "Control Panel->System->Advanced->Environment variables" and for
@@ -550,7 +550,7 @@ in the \l{Qt for Windows CE Requirements} document.
         \l{http://www.microsoft.com/downloads/details.aspx?FamilyID=0baf2b35-c656-4969-ace8-e4c0c0716adb&amp;DisplayLang=en}{here}.
     \endlist
 
-    \sa {Known Issues in 4.5.1}
+    \sa {Known Issues in 4.5.2}
 */
 
 /*!
@@ -560,7 +560,7 @@ in the \l{Qt for Windows CE Requirements} document.
     \brief Setting up the Mac OS X environment for Qt.
     \previouspage General Qt Requirements
 
-    \sa {Known Issues in 4.5.1}
+    \sa {Known Issues in 4.5.2}
 */
 
 /*!
@@ -651,7 +651,7 @@ in the \l{Qt for Windows CE Requirements} document.
     distributions; try searching for \c gstreamer or \c libgstreamer in your
     distribution's package repository to find suitable packages.
 
-    \sa {Known Issues in 4.5.1}
+    \sa {Known Issues in 4.5.2}
 */
 
 /*!
@@ -705,7 +705,7 @@ in the \l{Qt for Windows CE Requirements} document.
     information on Windows CE Customization can be found
     \l{Windows CE - Working with Custom SDKs}{here}.
 
-    \sa {Known Issues in 4.5.1}
+    \sa {Known Issues in 4.5.2}
 */
 
 /*!
@@ -715,7 +715,7 @@ in the \l{Qt for Windows CE Requirements} document.
     \brief Setting up the Embedded Linux environment for Qt.
     \previouspage General Qt Requirements
 
-    \sa {Known Issues in 4.5.1}
+    \sa {Known Issues in 4.5.2}
 
     \section1 Building Qt for Embedded Linux with uclibc
 
@@ -738,8 +738,6 @@ in the \l{Qt for Windows CE Requirements} document.
     \header                                        \o Minimal \o Normal \o Minimal \o Normal \o Minimal \o Normal \o Minimal \o Normal 
     \row    \o linux-x86-g++ \o GCC 4.2.4          \o 1.7M    \o 2.7M   \o 3.3M    \o 9.9M   \o 653K    \o 1.1M   \o N/A     \o 17M
     \row    \o linux-arm-g++ \o GCC 4.1.1          \o 1.9M    \o 3.2M   \o 4.1M    \o 11M    \o 507K    \o 1.0M   \o N/A     \o 17M
-    \row    \o linux-arm-g++ (thumb)
-                             \o GCC 4.1.1          \o 1.7M    \o 2.8M   \o 4.0M    \o 9.8M   \o 409K    \o 796K   \o N/A     \o 17M
     \row    \o linux-mips-g++ (MIPS32)
                              \o GCC 4.2.4          \o 2.0M    \o 3.2M   \o 4.5M    \o 12M    \o 505K    \o 1003K  \o N/A     \o 21M
     \endtable

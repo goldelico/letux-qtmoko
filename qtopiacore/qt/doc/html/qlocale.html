@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qlocale.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qlocale.cpp -->
 <head>
   <title>Qt 4.5: QLocale Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -145,7 +145,7 @@
 <li>If the language is found but the country is not, or if the country is <tt>AnyCountry</tt>, the language is used with the most appropriate available country (for example, Germany for German),</li>
 <li>If neither the language nor the country are found, QLocale defaults to the default locale (see <a href="qlocale.html#setDefault">setDefault</a>()).</li>
 </ul>
-<p>The &quot;C&quot; locale is identical to <a href="qlocale.html#Language-enum">English</a>/<a href="qlocale.html#Country-enum">UnitedStates</a>.</p>
+<p>The &quot;C&quot; locale is identical in behavior to <a href="qlocale.html#Language-enum">English</a>/<a href="qlocale.html#Country-enum">UnitedStates</a>.</p>
 <p>Use <a href="qlocale.html#language">language</a>() and <a href="qlocale.html#country">country</a>() to determine the actual language and country values used.</p>
 <p>An alternative method for constructing a QLocale object is by specifying the locale name.</p>
 <pre> QLocale korean(&quot;ko&quot;);
@@ -420,7 +420,7 @@
 <p>This enumerated type is used to specify a language.</p>
 <p><table border="1" cellpadding="2" cellspacing="1" width="100%">
 <tr><th width="25%">Constant</th><th width="15%">Value</th><th width="60%">Description</th></tr>
-<tr><td valign="top"><tt>QLocale::C</tt></td><td align="center" valign="top"><tt>1</tt></td><td valign="top">The &quot;C&quot; locale is English/<a href="qlocale.html#Country-enum">UnitedStates</a>.</td></tr>
+<tr><td valign="top"><tt>QLocale::C</tt></td><td align="center" valign="top"><tt>1</tt></td><td valign="top">The &quot;C&quot; locale is identical in behavior to English/<a href="qlocale.html#Country-enum">UnitedStates</a>.</td></tr>
 <tr><td valign="top"><tt>QLocale::Abkhazian</tt></td><td align="center" valign="top"><tt>2</tt></td><td valign="top">&nbsp;</td></tr>
 <tr><td valign="top"><tt>QLocale::Afan</tt></td><td align="center" valign="top"><tt>3</tt></td><td valign="top">&nbsp;</td></tr>
 <tr><td valign="top"><tt>QLocale::Afar</tt></td><td align="center" valign="top"><tt>4</tt></td><td valign="top">&nbsp;</td></tr>
@@ -822,26 +822,26 @@
 <p>Returns a localized string representation of the given <i>dateTime</i> according to the specified <i>format</i>. If <i>format</i> is an empty string, an empty string is returned.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="toString-8"></a><a href="qstring.html">QString</a> QLocale::toString ( <a href="qtglobal.html#qulonglong-typedef">qulonglong</a> <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>See also <a href="qlocale.html#toULongLong">toULongLong</a>().</p>
 <h3 class="fn"><a name="toString-9"></a><a href="qstring.html">QString</a> QLocale::toString ( double <i>i</i>, char <i>f</i> = 'g', int <i>prec</i> = 6 ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p><i>f</i> and <i>prec</i> have the same meaning as in QString::number(double, char, int).</p>
 <p>See also <a href="qlocale.html#toDouble">toDouble</a>().</p>
 <h3 class="fn"><a name="toString-10"></a><a href="qstring.html">QString</a> QLocale::toString ( short <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>See also <a href="qlocale.html#toShort">toShort</a>().</p>
 <h3 class="fn"><a name="toString-11"></a><a href="qstring.html">QString</a> QLocale::toString ( <a href="qtglobal.html#ushort-typedef">ushort</a> <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>See also <a href="qlocale.html#toUShort">toUShort</a>().</p>
 <h3 class="fn"><a name="toString-12"></a><a href="qstring.html">QString</a> QLocale::toString ( int <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>See also <a href="qlocale.html#toInt">toInt</a>().</p>
 <h3 class="fn"><a name="toString-13"></a><a href="qstring.html">QString</a> QLocale::toString ( <a href="qtglobal.html#uint-typedef">uint</a> <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>See also <a href="qlocale.html#toUInt">toUInt</a>().</p>
 <h3 class="fn"><a name="toString-14"></a><a href="qstring.html">QString</a> QLocale::toString ( float <i>i</i>, char <i>f</i> = 'g', int <i>prec</i> = 6 ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p><i>f</i> and <i>prec</i> have the same meaning as in QString::number(double, char, int).</p>
 <p>See also <a href="qlocale.html#toDouble">toDouble</a>().</p>
 <h3 class="fn"><a name="toTime"></a><a href="qtime.html">QTime</a> QLocale::toTime ( const <a href="qstring.html">QString</a> &amp; <i>string</i>, <a href="qlocale.html#FormatType-enum">FormatType</a> <i>format</i> = LongFormat ) const</h3>
@@ -885,6 +885,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

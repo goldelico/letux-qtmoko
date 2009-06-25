@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -178,7 +178,7 @@ public:
      * Create a qimage with the alpha values for the glyph.
      * Returns an image indexed_8 with index values ranging from 0=fully transparant to 255=opaque
      */
-    virtual QImage alphaMapForGlyph(glyph_t) = 0;
+    virtual QImage alphaMapForGlyph(glyph_t);
     virtual QImage alphaMapForGlyph(glyph_t, const QTransform &t);
     virtual QImage alphaRGBMapForGlyph(glyph_t, int margin, const QTransform &t);
 

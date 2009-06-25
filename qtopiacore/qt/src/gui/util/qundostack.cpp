@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -715,7 +715,7 @@ int QUndoStack::index() const
 }
 
 /*!
-    Repeatedly calls undo() or redo() until the the current command index reaches
+    Repeatedly calls undo() or redo() until the current command index reaches
     \a idx. This function can be used to roll the state of the document forwards
     of backwards. indexChanged() is emitted only once.
 

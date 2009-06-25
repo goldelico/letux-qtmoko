@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/deployment.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/deployment.qdoc -->
 <head>
   <title>Qt 4.5: Deploying an Application on Windows</title>
   <link rel="contents" href="deployment.html" />
@@ -174,7 +174,7 @@
 <p>If you add a custom path using QApplication::addLibraryPath it could look like this:</p>
 <pre> qApp-&gt;addLibraryPath(&quot;C:/customPath/plugins&quot;);</pre>
 <p>Then <a href="qapplication.html#qApp">qApp</a>-&gt;libraryPaths() would return something like this:</p>
-<p>&quot;C:/customPath/plugins &quot; &quot;C:/Qt/4.5&#x2e;1/plugins&quot; &quot;E:/myApplication/directory/&quot;</p>
+<p>&quot;C:/customPath/plugins &quot; &quot;C:/Qt/4.5&#x2e;2/plugins&quot; &quot;E:/myApplication/directory/&quot;</p>
 <p>The executable will look for the plugins in these directories and the same order as the <a href="qstringlist.html">QStringList</a> returned by <a href="qapplication.html#qApp">qApp</a>-&gt;libraryPaths(). The newly added path is prepended to the <a href="qapplication.html#qApp">qApp</a>-&gt;libraryPaths() which means that it will be searched through first. However, if you use <a href="qapplication.html#qApp">qApp</a>-&gt;setLibraryPaths(), you will be able to determend which paths and in which order they will be searched.</p>
 <p>The <a href="plugins-howto.html">How to Create Qt Plugins</a> document outlines the issues you need to pay attention to when building and deploying plugins for Qt applications.</p>
 <p>
@@ -184,6 +184,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

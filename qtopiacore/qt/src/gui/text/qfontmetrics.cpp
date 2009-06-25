@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -670,8 +670,8 @@ QRect QFontMetrics::boundingRect(const QString &text) const
     Returns the rectangle that is covered by ink if character \a ch
     were to be drawn at the origin of the coordinate system.
 
-    Note that the bounding rectangle may extend to the left of (0, 0),
-    e.g. for italicized fonts, and that the text output may cover \e
+    Note that the bounding rectangle may extend to the left of (0, 0)
+    (e.g., for italicized fonts), and that the text output may cover \e
     all pixels in the bounding rectangle. For a space character the rectangle
     will usually be empty.
 
@@ -724,7 +724,7 @@ QRect QFontMetrics::boundingRect(QChar ch) const
     \o Qt::AlignCenter (== \c{Qt::AlignHCenter | Qt::AlignVCenter})
     \o Qt::TextSingleLine ignores newline characters in the text.
     \o Qt::TextExpandTabs expands tabs (see below)
-    \o Qt::TextShowMnemonic interprets "&amp;x" as \underline{x}, i.e. underlined.
+    \o Qt::TextShowMnemonic interprets "&x" as \underline{x}; i.e., underlined.
     \o Qt::TextWordWrap breaks the text to fit the rectangle.
     \endlist
 
@@ -781,7 +781,7 @@ QRect QFontMetrics::boundingRect(const QRect &rect, int flags, const QString &te
     \list
     \o Qt::TextSingleLine ignores newline characters.
     \o Qt::TextExpandTabs expands tabs (see below)
-    \o Qt::TextShowMnemonic interprets "&amp;x" as \underline{x}, i.e. underlined.
+    \o Qt::TextShowMnemonic interprets "&x" as \underline{x}; i.e., underlined.
     \o Qt::TextWordBreak breaks the text to fit the rectangle.
     \endlist
 
@@ -1500,7 +1500,7 @@ QRectF QFontMetricsF::boundingRect(QChar ch) const
     \o Qt::AlignCenter (== \c{Qt::AlignHCenter | Qt::AlignVCenter})
     \o Qt::TextSingleLine ignores newline characters in the text.
     \o Qt::TextExpandTabs expands tabs (see below)
-    \o Qt::TextShowMnemonic interprets "&amp;x" as \underline{x}, i.e. underlined.
+    \o Qt::TextShowMnemonic interprets "&x" as \underline{x}; i.e., underlined.
     \o Qt::TextWordWrap breaks the text to fit the rectangle.
     \endlist
 
@@ -1559,7 +1559,7 @@ QRectF QFontMetricsF::boundingRect(const QRectF &rect, int flags, const QString&
     \list
     \o Qt::TextSingleLine ignores newline characters.
     \o Qt::TextExpandTabs expands tabs (see below)
-    \o Qt::TextShowMnemonic interprets "&amp;x" as \underline{x}, i.e. underlined.
+    \o Qt::TextShowMnemonic interprets "&x" as \underline{x}; i.e., underlined.
     \o Qt::TextWordBreak breaks the text to fit the rectangle.
     \endlist
 

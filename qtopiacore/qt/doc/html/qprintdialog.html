@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/dialogs/qabstractprintdialog.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/dialogs/qabstractprintdialog.cpp -->
 <head>
   <title>Qt 4.5: QPrintDialog Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -52,7 +52,7 @@
 <li><div class="fn"></div>5 public functions inherited from <a href="qdialog.html#public-functions">QDialog</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
@@ -97,7 +97,7 @@
     </table>
     <p>The printer dialog (shown above in Plastique style) enables access to common printing properties. On X11 platforms that use the CUPS printing system, the settings for each available printer can be modified via the dialog's <b>Properties</b> push button.</p>
 <p>On Windows and Mac OS X, the native print dialog is used, which means that some <a href="qwidget.html">QWidget</a> and <a href="qdialog.html">QDialog</a> properties set on the dialog won't be respected. The native print dialog on Mac OS X does not support setting printer options, i.e&#x2e; <a href="qabstractprintdialog-obsolete.html#setEnabledOptions">QAbstractPrintDialog::setEnabledOptions</a>() and <a href="qabstractprintdialog-obsolete.html#addEnabledOption">QAbstractPrintDialog::addEnabledOption</a>() have no effect.</p>
-<p>In Qt 4.4, it was possible to use the satic functions to show a sheet on Mac OS X. This is no longer supported in Qt 4.5&#x2e; If you want this functionality, use <a href="qprintdialog.html#open">QPrintDialog::open</a>().</p>
+<p>In Qt 4.4, it was possible to use the static functions to show a sheet on Mac OS X. This is no longer supported in Qt 4.5&#x2e; If you want this functionality, use <a href="qprintdialog.html#open">QPrintDialog::open</a>().</p>
 <p>See also <a href="qpagesetupdialog.html">QPageSetupDialog</a>, <a href="qprinter.html">QPrinter</a>, <a href="itemviews-pixelator.html">Pixelator Example</a>, <a href="richtext-orderform.html">Order Form Example</a>, <a href="widgets-imageviewer.html">Image Viewer Example</a>, and <a href="widgets-scribble.html">Scribble Example</a>.</p>
 <hr />
 <h2>Property Documentation</h2>
@@ -130,7 +130,7 @@
 <p>Reimplemented from <a href="qdialog.html#done">QDialog</a>.</p>
 <p>See also <a href="qdialog.html#done">QDialog::done</a>().</p>
 <h3 class="fn"><a name="open"></a>void QPrintDialog::open ( <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>member</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Opens the dialog and connects its <a href="qprintdialog.html#accepted">accepted</a>() signal to the slot specified by <i>receiver</i> and <i>member</i>.</p>
 <p>The signal will be disconnected from the slot when the dialog is closed.</p>
 <p>This function was introduced in Qt 4.5.</p>
@@ -155,6 +155,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -191,7 +191,11 @@ QIODevice *QNetworkDiskCache::prepare(const QNetworkCacheMetaData &metaData)
     } else {
         QString templateName = d->tmpCacheFileName();
         cacheItem->file = new QTemporaryFile(templateName, &cacheItem->data);
-        cacheItem->file->open();
+        if (!cacheItem->file->open()) {
+            qWarning() << "QNetworkDiskCache::prepare() unable to open temporary file";
+            delete cacheItem;
+            return 0;
+        }
         cacheItem->writeHeader(cacheItem->file);
         device = cacheItem->file;
     }
@@ -229,7 +233,7 @@ void QNetworkDiskCachePrivate::storeItem(QCacheItem *cacheItem)
 
     if (QFile::exists(fileName)) {
         if (!QFile::remove(fileName)) {
-            qWarning() << "QNetworkDiskCache: could't remove the cache file " << fileName;
+            qWarning() << "QNetworkDiskCache: couldn't remove the cache file " << fileName;
             return;
         }
     }
@@ -490,21 +494,21 @@ qint64 QNetworkDiskCache::expire()
     QDir::Filters filters = QDir::AllDirs | QDir:: Files | QDir::NoDotAndDotDot;
     QDirIterator it(cacheDirectory(), filters, QDirIterator::Subdirectories);
 
-    QMap<QDateTime, QString> cacheItems;
+    QMultiMap<QDateTime, QString> cacheItems;
     qint64 totalSize = 0;
     while (it.hasNext()) {
         QString path = it.next();
         QFileInfo info = it.fileInfo();
         QString fileName = info.fileName();
         if (fileName.endsWith(CACHE_POSTFIX) && fileName.startsWith(CACHE_PREFIX)) {
-            cacheItems[info.created()] = path;
+            cacheItems.insert(info.created(), path);
             totalSize += info.size();
         }
     }
 
     int removedFiles = 0;
     qint64 goal = (maximumCacheSize() * 9) / 10;
-    QMap<QDateTime, QString>::const_iterator i = cacheItems.constBegin();
+    QMultiMap<QDateTime, QString>::const_iterator i = cacheItems.constBegin();
     while (i != cacheItems.constEnd()) {
         if (totalSize < goal)
             break;

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/widgets/qtabwidget.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/widgets/qtabwidget.cpp -->
 <head>
   <title>Qt 4.5: QTabWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -96,7 +96,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -290,7 +290,7 @@
 <p><b>Note:</b> If you call addTab() after <a href="qwidget.html#show">show</a>(), the layout system will try to adjust to the changes in its widgets hierarchy and may cause flicker. To prevent this, you can set the <a href="qwidget.html#updatesEnabled-prop">QWidget::updatesEnabled</a> property to false prior to changes; remember to set the property to true when the changes are done, making the widget receive paint events again.</p>
 <p>See also <a href="qtabwidget.html#insertTab">insertTab</a>().</p>
 <h3 class="fn"><a name="addTab-2"></a>int QTabWidget::addTab ( <a href="qwidget.html">QWidget</a> * <i>page</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>label</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Adds a tab with the given <i>page</i>, <i>icon</i>, and <i>label</i> to the tab widget, and returns the index of the tab in the tab bar.</p>
 <p>This function is the same as <a href="qtabwidget.html#addTab">addTab</a>(), but with an additional <i>icon</i>.</p>
 <h3 class="fn"><a name="clear"></a>void QTabWidget::clear ()</h3>
@@ -318,11 +318,11 @@
 <p><b>Note:</b> If you call insertTab() after <a href="qwidget.html#show">show</a>(), the layout system will try to adjust to the changes in its widgets hierarchy and may cause flicker. To prevent this, you can set the <a href="qwidget.html#updatesEnabled-prop">QWidget::updatesEnabled</a> property to false prior to changes; remember to set the property to true when the changes are done, making the widget receive paint events again.</p>
 <p>See also <a href="qtabwidget.html#addTab">addTab</a>().</p>
 <h3 class="fn"><a name="insertTab-4"></a>int QTabWidget::insertTab ( int <i>index</i>, <a href="qwidget.html">QWidget</a> * <i>page</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>label</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a tab with the given <i>label</i>, <i>page</i>, and <i>icon</i> into the tab widget at the specified <i>index</i>, and returns the index of the inserted tab in the tab bar.</p>
 <p>This function is the same as <a href="qtabwidget.html#insertTab">insertTab</a>(), but with an additional <i>icon</i>.</p>
 <h3 class="fn"><a name="isTabEnabled"></a>bool QTabWidget::isTabEnabled ( int <i>index</i> ) const</h3>
-<p>Returns true if the the page at position <i>index</i> is enabled; otherwise returns false.</p>
+<p>Returns true if the page at position <i>index</i> is enabled; otherwise returns false.</p>
 <p>See also <a href="qtabwidget.html#setTabEnabled">setTabEnabled</a>() and <a href="qwidget.html#enabled-prop">QWidget::isEnabled</a>().</p>
 <h3 class="fn"><a name="paintEvent"></a>void QTabWidget::paintEvent ( <a href="qpaintevent.html">QPaintEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>Paints the tab widget's tab bar in response to the paint <i>event</i>.</p>
@@ -350,7 +350,7 @@
 <p>Note that even a disabled tab/page may be visible. If the page is visible already, <a href="qtabwidget.html">QTabWidget</a> will not hide it; if all the pages are disabled, <a href="qtabwidget.html">QTabWidget</a> will show one of them.</p>
 <p>See also <a href="qtabwidget.html#isTabEnabled">isTabEnabled</a>() and <a href="qwidget.html#enabled-prop">QWidget::setEnabled</a>().</p>
 <h3 class="fn"><a name="setTabIcon"></a>void QTabWidget::setTabIcon ( int <i>index</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the <i>icon</i> for the tab at position <i>index</i>.</p>
 <p>See also <a href="qtabwidget.html#tabIcon">tabIcon</a>().</p>
 <h3 class="fn"><a name="setTabText"></a>void QTabWidget::setTabText ( int <i>index</i>, const <a href="qstring.html">QString</a> &amp; <i>label</i> )</h3>
@@ -396,6 +396,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

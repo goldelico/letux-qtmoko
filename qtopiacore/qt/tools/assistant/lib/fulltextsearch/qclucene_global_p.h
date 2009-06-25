@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QCLucene library and is distributable under
 ** the terms of the LGPL license as specified in the license.txt file.
@@ -28,6 +28,14 @@
 
 #include <QtCore/QChar>
 #include <QtCore/QString>
+
+#if !defined(_MSC_VER) && defined(_CL_HAVE_WCHAR_H) && defined(_CL_HAVE_WCHAR_T)
+#   if !defined(TCHAR)
+#       define TCHAR wchar_t
+#   endif
+#else
+#   include <windows.h>
+#endif
 
 QT_BEGIN_HEADER
 
@@ -85,14 +93,6 @@ QT_BEGIN_NAMESPACE
 #   define CL_NS_USE2(sub,sub2)
 #   define CL_NS(sub)
 #   define CL_NS2(sub,sub2)
-#endif
-
-#if !defined(_MSC_VER) && defined(_CL_HAVE_WCHAR_H) && defined(_CL_HAVE_WCHAR_T)
-#   if !defined(TCHAR)
-#       define TCHAR wchar_t
-#   endif
-#else
-#   include <windows.h>
 #endif
 
 namespace {

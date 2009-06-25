@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -525,7 +525,12 @@ void QTextTablePrivate::update() const
     Rows and columns within a QTextTable can be merged and split using
     the mergeCells() and splitCell() functions. However, only cells that span multiple
     rows or columns can be split. (Merging or splitting does not increase or decrease
-    the number of rows and columns.)
+    the number of rows and columns.) 
+
+    Note that if you have merged multiple columns and rows into one cell, you will not
+    be able to split the merged cell into new cells spanning over more than one row 
+    or column. To be able to split cells spanning over several rows and columns you 
+    need to do this over several iterations.
 
     \table 80%
     \row

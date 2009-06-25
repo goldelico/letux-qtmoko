@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -466,7 +466,7 @@ void QClipboard::setPixmap(const QPixmap &pixmap, Mode mode)
 
     The \a mode argument is used to control which part of the system
     clipboard is used.  If \a mode is QClipboard::Clipboard, this
-    function clears the the global clipboard contents.  If \a mode is
+    function clears the global clipboard contents.  If \a mode is
     QClipboard::Selection, this function clears the global mouse
     selection contents. If \a mode is QClipboard::FindBuffer, this 
     function clears the search string buffer.

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtXmlPatterns module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -170,7 +170,7 @@ Expression::Ptr Path::compress(const StaticContext::Ptr &context)
 
     /* We do this as late as we can, such that we pick up the most recent type
      * from the operand. */
-    if(m_isLast && !m_kind == XSLTForEach && m_operand2->staticType()->itemType() == BuiltinTypes::item)
+    if(m_isLast && m_kind != XSLTForEach && m_operand2->staticType()->itemType() == BuiltinTypes::item)
         m_checkXPTY0018 = true;
 
     return me;

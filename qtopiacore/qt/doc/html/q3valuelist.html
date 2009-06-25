@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/q3valuelist.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/q3valuelist.qdoc -->
 <head>
   <title>Qt 4.5: Q3ValueList Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -76,7 +76,7 @@
 <h3>Related Non-Members</h3>
 <ul>
 <li><div class="fn"></div>QDataStream &amp; <b><a href="q3valuelist.html#operator-lt-lt-165">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>s</i>, const Q3ValueList&lt;T&gt; &amp; <i>l</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="q3valuelist.html#operator-gt-gt-59">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, Q3ValueList&lt;T&gt; &amp; <i>l</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="q3valuelist.html#operator-gt-gt-28">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, Q3ValueList&lt;T&gt; &amp; <i>l</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -142,7 +142,7 @@
  // Jones, Tom earns 60000</pre>
 <p>Notice that the latest changes to Mary's salary did not affect the value in the list because the list created a copy of Mary's entry.</p>
 <p>There are several ways to find items in the list. The <a href="qlinkedlist.html#begin">begin</a>() and <a href="qlinkedlist.html#end">end</a>() functions return iterators to the beginning and end of the list. The advantage of getting an iterator is that you can move forward or backward from this position by incrementing/decrementing the iterator. The iterator returned by <a href="qlinkedlist.html#end">end</a>() points to the item which is one <i>past</i> the last item in the container. The past-the-end iterator is still associated with the list it belongs to, however it is <i>not</i> dereferenceable; operator*() will not return a well-defined value. If the list is <a href="qlinkedlist.html#empty">empty</a>(), the iterator returned by <a href="qlinkedlist.html#begin">begin</a>() will equal the iterator returned by <a href="qlinkedlist.html#end">end</a>().</p>
-<p>It is safe to have multiple iterators a the list at the same time. If some member of the list is removed, only iterators pointing to the removed member become invalid. Inserting into the list does not invalidate any iterator. For convenience, the function <a href="qlinkedlist.html#last">last</a>() returns a reference to the last item in the list, and <a href="qlinkedlist.html#first">first</a>() returns a reference to the the first item. If the list is <a href="qlinkedlist.html#empty">empty</a>(), both <a href="qlinkedlist.html#last">last</a>() and <a href="qlinkedlist.html#first">first</a>() have undefined behavior (your application will crash or do unpredictable things). Use <a href="qlinkedlist.html#last">last</a>() and <a href="qlinkedlist.html#first">first</a>() with caution, for example:</p>
+<p>It is safe to have multiple iterators a the list at the same time. If some member of the list is removed, only iterators pointing to the removed member become invalid. Inserting into the list does not invalidate any iterator. For convenience, the function <a href="qlinkedlist.html#last">last</a>() returns a reference to the last item in the list, and <a href="qlinkedlist.html#first">first</a>() returns a reference to the first item. If the list is <a href="qlinkedlist.html#empty">empty</a>(), both <a href="qlinkedlist.html#last">last</a>() and <a href="qlinkedlist.html#first">first</a>() have undefined behavior (your application will crash or do unpredictable things). Use <a href="qlinkedlist.html#last">last</a>() and <a href="qlinkedlist.html#first">first</a>() with caution, for example:</p>
 <pre> Q3ValueList&lt;int&gt; list;
  list.append( 1 );
  list.append( 2 );
@@ -209,7 +209,7 @@
 <p>Returns an iterator pointing to the item at position <i>i</i> in the list, or an undefined value if the index is out of range.</p>
 <p><b>Warning:</b> This function uses a linear search and can be extremely slow for large lists. <a href="q3valuelist.html">Q3ValueList</a> is not optimized for random item access. If you need random access use a different container, such as <a href="q3valuevector.html">Q3ValueVector</a>.</p>
 <h3 class="fn"><a name="at-2"></a>Q3ValueList&lt;T&gt;::Iterator Q3ValueList::at ( Q3ValueList&lt;T&gt;::size_type <i>i</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns an iterator pointing to the item at position <i>i</i> in the list, or an undefined value if the index is out of range.</p>
 <h3 class="fn"><a name="contains"></a>Q3ValueList&lt;T&gt;::size_type Q3ValueList::contains ( const T &amp; <i>x</i> ) const</h3>
 <p>Returns the number of occurrences of the value <i>x</i> in the list.</p>
@@ -223,7 +223,7 @@
  if ( it != end() )
      // ...</pre>
 <h3 class="fn"><a name="fromLast-2"></a>Q3ValueList&lt;T&gt;::Iterator Q3ValueList::fromLast ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns an iterator to the last item in the list, or <a href="qlinkedlist.html#end">end</a>() if there is no last item.</p>
 <p>Use the <a href="qlinkedlist.html#end">end</a>() function instead. For example:</p>
 <pre> Q3ValueList&lt;int&gt; l;
@@ -237,7 +237,7 @@
 <p>Returns an iterator pointing at the inserted item.</p>
 <p>See also <a href="q3valuelist.html#append">append</a>() and <a href="q3valuelist.html#prepend">prepend</a>().</p>
 <h3 class="fn"><a name="insert-2"></a>void Q3ValueList::insert ( Q3ValueList&lt;T&gt;::Iterator <i>pos</i>, Q3ValueList&lt;T&gt;::size_type <i>n</i>, const T &amp; <i>x</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts <i>n</i> copies of <i>x</i> before position <i>pos</i>.</p>
 <h3 class="fn"><a name="prepend"></a>Q3ValueList&lt;T&gt;::Iterator Q3ValueList::prepend ( const T &amp; <i>x</i> )</h3>
 <p>Inserts <i>x</i> at the beginning of the list.</p>
@@ -246,7 +246,7 @@
 <p>Removes the item pointed to by <i>it</i> from the list. No iterators other than <i>it</i> or other iterators pointing at the same item as <i>it</i> are invalidated. Returns an iterator to the next item after <i>it</i>, or <a href="qlinkedlist.html#end">end</a>() if there is no such item.</p>
 <p>See also <a href="qlinkedlist.html#clear">clear</a>().</p>
 <h3 class="fn"><a name="remove-2"></a>int Q3ValueList::remove ( const T &amp; <i>x</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Removes all items that have value <i>x</i> and returns the number of removed items.</p>
 <h3 class="fn"><a name="operator-QList-ltT-gt"></a>Q3ValueList::operator QList&lt;T&gt; () const</h3>
 <p>Automatically converts a <a href="q3valuelist.html">Q3ValueList</a>&lt;T&gt; into a <a href="qlist.html">QList</a>&lt;T&gt;.</p>
@@ -258,7 +258,7 @@
 <h3 class="fn"><a name="operator-2b-eq"></a>Q3ValueList&lt;T&gt; &amp; Q3ValueList::operator+= ( const Q3ValueList&lt;T&gt; &amp; <i>l</i> )</h3>
 <p>Appends the items of <i>l</i> to this list. Returns a reference to this list.</p>
 <h3 class="fn"><a name="operator-2b-eq-2"></a>Q3ValueList&lt;T&gt; &amp; Q3ValueList::operator+= ( const T &amp; <i>x</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the value <i>x</i> to the list. Returns a reference to the list.</p>
 <h3 class="fn"><a name="operator-lt-lt"></a>Q3ValueList&lt;T&gt; &amp; Q3ValueList::operator&lt;&lt; ( const T &amp; <i>x</i> )</h3>
 <p>Adds the value <i>x</i> to the end of the list.</p>
@@ -270,33 +270,33 @@
 <p>Assigns <i>l</i> to this list and returns a reference to this list.</p>
 <p>All iterators of the current list become invalidated by this operation.</p>
 <h3 class="fn"><a name="operator-eq-3"></a>Q3ValueList&lt;T&gt; &amp; Q3ValueList::operator= ( const std::list&lt;T&gt; &amp; <i>l</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Assigns the contents of <i>l</i> to the list.</p>
 <p>All iterators of the current list become invalidated by this operation.</p>
 <h3 class="fn"><a name="operator-eq-eq"></a>bool Q3ValueList::operator== ( const Q3ValueList&lt;T&gt; &amp; <i>l</i> ) const</h3>
 <p>Compares both lists.</p>
 <p>Returns TRUE if this list and <i>l</i> are equal; otherwise returns FALSE.</p>
 <h3 class="fn"><a name="operator-eq-eq-2"></a>bool Q3ValueList::operator== ( const std::list&lt;T&gt; &amp; <i>l</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns TRUE if this list and <i>l</i> are equal; otherwise returns FALSE.</p>
 <p>This operator is provided for compatibility with STL containers.</p>
 <h3 class="fn"><a name="operator-5b-5d"></a>const T &amp; Q3ValueList::operator[] ( Q3ValueList&lt;T&gt;::size_type <i>i</i> ) const</h3>
 <p>Returns a const reference to the item with index <i>i</i> in the list. It is up to you to check whether this item really exists. You can do that easily with the <a href="qlinkedlist.html#count">count</a>() function. However this operator does not check whether <i>i</i> is in range and will deliver undefined results if it does not exist.</p>
 <p><b>Warning:</b> This function uses a linear search and can be extremely slow for large lists. <a href="q3valuelist.html">Q3ValueList</a> is not optimized for random item access. If you need random access use a different container, such as <a href="q3valuevector.html">Q3ValueVector</a>.</p>
 <h3 class="fn"><a name="operator-5b-5d-2"></a>T &amp; Q3ValueList::operator[] ( Q3ValueList&lt;T&gt;::size_type <i>i</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a non-const reference to the item with index <i>i</i>.</p>
 <hr />
 <h2>Related Non-Members</h2>
 <h3 class="fn"><a name="operator-lt-lt-165"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, const Q3ValueList&lt;T&gt; &amp; <i>l</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Writes a list, <i>l</i>, to the stream <i>s</i>. The type T stored in the list must implement the streaming operator.</p>
-<h3 class="fn"><a name="operator-gt-gt-59"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, Q3ValueList&lt;T&gt; &amp; <i>l</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-28"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, Q3ValueList&lt;T&gt; &amp; <i>l</i> )</h3>
 <p>Reads a list, <i>l</i>, from the stream <i>s</i>. The type T stored in the list must implement the streaming operator.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

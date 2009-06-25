@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -83,6 +83,9 @@ private slots:
     void updateButtons();
 
 private:
+    QToolButton* setupToolButton(const QString &text, const QString &icon);
+
+private:
     QLineEdit *editFind;
     QCheckBox *checkCase;
     QLabel *labelWrapped;
@@ -113,9 +116,13 @@ public:
     void setGlobalActions(const QList<QAction*> &actions);
     HelpViewer *currentHelpViewer() const;
     void activateTab(bool onlyHelpViewer = false);
-    void activateSearch();
+
     void createSearchWidget(QHelpSearchEngine *searchEngine);
+    void activateSearchWidget(bool updateLastTabPage = false);
     void removeSearchWidget();
+
+    int availableHelpViewer() const;
+    bool enableTabCloseAction() const;
 
     void closeTabAt(int index);
     QMap<int, QString> currentSourceFileList() const;
@@ -167,7 +174,7 @@ private slots:
     void setSourceFromSearchInNewTab(const QUrl &url);
 
 private:
-    void connectSignals();    
+    void connectSignals();
     bool eventFilter(QObject *object, QEvent *e);
     void find(QString ttf, bool forward, bool backward);
     void initPrinter();
@@ -180,13 +187,13 @@ private:
     QList<QAction*> globalActionList;
 
     QWidget *findBar;
-    QTabWidget* tabWidget;
+    QTabWidget *tabWidget;
     FindWidget *findWidget;
     QHelpEngine *helpEngine;
     QPrinter *printer;
     bool usesDefaultCollection;
-    
-    SearchWidget* m_searchWidget;
+
+    SearchWidget *m_searchWidget;
 };
 
 QT_END_NAMESPACE

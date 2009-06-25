@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qapplication.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/kernel/qapplication.cpp -->
 <head>
   <title>Qt 4.5: QApplication Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -71,7 +71,6 @@
 <li><div class="fn"></div>QString <b><a href="qapplication.html#sessionKey">sessionKey</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qapplication.html#setInputContext">setInputContext</a></b> ( QInputContext * <i>inputContext</i> )</li>
 <li><div class="fn"></div>QString <b><a href="qapplication.html#styleSheet-prop">styleSheet</a></b> () const</li>
-<li><div class="fn"></div>void <b><a href="qapplication.html#winFocus">winFocus</a></b> ( QWidget *, bool )</li>
 <li><div class="fn"></div>virtual bool <b><a href="qapplication.html#x11EventFilter">x11EventFilter</a></b> ( XEvent * <i>event</i> )</li>
 <li><div class="fn"></div>int <b><a href="qapplication.html#x11ProcessEvent">x11ProcessEvent</a></b> ( XEvent * <i>event</i> )</li>
 </ul>
@@ -181,7 +180,6 @@
 <li><div class="fn"></div>int <b><a href="qapplication.html#wheelScrollLines-prop">wheelScrollLines</a></b> ()</li>
 <li><div class="fn"></div>QWidget * <b><a href="qapplication.html#widgetAt">widgetAt</a></b> ( const QPoint &amp; <i>point</i> )</li>
 <li><div class="fn"></div>QWidget * <b><a href="qapplication.html#widgetAt-4">widgetAt</a></b> ( int <i>x</i>, int <i>y</i> )</li>
-<li><div class="fn"></div>void <b><a href="qapplication.html#winMouseButtonUp">winMouseButtonUp</a></b> ()</li>
 <li><div class="fn"></div>QIcon <b><a href="qapplication.html#windowIcon-prop">windowIcon</a></b> ()</li>
 </ul>
 <ul>
@@ -571,11 +569,11 @@
 <p>Returns the default application font.</p>
 <p>See also <a href="qapplication.html#setFont">setFont</a>(), <a href="qapplication.html#fontMetrics">fontMetrics</a>(), and <a href="qwidget.html#font-prop">QWidget::font</a>().</p>
 <h3 class="fn"><a name="font-2"></a><a href="qfont.html">QFont</a> QApplication::font ( const <a href="qwidget.html">QWidget</a> * <i>widget</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the default font for the <i>widget</i>.</p>
 <p>See also <a href="qapplication.html#fontMetrics">fontMetrics</a>() and <a href="qwidget.html#font-prop">QWidget::setFont</a>().</p>
 <h3 class="fn"><a name="font-3"></a><a href="qfont.html">QFont</a> QApplication::font ( const char * <i>className</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the font for widgets of the given <i>className</i>.</p>
 <p>See also <a href="qapplication.html#setFont">setFont</a>() and <a href="qwidget.html#font-prop">QWidget::font</a>().</p>
 <h3 class="fn"><a name="fontDatabaseChanged"></a>void QApplication::fontDatabaseChanged ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -638,11 +636,11 @@
 <p>Returns the application palette.</p>
 <p>See also <a href="qapplication.html#setPalette">setPalette</a>() and <a href="qwidget.html#palette-prop">QWidget::palette</a>().</p>
 <h3 class="fn"><a name="palette-2"></a><a href="qpalette.html">QPalette</a> QApplication::palette ( const <a href="qwidget.html">QWidget</a> * <i>widget</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>If a <i>widget</i> is passed, the default palette for the widget's class is returned. This may or may not be the application palette. In most cases there is no special palette for certain types of widgets, but one notable exception is the popup menu under Windows, if the user has defined a special background color for menus in the display settings.</p>
 <p>See also <a href="qapplication.html#setPalette">setPalette</a>() and <a href="qwidget.html#palette-prop">QWidget::palette</a>().</p>
 <h3 class="fn"><a name="palette-3"></a><a href="qpalette.html">QPalette</a> QApplication::palette ( const char * <i>className</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the palette for widgets of the given <i>className</i>.</p>
 <p>See also <a href="qapplication.html#setPalette">setPalette</a>() and <a href="qwidget.html#palette-prop">QWidget::palette</a>().</p>
 <h3 class="fn"><a name="qwsDecoration"></a><a href="qdecoration.html">QDecoration</a> &amp; QApplication::qwsDecoration ()&nbsp;&nbsp;<tt> [static]</tt></h3>
@@ -664,7 +662,7 @@
 <p>This method is non-portable. It is only available in Qt for Embedded Linux.</p>
 <p>See also <a href="qdecoration.html">QDecoration</a>.</p>
 <h3 class="fn"><a name="qwsSetDecoration-2"></a><a href="qdecoration.html">QDecoration</a> * QApplication::qwsSetDecoration ( const <a href="qstring.html">QString</a> &amp; <i>decoration</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Requests a <a href="qdecoration.html">QDecoration</a> object for <i>decoration</i> from the <a href="qdecorationfactory.html">QDecorationFactory</a>.</p>
 <p>The string must be one of the <a href="qdecorationfactory.html#keys">QDecorationFactory::keys</a>(). Keys are case insensitive.</p>
 <p>A later call to the <a href="qapplication.html">QApplication</a> constructor will override the requested style when a &quot;-style&quot; option is passed in as a commandline parameter.</p>
@@ -786,7 +784,7 @@
 <p><b>Warning:</b> Qt style sheets are currently not supported for custom <a href="qstyle.html">QStyle</a> subclasses. We plan to address this in some future release.</p>
 <p>See also <a href="qapplication.html#style">style</a>(), <a href="qstyle.html">QStyle</a>, <a href="qapplication.html#setPalette">setPalette</a>(), and <a href="qapplication.html#desktopSettingsAware">desktopSettingsAware</a>().</p>
 <h3 class="fn"><a name="setStyle-2"></a><a href="qstyle.html">QStyle</a> * QApplication::setStyle ( const <a href="qstring.html">QString</a> &amp; <i>style</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Requests a <a href="qstyle.html">QStyle</a> object for <i>style</i> from the <a href="qstylefactory.html">QStyleFactory</a>.</p>
 <p>The string must be one of the <a href="qstylefactory.html#keys">QStyleFactory::keys</a>(), typically one of &quot;windows&quot;, &quot;motif&quot;, &quot;cde&quot;, &quot;plastique&quot;, &quot;windowsxp&quot;, or &quot;macintosh&quot;. Style names are case insensitive.</p>
 <p>Returns 0 if an unknown <i>style</i> is passed, otherwise the <a href="qstyle.html">QStyle</a> object returned is set as the application's GUI style.</p>
@@ -799,7 +797,7 @@
 <h3 class="fn"><a name="topLevelAt"></a><a href="qwidget.html">QWidget</a> * QApplication::topLevelAt ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns the top-level widget at the given <i>point</i>; returns 0 if there is no such widget.</p>
 <h3 class="fn"><a name="topLevelAt-2"></a><a href="qwidget.html">QWidget</a> * QApplication::topLevelAt ( int <i>x</i>, int <i>y</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the top-level widget at the point (<i>x</i>, <i>y</i>); returns 0 if there is no such widget.</p>
 <h3 class="fn"><a name="topLevelWidgets"></a><a href="qwidget.html#QWidgetList-typedef">QWidgetList</a> QApplication::topLevelWidgets ()&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns a list of the top-level widgets (windows) in the application.</p>
@@ -820,10 +818,8 @@
 <p>This function can be slow.</p>
 <p>See also <a href="qcursor.html#pos">QCursor::pos</a>(), <a href="qwidget.html#grabMouse">QWidget::grabMouse</a>(), and <a href="qwidget.html#grabKeyboard">QWidget::grabKeyboard</a>().</p>
 <h3 class="fn"><a name="widgetAt-4"></a><a href="qwidget.html">QWidget</a> * QApplication::widgetAt ( int <i>x</i>, int <i>y</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the widget at global screen position (<i>x</i>, <i>y</i>), or 0 if there is no Qt widget there.</p>
-<h3 class="fn"><a name="winFocus"></a>void QApplication::winFocus ( <a href="qwidget.html">QWidget</a> *, bool )</h3>
-<h3 class="fn"><a name="winMouseButtonUp"></a>void QApplication::winMouseButtonUp ()&nbsp;&nbsp;<tt> [static]</tt></h3>
 <h3 class="fn"><a name="x11EventFilter"></a>bool QApplication::x11EventFilter ( XEvent * <i>event</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p><b>Warning:</b> This virtual function is only implemented under X11.</p>
 <p>If you create an application that inherits <a href="qapplication.html">QApplication</a> and reimplement this function, you get direct access to all X events that the are received from the X server. The events are passed in the <i>event</i> parameter.</p>
@@ -844,6 +840,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

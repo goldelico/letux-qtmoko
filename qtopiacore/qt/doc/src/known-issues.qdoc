@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,18 +34,18 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
 
 /*!
     \page known-issues.html
-    \title Known Issues in 4.5.1
+    \title Known Issues in 4.5.2
     \ingroup platform-notes
-    \brief A summary of known issues in Qt 4.5.1 at the time of release.
+    \brief A summary of known issues in Qt 4.5.2 at the time of release.
 
-    An up-to-date list of known issues with Qt 4.5.1 can be found via the
+    An up-to-date list of known issues with Qt 4.5.2 can be found via the
     \l{Task Tracker} on the Qt website which provides additional information
     about known issues and tasks related to Qt.
 
@@ -57,14 +57,6 @@
 
 
     \section1 Issues with Third Party Software
-
-    \section2 Intel Compiler Support
-
-    Although it is possible to build applications against Qt 4.5.0 using Intel
-    CC 10, these applications will crash when run. A fix for this issue is
-    scheduled for Qt 4.5.1. We recommend that developers who rely on this
-    compiler wait until the fix is applied before upgrading to the Qt 4.5.x
-    series of releases.
 
     \section2 X11 Hardware Support
 

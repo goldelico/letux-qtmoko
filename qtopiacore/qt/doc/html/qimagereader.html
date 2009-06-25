@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimagereader.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/image/qimagereader.cpp -->
 <head>
   <title>Qt 4.5: QImageReader Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -185,7 +185,7 @@
 <p>For image formats that support animation, calling read() repeatedly will return the next frame. When all frames have been read, a null image will be returned.</p>
 <p>See also <a href="qimagereader.html#canRead">canRead</a>(), <a href="qimagereader.html#supportedImageFormats">supportedImageFormats</a>(), <a href="qimagereader.html#supportsAnimation">supportsAnimation</a>(), and <a href="qmovie.html">QMovie</a>.</p>
 <h3 class="fn"><a name="read-2"></a>bool QImageReader::read ( <a href="qimage.html">QImage</a> * <i>image</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Reads an image from the device into <i>image</i>, which must point to a <a href="qimage.html">QImage</a>. Returns true on success; otherwise, returns false.</p>
 <p>If <i>image</i> has same format and size as the image data that is about to be read, this function may not need to allocate a new image before reading. Because of this, it can be faster than the other <a href="qimagereader.html#read">read</a>() overload, which always constructs a new image; especially when reading several images with the same format and size.</p>
 <pre> QImage icon(64, 64, QImage::Format_RGB32);
@@ -266,6 +266,7 @@
 <tr valign="top" class="even"><td>TIFF</td><td>Tagged Image File Format</td></tr>
 <tr valign="top" class="odd"><td>XBM</td><td>X11 Bitmap</td></tr>
 <tr valign="top" class="even"><td>XPM</td><td>X11 Pixmap</td></tr>
+<tr valign="top" class="odd"><td>SVG</td><td>Scalable Vector Graphics</td></tr>
 </table></p>
 <p>Reading and writing SVG files is supported through Qt's <a href="qtsvg.html">SVG Module</a>.</p>
 <p>To configure Qt with GIF support, pass <tt>-qt-gif</tt> to the <tt>configure</tt> script or check the appropriate option in the graphical installer.</p>
@@ -296,6 +297,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

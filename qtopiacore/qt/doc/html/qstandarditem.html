@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/itemviews/qstandarditemmodel.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/itemviews/qstandarditemmodel.cpp -->
 <head>
   <title>Qt 4.5: QStandardItem Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -123,8 +123,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qstandarditem.html#operator-lt-lt-72">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QStandardItem &amp; <i>item</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qstandarditem.html#operator-gt-gt-45">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QStandardItem &amp; <i>item</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qstandarditem.html#operator-lt-lt-21">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QStandardItem &amp; <i>item</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qstandarditem.html#operator-gt-gt-10">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QStandardItem &amp; <i>item</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -187,7 +187,7 @@
 <p>Appends a row containing <i>items</i>. If necessary, the column count is increased to the size of <i>items</i>.</p>
 <p>See also <a href="qstandarditem.html#insertRow">insertRow</a>().</p>
 <h3 class="fn"><a name="appendRow-2"></a>void QStandardItem::appendRow ( QStandardItem * <i>item</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends a row containing <i>item</i>.</p>
 <p>When building a list or a tree that has only one column, this function provides a convenient way to append a single new item.</p>
 <h3 class="fn"><a name="appendRows"></a>void QStandardItem::appendRows ( const <a href="qlist.html">QList</a>&lt;QStandardItem *&gt; &amp; <i>items</i> )</h3>
@@ -253,7 +253,7 @@
 <p>Inserts a row at <i>row</i> containing <i>items</i>. If necessary, the column count is increased to the size of <i>items</i>.</p>
 <p>See also <a href="qstandarditem.html#insertRows">insertRows</a>() and <a href="qstandarditem.html#insertColumn">insertColumn</a>().</p>
 <h3 class="fn"><a name="insertRow-2"></a>void QStandardItem::insertRow ( int <i>row</i>, QStandardItem * <i>item</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a row at <i>row</i> containing <i>item</i>.</p>
 <p>When building a list or a tree that has only one column, this function provides a convenient way to insert a single new item.</p>
 <h3 class="fn"><a name="insertRows"></a>void QStandardItem::insertRows ( int <i>row</i>, const <a href="qlist.html">QList</a>&lt;QStandardItem *&gt; &amp; <i>items</i> )</h3>
@@ -343,7 +343,7 @@
 <p>Sets the child item at (<i>row</i>, <i>column</i>) to <i>item</i>. This item (the parent item) takes ownership of <i>item</i>. If necessary, the row count and column count are increased to fit the item.</p>
 <p>See also <a href="qstandarditem.html#child">child</a>().</p>
 <h3 class="fn"><a name="setChild-2"></a>void QStandardItem::setChild ( int <i>row</i>, QStandardItem * <i>item</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the child at <i>row</i> to <i>item</i>.</p>
 <h3 class="fn"><a name="setColumnCount"></a>void QStandardItem::setColumnCount ( int <i>columns</i> )</h3>
 <p>Sets the number of child item columns to <i>columns</i>. If this is less than <a href="qstandarditem.html#columnCount">columnCount</a>(), the data in the unwanted columns is discarded.</p>
@@ -458,12 +458,12 @@
 <p>This function is useful when reimplementing <a href="qstandarditem.html#clone">clone</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-72"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QStandardItem &amp; <i>item</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-21"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QStandardItem &amp; <i>item</i> )</h3>
 <p>Writes the <a href="qstandarditem.html">QStandardItem</a> <i>item</i> to stream <i>out</i>.</p>
 <p>This operator uses <a href="qstandarditem.html#write">QStandardItem::write</a>().</p>
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-45"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QStandardItem &amp; <i>item</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-10"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QStandardItem &amp; <i>item</i> )</h3>
 <p>Reads a <a href="qstandarditem.html">QStandardItem</a> from stream <i>in</i> into <i>item</i>.</p>
 <p>This operator uses <a href="qstandarditem.html#read">QStandardItem::read</a>().</p>
 <p>This function was introduced in Qt 4.2.</p>
@@ -472,6 +472,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

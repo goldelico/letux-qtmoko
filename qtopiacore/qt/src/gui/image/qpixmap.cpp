@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -674,7 +674,7 @@ void QPixmap::resize_helper(const QSize &s)
     pixels black. The effect of this function is undefined when the pixmap is
     being painted on.
 
-    This is potentially an expensive operation.
+    \warning This is potentially an expensive operation.
 
     \sa mask(), {QPixmap#Pixmap Transformations}{Pixmap Transformations},
     QBitmap
@@ -1232,7 +1232,7 @@ bool QPixmap::convertFromImage(const QImage &image, ColorMode mode)
 /*!
     \relates QPixmap
 
-    Writes the given \a pixmap to the the given \a stream as a PNG
+    Writes the given \a pixmap to the given \a stream as a PNG
     image. Note that writing the stream to a file will not produce a
     valid image file.
 
@@ -1379,6 +1379,12 @@ void QPixmap::deref()
 
     If the given \a size is empty, this function returns a null
     pixmap.
+
+
+    In some cases it can be more beneficial to draw the pixmap to a
+    painter with a scale set rather than scaling the pixmap. This is
+    the case when the painter is for instance based on OpenGL or when
+    the scale factor changes rapidly.
 
     \sa isNull(), {QPixmap#Pixmap Transformations}{Pixmap
     Transformations}
@@ -1751,6 +1757,10 @@ int QPixmap::metric(PaintDeviceMetric metric) const
     The effect of this function is undefined when the pixmap is being
     painted on.
 
+    \warning This is potentially an expensive operation. Most usecases
+    for this function are covered by QPainter and compositionModes
+    which will normally execute faster.
+
     \sa alphaChannel(), {QPixmap#Pixmap Transformations}{Pixmap
     Transformations}
  */
@@ -1793,6 +1803,9 @@ void QPixmap::setAlphaChannel(const QPixmap &alphaChannel)
 
     \image alphachannelimage.png The pixmap and channelImage QPixmaps
 
+    \warning This is an expensive operation. The alpha channel of the
+    pixmap is extracted dynamically from the pixeldata.
+
     \sa setAlphaChannel(), {QPixmap#Pixmap Information}{Pixmap
     Information}
 */
@@ -1814,7 +1827,8 @@ QPaintEngine *QPixmap::paintEngine() const
 
     Extracts a bitmap mask from the pixmap's alphachannel.
 
-    This is potentially an expensive operation.
+    \warning This is potentially an expensive operation. The mask of
+    the pixmap is extracted dynamically from the pixeldata.
 
     \sa setMask(), {QPixmap#Pixmap Information}{Pixmap Information}
 */
@@ -1999,5 +2013,100 @@ QPixmapData* QPixmap::pixmapData() const
 {
     return data;
 }
+
+/*!
+    \enum QPixmap::HBitmapFormat
+
+    \bold{Win32 only:} This enum defines how the conversion between \c
+    HBITMAP and QPixmap is performed.
+
+    \warning This enum is only available on Windows.
+
+    \value NoAlpha The alpha channel is ignored and always treated as
+    being set to fully opaque. This is preferred if the \c HBITMAP is
+    used with standard GDI calls, such as \c BitBlt().
+
+    \value PremultipliedAlpha The \c HBITMAP is treated as having an
+    alpha channel and premultiplied colors. This is preferred if the
+    \c HBITMAP is accessed through the \c AlphaBlend() GDI function.
+
+    \value Alpha The \c HBITMAP is treated as having a plain alpha
+    channel. This is the preferred format if the \c HBITMAP is going
+    to be used as an application icon or systray icon.
+
+    \sa fromWinHBITMAP(), toWinHBITMAP()
+*/
+
+/*! \fn HBITMAP QPixmap::toWinHBITMAP(HBitmapFormat format) const
+    \bold{Win32 only:} Creates a \c HBITMAP equivalent to the QPixmap,
+    based on the given \a format. Returns the \c HBITMAP handle.
+
+    It is the caller's responsibility to free the \c HBITMAP data
+    after use.
+
+    \warning This function is only available on Windows.
+
+    \sa fromWinHBITMAP()
+*/
+
+/*! \fn QPixmap QPixmap::fromWinHBITMAP(HBITMAP bitmap, HBitmapFormat format)
+    \bold{Win32 only:} Returns a QPixmap that is equivalent to the
+    given \a bitmap. The conversion is based on the specified \a
+    format.
+
+    \warning This function is only available on Windows.
+
+    \sa toWinHBITMAP(), {QPixmap#Pixmap Conversion}{Pixmap Conversion}
+
+*/
+
+/*! \fn const QX11Info &QPixmap::x11Info() const
+    \bold{X11 only:} Returns information about the configuration of
+    the X display used to display the widget.
+
+    \warning This function is only available on X11.
+
+    \sa {QPixmap#Pixmap Information}{Pixmap Information}
+*/
+
+/*! \fn Qt::HANDLE QPixmap::x11PictureHandle() const
+    \bold{X11 only:} Returns the X11 Picture handle of the pixmap for
+    XRender support.
+
+    This function will return 0 if XRender support is not compiled
+    into Qt, if the XRender extension is not supported on the X11
+    display, or if the handle could not be created. Use of this
+    function is not portable.
+
+    \warning This function is only available on X11.
+
+    \sa {QPixmap#Pixmap Information}{Pixmap Information}
+*/
+
+/*! \fn int QPixmap::x11SetDefaultScreen(int screen)
+  \internal
+*/
+
+/*! \fn void QPixmap::x11SetScreen(int screen)
+  \internal
+*/
+
+/*! \fn QRgb* QPixmap::clut() const
+    \internal
+*/
+
+/*! \fn int QPixmap::numCols() const
+    \internal
+*/
+
+/*! \fn const uchar* QPixmap::qwsBits() const
+    \internal
+    \since 4.1
+*/
+
+/*! \fn int QPixmap::qwsBytesPerLine() const
+    \internal
+    \since 4.1
+*/
 
 QT_END_NAMESPACE

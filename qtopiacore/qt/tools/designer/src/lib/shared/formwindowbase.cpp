@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -55,7 +55,7 @@ TRANSLATOR qdesigner_internal::FormWindowBase
 #include "deviceprofile_p.h"
 #include "qdesigner_utils_p.h"
 
-#include <abstractformbuilder.h>
+#include "qsimpleresource_p.h"
 
 #include <QtDesigner/QDesignerFormEditorInterface>
 #include <QtDesigner/QDesignerContainerExtension>
@@ -480,6 +480,14 @@ void FormWindowBase::triggerDefaultAction(QWidget *widget)
 void FormWindowBase::setupDefaultAction(QDesignerFormWindowInterface *fw)
 {
     QObject::connect(fw, SIGNAL(activated(QWidget*)), fw, SLOT(triggerDefaultAction(QWidget*)));
+}
+
+QString FormWindowBase::fileContents() const
+{
+    const bool oldValue = QSimpleResource::setWarningsEnabled(false);
+    const QString rc = contents();
+    QSimpleResource::setWarningsEnabled(oldValue);
+    return rc;
 }
 
 } // namespace qdesigner_internal

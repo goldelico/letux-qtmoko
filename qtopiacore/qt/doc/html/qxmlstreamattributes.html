@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/xml/qxmlstream.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/xml/qxmlstream.cpp -->
 <head>
   <title>Qt 4.5: QXmlStreamAttributes Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -58,37 +58,37 @@
 <p>Appends the given <i>attribute</i> to the end of the vector.</p>
 <p>See also <a href="qvector.html#append">QVector::append</a>().</p>
 <h3 class="fn"><a name="append-3"></a>void QXmlStreamAttributes::append ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i>, const <a href="qstring.html">QString</a> &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends a new attribute with qualified name <i>qualifiedName</i> and value <i>value</i>.</p>
 <h3 class="fn"><a name="hasAttribute"></a>bool QXmlStreamAttributes::hasAttribute ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i> ) const</h3>
 <p>Returns true if this <a href="qxmlstreamattributes.html">QXmlStreamAttributes</a> has an attribute whose qualified name is <i>qualifiedName</i>; otherwise returns false.</p>
 <p>Note that this is not namespace aware. For instance, if this <a href="qxmlstreamattributes.html">QXmlStreamAttributes</a> contains an attribute whose lexical name is &quot;xlink:href&quot; this doesn't tell that an attribute named <tt>href</tt> in the XLink namespace is present, since the <tt>xlink</tt> prefix can be bound to any namespace. Use the overload that takes a namespace URI and a local name as parameter, for namespace aware code.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="hasAttribute-2"></a>bool QXmlStreamAttributes::hasAttribute ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>qualifiedName</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="hasAttribute-3"></a>bool QXmlStreamAttributes::hasAttribute ( const <a href="qstring.html">QString</a> &amp; <i>namespaceUri</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if this <a href="qxmlstreamattributes.html">QXmlStreamAttributes</a> has an attribute whose namespace URI and name correspond to <i>namespaceUri</i> and <i>name</i>; otherwise returns false.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="value"></a><a href="qstringref.html">QStringRef</a> QXmlStreamAttributes::value ( const <a href="qstring.html">QString</a> &amp; <i>namespaceUri</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i> ) const</h3>
 <p>Returns the value of the attribute <i>name</i> in the namespace described with <i>namespaceUri</i>, or an empty string reference if the attribute is not defined. The <i>namespaceUri</i> can be empty.</p>
 <h3 class="fn"><a name="value-2"></a><a href="qstringref.html">QStringRef</a> QXmlStreamAttributes::value ( const <a href="qstring.html">QString</a> &amp; <i>namespaceUri</i>, const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>name</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the value of the attribute <i>name</i> in the namespace described with <i>namespaceUri</i>, or an empty string reference if the attribute is not defined. The <i>namespaceUri</i> can be empty.</p>
 <h3 class="fn"><a name="value-3"></a><a href="qstringref.html">QStringRef</a> QXmlStreamAttributes::value ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>namespaceUri</i>, const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>name</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the value of the attribute <i>name</i> in the namespace described with <i>namespaceUri</i>, or an empty string reference if the attribute is not defined. The <i>namespaceUri</i> can be empty.</p>
 <h3 class="fn"><a name="value-4"></a><a href="qstringref.html">QStringRef</a> QXmlStreamAttributes::value ( const <a href="qstring.html">QString</a> &amp; <i>qualifiedName</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the value of the attribute with qualified name <i>qualifiedName</i> , or an empty string reference if the attribute is not defined. A qualified name is the raw name of an attribute in the XML data. It consists of the namespace prefix, followed by colon, followed by the attribute's local name. Since the namespace prefix is not unique (the same prefix can point to different namespaces and different prefixes can point to the same namespace), you shouldn't use qualified names, but a resolved namespaceUri and the attribute's local name.</p>
 <h3 class="fn"><a name="value-5"></a><a href="qstringref.html">QStringRef</a> QXmlStreamAttributes::value ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>qualifiedName</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the value of the attribute with qualified name <i>qualifiedName</i> , or an empty string reference if the attribute is not defined. A qualified name is the raw name of an attribute in the XML data. It consists of the namespace prefix, followed by colon, followed by the attribute's local name. Since the namespace prefix is not unique (the same prefix can point to different namespaces and different prefixes can point to the same namespace), you shouldn't use qualified names, but a resolved namespaceUri and the attribute's local name.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1267,8 +1267,10 @@ void QHeaderView::setSortIndicator(int logicalIndex, Qt::SortOrder order)
     d->sortIndicatorSection = logicalIndex;
     d->sortIndicatorOrder = order;
 
-    if (logicalIndex >= d->sectionCount)
+    if (logicalIndex >= d->sectionCount) {
+        emit sortIndicatorChanged(logicalIndex, order);
         return; // nothing to do
+    }
 
     if (old != logicalIndex
         && ((logicalIndex >= 0 && resizeMode(logicalIndex) == ResizeToContents)
@@ -1388,8 +1390,7 @@ int QHeaderView::defaultSectionSize() const
 void QHeaderView::setDefaultSectionSize(int size)
 {
     Q_D(QHeaderView);
-    d->defaultSectionSize = size;
-    d->forceInitializing = true;
+    d->setDefaultSectionSize(size);
 }
 
 /*!
@@ -1894,9 +1895,6 @@ void QHeaderView::initializeSections()
         //make sure we update the hidden sections
         if (newCount < oldCount)
             d->updateHiddenSections(0, newCount-1);
-    } else if (d->forceInitializing) {
-        initializeSections(0, newCount - 1);
-        d->forceInitializing = false;
     }
 }
 
@@ -1952,7 +1950,7 @@ void QHeaderView::initializeSections(int start, int end)
     if (!d->sectionHidden.isEmpty())
         d->sectionHidden.resize(d->sectionCount);
 
-    if (d->sectionCount > oldCount || d->forceInitializing)
+    if (d->sectionCount > oldCount)
         d->createSectionSpan(start, end, (end - start + 1) * d->defaultSectionSize, d->globalResizeMode);
     //Q_ASSERT(d->headerLength() == d->length);
 
@@ -3362,6 +3360,29 @@ void QHeaderViewPrivate::cascadingResize(int visual, int newSize)
         doDelayedResizeSections();
 
     viewport->update();
+}
+
+void QHeaderViewPrivate::setDefaultSectionSize(int size)
+{
+    Q_Q(QHeaderView);
+    defaultSectionSize = size;
+    int currentVisualIndex = 0;
+    for (int i = 0; i < sectionSpans.count(); ++i) {
+        QHeaderViewPrivate::SectionSpan &span = sectionSpans[i];
+        if (span.size > 0) {
+            //we resize it if it is not hidden (ie size > 0)
+            const int newSize = span.count * size;
+            if (newSize != span.size) {
+                length += newSize - span.size; //the whole length is changed
+                const int oldSectionSize = span.sectionSize();
+                span.size = span.count * size;
+                for (int i = currentVisualIndex; i < currentVisualIndex + span.count; ++i) {
+                    emit q->sectionResized(logicalIndex(i), oldSectionSize, size);
+                }
+            }
+        }
+        currentVisualIndex += span.count;
+    }
 }
 
 void QHeaderViewPrivate::resizeSectionSpan(int visualIndex, int oldSize, int newSize)

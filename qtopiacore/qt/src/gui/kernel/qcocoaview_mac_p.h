@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -59,6 +59,7 @@ QT_FORWARD_DECLARE_CLASS(QWidgetPrivate);
 QT_FORWARD_DECLARE_CLASS(QWidget);
 QT_FORWARD_DECLARE_CLASS(QEvent);
 QT_FORWARD_DECLARE_CLASS(QCocoaDropData);
+QT_FORWARD_DECLARE_CLASS(QStringList);
 
 QT_BEGIN_NAMESPACE
 struct DnDParams
@@ -83,6 +84,7 @@ Q_GUI_EXPORT
     bool composing;
     int composingLength;
     bool sendKeyEvents;
+    QStringList *currentCustomTypes;
 }
 - (id)initWithQWidget:(QWidget *)widget widgetPrivate:(QWidgetPrivate *)widgetprivate;
 - (void) finishInitWithQWidget:(QWidget *)widget widgetPrivate:(QWidgetPrivate *)widgetprivate;
@@ -91,7 +93,7 @@ Q_GUI_EXPORT
 - (NSDragOperation)draggingUpdated:(id < NSDraggingInfo >)sender;
 - (void)draggingExited:(id < NSDraggingInfo >)sender;
 - (BOOL)performDragOperation:(id <NSDraggingInfo>)sender;
-- (void)registerDragTypes:(bool)accept;
+- (void)registerDragTypes;
 - (void)removeDropData;
 - (void)addDropData:(id <NSDraggingInfo>)sender;
 - (void)setSupportedActions:(NSDragOperation)actions;

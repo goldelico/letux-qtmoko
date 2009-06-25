@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -45,12 +45,12 @@
     \ingroup licensing
     \brief Information about other licenses used for Qt components and third-party code.
 
-    Qt contains some code that is not provided under the the
+    Qt contains some code that is not provided under the
     \l{GNU General Public License (GPL)},
     \l{GNU Lesser General Public License (LGPL)} or the
     \l{Qt Commercial Editions}{Qt Commercial License Agreement}, but rather under
     specific licenses from the original authors. Some pieces of code were developed
-    by Qt Software and others originated from third parties.
+    by Nokia and others originated from third parties.
     This page lists the licenses used, names the authors, and links
     to the places where it is used.
 
@@ -238,6 +238,24 @@
     \list
     \o Parts of the internal QImageSmoothScaler::scale() function use code
     based on pnmscale.c by Jef Poskanzer.
+    \endlist
+
+    \hr
+
+    jQuery JavaScript Library v1.3.2
+    http://jquery.com/
+
+    Copyright (c) 2009 John Resig
+    Dual licensed under the MIT and GPL licenses.
+    http://docs.jquery.com/License
+
+    Sizzle CSS Selector Engine - v0.9.3
+    Copyright 2009, The Dojo Foundation
+    Released under the MIT, BSD, and GPL Licenses.
+    More information: http://sizzlejs.com/
+
+    \list
+    \o examples/webkit/fancybrowser/jquery.min.js
     \endlist
 */
 

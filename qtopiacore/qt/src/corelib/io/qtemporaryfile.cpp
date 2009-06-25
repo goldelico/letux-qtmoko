@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -105,100 +105,100 @@ QT_BEGIN_NAMESPACE
  */
 static int _gettemp(char *path, int *doopen, int domkdir, int slen)
 {
-	char *start, *trv, *suffp;
-	QT_STATBUF sbuf;
-	int rval;
+    char *start, *trv, *suffp;
+    QT_STATBUF sbuf;
+    int rval;
 #if defined(Q_OS_WIN)
     int pid;
 #else
-	pid_t pid;
+    pid_t pid;
 #endif
 
-	if (doopen && domkdir) {
-		errno = EINVAL;
-		return(0);
-	}
+    if (doopen && domkdir) {
+        errno = EINVAL;
+        return 0;
+    }
 
-	for (trv = path; *trv; ++trv)
-		;
-	trv -= slen;
-	suffp = trv;
-	--trv;
-	if (trv < path) {
-		errno = EINVAL;
-		return (0);
-	}
+    for (trv = path; *trv; ++trv)
+        ;
+    trv -= slen;
+    suffp = trv;
+    --trv;
+    if (trv < path) {
+        errno = EINVAL;
+        return 0;
+    }
 #if defined(Q_OS_WIN) && defined(_MSC_VER) && _MSC_VER >= 1400
-        pid = _getpid();
+    pid = _getpid();
 #else
-        pid = getpid();
+    pid = getpid();
 #endif
-	while (trv >= path && *trv == 'X' && pid != 0) {
-		*trv-- = (pid % 10) + '0';
-		pid /= 10;
-        }
+    while (trv >= path && *trv == 'X' && pid != 0) {
+        *trv-- = (pid % 10) + '0';
+        pid /= 10;
+    }
 
 #ifndef S_ISDIR
-#define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
+#  define S_ISDIR(m) (((m) & S_IFMT) == S_IFDIR)
 #endif
 
-        while (trv >= path && *trv == 'X') {
-            char c;
+    while (trv >= path && *trv == 'X') {
+        char c;
 
-            // CHANGE arc4random() -> random()
-            pid = (qrand() & 0xffff) % (26+26);
-		if (pid < 26)
-			c = pid + 'A';
-		else
-			c = (pid - 26) + 'a';
-		*trv-- = c;
-	}
-	start = trv + 1;
+        // CHANGE arc4random() -> random()
+        pid = (qrand() & 0xffff) % (26+26);
+        if (pid < 26)
+            c = pid + 'A';
+        else
+            c = (pid - 26) + 'a';
+        *trv-- = c;
+    }
+    start = trv + 1;
 
-	/*
-	 * check the target directory; if you have six X's and it
-	 * doesn't exist this runs for a *very* long time.
-	 */
-	if (doopen || domkdir) {
-		for (;; --trv) {
-			if (trv <= path)
-				break;
-			if (*trv == '/') {
-				*trv = '\0';
+    /*
+     * check the target directory; if you have six X's and it
+     * doesn't exist this runs for a *very* long time.
+     */
+    if (doopen || domkdir) {
+        for (;; --trv) {
+            if (trv <= path)
+                break;
+            if (*trv == '/') {
+                *trv = '\0';
 #if defined (Q_OS_WIN) && !defined(Q_OS_WINCE)
-                                if (trv - path == 2 && path[1] == ':') {
-                                    // Special case for Windows drives
-                                    // (e.g., "C:" => "C:\").
-                                    // ### Better to use a Windows
-                                    // call for this.
-									char drive[] = "c:\\";
-                                    drive[0] = path[0];
-                                    rval = QT_STAT(drive, &sbuf);
-                                } else
+                if (trv - path == 2 && path[1] == ':') {
+                    // Special case for Windows drives
+                    // (e.g., "C:" => "C:\").
+                    // ### Better to use a Windows
+                    // call for this.
+                    char drive[] = "c:\\";
+                    drive[0] = path[0];
+                    rval = QT_STAT(drive, &sbuf);
+                } else
 #endif
-				rval = QT_STAT(path, &sbuf);
-				*trv = '/';
-				if (rval != 0)
-					return(0);
-				if (!S_ISDIR(sbuf.st_mode)) {
-					errno = ENOTDIR;
-					return(0);
-				}
-				break;
-			}
-		}
-	}
+                    rval = QT_STAT(path, &sbuf);
+                *trv = '/';
+                if (rval != 0)
+                    return 0;
+                if (!S_ISDIR(sbuf.st_mode)) {
+                    errno = ENOTDIR;
+                    return 0;
+                }
+                break;
+            }
+        }
+    }
 
-	for (;;) {
-		if (doopen) {
+    for (;;) {
+        if (doopen) {
 #if defined(Q_OS_WIN) && !defined(Q_OS_WINCE) && defined(_MSC_VER) && _MSC_VER >= 1400
-                        if (_sopen_s(doopen, path, QT_OPEN_CREAT|O_EXCL|QT_OPEN_RDWR|QT_OPEN_BINARY
-#ifdef QT_LARGEFILE_SUPPORT
-                                     |QT_OPEN_LARGEFILE
-#endif
-                                     , _SH_DENYNO, _S_IREAD | _S_IWRITE)== 0)
-#else
-#if defined(Q_OS_WINCE)
+            if (_sopen_s(doopen, path, QT_OPEN_CREAT|O_EXCL|QT_OPEN_RDWR|QT_OPEN_BINARY
+#  ifdef QT_LARGEFILE_SUPPORT
+                                       |QT_OPEN_LARGEFILE
+#  endif
+                         , _SH_DENYNO, _S_IREAD | _S_IWRITE)== 0)
+#else // WIN && !CE
+#  if defined(Q_OS_WINCE)
             QString targetPath;
             if (QDir::isAbsolutePath(QString::fromLatin1(path)))
                 targetPath = QLatin1String(path);
@@ -207,84 +207,106 @@ static int _gettemp(char *path, int *doopen, int domkdir, int slen)
 
             if ((*doopen =
                 QT_OPEN(targetPath.toLocal8Bit(), O_CREAT|O_EXCL|O_RDWR
-#else
-                        if ((*doopen =
-                            open(path, QT_OPEN_CREAT|O_EXCL|QT_OPEN_RDWR
-#endif
-#ifdef QT_LARGEFILE_SUPPORT
-                                 |QT_OPEN_LARGEFILE
-#endif
-#  if defined(Q_OS_WINCE)
-                                                             |_O_BINARY
-#  elif defined(Q_OS_WIN)
-                                 |O_BINARY
+#  else // CE
+            if ((*doopen =
+                open(path, QT_OPEN_CREAT|O_EXCL|QT_OPEN_RDWR
 #  endif
-                                 , 0600)) >= 0)
+#  ifdef QT_LARGEFILE_SUPPORT
+                           |QT_OPEN_LARGEFILE
+#  endif
+#  if defined(Q_OS_WINCE)
+                           |_O_BINARY
+#  elif defined(Q_OS_WIN)
+                           |O_BINARY
+#  endif
+#  ifdef O_CLOEXEC
+                           // supported on Linux >= 2.6.23; avoids one extra system call
+                           // and avoids a race condition: if another thread forks, we could
+                           // end up leaking a file descriptor...
+                           |O_CLOEXEC
+#  endif
+                     , 0600)) >= 0)
+#endif // WIN && !CE
+            {
+#if defined(Q_OS_UNIX) && !defined(O_CLOEXEC)
+                fcntl(*doopen, F_SETFD, FD_CLOEXEC);
 #endif
-
-                                return(1);
-                        if (errno != EEXIST)
-                                return(0);
-                } else if (domkdir) {
-#ifdef Q_OS_WIN
-                    if (QT_MKDIR(path) == 0)
-#else
-                    if (mkdir(path, 0700) == 0)
-#endif
-                                return(1);
-                        if (errno != EEXIST)
-                                return(0);
-            }
-#ifndef Q_OS_WIN
-            else if (QT_LSTAT(path, &sbuf))
-			return(errno == ENOENT ? 1 : 0);
-#else
-            if (!QFileInfo(QLatin1String(path)).exists())
                 return 1;
+            }
+            if (errno != EEXIST)
+                return 0;
+        } else if (domkdir) {
+#ifdef Q_OS_WIN
+            if (QT_MKDIR(path) == 0)
+#else
+            if (mkdir(path, 0700) == 0)
+#endif
+                return 1;
+            if (errno != EEXIST)
+                return 0;
+        }
+#ifndef Q_OS_WIN
+        else if (QT_LSTAT(path, &sbuf))
+            return (errno == ENOENT) ? 1 : 0;
+#else
+        if (!QFileInfo(QLatin1String(path)).exists())
+            return 1;
 #endif
 
-                /* tricky little algorwwithm for backward compatibility */
-                for (trv = start;;) {
-                        if (!*trv)
-                                return (0);
-                        if (*trv == 'Z') {
-                                if (trv == suffp)
-                                        return (0);
-                                *trv++ = 'a';
-                        } else {
-                                if (isdigit(*trv))
-                                        *trv = 'a';
-                                else if (*trv == 'z')	/* inc from z to A */
-                                        *trv = 'A';
-                                else {
-                                        if (trv == suffp)
-                                                return (0);
-                                        ++*trv;
-                                }
-                                break;
-                        }
+        /* tricky little algorwwithm for backward compatibility */
+        for (trv = start;;) {
+            if (!*trv)
+                return 0;
+            if (*trv == 'Z') {
+                if (trv == suffp)
+                    return 0;
+                *trv++ = 'a';
+            } else {
+                if (isdigit(*trv))
+                    *trv = 'a';
+                else if (*trv == 'z') /* inc from z to A */
+                    *trv = 'A';
+                else {
+                    if (trv == suffp)
+                        return 0;
+                    ++*trv;
                 }
+                break;
+            }
         }
-        /*NOTREACHED*/
+    }
+    /*NOTREACHED*/
 }
 
+#ifndef Q_WS_WIN
 static int qt_mkstemps(char *path, int slen)
 {
-        int fd = 0;
-        return (_gettemp(path, &fd, 0, slen) ? fd : -1);
+    int fd = 0;
+    return (_gettemp(path, &fd, 0, slen) ? fd : -1);
 }
+#endif
 
 //************* QTemporaryFileEngine
 class QTemporaryFileEngine : public QFSFileEngine
 {
     Q_DECLARE_PRIVATE(QFSFileEngine)
 public:
-    QTemporaryFileEngine(const QString &file) : QFSFileEngine(file) { }
+    QTemporaryFileEngine(const QString &file, bool fileIsTemplate = true)
+        : QFSFileEngine(file), filePathIsTemplate(fileIsTemplate)
+    {
+    }
+
     ~QTemporaryFileEngine();
+
+    bool isReallyOpen();
+    void setFileName(const QString &file);
 
     bool open(QIODevice::OpenMode flags);
     bool remove();
+    bool rename(const QString &newName);
     bool close();
+
+    bool filePathIsTemplate;
 };
 
 QTemporaryFileEngine::~QTemporaryFileEngine()
@@ -292,16 +314,41 @@ QTemporaryFileEngine::~QTemporaryFileEngine()
     QFSFileEngine::close();
 }
 
+bool QTemporaryFileEngine::isReallyOpen()
+{
+    Q_D(QFSFileEngine);
+
+    if (!((0 == d->fh) && (-1 == d->fd)
+#if defined Q_OS_WIN
+                && (INVALID_HANDLE_VALUE == d->fileHandle)
+#endif
+            ))
+        return true;
+
+    return false;
+
+}
+
+void QTemporaryFileEngine::setFileName(const QString &file)
+{
+    // Really close the file, so we don't leak
+    QFSFileEngine::close();
+    QFSFileEngine::setFileName(file);
+}
+
 bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
 {
     Q_D(QFSFileEngine);
+    Q_ASSERT(!isReallyOpen());
+
+    if (!filePathIsTemplate)
+        return QFSFileEngine::open(openMode);
 
     QString qfilename = d->filePath;
     if(!qfilename.contains(QLatin1String("XXXXXX")))
         qfilename += QLatin1String(".XXXXXX");
 
     int suffixLength = qfilename.length() - (qfilename.lastIndexOf(QLatin1String("XXXXXX"), -1, Qt::CaseSensitive) + 6);
-    d->closeFileHandle = true;
     char *filename = qstrdup(qfilename.toLocal8Bit());
 
 #ifndef Q_WS_WIN
@@ -309,16 +356,20 @@ bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
     if (fd != -1) {
         // First open the fd as an external file descriptor to
         // initialize the engine properly.
-        QFSFileEngine::open(openMode, fd);
+        if (QFSFileEngine::open(openMode, fd)) {
 
-        // Allow the engine to close the handle even if it's "external".
-        d->closeFileHandle = true;
+            // Allow the engine to close the handle even if it's "external".
+            d->closeFileHandle = true;
 
-        // Restore the file names (open() resets them).
-        d->filePath = QString::fromLocal8Bit(filename); //changed now!
-        d->nativeInitFileName();
-        delete [] filename;
-        return true;
+            // Restore the file names (open() resets them).
+            d->filePath = QString::fromLocal8Bit(filename); //changed now!
+            filePathIsTemplate = false;
+            d->nativeInitFileName();
+            delete [] filename;
+            return true;
+        }
+
+        QT_CLOSE(fd);
     }
     delete [] filename;
     setError(errno == EMFILE ? QFile::ResourceError : QFile::OpenError, qt_error_string(errno));
@@ -330,6 +381,7 @@ bool QTemporaryFileEngine::open(QIODevice::OpenMode openMode)
     }
 
     d->filePath = QString::fromLocal8Bit(filename);
+    filePathIsTemplate = false;
     d->nativeInitFileName();
     d->closeFileHandle = true;
     delete [] filename;
@@ -343,9 +395,17 @@ bool QTemporaryFileEngine::remove()
     // Since the QTemporaryFileEngine::close() does not really close the file,
     // we must explicitly call QFSFileEngine::close() before we remove it.
     QFSFileEngine::close();
-    bool removed = QFSFileEngine::remove();
-    d->filePath.clear();
-    return removed;
+    if (QFSFileEngine::remove()) {
+        d->filePath.clear();
+        return true;
+    }
+    return false;
+}
+
+bool QTemporaryFileEngine::rename(const QString &newName)
+{
+    QFSFileEngine::close();
+    return QFSFileEngine::rename(newName);
 }
 
 bool QTemporaryFileEngine::close()
@@ -367,17 +427,14 @@ protected:
 
     bool autoRemove;
     QString templateName;
-    mutable QTemporaryFileEngine *fileEngine;
 };
 
-QTemporaryFilePrivate::QTemporaryFilePrivate() : autoRemove(true), fileEngine(0)
+QTemporaryFilePrivate::QTemporaryFilePrivate() : autoRemove(true)
 {
 }
 
 QTemporaryFilePrivate::~QTemporaryFilePrivate()
 {
-    delete fileEngine;
-    fileEngine = 0;
 }
 
 //************* QTemporaryFile
@@ -409,8 +466,8 @@ QTemporaryFilePrivate::~QTemporaryFilePrivate()
     file will exist and be kept open internally by QTemporaryFile.
 
     The file name of the temporary file can be found by calling fileName().
-    Note that this is only defined while the file is open; the function returns
-    an empty string before the file is opened and after it is closed.
+    Note that this is only defined after the file is first opened; the function
+    returns an empty string before this.
 
     A temporary file will have some static part of the name and some
     part that is calculated to be unique. The default filename \c
@@ -580,7 +637,8 @@ void QTemporaryFile::setAutoRemove(bool b)
 
 QString QTemporaryFile::fileName() const
 {
-    if(!isOpen())
+    Q_D(const QTemporaryFile);
+    if(d->fileName.isEmpty())
         return QString();
     return fileEngine()->fileName(QAbstractFileEngine::DefaultName);
 }
@@ -674,8 +732,12 @@ QTemporaryFile *QTemporaryFile::createLocalFile(QFile &file)
 QAbstractFileEngine *QTemporaryFile::fileEngine() const
 {
     Q_D(const QTemporaryFile);
-    if(!d->fileEngine)
-        d->fileEngine = new QTemporaryFileEngine(d->templateName);
+    if(!d->fileEngine) {
+        if (d->fileName.isEmpty())
+            d->fileEngine = new QTemporaryFileEngine(d->templateName);
+        else
+            d->fileEngine = new QTemporaryFileEngine(d->fileName, false);
+    }
     return d->fileEngine;
 }
 
@@ -690,10 +752,13 @@ bool QTemporaryFile::open(OpenMode flags)
 {
     Q_D(QTemporaryFile);
     if (!d->fileName.isEmpty()) {
-        setOpenMode(flags);
-        return true;
+        if (static_cast<QTemporaryFileEngine*>(fileEngine())->isReallyOpen()) {
+            setOpenMode(flags);
+            return true;
+        }
     }
 
+    flags |= QIODevice::ReadWrite;
     if (QFile::open(flags)) {
         d->fileName = d->fileEngine->fileName(QAbstractFileEngine::DefaultName);
         return true;
@@ -701,6 +766,8 @@ bool QTemporaryFile::open(OpenMode flags)
     return false;
 }
 
+QT_END_NAMESPACE
+
 #endif // QT_NO_TEMPORARYFILE
 
-QT_END_NAMESPACE
+

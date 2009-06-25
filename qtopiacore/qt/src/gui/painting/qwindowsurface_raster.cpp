@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -142,8 +142,7 @@ void QRasterWindowSurface::beginPaint(const QRegion &rgn)
             p.fillRect(*it, blank);
         }
     }
-#endif
-#if defined(Q_OS_WINCE)
+#else
     Q_UNUSED(rgn);
 #endif
 }
@@ -230,7 +229,7 @@ void QRasterWindowSurface::flush(QWidget *widget, const QRegion &rgn, const QPoi
     {
         const QImage &src = d->image->image;
         br = br.intersected(src.rect());
-        if (src.format() != QImage::Format_RGB32) {
+        if (src.format() != QImage::Format_RGB32 || widget->x11Info().depth() < 24) {
             QX11PixmapData *data = new QX11PixmapData(QPixmapData::PixmapType);
             data->xinfo = widget->x11Info();
             data->fromImage(src, Qt::AutoColor);
@@ -250,6 +249,7 @@ void QRasterWindowSurface::flush(QWidget *widget, const QRegion &rgn, const QPoi
 
 //     d->image->image.save("flush.png");
 
+    Q_UNUSED(offset);
     // Get a context for the widget.
 #ifndef QT_MAC_USE_COCOA
     CGContextRef context;

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -343,18 +343,6 @@ void QObjectPrivate::derefSender(QObject *sender, int signal)
         }
     }
     // Q_ASSERT_X(false, "QObjectPrivate::derefSender", "sender not found");
-}
-
-void QObjectPrivate::removeSender(QObject *sender, int signal)
-{
-    for (int i = 0; i < senders.count(); ++i) {
-        Sender &s = senders[i];
-        if (s.sender == sender && s.signal == signal) {
-            senders.removeAt(i);
-            return;
-        }
-    }
-    // Q_ASSERT_X(false, "QObjectPrivate::removeSender", "sender not found");
 }
 
 QObjectPrivate::Sender *QObjectPrivate::setCurrentSender(QObject *receiver,
@@ -790,7 +778,7 @@ QObject::~QObject()
                     bool needToUnlock = QOrderedMutexLocker::relock(locker.mutex(), m);
                     c = &connectionList[i];
                     if (c->receiver)
-                        c->receiver->d_func()->removeSender(this, signal);
+                        c->receiver->d_func()->derefSender(this, signal);
                     if (needToUnlock)
                         m->unlock();
 
@@ -811,18 +799,22 @@ QObject::~QObject()
         }
 
         // disconnect all senders
-        for (int i = 0; i < d->senders.count(); ++i) {
+        for (int i = 0; i < d->senders.count(); ) {
             QObjectPrivate::Sender *s = &d->senders[i];
-            if (!s->sender)
-                continue;
 
             QMutex *m = &s->sender->d_func()->threadData->mutex;
             bool needToUnlock = QOrderedMutexLocker::relock(locker.mutex(), m);
-            s = &d->senders[i];
-            if (s->sender)
-                s->sender->d_func()->removeReceiver(s->signal, this);
+            if (m < locker.mutex()) {
+                if (i >= d->senders.count() || s != &d->senders[i]) {
+                    if (needToUnlock)
+                        m->unlock();
+                    continue;
+                }
+            }
+            s->sender->d_func()->removeReceiver(s->signal, this);
             if (needToUnlock)
                 m->unlock();
+            ++i;
         }
 
         d->senders.clear();
@@ -920,7 +912,8 @@ QObject::~QObject()
     \relates QObject
 
     Returns the given \a object cast to type T if the object is of type
-    T (or of a subclass); otherwise returns 0.
+    T (or of a subclass); otherwise returns 0.  If \a object is 0 then 
+    it will also return 0.
 
     The class T must inherit (directly or indirectly) QObject and be
     declared with the \l Q_OBJECT macro.

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qmap.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qmap.cpp -->
 <head>
   <title>Qt 4.5: QMap Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -85,8 +85,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qmap.html#operator-lt-lt-164">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QMap&lt;Key, T&gt; &amp; <i>map</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qmap.html#operator-gt-gt-95">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QMap&lt;Key, T&gt; &amp; <i>map</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qmap.html#operator-lt-lt-142">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QMap&lt;Key, T&gt; &amp; <i>map</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qmap.html#operator-gt-gt-76">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QMap&lt;Key, T&gt; &amp; <i>map</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -219,7 +219,7 @@
 <p>Returns an <a href="containers.html#stl-style-iterators">STL-style iterator</a> pointing to the first item in the map.</p>
 <p>See also <a href="qmap.html#constBegin">constBegin</a>() and <a href="qmap.html#end">end</a>().</p>
 <h3 class="fn"><a name="begin-2"></a><a href="qmap-const-iterator.html">const_iterator</a> QMap::begin () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="clear"></a>void QMap::clear ()</h3>
 <p>Removes all items from the map.</p>
 <p>See also <a href="qmap.html#remove">remove</a>().</p>
@@ -241,7 +241,7 @@
 <p>Returns the number of items associated with key <i>key</i>.</p>
 <p>See also <a href="qmap.html#contains">contains</a>(), <a href="qmap.html#insertMulti">insertMulti</a>(), and <a href="qmultimap.html#count">QMultiMap::count</a>().</p>
 <h3 class="fn"><a name="count-2"></a>int QMap::count () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Same as <a href="qmap.html#size">size</a>().</p>
 <h3 class="fn"><a name="empty"></a>bool QMap::empty () const</h3>
 <p>This function is provided for STL compatibility. It is equivalent to <a href="qmap.html#isEmpty">isEmpty</a>(), returning true if the map is empty; otherwise returning false.</p>
@@ -249,7 +249,7 @@
 <p>Returns an <a href="containers.html#stl-style-iterators">STL-style iterator</a> pointing to the imaginary item after the last item in the map.</p>
 <p>See also <a href="qmap.html#begin">begin</a>() and <a href="qmap.html#constEnd">constEnd</a>().</p>
 <h3 class="fn"><a name="end-2"></a><a href="qmap-const-iterator.html">const_iterator</a> QMap::end () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="erase"></a><a href="qmap-iterator.html">iterator</a> QMap::erase ( <a href="qmap-iterator.html">iterator</a> <i>pos</i> )</h3>
 <p>Removes the (key, value) pair pointed to by the iterator <i>pos</i> from the map, and returns an iterator to the next item in the map.</p>
 <p>See also <a href="qmap.html#remove">remove</a>().</p>
@@ -266,7 +266,7 @@
  }</pre>
 <p>See also <a href="qmap.html#constFind">constFind</a>(), <a href="qmap.html#value">value</a>(), <a href="qmap.html#values">values</a>(), <a href="qmap.html#lowerBound">lowerBound</a>(), <a href="qmap.html#upperBound">upperBound</a>(), and <a href="qmultimap.html#find">QMultiMap::find</a>().</p>
 <h3 class="fn"><a name="find-2"></a><a href="qmap-const-iterator.html">const_iterator</a> QMap::find ( const Key &amp; <i>key</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="insert"></a><a href="qmap-iterator.html">iterator</a> QMap::insert ( const Key &amp; <i>key</i>, const T &amp; <i>value</i> )</h3>
 <p>Inserts a new item with the key <i>key</i> and a value of <i>value</i>.</p>
 <p>If there is already an item with the key <i>key</i>, that item's value is replaced with <i>value</i>.</p>
@@ -285,7 +285,7 @@
 <p>This function can be slow (<a href="containers.html#linear-time">linear time</a>), because <a href="qmap.html">QMap</a>'s internal data structure is optimized for fast lookup by key, not by value.</p>
 <p>See also <a href="qmap.html#value">value</a>() and <a href="qmap.html#keys">keys</a>().</p>
 <h3 class="fn"><a name="key-2"></a>const Key QMap::key ( const T &amp; <i>value</i>, const Key &amp; <i>defaultKey</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the first key with value <i>value</i>, or <i>defaultKey</i> if the map contains no item with value <i>value</i>.</p>
 <p>This function can be slow (<a href="containers.html#linear-time">linear time</a>), because <a href="qmap.html">QMap</a>'s internal data structure is optimized for fast lookup by key, not by value.</p>
 <p>This function was introduced in Qt 4.3.</p>
@@ -295,7 +295,7 @@
 <p>The order is guaranteed to be the same as that used by <a href="qmap.html#values">values</a>().</p>
 <p>See also <a href="qmap.html#uniqueKeys">uniqueKeys</a>(), <a href="qmap.html#values">values</a>(), and <a href="qmap.html#key">key</a>().</p>
 <h3 class="fn"><a name="keys-2"></a><a href="qlist.html">QList</a>&lt;Key&gt; QMap::keys ( const T &amp; <i>value</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list containing all the keys associated with value <i>value</i> in ascending order.</p>
 <p>This function can be slow (<a href="containers.html#linear-time">linear time</a>), because <a href="qmap.html">QMap</a>'s internal data structure is optimized for fast lookup by key, not by value.</p>
 <h3 class="fn"><a name="lowerBound"></a><a href="qmap-iterator.html">iterator</a> QMap::lowerBound ( const Key &amp; <i>key</i> )</h3>
@@ -322,7 +322,7 @@
  }</pre>
 <p>See also <a href="qtalgorithms.html#qLowerBound">qLowerBound</a>(), <a href="qmap.html#upperBound">upperBound</a>(), and <a href="qmap.html#find">find</a>().</p>
 <h3 class="fn"><a name="lowerBound-2"></a><a href="qmap-const-iterator.html">const_iterator</a> QMap::lowerBound ( const Key &amp; <i>key</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="remove"></a>int QMap::remove ( const Key &amp; <i>key</i> )</h3>
 <p>Removes all the items that have the key <i>key</i> from the map. Returns the number of items removed which is usually 1 but will be 0 if the key isn't in the map, or &gt; 1 if <a href="qmap.html#insertMulti">insertMulti</a>() has been used with the <i>key</i>.</p>
 <p>See also <a href="qmap.html#clear">clear</a>(), <a href="qmap.html#take">take</a>(), and <a href="qmultimap.html#remove">QMultiMap::remove</a>().</p>
@@ -359,19 +359,19 @@
  map.upperBound(999);    <span class="comment">// returns end()</span></pre>
 <p>See also <a href="qtalgorithms.html#qUpperBound">qUpperBound</a>(), <a href="qmap.html#lowerBound">lowerBound</a>(), and <a href="qmap.html#find">find</a>().</p>
 <h3 class="fn"><a name="upperBound-2"></a><a href="qmap-const-iterator.html">const_iterator</a> QMap::upperBound ( const Key &amp; <i>key</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="value"></a>const T QMap::value ( const Key &amp; <i>key</i> ) const</h3>
 <p>Returns the value associated with the key <i>key</i>.</p>
 <p>If the map contains no item with key <i>key</i>, the function returns a <a href="containers.html#default-constructed-values">default-constructed value</a>. If there are multiple items for <i>key</i> in the map, the value of the most recently inserted one is returned.</p>
 <p>See also <a href="qmap.html#key">key</a>(), <a href="qmap.html#values">values</a>(), <a href="qmap.html#contains">contains</a>(), and <a href="qmap.html#operator-5b-5d">operator[]</a>().</p>
 <h3 class="fn"><a name="value-2"></a>const T QMap::value ( const Key &amp; <i>key</i>, const T &amp; <i>defaultValue</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>If the map contains no item with key <i>key</i>, the function returns <i>defaultValue</i>.</p>
 <h3 class="fn"><a name="values"></a><a href="qlist.html">QList</a>&lt;T&gt; QMap::values () const</h3>
 <p>Returns a list containing all the values in the map, in ascending order of their keys. If a key is associated with multiple values, all of its values will be in the list, and not just the most recently inserted one.</p>
 <p>See also <a href="qmap.html#keys">keys</a>() and <a href="qmap.html#value">value</a>().</p>
 <h3 class="fn"><a name="values-2"></a><a href="qlist.html">QList</a>&lt;T&gt; QMap::values ( const Key &amp; <i>key</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list containing all the values associated with key <i>key</i>, from the most recently inserted to the least recently inserted one.</p>
 <p>See also <a href="qmap.html#count">count</a>() and <a href="qmap.html#insertMulti">insertMulti</a>().</p>
 <h3 class="fn"><a name="operator-not-eq"></a>bool QMap::operator!= ( const QMap&lt;Key, T&gt; &amp; <i>other</i> ) const</h3>
@@ -391,15 +391,15 @@
 <p>If the map contains no item with key <i>key</i>, the function inserts a <a href="containers.html#default-constructed-values">default-constructed value</a> into the map with key <i>key</i>, and returns a reference to it. If the map contains multiple items with key <i>key</i>, this function returns a reference to the most recently inserted value.</p>
 <p>See also <a href="qmap.html#insert">insert</a>() and <a href="qmap.html#value">value</a>().</p>
 <h3 class="fn"><a name="operator-5b-5d-2"></a>const T QMap::operator[] ( const Key &amp; <i>key</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Same as <a href="qmap.html#value">value</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-164"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QMap&lt;Key, T&gt; &amp; <i>map</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-142"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QMap&lt;Key, T&gt; &amp; <i>map</i> )</h3>
 <p>Writes the map <i>map</i> to stream <i>out</i>.</p>
 <p>This function requires the key and value types to implement <tt>operator&lt;&lt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-95"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QMap&lt;Key, T&gt; &amp; <i>map</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-76"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QMap&lt;Key, T&gt; &amp; <i>map</i> )</h3>
 <p>Reads a map from stream <i>in</i> into <i>map</i>.</p>
 <p>This function requires the key and value types to implement <tt>operator&gt;&gt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
@@ -407,6 +407,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

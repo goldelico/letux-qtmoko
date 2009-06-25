@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -397,7 +397,7 @@ namespace qdesigner_internal
         QMapIterator<QPair<QIcon::Mode, QIcon::State>, PropertySheetPixmapValue> itPath(paths);
         while (itPath.hasNext()) {
             QPair<QIcon::Mode, QIcon::State> pair = itPath.next().key();
-            icon.addPixmap(m_pixmapCache->pixmap(itPath.value()), pair.first, pair.second);
+            icon.addFile(itPath.value().path(), QSize(), pair.first, pair.second);
         }
         m_cache.insert(value, icon);
         return icon;

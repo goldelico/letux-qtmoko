@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qstring.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qstring.cpp -->
 <head>
   <title>Qt 4.5: QStringRef Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -64,9 +64,9 @@
 <ul>
 <li><div class="fn"></div>bool <b><a href="qstringref.html#operator-lt-17">operator&lt;</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
 <li><div class="fn"></div>bool <b><a href="qstringref.html#operator-lt-eq-12">operator&lt;=</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
-<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-53">operator==</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
-<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-54">operator==</a></b> ( const QString &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
-<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-56">operator==</a></b> ( const QLatin1String &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-64">operator==</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-65">operator==</a></b> ( const QString &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qstringref.html#operator-eq-eq-67">operator==</a></b> ( const QLatin1String &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
 <li><div class="fn"></div>bool <b><a href="qstringref.html#operator-gt-12">operator&gt;</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
 <li><div class="fn"></div>bool <b><a href="qstringref.html#operator-gt-eq-12">operator&gt;=</a></b> ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</li>
 </ul>
@@ -109,31 +109,31 @@
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="compare-2"></a>int QStringRef::compare ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>cs</i> = Qt::CaseSensitive )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares the string <i>s1</i> with the string <i>s2</i> and returns an integer less than, equal to, or greater than zero if <i>s1</i> is less than, equal to, or greater than <i>s2</i>.</p>
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="compare-3"></a>int QStringRef::compare ( const QStringRef &amp; <i>s1</i>, <a href="qlatin1string.html">QLatin1String</a> <i>s2</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>cs</i> = Qt::CaseSensitive )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares the string <i>s1</i> with the string <i>s2</i> and returns an integer less than, equal to, or greater than zero if <i>s1</i> is less than, equal to, or greater than <i>s2</i>.</p>
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="compare-4"></a>int QStringRef::compare ( const <a href="qstring.html">QString</a> &amp; <i>other</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>cs</i> = Qt::CaseSensitive ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this string with the <i>other</i> string and returns an integer less than, equal to, or greater than zero if this string is less than, equal to, or greater than the <i>other</i> string.</p>
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>Equivalent to <tt>compare(*this, other, cs)</tt>.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qstring.html#compare">QString::compare</a>().</p>
 <h3 class="fn"><a name="compare-5"></a>int QStringRef::compare ( const QStringRef &amp; <i>other</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>cs</i> = Qt::CaseSensitive ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this string with the <i>other</i> string and returns an integer less than, equal to, or greater than zero if this string is less than, equal to, or greater than the <i>other</i> string.</p>
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>Equivalent to <tt>compare(*this, other, cs)</tt>.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qstring.html#compare">QString::compare</a>().</p>
 <h3 class="fn"><a name="compare-6"></a>int QStringRef::compare ( <a href="qlatin1string.html">QLatin1String</a> <i>other</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>cs</i> = Qt::CaseSensitive ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this string with the <i>other</i> string and returns an integer less than, equal to, or greater than zero if this string is less than, equal to, or greater than the <i>other</i> string.</p>
 <p>If <i>cs</i> is <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitive</a>, the comparison is case sensitive; otherwise the comparison is case insensitive.</p>
 <p>Equivalent to <tt>compare(*this, other, cs)</tt>.</p>
@@ -163,17 +163,17 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qstringref.html#compare">compare</a>() and <a href="qtextcodec-qt3.html#locale">QTextCodec::locale</a>().</p>
 <h3 class="fn"><a name="localeAwareCompare-2"></a>int QStringRef::localeAwareCompare ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares <i>s1</i> with <i>s2</i> and returns an integer less than, equal to, or greater than zero if <i>s1</i> is less than, equal to, or greater than <i>s2</i>.</p>
 <p>The comparison is performed in a locale- and also platform-dependent manner. Use this function to present sorted lists of strings to the user.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="localeAwareCompare-3"></a>int QStringRef::localeAwareCompare ( const <a href="qstring.html">QString</a> &amp; <i>other</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this string with the <i>other</i> string and returns an integer less than, equal to, or greater than zero if this string is less than, equal to, or greater than the <i>other</i> string.</p>
 <p>The comparison is performed in a locale- and also platform-dependent manner. Use this function to present sorted lists of strings to the user.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="localeAwareCompare-4"></a>int QStringRef::localeAwareCompare ( const QStringRef &amp; <i>other</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this string with the <i>other</i> string and returns an integer less than, equal to, or greater than zero if this string is less than, equal to, or greater than the <i>other</i> string.</p>
 <p>The comparison is performed in a locale- and also platform-dependent manner. Use this function to present sorted lists of strings to the user.</p>
 <p>This function was introduced in Qt 4.5.</p>
@@ -205,11 +205,11 @@
 <h3 class="fn"><a name="operator-lt-eq-12"></a>bool operator&lt;= ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
 <p>Returns true if string reference <i>s1</i> is lexically less than or equal to string reference <i>s2</i>; otherwise returns false.</p>
 <p>The comparison is based exclusively on the numeric Unicode values of the characters and is very fast, but is not what a human would expect. Consider sorting user-interface strings using the <a href="qstring.html#localeAwareCompare">QString::localeAwareCompare</a>() function.</p>
-<h3 class="fn"><a name="operator-eq-eq-53"></a>bool operator== ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
+<h3 class="fn"><a name="operator-eq-eq-64"></a>bool operator== ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
 <p>Returns true if string reference <i>s1</i> is lexically equal to string reference <i>s2</i>; otherwise returns false.</p>
-<h3 class="fn"><a name="operator-eq-eq-54"></a>bool operator== ( const <a href="qstring.html">QString</a> &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
+<h3 class="fn"><a name="operator-eq-eq-65"></a>bool operator== ( const <a href="qstring.html">QString</a> &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
 <p>Returns true if string <i>s1</i> is lexically equal to string reference <i>s2</i>; otherwise returns false.</p>
-<h3 class="fn"><a name="operator-eq-eq-56"></a>bool operator== ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
+<h3 class="fn"><a name="operator-eq-eq-67"></a>bool operator== ( const <a href="qlatin1string.html">QLatin1String</a> &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
 <p>Returns true if string <i>s1</i> is lexically equal to string reference <i>s2</i>; otherwise returns false.</p>
 <h3 class="fn"><a name="operator-gt-12"></a>bool operator&gt; ( const QStringRef &amp; <i>s1</i>, const QStringRef &amp; <i>s2</i> )</h3>
 <p>Returns true if string reference <i>s1</i> is lexically greater than string reference <i>s2</i>; otherwise returns false.</p>
@@ -221,6 +221,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

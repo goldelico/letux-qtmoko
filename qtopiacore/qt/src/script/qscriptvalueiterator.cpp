@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtScript module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -106,6 +106,7 @@ QScriptValueIteratorPrivate::QScriptValueIteratorPrivate()
 */
 QScriptValueIteratorPrivate::~QScriptValueIteratorPrivate()
 {
+    delete it;
 }
 
 /*!
@@ -130,7 +131,6 @@ QScriptValueIterator::QScriptValueIterator(const QScriptValue &object)
 QScriptValueIterator::~QScriptValueIterator()
 {
     if (d_ptr) {
-        delete d_ptr->it;
         delete d_ptr;
         d_ptr = 0;
     }
@@ -312,7 +312,7 @@ void QScriptValueIterator::remove()
 QScriptValueIterator& QScriptValueIterator::operator=(QScriptValue &object)
 {
     if (d_ptr) {
-        delete d_ptr->it;
+        delete d_ptr;
         d_ptr = 0;
     }
     QScriptValueImpl val = QScriptValuePrivate::valueOf(object);

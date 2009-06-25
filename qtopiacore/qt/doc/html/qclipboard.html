@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qclipboard.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/kernel/qclipboard.cpp -->
 <head>
   <title>Qt 4.5: QClipboard Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -131,7 +131,7 @@
 <p>See also <a href="qclipboard.html#dataChanged">dataChanged</a>(), <a href="qclipboard.html#selectionChanged">selectionChanged</a>(), and <a href="qclipboard.html#findBufferChanged">findBufferChanged</a>().</p>
 <h3 class="fn"><a name="clear"></a>void QClipboard::clear ( <a href="qclipboard.html#Mode-enum">Mode</a> <i>mode</i> = Clipboard )</h3>
 <p>Clear the clipboard contents.</p>
-<p>The <i>mode</i> argument is used to control which part of the system clipboard is used. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Clipboard</a>, this function clears the the global clipboard contents. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Selection</a>, this function clears the global mouse selection contents. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::FindBuffer</a>, this function clears the search string buffer.</p>
+<p>The <i>mode</i> argument is used to control which part of the system clipboard is used. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Clipboard</a>, this function clears the global clipboard contents. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Selection</a>, this function clears the global mouse selection contents. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::FindBuffer</a>, this function clears the search string buffer.</p>
 <p>See also <a href="qclipboard.html#Mode-enum">QClipboard::Mode</a> and <a href="qclipboard.html#supportsSelection">supportsSelection</a>().</p>
 <h3 class="fn"><a name="dataChanged"></a>void QClipboard::dataChanged ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the clipboard data is changed.</p>
@@ -195,7 +195,7 @@
 <p>The <i>mode</i> argument is used to control which part of the system clipboard is used. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Clipboard</a>, the text is retrieved from the global clipboard. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Selection</a>, the text is retrieved from the global mouse selection. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::FindBuffer</a>, the text is retrieved from the search string buffer.</p>
 <p>See also <a href="qclipboard.html#setText">setText</a>() and <a href="qclipboard.html#mimeData">mimeData</a>().</p>
 <h3 class="fn"><a name="text-2"></a><a href="qstring.html">QString</a> QClipboard::text ( <a href="qstring.html">QString</a> &amp; <i>subtype</i>, <a href="qclipboard.html#Mode-enum">Mode</a> <i>mode</i> = Clipboard ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the clipboard text in subtype <i>subtype</i>, or an empty string if the clipboard does not contain any text. If <i>subtype</i> is null, any subtype is acceptable, and <i>subtype</i> is set to the chosen subtype.</p>
 <p>The <i>mode</i> argument is used to control which part of the system clipboard is used. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Clipboard</a>, the text is retrieved from the global clipboard. If <i>mode</i> is <a href="qclipboard.html#Mode-enum">QClipboard::Selection</a>, the text is retrieved from the global mouse selection.</p>
 <p>Common values for <i>subtype</i> are &quot;plain&quot; and &quot;html&quot;.</p>
@@ -205,6 +205,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

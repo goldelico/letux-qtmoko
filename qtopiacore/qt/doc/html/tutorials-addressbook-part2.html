@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/tutorials/addressbook.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/tutorials/addressbook.qdoc -->
 <head>
   <title>Qt 4.5: Address Book 2 - Adding Addresses</title>
   <link rel="prev" href="tutorials-addressbook-part1.html" />
@@ -51,10 +51,10 @@
      QString oldName;
      QString oldAddress;
  };</pre>
-<p>We also declare two private <a href="qstring.html">QString</a> objects, <tt>oldName</tt> and <tt>oldAddress</tt>. These objects are needed to hold the name and address of the contact that was last displayed, before the user clicked &quot;Add&quot;. So, when the user clicks &quot;Cancel&quot;, we can revert to displaying the details of the last contact.</p>
+<p>We also declare two private <a href="qstring.html">QString</a> objects, <tt>oldName</tt> and <tt>oldAddress</tt>. These objects are needed to hold the name and address of the contact that was last displayed, before the user clicked <b>Add</b>. So, when the user clicks <b>Cancel</b>, we can revert to displaying the details of the last contact.</p>
 <a name="implementing-the-addressbook-class"></a>
 <h2>Implementing the AddressBook Class</h2>
-<p>Within the constructor of <tt>AddressBook</tt>, we set the <tt>nameLine</tt> and <tt>addressText</tt> to read-only, so that we can only display but not edit existing cotact details.</p>
+<p>Within the constructor of <tt>AddressBook</tt>, we set the <tt>nameLine</tt> and <tt>addressText</tt> to read-only, so that we can only display but not edit existing contact details.</p>
 <pre>     ...
      nameLine-&gt;setReadOnly(true);
      ...
@@ -66,7 +66,7 @@
      submitButton-&gt;hide();
      cancelButton = new QPushButton(tr(&quot;&amp;Cancel&quot;));
      cancelButton-&gt;hide();</pre>
-<p>The <tt>addButton</tt> is displayed by invoking the <a href="qwidget.html#show">show()</a> function, while the <tt>submitButton</tt> and <tt>cancelButton</tt> are hidden by invoking <a href="qwidget.html#hide">hide()</a>. These two push buttons will only be displayed when the user clicks &quot;Add&quot; and this is handled by the <tt>addContact()</tt> function discussed below.</p>
+<p>The <tt>addButton</tt> is displayed by invoking the <a href="qwidget.html#show">show()</a> function, while the <tt>submitButton</tt> and <tt>cancelButton</tt> are hidden by invoking <a href="qwidget.html#hide">hide()</a>. These two push buttons will only be displayed when the user clicks <b>Add</b> and this is handled by the <tt>addContact()</tt> function discussed below.</p>
 <pre>     connect(addButton, SIGNAL(clicked()), this, SLOT(addContact()));
      connect(submitButton, SIGNAL(clicked()), this, SLOT(submitContact()));
      connect(cancelButton, SIGNAL(clicked()), this, SLOT(cancel()));</pre>
@@ -105,7 +105,7 @@
  }</pre>
 <p>The <tt>submitContact()</tt> function can be divided into three parts:</p>
 <ol type="1">
-<li>We extract the contact's details from <tt>nameLine</tt> and <tt>addressText</tt> and store them in <a href="qstring.html">QString</a> objects. We also validate to make sure that the user did not click &quot;Submit&quot; with empty input fields; otherwise, a <a href="qmessagebox.html">QMessageBox</a> is displayed to remind the user for a name and address.<pre> void AddressBook::submitContact()
+<li>We extract the contact's details from <tt>nameLine</tt> and <tt>addressText</tt> and store them in <a href="qstring.html">QString</a> objects. We also validate to make sure that the user did not click <b>Submit</b> with empty input fields; otherwise, a <a href="qmessagebox.html">QMessageBox</a> is displayed to remind the user for a name and address.<pre> void AddressBook::submitContact()
  {
      QString name = nameLine-&gt;text();
      QString address = addressText-&gt;toPlainText();
@@ -125,7 +125,7 @@
              tr(&quot;Sorry, \&quot;%1\&quot; is already in your address book.&quot;).arg(name));
          return;
      }</pre>
-<p>If the contact already exists, again, we display a <a href="qmessagebox.html">QMessageBox</a> to inform the user about this, to prevent the user from adding duplicate contacts. Our <tt>contacts</tt> object is based on key-value pairs of name and addresses, hence, we want to ensure that <i>key</i> is unique.</p>
+<p>If the contact already exists, again, we display a <a href="qmessagebox.html">QMessageBox</a> to inform the user about this, preventing the user from adding duplicate contacts. Our <tt>contacts</tt> object is based on key-value pairs of name and address, hence, we want to ensure that <i>key</i> is unique.</p>
 </li>
 <li>Once we have handled both cases mentioned above, we restore the push buttons to their normal state with the following code:<pre>     if (contacts.isEmpty()) {
          nameLine-&gt;clear();
@@ -154,7 +154,7 @@
      submitButton-&gt;hide();
      cancelButton-&gt;hide();
  }</pre>
-<p>The general idea to add a contact is to give the user the flexibility to click &quot;Submit&quot; or &quot;Cancel&quot; at any time. The flowchart below further explains this concept:</p>
+<p>The general idea behind adding a contact is to give the user the flexibility to click <b>Submit</b> or <b>Cancel</b> at any time. The flowchart below further explains this concept:</p>
 <p align="center"><img src="images/addressbook-tutorial-part2-add-flowchart.png" /></p><p>
 [Previous: <a href="tutorials-addressbook-part1.html">Address Book 1 - Designing the User Interface</a>]
 [<a href="tutorials-addressbook.html">Contents</a>]
@@ -164,6 +164,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

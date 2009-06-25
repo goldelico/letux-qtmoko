@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -663,11 +663,7 @@ QString QScriptDebuggerPrivate::toolTip(int frameIndex, int lineNumber,
         objects.append(ctx->thisObject());
         ++pathIndex;
     } else {
-#if QT_VERSION >= 0x040500
         objects << ctx->scopeChain();
-#else
-        objects.append(ctx->activationObject());
-#endif
     }
     for (int i = 0; i < objects.size(); ++i) {
         QScriptValue val = objects.at(i);
@@ -991,13 +987,11 @@ public:
             qint64 scriptId = m_added.at(m_index);
             m_debugger->scriptsModel->addScript(scriptId, data);
 
-#if QT_VERSION >= 0x040500
             // ### could be slow, might want to do this in a separate thread
             QString xml = qt_scriptToXml(data.contents(), data.baseLineNumber());
             QScriptXmlParser::Result extraInfo = QScriptXmlParser::parse(xml);
             m_debugger->scriptsModel->addExtraScriptInfo(
                 scriptId, extraInfo.functionsInfo, extraInfo.executableLineNumbers);
-#endif
 
             if (++m_index < m_added.size())
                 frontend.scheduleGetScriptData(m_added.at(m_index));

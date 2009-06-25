@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qstringlist.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qstringlist.cpp -->
 <head>
   <title>Qt 4.5: QStringList Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -54,8 +54,8 @@
 <ul>
 <li><div class="fn"></div>typedef <b><a href="qstringlist.html#QMutableStringListIterator-typedef">QMutableStringListIterator</a></b></li>
 <li><div class="fn"></div>typedef <b><a href="qstringlist.html#QStringListIterator-typedef">QStringListIterator</a></b></li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qstringlist.html#operator-lt-lt-110">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QStringList &amp; <i>list</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qstringlist.html#operator-gt-gt-60">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QStringList &amp; <i>list</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qstringlist.html#operator-lt-lt-18">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QStringList &amp; <i>list</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qstringlist.html#operator-gt-gt-7">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QStringList &amp; <i>list</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -151,7 +151,7 @@
      }</pre>
 <p>See also <a href="qstringlist.html#contains">contains</a>().</p>
 <h3 class="fn"><a name="filter-2"></a>QStringList QStringList::filter ( const <a href="qregexp.html">QRegExp</a> &amp; <i>rx</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list of all the strings that match the regular expression <i>rx</i>.</p>
 <h3 class="fn"><a name="indexOf"></a>int QStringList::indexOf ( const <a href="qregexp.html">QRegExp</a> &amp; <i>rx</i>, int <i>from</i> = 0 ) const</h3>
 <p>Returns the index position of the first exact match of <i>rx</i> in the list, searching forward from index position <i>from</i>. Returns -1 if no item matched.</p>
@@ -159,7 +159,6 @@
 <p>See also <a href="qstringlist.html#lastIndexOf">lastIndexOf</a>(), <a href="qstringlist.html#contains">contains</a>(), and <a href="qregexp.html#exactMatch">QRegExp::exactMatch</a>().</p>
 <h3 class="fn"><a name="indexOf-2"></a>int QStringList::indexOf ( const <a href="qstring.html">QString</a> &amp; <i>value</i>, int <i>from</i> = 0 ) const</h3>
 <p>Returns the index position of the first occurrence of <i>value</i> in the list, searching forward from index position <i>from</i>. Returns -1 if no item matched.</p>
-<p>By default, this function is case sensitive.</p>
 <p>See also <a href="qstringlist.html#lastIndexOf">lastIndexOf</a>(), <a href="qstringlist.html#contains">contains</a>(), and <a href="qlist.html#indexOf">QList::indexOf</a>().</p>
 <h3 class="fn"><a name="indexOf-3"></a>int QStringList::indexOf ( <a href="qregexp.html">QRegExp</a> &amp; <i>rx</i>, int <i>from</i> = 0 ) const</h3>
 <p>This function overloads <a href="qstringlist.html#indexOf">indexOf</a>().</p>
@@ -169,7 +168,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qstringlist.html#lastIndexOf">lastIndexOf</a>(), <a href="qstringlist.html#contains">contains</a>(), and <a href="qregexp.html#exactMatch">QRegExp::exactMatch</a>().</p>
 <h3 class="fn"><a name="join"></a><a href="qstring.html">QString</a> QStringList::join ( const <a href="qstring.html">QString</a> &amp; <i>separator</i> ) const</h3>
-<p>Joins all the string list's strings into a single string with each element separated by the the given <i>separator</i> (which can be an empty string).</p>
+<p>Joins all the string list's strings into a single string with each element separated by the given <i>separator</i> (which can be an empty string).</p>
 <p>See also <a href="qstring.html#split">QString::split</a>().</p>
 <h3 class="fn"><a name="lastIndexOf"></a>int QStringList::lastIndexOf ( const <a href="qregexp.html">QRegExp</a> &amp; <i>rx</i>, int <i>from</i> = -1 ) const</h3>
 <p>Returns the index position of the last exact match of <i>rx</i> in the list, searching backward from index position <i>from</i>. If <i>from</i> is -1 (the default), the search starts at the last item. Returns -1 if no item matched.</p>
@@ -199,7 +198,7 @@
      <span class="comment">// list == [&quot;olpho&quot;, &quot;beto&quot;, &quot;gommo&quot;, &quot;epsilon&quot;]</span></pre>
 <p>See also <a href="qstring.html#replace">QString::replace</a>().</p>
 <h3 class="fn"><a name="replaceInStrings-2"></a>QStringList &amp; QStringList::replaceInStrings ( const <a href="qregexp.html">QRegExp</a> &amp; <i>rx</i>, const <a href="qstring.html">QString</a> &amp; <i>after</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Replaces every occurrence of the regexp <i>rx</i>, in each of the string lists's strings, with <i>after</i>. Returns a reference to the string list.</p>
 <p>For example:</p>
 <pre>     QStringList list;
@@ -224,7 +223,7 @@
 <p>Appends the given string, <i>str</i>, to this string list and returns a reference to the string list.</p>
 <p>See also <a href="qlist.html#append">append</a>().</p>
 <h3 class="fn"><a name="operator-lt-lt-2"></a>QStringList &amp; QStringList::operator&lt;&lt; ( const QStringList &amp; <i>other</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the <i>other</i> string list to the string list and returns a reference to the latter string list.</p>
 <hr />
 <h2>Related Non-Members</h2>
@@ -236,16 +235,16 @@
 <p>The QStringListIterator type definition provides a Java-style const iterator for <a href="qstringlist.html">QStringList</a>.</p>
 <p><a href="qstringlist.html">QStringList</a> provides both <a href="containers.html#java-style-iterators">Java-style iterators</a> and <a href="containers.html#stl-style-iterators">STL-style iterators</a>. The Java-style const iterator is simply a type definition for <a href="qlistiterator.html">QListIterator</a>&lt;<a href="qstring.html">QString</a>&gt;.</p>
 <p>See also <a href="qstringlist.html#QMutableStringListIterator-typedef">QMutableStringListIterator</a> and <a href="qlist-const-iterator.html">QStringList::const_iterator</a>.</p>
-<h3 class="fn"><a name="operator-lt-lt-110"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QStringList &amp; <i>list</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-18"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QStringList &amp; <i>list</i> )</h3>
 <p>Writes the given string <i>list</i> to the specified <i>out</i> stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-60"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QStringList &amp; <i>list</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-7"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QStringList &amp; <i>list</i> )</h3>
 <p>Reads a string list from the given <i>in</i> stream into the specified <i>list</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

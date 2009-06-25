@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1394,7 +1394,7 @@ QImage::Format QScreenPrivate::preferredImageFormat() const
     altered. Note that the default implementations of these functions
     do nothing.
 
-    Reimplement the the mapFromDevice() and mapToDevice() functions to
+    Reimplement the mapFromDevice() and mapToDevice() functions to
     map objects from the framebuffer coordinate system to the
     coordinate space used by the application, and vice versa. Be aware
     that the default implementations simply return the given objects

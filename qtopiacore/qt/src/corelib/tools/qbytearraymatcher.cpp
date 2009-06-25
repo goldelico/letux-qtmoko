@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -120,6 +120,7 @@ QByteArrayMatcher::QByteArrayMatcher()
     : d(0)
 {
     p.p = 0;
+    p.l = 0;
     qMemSet(p.q_skiptable, 0, sizeof(p.q_skiptable));
 }
 
@@ -170,7 +171,7 @@ QByteArrayMatcher::~QByteArrayMatcher()
 QByteArrayMatcher &QByteArrayMatcher::operator=(const QByteArrayMatcher &other)
 {
     q_pattern = other.q_pattern;
-    qMemCopy(p.q_skiptable, other.p.q_skiptable, sizeof(p.q_skiptable));
+    qMemCopy(&p, &other.p, sizeof(p));
     return *this;
 }
 

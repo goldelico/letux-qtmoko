@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -157,7 +157,7 @@
     \target IRIX
     \section1 IRIX - 6.5.x
 
-    \bold{IRIX is an unsupported platform - please see Qt Software's online
+    \bold{IRIX is an unsupported platform - please see Qt's online
     \l{Platform Support Policy} for details.}
 
     Unpackaging and IRIX tar:
@@ -232,7 +232,7 @@
 
     \section1 Windows Vista
 
-    At the time Qt 4.5.1 was released, there were no known Vista-specific issues.
+    At the time Qt 4.5.2 was released, there were no known Vista-specific issues.
 
     \target Windows NT
     \section1 Windows XP, Windows 2000 and Windows NT
@@ -382,7 +382,7 @@
     Qt is supported on a variety of 32-bit and 64-bit platforms, and can
     usually be built on each platform with GCC, a vendor-supplied compiler, or
     a third party compiler. Although Qt may be built on a range of platform-compiler
-    combinations, only a subset of these are actively supported by Qt Software.
+    combinations, only a subset of these are actively supported by Qt.
 
     A more general overview of the platforms Qt runs on can be found on the
     \l{Platform Notes} page. Information about the compilers used on each platform
@@ -397,7 +397,7 @@
     \row    \o Apple Mac OS X (32-bit) \o gcc 4.0.1
     \row    \o Linux (32 and 64-bit)   \o gcc 4.1, 4.2, 4.3
     \row    \o Microsoft Windows       \o gcc 3.4.2 (MinGW) (32-bit), MSVC 2003, 2005 (32 and 64-bit), 2008,
-                                          \l{Known Issues in 4.5.1}{Intel icc (see note)}
+                                          \l{Known Issues in 4.5.2}{Intel icc (see note)}
     \endtable
 
     Any platform-compiler combinations not listed here should be considered unsupported.
@@ -472,7 +472,7 @@
     \row    \o Windows XP/Vista  \o Intel 32/64-bit \o win32-msvc.net      \o Visual Studio 2002
     \endtable
 
-    Qt Software's online \l{Platform Support Policy} for Qt describes the level of
+    Qt's online \l{Platform Support Policy} for Qt describes the level of
     support you should expect for these platforms.
 
     \section1 Supported Features
@@ -492,7 +492,7 @@
     \row    \o aCC series 3     \o            \o             \o          \o \bold{X} \o \bold{X}
     \row    \o aCC series 6     \o \bold{X}   \o \bold{X}    \o \bold{X} \o \bold{X} \o \bold{X}
     \row    \o xlC 6            \o            \o             \o          \o \bold{X} \o \bold{X}
-    \row    \o \l{Known Issues in 4.5.1}{Intel CC 10 (see note)}
+    \row    \o \l{Known Issues in 4.5.2}{Intel CC 10 (see note)}
                                 \o \bold{X}   \o \bold{X}    \o \bold{X} \o \bold{X} \o \bold{X}
     \row
     \row    \o MSVC 2003        \o \bold{X}   \o \bold{X}    \o          \o \bold{X} \o \bold{X}
@@ -596,12 +596,12 @@
 
     \section1 Intel C++ Compiler
 
-    \warning Please see the \l{Known Issues in 4.5.1} page for information
+    \warning Please see the \l{Known Issues in 4.5.2} page for information
     about an issue with this compiler.
 
     \section2 Intel C++ Compiler for Linux
 
-    Qt Software currently tests the following compilers:
+    Nokia currently tests the following compilers:
 
     \list
 

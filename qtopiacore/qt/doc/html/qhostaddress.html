@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/kernel/qhostaddress.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/kernel/qhostaddress.cpp -->
 <head>
   <title>Qt 4.5: QHostAddress Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -66,8 +66,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qhostaddress.html#operator-lt-lt-36">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QHostAddress &amp; <i>address</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qhostaddress.html#operator-gt-gt-16">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QHostAddress &amp; <i>address</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qhostaddress.html#operator-lt-lt-90">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QHostAddress &amp; <i>address</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qhostaddress.html#operator-gt-gt-48">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QHostAddress &amp; <i>address</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -123,7 +123,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qhostaddress.html#parseSubnet">parseSubnet</a>().</p>
 <h3 class="fn"><a name="isInSubnet-2"></a>bool QHostAddress::isInSubnet ( const <a href="qpair.html">QPair</a>&lt;QHostAddress, int&gt; &amp; <i>subnet</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if this IP is in the subnet described by <i>subnet</i>. The <a href="qhostaddress.html">QHostAddress</a> member of <i>subnet</i> contains the network prefix and the int (second) member contains the netmask (prefix length).</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="isNull"></a>bool QHostAddress::isNull () const</h3>
@@ -158,17 +158,17 @@
 <h3 class="fn"><a name="setAddress"></a>void QHostAddress::setAddress ( <a href="qtglobal.html#quint32-typedef">quint32</a> <i>ip4Addr</i> )</h3>
 <p>Set the IPv4 address specified by <i>ip4Addr</i>.</p>
 <h3 class="fn"><a name="setAddress-2"></a>void QHostAddress::setAddress ( <a href="qtglobal.html#quint8-typedef">quint8</a> * <i>ip6Addr</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Set the IPv6 address specified by <i>ip6Addr</i>.</p>
 <p><i>ip6Addr</i> must be an array of 16 bytes in network byte order (high-order byte first).</p>
 <h3 class="fn"><a name="setAddress-3"></a>void QHostAddress::setAddress ( const Q_IPV6ADDR &amp; <i>ip6Addr</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Set the IPv6 address specified by <i>ip6Addr</i>.</p>
 <h3 class="fn"><a name="setAddress-4"></a>bool QHostAddress::setAddress ( const <a href="qstring.html">QString</a> &amp; <i>address</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the IPv4 or IPv6 address specified by the string representation specified by <i>address</i> (e.g&#x2e; &quot;127.0&#x2e;0&#x2e;1&quot;). Returns true and sets the address if the address was successfully parsed; otherwise returns false.</p>
 <h3 class="fn"><a name="setAddress-5"></a>void QHostAddress::setAddress ( const sockaddr * <i>sockaddr</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the IPv4 or IPv6 address specified by the native structure <i>sockaddr</i>. Returns true and sets the address if the address was successfully parsed; otherwise returns false.</p>
 <h3 class="fn"><a name="setScopeId"></a>void QHostAddress::setScopeId ( const <a href="qstring.html">QString</a> &amp; <i>id</i> )</h3>
 <p>Sets the IPv6 scope ID of the address to <i>id</i>. If the address protocol is not IPv6, this function does nothing.</p>
@@ -209,16 +209,16 @@
 <p>Returns true if this host address is the same as the <i>other</i> address given; otherwise returns false.</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-36"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QHostAddress &amp; <i>address</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-90"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QHostAddress &amp; <i>address</i> )</h3>
 <p>Writes host address <i>address</i> to the stream <i>out</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-16"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QHostAddress &amp; <i>address</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-48"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QHostAddress &amp; <i>address</i> )</h3>
 <p>Reads a host address into <i>address</i> from the stream <i>in</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

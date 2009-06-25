@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Linguist of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -133,19 +133,12 @@ void MessageEditor::setupEditorPage()
     QFrame *editorPage = new QFrame;
     editorPage->setObjectName(QLatin1String("editorPage"));
 
-    // Due to CSS being rather broken on the Mac style at the moment, only
-    // use the border-image on non-Mac systems.
     editorPage->setStyleSheet(QLatin1String(
-#ifndef Q_WS_MAC
             "QFrame#editorPage { border-image: url(:/images/transbox.png) 12 16 16 12 repeat;"
             "                    border-width: 12px 16px 16px 12px; }"
-#endif
             "QFrame#editorPage { background-color: white; }"
             "QLabel { font-weight: bold; }"
             ));
-#ifdef Q_WS_MAC
-    editorPage->setFrameStyle(QFrame::StyledPanel | QFrame::Raised);
-#endif
     editorPage->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
 
     m_source = new FormWidget(tr("Source text"), false);

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -71,7 +71,7 @@
   The query engine can only traverse two dimensional trees, because an
   XML document is always a two dimensional tree. If we want to add the
   QMetaObject tree to the node model, we have to somehow flatten it
-  into the the same plane as the QObject tree. This requires that the
+  into the same plane as the QObject tree. This requires that the
   node model class must build an auxiliary data structure and make it
   part of the two dimensional QObject node model. How to do this is
   explained in \l{Including The QMetaObject Tree}.

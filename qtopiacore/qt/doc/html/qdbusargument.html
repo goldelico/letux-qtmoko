@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/dbus/qdbusargument.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/dbus/qdbusargument.cpp -->
 <head>
   <title>Qt 4.5: QDBusArgument Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -95,7 +95,7 @@
      int count;
      QString name;
  };
- QT_DECLARE_METATYPE(MyStructure)
+ Q_DECLARE_METATYPE(MyStructure)
 
 <span class="comment"> // Marshall the MyStructure data into a D-Bus argument</span>
  QDBusArgument &amp;operator&lt;&lt;(QDBusArgument &amp;argument, const MyStructure &amp;mystruct)
@@ -316,43 +316,43 @@
 <h3 class="fn"><a name="operator-lt-lt"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( <a href="qtglobal.html#uchar-typedef">uchar</a> <i>arg</i> )</h3>
 <p>Appends the primitive value <i>arg</i> of type <tt>BYTE</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-2"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( bool <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>BOOLEAN</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-3"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( short <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>INT16</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-4"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( <a href="qtglobal.html#ushort-typedef">ushort</a> <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>UINT16</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-5"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( int <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>INT32</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-6"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( <a href="qtglobal.html#uint-typedef">uint</a> <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>UINT32</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-7"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( <a href="qtglobal.html#qlonglong-typedef">qlonglong</a> <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>INT64</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-8"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( <a href="qtglobal.html#qulonglong-typedef">qulonglong</a> <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>UINT64</tt> to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-9"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( double <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>DOUBLE</tt> (double-precision floating-point) to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-10"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( const <a href="qstring.html">QString</a> &amp; <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>STRING</tt> (Unicode character string) to the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-lt-lt-13"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( const <a href="qdbusvariant.html">QDBusVariant</a> &amp; <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the primitive value <i>arg</i> of type <tt>VARIANT</tt> to the D-Bus stream.</p>
 <p>A D-Bus variant type can contain any type, including other variants. It is similar to the Qt <a href="qvariant.html">QVariant</a> type.</p>
 <h3 class="fn"><a name="operator-lt-lt-14"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( const <a href="qstringlist.html">QStringList</a> &amp; <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the <a href="qstringlist.html">QStringList</a> given by <i>arg</i> as <tt>ARRAY of STRING</tt> to the D-Bus stream.</p>
 <p><a href="qstringlist.html">QStringList</a> and <a href="qbytearray.html">QByteArray</a> are the only two non-primitive types that are supported directly by <a href="qdbusargument.html">QDBusArgument</a> because of their widespread usage in Qt applications.</p>
 <p>Other arrays are supported through compound types in <a href="qtdbus.html">QtDBus</a>.</p>
 <h3 class="fn"><a name="operator-lt-lt-15"></a>QDBusArgument &amp; QDBusArgument::operator&lt;&lt; ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>arg</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Appends the <a href="qbytearray.html">QByteArray</a> given by <i>arg</i> as <tt>ARRAY of BYTE</tt> to the D-Bus stream.</p>
 <p><a href="qstringlist.html">QStringList</a> and <a href="qbytearray.html">QByteArray</a> are the only two non-primitive types that are supported directly by <a href="qdbusargument.html">QDBusArgument</a> because of their widespread usage in Qt applications.</p>
 <p>Other arrays are supported through compound types in <a href="qtdbus.html">QtDBus</a>.</p>
@@ -362,44 +362,44 @@
 <h3 class="fn"><a name="operator-gt-gt"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qtglobal.html#uchar-typedef">uchar</a> &amp; <i>arg</i> ) const</h3>
 <p>Extracts one D-BUS primitive argument of type <tt>BYTE</tt> from the D-BUS stream and puts it into <i>arg</i>.</p>
 <h3 class="fn"><a name="operator-gt-gt-2"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( bool &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>BOOLEAN</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-3"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qtglobal.html#ushort-typedef">ushort</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>UINT16</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-4"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( short &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>INT16</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-5"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( int &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>INT32</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-6"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qtglobal.html#uint-typedef">uint</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>UINT32</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-7"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qtglobal.html#qlonglong-typedef">qlonglong</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>INT64</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-8"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qtglobal.html#qulonglong-typedef">qulonglong</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>UINT64</tt> from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-9"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( double &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>DOUBLE</tt> (double-precision floating pount) from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-10"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qstring.html">QString</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>STRING</tt> (Unicode character string) from the D-Bus stream.</p>
 <h3 class="fn"><a name="operator-gt-gt-13"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qdbusvariant.html">QDBusVariant</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts one D-Bus primitive argument of type <tt>VARIANT</tt> from the D-Bus stream.</p>
 <p>A D-Bus variant type can contain any type, including other variants. It is similar to the Qt <a href="qvariant.html">QVariant</a> type.</p>
 <p>In case the variant contains a type not directly supported by <a href="qdbusargument.html">QDBusArgument</a>, the value of the returned <a href="qdbusvariant.html">QDBusVariant</a> will contain another <a href="qdbusargument.html">QDBusArgument</a>. It is your responsibility to further demarshall it into another type.</p>
 <h3 class="fn"><a name="operator-gt-gt-14"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qstringlist.html">QStringList</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts an array of strings from the D-Bus stream and return it as a <a href="qstringlist.html">QStringList</a>.</p>
 <p><a href="qstringlist.html">QStringList</a> and <a href="qbytearray.html">QByteArray</a> are the only two non-primitive types that are supported directly by <a href="qdbusargument.html">QDBusArgument</a> because of their widespread usage in Qt applications.</p>
 <p>Other arrays are supported through compound types in <a href="qtdbus.html">QtDBus</a>.</p>
 <h3 class="fn"><a name="operator-gt-gt-15"></a>const QDBusArgument &amp; QDBusArgument::operator&gt;&gt; ( <a href="qbytearray.html">QByteArray</a> &amp; <i>arg</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Extracts an array of bytes from the D-Bus stream and return it as a <a href="qbytearray.html">QByteArray</a>.</p>
 <p><a href="qstringlist.html">QStringList</a> and <a href="qbytearray.html">QByteArray</a> are the only two non-primitive types that are supported directly by <a href="qdbusargument.html">QDBusArgument</a> because of their widespread usage in Qt applications.</p>
 <p>Other arrays are supported through compound types in <a href="qtdbus.html">QtDBus</a>.</p>
@@ -425,6 +425,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

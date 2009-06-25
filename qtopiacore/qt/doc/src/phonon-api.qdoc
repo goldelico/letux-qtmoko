@@ -2,7 +2,7 @@
     This file is part of the KDE project
     Copyright (C) 2005-2007 Matthias Kretz <kretz@kde.org>
     Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-   Contact: Qt Software Information (qt-info@nokia.com)
+    Contact: Nokia Corporation (qt-info@nokia.com)
 
     This library is free software; you can redistribute it and/or
     modify it under the terms of the GNU Library General Public
@@ -2973,7 +2973,7 @@
 
     \value ToggledHint
     If this hint is set it means that
-    the the control has only two states: zero and non-zero
+    the control has only two states: zero and non-zero
     (see isToggleControl()).
 
     \value LogarithmicHint
@@ -4457,12 +4457,12 @@
 */
 
 /*!
-    \fn QList<int> Phonon::GlobalConfig::audioOutputDeviceListFor(Phonon::Category category, HideAdvancedDevicesOverride override = FromSettings) const
+    \fn QList<int> Phonon::GlobalConfig::audioOutputDeviceListFor(Phonon::Category category, int override = AdvancedDevicesFromSettings) const
     \internal
 */
 
 /*!
-    \fn int Phonon::GlobalConfig::audioOutputDeviceFor(Phonon::Category category) const
+    \fn int Phonon::GlobalConfig::audioOutputDeviceFor(Phonon::Category category, int override = AdvancedDevicesFromSettings) const
     \internal
 */
 

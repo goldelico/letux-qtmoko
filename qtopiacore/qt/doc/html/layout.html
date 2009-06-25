@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/layout.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/layout.qdoc -->
 <head>
   <title>Qt 4.5: Layout Classes</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -156,23 +156,21 @@
 <pre> #ifndef CARD_H
  #define CARD_H
 
- #include &lt;QLayout&gt;
+ #include &lt;QtGui&gt;
  #include &lt;QList&gt;
 
  class CardLayout : public QLayout
  {
  public:
-     CardLayout(QWidget *parent, int dist)
-         : QLayout(parent, 0, dist) {}
-     CardLayout(QLayout *parent, int dist)
-         : QLayout(parent, dist) {}
-     CardLayout(int dist)
-         : QLayout(dist) {}
+     CardLayout(QWidget *parent, int dist): QLayout(parent, 0, dist) {}
+     CardLayout(QLayout *parent, int dist): QLayout(parent, dist) {}
+     CardLayout(int dist): QLayout(dist) {}
      ~CardLayout();
 
      void addItem(QLayoutItem *item);
      QSize sizeHint() const;
      QSize minimumSize() const;
+         QLayoutItem *count() const;
      QLayoutItem *itemAt(int) const;
      QLayoutItem *takeAt(int);
      void setGeometry(const QRect &amp;rect);
@@ -183,8 +181,14 @@
  #endif</pre>
 <a name="the-implementation-file"></a>
 <h4>The Implementation File (<tt>card.cpp</tt>)</h4>
-<pre> #include &quot;card.h&quot;</pre>
-<p>First we define two functions that iterate over the layout: <tt>itemAt()</tt> and <tt>takeAt()</tt>. These functions are used internally by the layout system to handle deletion of widgets. They are also available for application programmers.</p>
+<pre> //#include &quot;card.h&quot;</pre>
+<p>First we define <tt>count()</tt> to fetch the number of items in the list.</p>
+<pre> QLayoutItem *CardLayout::count() const
+ {
+         // QList::size() returns the number of QLayoutItems in the list
+     return list.size();
+ }</pre>
+<p>Then we define two functions that iterate over the layout: <tt>itemAt()</tt> and <tt>takeAt()</tt>. These functions are used internally by the layout system to handle deletion of widgets. They are also available for application programmers.</p>
 <p><tt>itemAt()</tt> returns the item at the given index. <tt>takeAt()</tt> removes the item at the given index, and returns it. In this case we use the list index as the layout index. In other cases where we have a more complex data structure, we may have to spend more effort defining a linear order for the items.</p>
 <pre> QLayoutItem *CardLayout::itemAt(int idx) const
  {
@@ -203,10 +207,12 @@
  {
      list.append(item);
  }</pre>
-<p>The layout takes over responsibility of the items added. Since <a href="qlayoutitem.html">QLayoutItem</a> does not inherit <a href="qobject.html">QObject</a>, we must delete the items manually. The function <a href="qlayout-qt3.html#deleteAllItems">QLayout::deleteAllItems</a>() uses <tt>takeAt()</tt> defined above to delete all the items in the layout.</p>
+<p>The layout takes over responsibility of the items added. Since <a href="qlayoutitem.html">QLayoutItem</a> does not inherit <a href="qobject.html">QObject</a>, we must delete the items manually. In the destructor, we remove each item from the list using <tt>takeAt()</tt>, and then delete it.</p>
 <pre> CardLayout::~CardLayout()
  {
-     deleteAllItems();
+      QLayoutItem *item;
+      while ((item = takeAt(0)))
+          delete item;
  }</pre>
 <p>The <tt>setGeometry()</tt> function actually performs the layout. The rectangle supplied as an argument does not include <tt>margin()</tt>. If relevant, use <tt>spacing()</tt> as the distance between items.</p>
 <pre> void CardLayout::setGeometry(const QRect &amp;r)
@@ -261,12 +267,12 @@
 <li>We ignore <a href="qlayoutitem.html#isEmpty">QLayoutItem::isEmpty</a>(); this means that the layout will treat hidden widgets as visible.</li>
 <li>For complex layouts, speed can be greatly increased by caching calculated values. In that case, implement <a href="qlayoutitem.html#invalidate">QLayoutItem::invalidate</a>() to mark the cached data is dirty.</li>
 <li>Calling <a href="qlayoutitem.html#sizeHint">QLayoutItem::sizeHint</a>(), etc. may be expensive. So, you should store the value in a local variable if you need it again later within in the same function.</li>
-<li>You should not call <a href="qlayoutitem.html#setGeometry">QLayoutItem::setGeometry</a>() twice on the same item in the smae function. This call can be very expensive if the item has several child widgets, because the layout manager must do a complete layout every time. Instead, calculate the geometry and then set it. (This does not only apply to layouts, you should do the same if you implement your own resizeEvent(), for example.)</li>
+<li>You should not call <a href="qlayoutitem.html#setGeometry">QLayoutItem::setGeometry</a>() twice on the same item in the same function. This call can be very expensive if the item has several child widgets, because the layout manager must do a complete layout every time. Instead, calculate the geometry and then set it. (This does not only apply to layouts, you should do the same if you implement your own resizeEvent(), for example.)</li>
 </ul>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

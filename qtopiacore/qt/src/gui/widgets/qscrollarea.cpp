@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -127,7 +127,7 @@ QT_BEGIN_NAMESPACE
     setting the layout's \l{QLayout::sizeConstraint}{size constraint}
     property to one which provides constraints on the minimum and/or
     maximum size of the layout (e.g., QLayout::SetMinAndMaxSize) will
-    cause the size of the the scroll area to be updated whenever the
+    cause the size of the scroll area to be updated whenever the
     contents of the layout changes.
 
     For a complete example using the QScrollArea class, see the \l

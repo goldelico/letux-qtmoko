@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/drilldown.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/examples/drilldown.qdoc -->
 <head>
   <title>Qt 4.5: Drill Down Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -27,7 +27,7 @@
 <li><a href="sql-drilldown-drilldown-qrc.html">sql/drilldown/drilldown.qrc</a></li>
 </ul>
 <p>The Drill Down example shows how to read data from a database as well as submit changes, using the <a href="qsqlrelationaltablemodel.html">QSqlRelationalTableModel</a> and <a href="qdatawidgetmapper.html">QDataWidgetMapper</a> classes.</p>
-<p align="center"><img src="images/drilldown-example.png" alt="Screenshot of the Drill Down Example" /></p><p>When running the example application, a user can retrieve information about each of Nokia's Qt Software offices by clicking the corresponding image. The application pops up an information window displaying the data, and allows the users to alter the location description as well as the image. The main view will be updated when the users submit their changes.</p>
+<p align="center"><img src="images/drilldown-example.png" alt="Screenshot of the Drill Down Example" /></p><p>When running the example application, a user can retrieve information about each of Nokia's Qt offices by clicking the corresponding image. The application pops up an information window displaying the data, and allows the users to alter the location description as well as the image. The main view will be updated when the users submit their changes.</p>
 <p>The example consists of three classes:</p>
 <ul>
 <li><tt>ImageItem</tt> is a custom graphics item class used to display the office images.</li>
@@ -211,7 +211,7 @@
 
  private slots:
      void updateImage(int id, const QString &amp;fileName);</pre>
-<p>The <a href="qgraphicsview.html">QGraphicsView</a> class is part of the <a href="graphicsview.html">The Graphics View Framework</a> which we will use to display the images of Nokia's Qt Software offices. To be able to respond to user interaction; i.e&#x2e;, showing the appropriate information window whenever the user clicks one of the office images, we reimplement <a href="qgraphicsview.html">QGraphicsView</a>'s <a href="qwidget.html#mouseReleaseEvent">mouseReleaseEvent()</a> function.</p>
+<p>The <a href="qgraphicsview.html">QGraphicsView</a> class is part of the <a href="graphicsview.html">The Graphics View Framework</a> which we will use to display the images of Nokia's Qt offices. To be able to respond to user interaction; i.e&#x2e;, showing the appropriate information window whenever the user clicks one of the office images, we reimplement <a href="qgraphicsview.html">QGraphicsView</a>'s <a href="qwidget.html#mouseReleaseEvent">mouseReleaseEvent()</a> function.</p>
 <p>Note that the constructor expects the names of two database tables: One containing the detailed information about the offices, and another containing the names of the available image files. We also provide a private <tt>updateImage()</tt> slot to catch <tt>InformationWindow</tt>'s <tt>imageChanged()</tt> signal that is emitted whenever the user changes a location's image.</p>
 <pre> private:
      void addItems();
@@ -462,6 +462,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

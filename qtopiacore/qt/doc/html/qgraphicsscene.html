@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicsscene.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/graphicsview/qgraphicsscene.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsScene Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -577,7 +577,7 @@
 <p>Note that <a href="qgraphicsview.html">QGraphicsView</a> currently supports background caching only (see <a href="qgraphicsview.html#CacheModeFlag-enum">QGraphicsView::CacheBackground</a>). This function is equivalent to calling <a href="qgraphicsscene.html#update">update</a>() if any layer but <a href="qgraphicsscene.html#SceneLayer-enum">BackgroundLayer</a> is passed.</p>
 <p>See also <a href="qgraphicsview.html#resetCachedContent">QGraphicsView::resetCachedContent</a>().</p>
 <h3 class="fn"><a name="invalidate-2"></a>void QGraphicsScene::invalidate ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, <a href="qgraphicsscene.html#SceneLayer-enum">SceneLayers</a> <i>layers</i> = AllLayers )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling invalidate(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>layers</i>);</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="itemAt"></a><a href="qgraphicsitem.html">QGraphicsItem</a> * QGraphicsScene::itemAt ( const <a href="qpointf.html">QPointF</a> &amp; <i>position</i> ) const</h3>
@@ -585,7 +585,7 @@
 <p><b>Note:</b> The topmost item is the one with the highest Z-value.</p>
 <p>See also <a href="qgraphicsscene.html#items">items</a>(), <a href="qgraphicsscene.html#collidingItems">collidingItems</a>(), and <a href="qgraphicsitem.html#setZValue">QGraphicsItem::setZValue</a>().</p>
 <h3 class="fn"><a name="itemAt-2"></a><a href="qgraphicsitem.html">QGraphicsItem</a> * QGraphicsScene::itemAt ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the topmost item at the position specified by (<i>x</i>, <i>y</i>), or 0 if there are no items at this position.</p>
 <p>This convenience function is equivalent to calling <tt>itemAt(QPointF(x, y))</tt>.</p>
 <p><b>Note:</b> The topmost item is the one with the highest Z-value.</p>
@@ -599,17 +599,17 @@
 <p>This convenience function is equivalent to calling items(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>mode</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="items-4"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( const <a href="qrectf.html">QRectF</a> &amp; <i>rectangle</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns all visible items that, depending on <i>mode</i>, are either inside or intersect with the specified <i>rectangle</i>.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>rectangle</i> are returned.</p>
 <p>See also <a href="qgraphicsscene.html#itemAt">itemAt</a>().</p>
 <h3 class="fn"><a name="items-5"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( const <a href="qpolygonf.html">QPolygonF</a> &amp; <i>polygon</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns all visible items that, depending on <i>mode</i>, are either inside or intersect with the polygon <i>polygon</i>.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>polygon</i> are returned.</p>
 <p>See also <a href="qgraphicsscene.html#itemAt">itemAt</a>().</p>
 <h3 class="fn"><a name="items-6"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsScene::items ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns all visible items that, depending on <i>path</i>, are either inside or intersect with the path <i>path</i>.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>path</i> are returned.</p>
 <p>See also <a href="qgraphicsscene.html#itemAt">itemAt</a>().</p>
@@ -698,7 +698,7 @@
 <p>For an item to be selected, it must be marked as <i>selectable</i> (<a href="qgraphicsitem.html#GraphicsItemFlag-enum">QGraphicsItem::ItemIsSelectable</a>).</p>
 <p>See also <a href="qgraphicsscene.html#clearSelection">clearSelection</a>() and <a href="qgraphicsscene.html#selectionArea">selectionArea</a>().</p>
 <h3 class="fn"><a name="setSelectionArea-2"></a>void QGraphicsScene::setSelectionArea ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the selection area to <i>path</i> using <i>mode</i> to determine if items are included in the selection area.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qgraphicsscene.html#clearSelection">clearSelection</a>() and <a href="qgraphicsscene.html#selectionArea">selectionArea</a>().</p>
@@ -716,7 +716,7 @@
 <p>Schedules a redraw of the area <i>rect</i> on the scene.</p>
 <p>See also <a href="qgraphicsscene.html#sceneRect-prop">sceneRect</a>() and <a href="qgraphicsscene.html#changed">changed</a>().</p>
 <h3 class="fn"><a name="update-2"></a>void QGraphicsScene::update ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is equivalent to calling update(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>));</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="views"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsview.html">QGraphicsView</a> *&gt; QGraphicsScene::views () const</h3>
@@ -733,6 +733,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

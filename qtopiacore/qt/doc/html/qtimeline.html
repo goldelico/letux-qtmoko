@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qtimeline.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qtimeline.cpp -->
 <head>
   <title>Qt 4.5: QTimeLine Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -124,7 +124,8 @@
  ...</pre>
 <p>You can also use QTimeLine with the <a href="graphicsview.html#graphics-view">Graphics View framework</a> for animations. The <a href="qgraphicsitemanimation.html">QGraphicsItemAnimation</a> class implements animation of <a href="qgraphicsitem.html">QGraphicsItems</a> with a timeline.</p>
 <p>By default the timeline runs once, from the beginning and towards the end, upon which you must call <a href="qtimeline.html#start">start</a>() again to restart from the beginning. To make the timeline loop, you can call <a href="qtimeline.html#loopCount-prop">setLoopCount</a>(), passing the number of times the timeline should run before finishing. The direction can also be changed, causing the timeline to run backward, by calling <a href="qtimeline.html#direction-prop">setDirection</a>(). You can also pause and unpause the timeline while it's running by calling <a href="qtimeline.html#setPaused">setPaused</a>(). For interactive control, the <a href="qtimeline.html#currentTime-prop">setCurrentTime</a>() function is provided, which sets the time position of the time line directly. Although most useful in <a href="qtimeline.html#State-enum">NotRunning</a> state, (e.g&#x2e;, connected to a <a href="qtimeline.html#valueChanged">valueChanged</a>() signal in a <a href="qslider.html">QSlider</a>,) this function can be called at any time.</p>
-<p>The frame interface is useful for standard widgets, but QTimeLine can be used to control any type of animation. The heart of QTimeLine lies in the <a href="qtimeline.html#valueForTime">valueForTime</a>() function, which generates a <i>value</i> between 0 and 1 for a given time. This value is typically used to describe the steps of an animation, where 0 is the first step of an animation, and 1 is the last step. When running, QTimeLine generates values between 0 and 1 by calling <a href="qtimeline.html#valueForTime">valueForTime</a>() and emitting <a href="qtimeline.html#valueChanged">valueChanged</a>(). By default, <a href="qtimeline.html#valueForTime">valueForTime</a>() applies an interpolation algorithm to generate these value. You can choose from a set of predefined timeline algorithms by calling <a href="qtimeline.html#curveShape-prop">setCurveShape</a>(). By default, QTimeLine uses the EaseInOut curve shape, which provides a value that grows slowly, then grows steadily, and finally grows slowly. For a custom timeline, you can reimplement <a href="qtimeline.html#valueForTime">valueForTime</a>(), in which case QTimeLine's <a href="qtimeline.html#curveShape-prop">curveShape</a> property is ignored.</p>
+<p>The frame interface is useful for standard widgets, but QTimeLine can be used to control any type of animation. The heart of QTimeLine lies in the <a href="qtimeline.html#valueForTime">valueForTime</a>() function, which generates a <i>value</i> between 0 and 1 for a given time. This value is typically used to describe the steps of an animation, where 0 is the first step of an animation, and 1 is the last step. When running, QTimeLine generates values between 0 and 1 by calling <a href="qtimeline.html#valueForTime">valueForTime</a>() and emitting <a href="qtimeline.html#valueChanged">valueChanged</a>(). By default, <a href="qtimeline.html#valueForTime">valueForTime</a>() applies an interpolation algorithm to generate these value. You can choose from a set of predefined timeline algorithms by calling <a href="qtimeline.html#curveShape-prop">setCurveShape</a>().</p>
+<p>Note that by default, QTimeLine uses the EaseInOut curve shape, which provides a value that grows slowly, then grows steadily, and finally grows slowly. For a custom timeline, you can reimplement <a href="qtimeline.html#valueForTime">valueForTime</a>(), in which case QTimeLine's <a href="qtimeline.html#curveShape-prop">curveShape</a> property is ignored.</p>
 <p>See also <a href="qprogressbar.html">QProgressBar</a>, <a href="qprogressdialog.html">QProgressDialog</a>, and <a href="qgraphicsitemanimation.html">QGraphicsItemAnimation</a>.</p>
 <hr />
 <h2>Member Type Documentation</h2>
@@ -283,6 +284,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

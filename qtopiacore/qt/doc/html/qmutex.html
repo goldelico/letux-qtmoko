@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/thread/qmutex.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/thread/qmutex.cpp -->
 <head>
   <title>Qt 4.5: QMutex Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -125,7 +125,7 @@
 <p>Calling this function multiple times on the same mutex from the same thread is allowed if this mutex is a <a href="qmutex.html#RecursionMode-enum">recursive mutex</a>. If this mutex is a <a href="qmutex.html#RecursionMode-enum">non-recursive mutex</a>, this function will <i>always</i> return false when attempting to lock the mutex recursively.</p>
 <p>See also <a href="qmutex.html#lock">lock</a>() and <a href="qmutex.html#unlock">unlock</a>().</p>
 <h3 class="fn"><a name="tryLock-2"></a>bool QMutex::tryLock ( int <i>timeout</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Attempts to lock the mutex. This function returns true if the lock was obtained; otherwise it returns false. If another thread has locked the mutex, this function will wait for at most <i>timeout</i> milliseconds for the mutex to become available.</p>
 <p>Note: Passing a negative number as the <i>timeout</i> is equivalent to calling <a href="qmutex.html#lock">lock</a>(), i.e&#x2e; this function will wait forever until mutex can be locked if <i>timeout</i> is negative.</p>
 <p>If the lock was obtained, the mutex must be unlocked with <a href="qmutex.html#unlock">unlock</a>() before another thread can successfully lock it.</p>
@@ -138,6 +138,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

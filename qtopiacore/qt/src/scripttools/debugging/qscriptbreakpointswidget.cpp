@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -225,7 +225,6 @@ public:
 
     bool eventFilter(QObject *editor, QEvent *event)
     {
-#if QT_VERSION >= 0x040500
         if (QLineEdit *le = qobject_cast<QLineEdit*>(editor)) {
             if (event->type() == QEvent::KeyPress) {
                 int key = static_cast<QKeyEvent*>(event)->key();
@@ -237,21 +236,18 @@ public:
                 }
             }
         }
-#endif
         return QStyledItemDelegate::eventFilter(editor, event);
     }
 
     void setModelData(QWidget *editor, QAbstractItemModel *model,
                       const QModelIndex &index) const
     {
-#if QT_VERSION >= 0x040500
         if (index.column() == 2) {
             // check that the syntax is OK
             QString condition = qobject_cast<QLineEdit*>(editor)->text();
             if (QScriptEngine::checkSyntax(condition).state() != QScriptSyntaxCheckResult::Valid)
                 return;
         }
-#endif
         QStyledItemDelegate::setModelData(editor, model, index);
     }
 
@@ -261,11 +257,7 @@ private Q_SLOTS:
         QWidget *editor = qobject_cast<QWidget*>(sender());
         QPalette pal = editor->palette();
         QColor col;
-#if QT_VERSION >= 0x040500
         bool ok = (QScriptEngine::checkSyntax(text).state() == QScriptSyntaxCheckResult::Valid);
-#else
-        bool ok = true;
-#endif
         if (ok) {
             col = Qt::white;
         } else {

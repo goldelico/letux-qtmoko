@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qdatetime.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qdatetime.cpp -->
 <head>
   <title>Qt 4.5: QDate Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -136,7 +136,7 @@
 <p><b>Note:</b> If the ending day/month combination does not exist in the resulting year (i.e&#x2e;, if the date was Feb 29 and the final year is not a leap year), this function will return a date that is the latest valid date (that is, Feb 28).</p>
 <p>See also <a href="qdate.html#addDays">addDays</a>() and <a href="qdate.html#addMonths">addMonths</a>().</p>
 <h3 class="fn"><a name="currentDate"></a>QDate QDate::currentDate ()&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the current date, as reported by the system clock.</p>
 <p>See also <a href="qtime.html#currentTime">QTime::currentTime</a>() and <a href="qdatetime.html#currentDateTime">QDateTime::currentDateTime</a>().</p>
 <h3 class="fn"><a name="day"></a>int QDate::day () const</h3>
@@ -215,7 +215,7 @@
 <p>Returns true if this date is valid; otherwise returns false.</p>
 <p>See also <a href="qdate.html#isNull">isNull</a>().</p>
 <h3 class="fn"><a name="isValid-2"></a>bool QDate::isValid ( int <i>year</i>, int <i>month</i>, int <i>day</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the specified date (<i>year</i>, <i>month</i>, and <i>day</i>) is valid; otherwise returns false.</p>
 <p>Example:</p>
 <pre> QDate::isValid(2002, 5, 17);  <span class="comment">// true</span>
@@ -361,7 +361,7 @@
 <p><b>Warning:</b> The <a href="qt.html#DateFormat-enum">Qt::ISODate</a> format is only valid for years in the range 0 to 9999. This restriction may apply to locale-aware formats as well, depending on the locale settings.</p>
 <p>See also <a href="qdatetime.html#toString">QDateTime::toString</a>() and <a href="qtime.html#toString">QTime::toString</a>().</p>
 <h3 class="fn"><a name="toString-2"></a><a href="qstring.html">QString</a> QDate::toString ( <a href="qt.html#DateFormat-enum">Qt::DateFormat</a> <i>format</i> = Qt::TextDate ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the date as a string. The <i>format</i> parameter determines the format of the string.</p>
 <p>If the <i>format</i> is <a href="qt.html#DateFormat-enum">Qt::TextDate</a>, the string is formatted in the default way. <a href="qdate.html#shortDayName">QDate::shortDayName</a>() and <a href="qdate.html#shortMonthName">QDate::shortMonthName</a>() are used to generate the string, so the day and month names will be localized names. An example of this formatting is &quot;Sat May 20 1995&quot;.</p>
 <p>If the <i>format</i> is <a href="qt.html#DateFormat-enum">Qt::ISODate</a>, the string format corresponds to the ISO 8601 extended specification for representations of dates and times, taking the form YYYY-MM-DD, where YYYY is the year, MM is the month of the year (between 01 and 12), and DD is the day of the month between 01 and 31.</p>
@@ -405,6 +405,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

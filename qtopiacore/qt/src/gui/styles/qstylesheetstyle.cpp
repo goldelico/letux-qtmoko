@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -4926,7 +4926,7 @@ QSize QStyleSheetStyle::sizeFromContents(ContentsType ct, const QStyleOption *op
     case CT_LineEdit:
 #ifndef QT_NO_SPINBOX
         // ### hopelessly broken QAbstractSpinBox (part 2)
-        if (QAbstractSpinBox *spinBox = qobject_cast<QAbstractSpinBox *>(w->parentWidget())) {
+        if (QAbstractSpinBox *spinBox = qobject_cast<QAbstractSpinBox *>(w ? w->parentWidget() : 0)) {
             QRenderRule rule = renderRule(spinBox, opt);
             if (rule.hasBox() || !rule.hasNativeBorder())
                 return csz;
@@ -5252,9 +5252,12 @@ int QStyleSheetStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWi
 #ifndef QT_NO_COMBOBOX
             if (qobject_cast<const QComboBox *>(w)) {
                 QAbstractItemView *view = qFindChild<QAbstractItemView *>(w);
-                QRenderRule subRule = renderRule(view, PseudoElement_None);
-                if (subRule.hasBox() || !subRule.hasNativeBorder())
-                    return QFrame::NoFrame;
+                if (view) {
+                    view->ensurePolished();
+                    QRenderRule subRule = renderRule(view, PseudoElement_None);
+                    if (subRule.hasBox() || !subRule.hasNativeBorder())
+                        return QFrame::NoFrame;
+                }
             }
 #endif // QT_NO_COMBOBOX
             break;
@@ -5842,7 +5845,7 @@ QRect QStyleSheetStyle::subElementRect(SubElement se, const QStyleOption *opt, c
 
 bool QStyleSheetStyle::event(QEvent *e)
 {
-    return baseStyle()->event(e) || ParentStyle::event(e);
+    return (baseStyle()->event(e) && e->isAccepted()) || ParentStyle::event(e);
 }
 
 void QStyleSheetStyle::updateStyleSheetFont(QWidget* w) const

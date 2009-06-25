@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -206,11 +206,7 @@ private Q_SLOTS:
         QWidget *editor = qobject_cast<QWidget*>(sender());
         QPalette pal = editor->palette();
         QColor col;
-#if QT_VERSION >= 0x040500
         bool ok = (QScriptEngine::checkSyntax(text).state() == QScriptSyntaxCheckResult::Valid);
-#else
-        bool ok = true;
-#endif
         if (ok) {
             col = Qt::white;
         } else {
@@ -277,12 +273,10 @@ bool QScriptDebuggerLocalsItemDelegate::eventFilter(QObject *watched, QEvent *ev
         return QStyledItemDelegate::eventFilter(watched, event);
     QKeyEvent *ke = static_cast<QKeyEvent*>(event);
     if ((ke->key() == Qt::Key_Enter) || (ke->key() == Qt::Key_Return)) {
-#if QT_VERSION >= 0x040500
         if (QScriptEngine::checkSyntax(le->text()).state() != QScriptSyntaxCheckResult::Valid) {
             // ignore when script contains syntax error
             return true;
         }
-#endif
     }
     if (ke->key() != Qt::Key_Tab)
         return QStyledItemDelegate::eventFilter(watched, event);
@@ -296,14 +290,12 @@ void QScriptDebuggerLocalsItemDelegate::setModelData(
     QWidget *editor, QAbstractItemModel *model,
     const QModelIndex &index) const
 {
-#if QT_VERSION >= 0x040500
     if (index.column() == 1) {
         // check that the syntax is OK
         QString expression = qobject_cast<QLineEdit*>(editor)->text();
         if (QScriptEngine::checkSyntax(expression).state() != QScriptSyntaxCheckResult::Valid)
             return;
     }
-#endif
     QStyledItemDelegate::setModelData(editor, model, index);
 }
 

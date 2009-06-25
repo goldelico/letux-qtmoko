@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1789,7 +1789,7 @@ bool QOCIResult::prepare(const QString& query)
 bool QOCIResult::exec()
 {
     int r = 0;
-    ub2 stmtType;
+    ub2 stmtType=0;
     ub4 iters;
     ub4 mode;
     QList<QByteArray> tmpStorage;
@@ -1802,6 +1802,16 @@ bool QOCIResult::exec()
                     NULL,
                     OCI_ATTR_STMT_TYPE,
                     d->err);
+
+    if (r != OCI_SUCCESS && r != OCI_SUCCESS_WITH_INFO) {
+        qOraWarning("QOCIResult::exec: Unable to get statement type:", d->err);
+        setLastError(qMakeError(QCoreApplication::translate("QOCIResult",
+                     "Unable to get statement type"), QSqlError::StatementError, d->err));
+#ifdef QOCI_DEBUG
+        qDebug() << "lastQuery()" << lastQuery();
+#endif
+        return false;
+    }
 
     if (stmtType == OCI_STMT_SELECT) {
         iters = 0;
@@ -2201,7 +2211,7 @@ QStringList QOCIDriver::tables(QSql::TableType type) const
                 "and owner != 'CTXSYS'"
                 "and owner != 'WMSYS'"));
         while (t.next()) {
-            if (t.value(0).toString() != d->user)
+            if (t.value(0).toString().toUpper() != d->user.toUpper())
                 tl.append(t.value(0).toString() + QLatin1String(".") + t.value(1).toString());
             else
                 tl.append(t.value(1).toString());
@@ -2217,7 +2227,7 @@ QStringList QOCIDriver::tables(QSql::TableType type) const
                 "and owner != 'CTXSYS'"
                 "and owner != 'WMSYS'"));
         while (t.next()) {
-            if (t.value(0).toString() != d->user)
+            if (t.value(0).toString().toUpper() != d->user.toUpper())
                 tl.append(t.value(0).toString() + QLatin1String(".") + t.value(1).toString());
             else
                 tl.append(t.value(1).toString());

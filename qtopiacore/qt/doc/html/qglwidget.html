@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/opengl/qgl.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/opengl/qgl.cpp -->
 <head>
   <title>Qt 4.5: QGLWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -57,7 +57,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -82,7 +82,6 @@
 <h3>Protected Functions</h3>
 <ul>
 <li><div class="fn"></div>bool <b><a href="qglwidget.html#autoBufferSwap">autoBufferSwap</a></b> () const</li>
-<li><div class="fn"></div>virtual bool <b><a href="qglwidget.html#event">event</a></b> ( QEvent * )</li>
 <li><div class="fn"></div>virtual void <b><a href="qglwidget.html#glDraw">glDraw</a></b> ()</li>
 <li><div class="fn"></div>virtual void <b><a href="qglwidget.html#glInit">glInit</a></b> ()</li>
 <li><div class="fn"></div>virtual void <b><a href="qglwidget.html#initializeGL">initializeGL</a></b> ()</li>
@@ -116,7 +115,7 @@
 <p>QGLWidget provides three convenient virtual functions that you can reimplement in your subclass to perform the typical OpenGL tasks:</p>
 <ul>
 <li><a href="qglwidget.html#paintGL">paintGL</a>() - Renders the OpenGL scene. Gets called whenever the widget needs to be updated.</li>
-<li><a href="qglwidget.html#resizeGL">resizeGL</a>() - Sets up the OpenGL viewport, projection, etc. Gets called whenever the the widget has been resized (and also when it is shown for the first time because all newly created widgets get a resize event automatically).</li>
+<li><a href="qglwidget.html#resizeGL">resizeGL</a>() - Sets up the OpenGL viewport, projection, etc. Gets called whenever the widget has been resized (and also when it is shown for the first time because all newly created widgets get a resize event automatically).</li>
 <li><a href="qglwidget.html#initializeGL">initializeGL</a>() - Sets up the OpenGL rendering context, defines display lists, etc. Gets called once before the first time <a href="qglwidget.html#resizeGL">resizeGL</a>() or <a href="qglwidget.html#paintGL">paintGL</a>() is called.</li>
 </ul>
 <p>Here is a rough outline of how a QGLWidget subclass might look:</p>
@@ -234,7 +233,7 @@
 <p>Calls QGLContext:::bindTexture(<i>pixmap</i>, <i>target</i>, <i>format</i>) on the currently set context.</p>
 <p>See also <a href="qglwidget.html#deleteTexture">deleteTexture</a>().</p>
 <h3 class="fn"><a name="bindTexture-3"></a>GLuint QGLWidget::bindTexture ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Calls QGLContext::bindTexture(<i>fileName</i>) on the currently set context.</p>
 <p>See also <a href="qglwidget.html#deleteTexture">deleteTexture</a>().</p>
 <h3 class="fn"><a name="colormap"></a>const <a href="qglcolormap.html">QGLColormap</a> &amp; QGLWidget::colormap () const</h3>
@@ -263,7 +262,6 @@
 <p>Draws the given texture, <i>textureId</i>, at the given <i>point</i> in OpenGL model space. The <i>textureTarget</i> should be a 2D texture target.</p>
 <p>Equivalent to the corresponding <a href="qglcontext.html#drawTexture">QGLContext::drawTexture</a>().</p>
 <p>This function was introduced in Qt 4.4.</p>
-<h3 class="fn"><a name="event"></a>bool QGLWidget::event ( <a href="qevent.html">QEvent</a> * )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <h3 class="fn"><a name="format"></a><a href="qglformat.html">QGLFormat</a> QGLWidget::format () const</h3>
 <p>Returns the format of the contained GL rendering context.</p>
 <p>See also <a href="qglwidget-obsolete.html#setFormat">setFormat</a>().</p>
@@ -328,7 +326,7 @@
 <p>The <i>listBase</i> parameter is obsolete and will be removed in a future version of Qt.</p>
 <p><b>Note:</b> This function clears the stencil buffer.</p>
 <h3 class="fn"><a name="renderText-2"></a>void QGLWidget::renderText ( double <i>x</i>, double <i>y</i>, double <i>z</i>, const <a href="qstring.html">QString</a> &amp; <i>str</i>, const <a href="qfont.html">QFont</a> &amp; <i>font</i> = QFont(), int <i>listBase</i> = 2000 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p><i>x</i>, <i>y</i> and <i>z</i> are specified in scene or object coordinates relative to the currently set projection and model matrices. This can be useful if you want to annotate models with text labels and have the labels move with the model as it is rotated etc.</p>
 <h3 class="fn"><a name="resizeEvent"></a>void QGLWidget::resizeEvent ( <a href="qresizeevent.html">QResizeEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>Handles resize events that are passed in the <i>event</i> parameter. Calls the virtual function <a href="qglwidget.html#resizeGL">resizeGL</a>().</p>
@@ -362,6 +360,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicsview.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/graphicsview/qgraphicsview.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsView Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -144,7 +144,7 @@
 <li><div class="fn"></div>13 public functions inherited from <a href="qframe.html#public-functions">QFrame</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -415,10 +415,10 @@
 <p><b>Note:</b> If the item is close to or outside the border, it will be visible in the view, but not centered.</p>
 <p>See also <a href="qgraphicsview.html#ensureVisible">ensureVisible</a>().</p>
 <h3 class="fn"><a name="centerOn-2"></a>void QGraphicsView::centerOn ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is provided for convenience. It's equivalent to calling centerOn(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="centerOn-3"></a>void QGraphicsView::centerOn ( const <a href="qgraphicsitem.html">QGraphicsItem</a> * <i>item</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Scrolls the contents of the viewport to ensure that <i>item</i> is centered in the view.</p>
 <p>See also <a href="qgraphicsview.html#ensureVisible">ensureVisible</a>().</p>
 <h3 class="fn"><a name="drawBackground"></a>void QGraphicsView::drawBackground ( <a href="qpainter.html">QPainter</a> * <i>painter</i>, const <a href="qrectf.html">QRectF</a> &amp; <i>rect</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
@@ -441,10 +441,10 @@
 <p>Scrolls the contents of the viewport so that the scene rectangle <i>rect</i> is visible, with margins specified in pixels by <i>xmargin</i> and <i>ymargin</i>. If the specified rect cannot be reached, the contents are scrolled to the nearest valid position. The default value for both margins is 50 pixels.</p>
 <p>See also <a href="qgraphicsview.html#centerOn">centerOn</a>().</p>
 <h3 class="fn"><a name="ensureVisible-2"></a>void QGraphicsView::ensureVisible ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, int <i>xmargin</i> = 50, int <i>ymargin</i> = 50 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is provided for convenience. It's equivalent to calling ensureVisible(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>xmargin</i>, <i>ymargin</i>).</p>
 <h3 class="fn"><a name="ensureVisible-3"></a>void QGraphicsView::ensureVisible ( const <a href="qgraphicsitem.html">QGraphicsItem</a> * <i>item</i>, int <i>xmargin</i> = 50, int <i>ymargin</i> = 50 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Scrolls the contents of the viewport so that the center of item <i>item</i> is visible, with margins specified in pixels by <i>xmargin</i> and <i>ymargin</i>. If the specified point cannot be reached, the contents are scrolled to the nearest valid position. The default value for both margins is 50 pixels.</p>
 <p>See also <a href="qgraphicsview.html#centerOn">centerOn</a>().</p>
 <h3 class="fn"><a name="fitInView"></a>void QGraphicsView::fitInView ( const <a href="qrectf.html">QRectF</a> &amp; <i>rect</i>, <a href="qt.html#AspectRatioMode-enum">Qt::AspectRatioMode</a> <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio )</h3>
@@ -454,11 +454,11 @@
 <p>If <i>rect</i> is empty, or if the viewport is too small, this function will do nothing.</p>
 <p>See also <a href="qgraphicsview.html#setMatrix">setMatrix</a>(), <a href="qgraphicsview.html#ensureVisible">ensureVisible</a>(), and <a href="qgraphicsview.html#centerOn">centerOn</a>().</p>
 <h3 class="fn"><a name="fitInView-2"></a>void QGraphicsView::fitInView ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>w</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, <a href="qt.html#AspectRatioMode-enum">Qt::AspectRatioMode</a> <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling fitInView(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>aspectRatioMode</i>).</p>
 <p>See also <a href="qgraphicsview.html#ensureVisible">ensureVisible</a>() and <a href="qgraphicsview.html#centerOn">centerOn</a>().</p>
 <h3 class="fn"><a name="fitInView-3"></a>void QGraphicsView::fitInView ( const <a href="qgraphicsitem.html">QGraphicsItem</a> * <i>item</i>, <a href="qt.html#AspectRatioMode-enum">Qt::AspectRatioMode</a> <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Ensures that <i>item</i> fits tightly inside the view, scaling the view according to <i>aspectRatioMode</i>.</p>
 <p>See also <a href="qgraphicsview.html#ensureVisible">ensureVisible</a>() and <a href="qgraphicsview.html#centerOn">centerOn</a>().</p>
 <h3 class="fn"><a name="invalidateScene"></a>void QGraphicsView::invalidateScene ( const <a href="qrectf.html">QRectF</a> &amp; <i>rect</i> = QRectF(), <a href="qgraphicsscene.html#SceneLayer-enum">QGraphicsScene::SceneLayers</a> <i>layers</i> = QGraphicsScene::AllLayers )&nbsp;&nbsp;<tt> [slot]</tt></h3>
@@ -479,7 +479,7 @@
  }</pre>
 <p>See also <a href="qgraphicsview.html#items">items</a>().</p>
 <h3 class="fn"><a name="itemAt-2"></a><a href="qgraphicsitem.html">QGraphicsItem</a> * QGraphicsView::itemAt ( int <i>x</i>, int <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is provided for convenience. It's equivalent to calling itemAt(<a href="qpoint.html">QPoint</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="items"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsView::items () const</h3>
 <p>Returns a list of all the items in the associated scene.</p>
@@ -499,17 +499,17 @@
 <p>This convenience function is equivalent to calling items(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>), <i>mode</i>).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="items-5"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsView::items ( const <a href="qrect.html">QRect</a> &amp; <i>rect</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list of all the items that, depending on <i>mode</i>, are either contained by or intersect with <i>rect</i>. <i>rect</i> is in viewport coordinates.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>rect</i> are returned.</p>
 <p>See also <a href="qgraphicsview.html#itemAt">itemAt</a>(), <a href="qgraphicsview.html#items">items</a>(), and <a href="qgraphicsview.html#mapToScene">mapToScene</a>().</p>
 <h3 class="fn"><a name="items-6"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsView::items ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list of all the items that, depending on <i>mode</i>, are either contained by or intersect with <i>polygon</i>. <i>polygon</i> is in viewport coordinates.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>polygon</i> are returned.</p>
 <p>See also <a href="qgraphicsview.html#itemAt">itemAt</a>(), <a href="qgraphicsview.html#items">items</a>(), and <a href="qgraphicsview.html#mapToScene">mapToScene</a>().</p>
 <h3 class="fn"><a name="items-7"></a><a href="qlist.html">QList</a>&lt;<a href="qgraphicsitem.html">QGraphicsItem</a> *&gt; QGraphicsView::items ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a list of all the items that, depending on <i>mode</i>, are either contained by or intersect with <i>path</i>. <i>path</i> is in viewport coordinates.</p>
 <p>The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; all items whose exact shape intersects with or is contained by <i>path</i> are returned.</p>
 <p>See also <a href="qgraphicsview.html#itemAt">itemAt</a>(), <a href="qgraphicsview.html#items">items</a>(), and <a href="qgraphicsview.html#mapToScene">mapToScene</a>().</p>
@@ -655,6 +655,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

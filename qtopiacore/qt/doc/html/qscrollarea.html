@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/widgets/qscrollarea.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/widgets/qscrollarea.cpp -->
 <head>
   <title>Qt 4.5: QScrollArea Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -51,7 +51,7 @@
 <li><div class="fn"></div>13 public functions inherited from <a href="qframe.html#public-functions">QFrame</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -91,7 +91,7 @@
 <a name="size-hints-and-layouts"></a>
 <h3>Size Hints and Layouts</h3>
 <p>When using a scroll area to display the contents of a custom widget, it is important to ensure that the <a href="qwidget.html#sizeHint-prop">size hint</a> of the child widget is set to a suitable value. If a standard <a href="qwidget.html">QWidget</a> is used for the child widget, it may be necessary to call <a href="qwidget.html#minimumSize-prop">QWidget::setMinimumSize</a>() to ensure that the contents of the widget are shown correctly within the scroll area.</p>
-<p>If a scroll area is used to display the contents of a widget that contains child widgets arranged in a layout, it is important to realise that the size policy of the layout will also determine the size of the widget. This is especially useful to know if you intend to dynamically change the contents of the layout. In such cases, setting the layout's <a href="qlayout.html#sizeConstraint-prop">size constraint</a> property to one which provides constraints on the minimum and/or maximum size of the layout (e.g&#x2e;, <a href="qlayout.html#SizeConstraint-enum">QLayout::SetMinAndMaxSize</a>) will cause the size of the the scroll area to be updated whenever the contents of the layout changes.</p>
+<p>If a scroll area is used to display the contents of a widget that contains child widgets arranged in a layout, it is important to realise that the size policy of the layout will also determine the size of the widget. This is especially useful to know if you intend to dynamically change the contents of the layout. In such cases, setting the layout's <a href="qlayout.html#sizeConstraint-prop">size constraint</a> property to one which provides constraints on the minimum and/or maximum size of the layout (e.g&#x2e;, <a href="qlayout.html#SizeConstraint-enum">QLayout::SetMinAndMaxSize</a>) will cause the size of the scroll area to be updated whenever the contents of the layout changes.</p>
 <p>For a complete example using the QScrollArea class, see the <a href="widgets-imageviewer.html">Image Viewer</a> example. The example shows how to combine <a href="qlabel.html">QLabel</a> and QScrollArea to display an image.</p>
 <p>See also <a href="qabstractscrollarea.html">QAbstractScrollArea</a>, <a href="qscrollbar.html">QScrollBar</a>, and <a href="widgets-imageviewer.html">Image Viewer Example</a>.</p>
 <hr />
@@ -144,6 +144,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

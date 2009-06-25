@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/kernel/qwidget.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/kernel/qwidget.cpp -->
 <head>
   <title>Qt 4.5: QWidget Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -311,7 +311,7 @@
 </ul>
 <ul>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -1003,7 +1003,8 @@
 <h3 class="fn"><a name="styleSheet-prop"></a>styleSheet : <a href="qstring.html">QString</a></h3>
 <p>This property holds the widget's style sheet.</p>
 <p>The style sheet contains a textual description of customizations to the widget's style, as described in the <a href="stylesheet.html">Qt Style Sheets</a> document.</p>
-<p><b>Note:</b> Qt style sheets are currently not supported for QMacStyle (the default style on Mac OS X). We plan to address this in some future release.</p>
+<p>Since Qt 4.5, Qt style sheets fully supports Mac OS X.</p>
+<p><b>Warning:</b> Qt style sheets are currently not supported for custom <a href="qstyle.html">QStyle</a> subclasses. We plan to address this in some future release.</p>
 <p>This property was introduced in Qt 4.2.</p>
 <p>Access functions:</p>
 <ul>
@@ -1238,7 +1239,7 @@
 <h3 class="fn"><a name="childAt"></a>QWidget * QWidget::childAt ( int <i>x</i>, int <i>y</i> ) const</h3>
 <p>Returns the visible child widget at the position (<i>x</i>, <i>y</i>) in the widget's coordinate system. If there is no visible child widget at the specified position, the function returns 0.</p>
 <h3 class="fn"><a name="childAt-4"></a>QWidget * QWidget::childAt ( const <a href="qpoint.html">QPoint</a> &amp; <i>p</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the visible child widget at point <i>p</i> in the widget's own coordinate system.</p>
 <h3 class="fn"><a name="clearFocus"></a>void QWidget::clearFocus ()</h3>
 <p>Takes keyboard input focus from the widget.</p>
@@ -1377,7 +1378,6 @@
 <p>Returns the window system handle of the widget, for low-level access. Using this function is not portable.</p>
 <p>An HDC acquired with getDC() has to be released with <a href="qwidget.html#releaseDC">releaseDC</a>().</p>
 <p><b>Warning:</b> Using this function is not portable.</p>
-<p>Reimplemented from <a href="qpaintdevice.html#getDC">QPaintDevice</a>.</p>
 <h3 class="fn"><a name="grabKeyboard"></a>void QWidget::grabKeyboard ()</h3>
 <p>Grabs the keyboard input.</p>
 <p>This widget receives all keyboard events until <a href="qwidget.html#releaseKeyboard">releaseKeyboard</a>() is called; other widgets get no keyboard events at all. Mouse events are not affected. Use <a href="qwidget.html#grabMouse">grabMouse</a>() if you want to grab that.</p>
@@ -1393,7 +1393,7 @@
 <p><a href="qwidget.html#focusWidget">focusWidget</a>()</p>
 <p>See also <a href="qwidget.html#releaseMouse">releaseMouse</a>(), <a href="qwidget.html#grabKeyboard">grabKeyboard</a>(), <a href="qwidget.html#releaseKeyboard">releaseKeyboard</a>(), and <a href="qwidget.html#grabKeyboard">grabKeyboard</a>().</p>
 <h3 class="fn"><a name="grabMouse-2"></a>void QWidget::grabMouse ( const <a href="qcursor.html">QCursor</a> &amp; <i>cursor</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Grabs the mouse input and changes the cursor shape.</p>
 <p>The cursor will assume shape <i>cursor</i> (for as long as the mouse focus is grabbed) and this widget will be the only one to receive mouse events until <a href="qwidget.html#releaseMouse">releaseMouse</a>() is called().</p>
 <p><b>Warning:</b> Grabbing the mouse might lock the terminal.</p>
@@ -1612,7 +1612,6 @@
 <h3 class="fn"><a name="releaseDC"></a>void QWidget::releaseDC ( HDC <i>hdc</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Releases the HDC <i>hdc</i> acquired by a previous call to <a href="qwidget.html#getDC">getDC</a>().</p>
 <p><b>Warning:</b> Using this function is not portable.</p>
-<p>Reimplemented from <a href="qpaintdevice.html#releaseDC">QPaintDevice</a>.</p>
 <h3 class="fn"><a name="releaseKeyboard"></a>void QWidget::releaseKeyboard ()</h3>
 <p>Releases the keyboard grab.</p>
 <p>See also <a href="qwidget.html#grabKeyboard">grabKeyboard</a>(), <a href="qwidget.html#grabMouse">grabMouse</a>(), and <a href="qwidget.html#releaseMouse">releaseMouse</a>().</p>
@@ -1639,7 +1638,7 @@
 <p><b>Note:</b> To obtain the contents of an OpenGL widget, use <a href="qglwidget.html#grabFrameBuffer">QGLWidget::grabFrameBuffer</a>() or <a href="qglwidget.html#renderPixmap">QGLWidget::renderPixmap</a>() instead.</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="render-2"></a>void QWidget::render ( <a href="qpainter.html">QPainter</a> * <i>painter</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>targetOffset</i> = QPoint(), const <a href="qregion.html">QRegion</a> &amp; <i>sourceRegion</i> = QRegion(), <a href="qwidget.html#RenderFlag-enum">RenderFlags</a> <i>renderFlags</i> = RenderFlags( DrawWindowBackground | DrawChildren ) )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Renders the widget into the <i>painter</i>'s <a href="qpainter.html#device">QPainter::device</a>().</p>
 <p>Transformations and settings applied to the <i>painter</i> will be used when rendering.</p>
 <p><b>Note:</b> The <i>painter</i> must be active. On Mac OS X the widget will be rendered into a <a href="qpixmap.html">QPixmap</a> and then drawn by the <i>painter</i>.</p>
@@ -1650,14 +1649,14 @@
 <p><b>Warning:</b> If you call repaint() in a function which may itself be called from <a href="qwidget.html#paintEvent">paintEvent</a>(), you may get infinite recursion. The <a href="qwidget.html#update">update</a>() function never causes recursion.</p>
 <p>See also <a href="qwidget.html#update">update</a>(), <a href="qwidget.html#paintEvent">paintEvent</a>(), and <a href="qwidget.html#updatesEnabled-prop">setUpdatesEnabled</a>().</p>
 <h3 class="fn"><a name="repaint-6"></a>void QWidget::repaint ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version repaints a rectangle (<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>) inside the widget.</p>
 <p>If <i>w</i> is negative, it is replaced with <tt>width() - x</tt>, and if <i>h</i> is negative, it is replaced width <tt>height() - y</tt>.</p>
 <h3 class="fn"><a name="repaint-7"></a>void QWidget::repaint ( const <a href="qrect.html">QRect</a> &amp; <i>rect</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version repaints a rectangle <i>rect</i> inside the widget.</p>
 <h3 class="fn"><a name="repaint-8"></a>void QWidget::repaint ( const <a href="qregion.html">QRegion</a> &amp; <i>rgn</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version repaints a region <i>rgn</i> inside the widget.</p>
 <h3 class="fn"><a name="resizeEvent"></a>void QWidget::resizeEvent ( <a href="qresizeevent.html">QResizeEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>This event handler can be reimplemented in a subclass to receive widget resize events which are passed in the <i>event</i> parameter. When resizeEvent() is called, the widget already has its new geometry. The old size is accessible through <a href="qresizeevent.html#oldSize">QResizeEvent::oldSize</a>().</p>
@@ -1665,7 +1664,7 @@
 <p>See also <a href="qwidget.html#moveEvent">moveEvent</a>(), <a href="qwidget.html#event">event</a>(), <a href="qwidget.html#size-prop">resize</a>(), <a href="qresizeevent.html">QResizeEvent</a>, <a href="qwidget.html#paintEvent">paintEvent</a>(), and <a href="widgets-scribble.html">Scribble Example</a>.</p>
 <h3 class="fn"><a name="restoreGeometry"></a>bool QWidget::restoreGeometry ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>geometry</i> )</h3>
 <p>Restores the geometry and state top-level widgets stored in the byte array <i>geometry</i>. Returns true on success; otherwise returns false.</p>
-<p>If the restored geometry is off-screen, it will be modified to be inside the the available screen geometry.</p>
+<p>If the restored geometry is off-screen, it will be modified to be inside the available screen geometry.</p>
 <p>To restore geometry saved using <a href="qsettings.html">QSettings</a>, you can use code like this:</p>
 <pre> QSettings settings(&quot;MyCompany&quot;, &quot;MyApp&quot;);
  myWidget-&gt;restoreGeometry(settings.value(&quot;myWidget/geometry&quot;).toByteArray());</pre>
@@ -1693,7 +1692,7 @@
 <p>For widgets that use contents propagation, a scroll will cause an update of the entire scroll area.</p>
 <p>See also <a href="qwidget.html#transparency-and-double-buffering">Transparency and Double Buffering</a>.</p>
 <h3 class="fn"><a name="scroll-2"></a>void QWidget::scroll ( int <i>dx</i>, int <i>dy</i>, const <a href="qrect.html">QRect</a> &amp; <i>r</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version only scrolls <i>r</i> and does not move the children of the widget.</p>
 <p>If <i>r</i> is empty or invalid, the result is undefined.</p>
 <p>See also <a href="qscrollarea.html">QScrollArea</a>.</p>
@@ -1726,7 +1725,7 @@
 <p>Alternatively, if you want the widget to have a fixed size based on its contents, you can call QLayout::setSizeConstraint(<a href="qlayout.html#SizeConstraint-enum">QLayout::SetFixedSize</a>);</p>
 <p>See also <a href="qwidget.html#maximumSize-prop">maximumSize</a> and <a href="qwidget.html#minimumSize-prop">minimumSize</a>.</p>
 <h3 class="fn"><a name="setFixedSize-2"></a>void QWidget::setFixedSize ( int <i>w</i>, int <i>h</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the width of the widget to <i>w</i> and the height to <i>h</i>.</p>
 <h3 class="fn"><a name="setFixedWidth"></a>void QWidget::setFixedWidth ( int <i>w</i> )</h3>
 <p>Sets both the minimum and maximum width of the widget to <i>w</i> without changing the heights. Provided for convenience.</p>
@@ -1737,9 +1736,9 @@
 <p>setFocus() gives focus to a widget regardless of its focus policy, but does not clear any keyboard grab (see <a href="qwidget.html#grabKeyboard">grabKeyboard</a>()).</p>
 <p>Be aware that if the widget is hidden, it will not accept focus until it is shown.</p>
 <p><b>Warning:</b> If you call setFocus() in a function which may itself be called from <a href="qwidget.html#focusOutEvent">focusOutEvent</a>() or <a href="qwidget.html#focusInEvent">focusInEvent</a>(), you may get an infinite recursion.</p>
-<p>See also <a href="qwidget.html#focus-prop">hasFocus</a>(), <a href="qwidget.html#clearFocus">clearFocus</a>(), <a href="qwidget.html#focusInEvent">focusInEvent</a>(), <a href="qwidget.html#focusOutEvent">focusOutEvent</a>(), <a href="qwidget.html#focusPolicy-prop">setFocusPolicy</a>(), <a href="qapplication.html#focusWidget">QApplication::focusWidget</a>(), <a href="qwidget.html#grabKeyboard">grabKeyboard</a>(), <a href="qwidget.html#grabMouse">grabMouse</a>(), and <a href="focus.html">Keyboard Focus</a>.</p>
+<p>See also focus(), <a href="qwidget.html#focus-prop">hasFocus</a>(), <a href="qwidget.html#clearFocus">clearFocus</a>(), <a href="qwidget.html#focusInEvent">focusInEvent</a>(), <a href="qwidget.html#focusOutEvent">focusOutEvent</a>(), <a href="qwidget.html#focusPolicy-prop">setFocusPolicy</a>(), <a href="qwidget.html#focusWidget">focusWidget</a>(), <a href="qapplication.html#focusWidget">QApplication::focusWidget</a>(), <a href="qwidget.html#grabKeyboard">grabKeyboard</a>(), <a href="qwidget.html#grabMouse">grabMouse</a>(), and <a href="focus.html">Keyboard Focus</a>.</p>
 <h3 class="fn"><a name="setFocus-2"></a>void QWidget::setFocus ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Gives the keyboard input focus to this widget (or its focus proxy) if this widget or one of its parents is the <a href="qwidget.html#isActiveWindow-prop">active window</a>.</p>
 <h3 class="fn"><a name="setFocusProxy"></a>void QWidget::setFocusProxy ( QWidget * <i>w</i> )</h3>
 <p>Sets the widget's focus proxy to widget <i>w</i>. If <i>w</i> is 0, the function resets this widget to have no focus proxy.</p>
@@ -1780,7 +1779,7 @@
 <p>Masked widgets receive mouse events only on their visible portions.</p>
 <p>See also <a href="qwidget.html#mask">mask</a>(), <a href="qwidget.html#clearMask">clearMask</a>(), <a href="qwidget.html#windowOpacity-prop">windowOpacity</a>(), and <a href="widgets-shapedclock.html">Shaped Clock Example</a>.</p>
 <h3 class="fn"><a name="setMask-2"></a>void QWidget::setMask ( const <a href="qregion.html">QRegion</a> &amp; <i>region</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Causes only the parts of the widget which overlap <i>region</i> to be visible. If the region includes pixels outside the <a href="qwidget.html#rect-prop">rect</a>() of the widget, window system controls in that area may or may not be visible, depending on the platform.</p>
 <p>Note that this effect can be slow if the region is particularly complex.</p>
 <p>See also <a href="qwidget.html#windowOpacity-prop">windowOpacity</a>.</p>
@@ -1793,7 +1792,7 @@
 <p><b>Warning:</b> It is very unlikely that you will ever need this function. If you have a widget that changes its content dynamically, it is far easier to use <a href="qstackedwidget.html">QStackedWidget</a>.</p>
 <p>See also <a href="qwidget.html#windowFlags-prop">setWindowFlags</a>().</p>
 <h3 class="fn"><a name="setParent-2"></a>void QWidget::setParent ( QWidget * <i>parent</i>, <a href="qt.html#WindowType-enum">Qt::WindowFlags</a> <i>f</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function also takes widget flags, <i>f</i> as an argument.</p>
 <h3 class="fn"><a name="setShortcutAutoRepeat"></a>void QWidget::setShortcutAutoRepeat ( int <i>id</i>, bool <i>enable</i> = true )</h3>
 <p>If <i>enable</i> is true, auto repeat of the shortcut with the given <i>id</i> is enabled; otherwise it is disabled.</p>
@@ -1895,13 +1894,13 @@
 <p>Qt normally erases the widget's area before the <a href="qwidget.html#paintEvent">paintEvent</a>() call. If the <a href="qt.html#WidgetAttribute-enum">Qt::WA_OpaquePaintEvent</a> widget attribute is set, the widget is responsible for painting all its pixels with an opaque color.</p>
 <p>See also <a href="qwidget.html#repaint">repaint</a>(), <a href="qwidget.html#paintEvent">paintEvent</a>(), <a href="qwidget.html#updatesEnabled-prop">setUpdatesEnabled</a>(), and <a href="widgets-analogclock.html">Analog Clock Example</a>.</p>
 <h3 class="fn"><a name="update-2"></a>void QWidget::update ( int <i>x</i>, int <i>y</i>, int <i>w</i>, int <i>h</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version updates a rectangle (<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>) inside the widget.</p>
 <h3 class="fn"><a name="update-3"></a>void QWidget::update ( const <a href="qrect.html">QRect</a> &amp; <i>rect</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version updates a rectangle <i>rect</i> inside the widget.</p>
 <h3 class="fn"><a name="update-4"></a>void QWidget::update ( const <a href="qregion.html">QRegion</a> &amp; <i>rgn</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This version repaints a region <i>rgn</i> inside the widget.</p>
 <h3 class="fn"><a name="updateGeometry"></a>void QWidget::updateGeometry ()</h3>
 <p>Notifies the layout system that this widget has changed and may need to change geometry.</p>
@@ -1928,6 +1927,7 @@
 <p>Returns the window system identifier of the widget.</p>
 <p>Portable in principle, but if you use it you are probably about to do something non-portable. Be careful.</p>
 <p>If a widget is non-native (alien) and winId() is invoked on it, that widget will be provided a native handle.</p>
+<p>On Mac OS X, the type returned depends on which framework Qt was linked against. If Qt is using Carbon, the {WId} is actually an HIViewRef. If Qt is using Cocoa, {WId} is a pointer to an NSView.</p>
 <p><b>Note:</b> We recommend that you do not store this value as it is likely to change at run-time.</p>
 <p>See also <a href="qwidget.html#find">find</a>().</p>
 <h3 class="fn"><a name="window"></a>QWidget * QWidget::window () const</h3>
@@ -1977,6 +1977,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

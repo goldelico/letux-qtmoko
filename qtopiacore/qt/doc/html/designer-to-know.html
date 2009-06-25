@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/designer-manual.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/designer-manual.qdoc -->
 <head>
   <title>Qt 4.5: Getting to Know Qt Designer</title>
   <link rel="contents" href="designer-manual.html" />
@@ -51,7 +51,7 @@
 <a name="the-concept-of-layouts-in-qt"></a>
 <h2>The Concept of Layouts in Qt</h2>
 <p>A layout is used to arrange and manage the elements that make up a user interface. Qt provides a number of classes to automatically handle layouts -- <a href="qhboxlayout.html">QHBoxLayout</a>, <a href="qvboxlayout.html">QVBoxLayout</a>, <a href="qgridlayout.html">QGridLayout</a>, and <a href="qformlayout.html">QFormLayout</a>. These classes solve the challenge of laying out widgets automatically, providing a user interface that behaves predictably. Fortunately knowledge of the layout classes is not required to arrange widgets with <i>Qt Designer</i>. Instead, select one of the <b>Lay Out Horizontally</b>, <b>Lay Out in a Grid</b>, etc., options from the context menu.</p>
-<p>Each Qt widget has a recommended size, known as <a href="qwidget.html#sizeHint-prop">sizeHint()</a>. The layout manager will attempt to resize a widget to meet its size hint. In some cases, there is no need to have a different size. For example, the height of a <a href="qlineedit.html">QLineEdit</a> is always a fixed value, depending on font size and style. In other cases, you may require the size to change, e.g&#x2e;, the width of a <a href="qlineedit.html">QLineEdit</a> or the width and height of item view widgets. This is where the widget size constraints -- <a href="qwidget.html#minimumSize-prop">minimumSize</a> and <a href="qwidget.html#maximumSize-prop">maximumSize</a> constraints come into play. These are properties you can set in the property editor. Alternatively, to use the current size as a size constraint value, choose one of the <b>Size Constraint</b> options from the widget's context menu. The layout will then ensure that those constraints are met.</p>
+<p>Each Qt widget has a recommended size, known as <a href="qwidget.html#sizeHint-prop">sizeHint()</a>. The layout manager will attempt to resize a widget to meet its size hint. In some cases, there is no need to have a different size. For example, the height of a <a href="qlineedit.html">QLineEdit</a> is always a fixed value, depending on font size and style. In other cases, you may require the size to change, e.g&#x2e;, the width of a <a href="qlineedit.html">QLineEdit</a> or the width and height of item view widgets. This is where the widget size constraints -- <a href="qwidget.html#minimumSize-prop">minimumSize</a> and <a href="qwidget.html#maximumSize-prop">maximumSize</a> constraints come into play. These are properties you can set in the property editor. For example, to override the default <a href="qwidget.html#sizeHint-prop">sizeHint()</a>, simply set <a href="qwidget.html#minimumSize-prop">minimumSize</a> and <a href="qwidget.html#maximumSize-prop">maximumSize</a> to the same value. Alternatively, to use the current size as a size constraint value, choose one of the <b>Size Constraint</b> options from the widget's context menu. The layout will then ensure that those constraints are met. To control the size of your widgets via code, you can reimplement <a href="qwidget.html#sizeHint-prop">sizeHint()</a> in your code.</p>
 <p>The screenshot below shows the breakdown of a basic user interface designed using a grid. The coordinates on the screenshot show the position of each widget within the grid.</p>
 <p align="center"><img src="images/addressbook-tutorial-part3-labeled-layout.png" /></p><p><b>Note:</b> Inside the grid, the <a href="qpushbutton.html">QPushButton</a> objects are actually nested. The buttons on the right are first placed in a <a href="qvboxlayout.html">QVBoxLayout</a>; the buttons at the bottom are first placed in a <a href="qhboxlayout.html">QHBoxLayout</a>. Finally, they are put into coordinates (1,2) and (3,1) of the <a href="qgridlayout.html">QGridLayout</a>.</p>
 <p>To visualize, imagine the layout as a box that shrinks as much as possible, attempting to <i>squeeze</i> your widgets in a neat arrangement, and, at the same time, maximize the use of available space.</p>
@@ -76,6 +76,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

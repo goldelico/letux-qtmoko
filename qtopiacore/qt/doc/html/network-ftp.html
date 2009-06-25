@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/ftp.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/examples/ftp.qdoc -->
 <head>
   <title>Qt 4.5: FTP Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -162,7 +162,7 @@
          }
      }</pre>
 <p>After a <a href="qftp.html#Command-enum">List</a> command is performed, we have to check if no entries were found (in which case our <tt>addToList()</tt> function would not have been called).</p>
-<p>Let's continue with the the <tt>addToList()</tt> slot:</p>
+<p>Let's continue with the <tt>addToList()</tt> slot:</p>
 <pre> void FtpWindow::addToList(const QUrlInfo &amp;urlInfo)
  {
      QTreeWidgetItem *item = new QTreeWidgetItem;
@@ -216,7 +216,7 @@
      }
      ftp-&gt;list();
  }</pre>
-<p><tt>cdToParent()</tt> is invoked when the the user requests to go to the parent directory of the one displayed in the file list. After changing the directory, we <a href="qftp.html#Command-enum">QFtp::List</a> its contents.</p>
+<p><tt>cdToParent()</tt> is invoked when the user requests to go to the parent directory of the one displayed in the file list. After changing the directory, we <a href="qftp.html#Command-enum">QFtp::List</a> its contents.</p>
 <pre> void FtpWindow::updateDataTransferProgress(qint64 readBytes,
                                             qint64 totalBytes)
  {
@@ -239,6 +239,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

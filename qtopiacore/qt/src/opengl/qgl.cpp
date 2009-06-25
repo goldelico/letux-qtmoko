@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1327,13 +1327,21 @@ QImage qt_gl_read_framebuffer(const QSize &size, bool alpha_format, bool include
             // This is an old legacy fix for PowerPC based Macs, which
             // we shouldn't remove
             while (p < end) {
-                *p = 0xFF000000 | (*p>>8);
+                *p = 0xff000000 | (*p>>8);
                 ++p;
             }
         }
     } else {
         // OpenGL gives ABGR (i.e. RGBA backwards); Qt wants ARGB
-        img = img.rgbSwapped();
+        for (int y = 0; y < h; y++) {
+            uint *q = (uint*)img.scanLine(y);
+            for (int x=0; x < w; ++x) {
+                const uint pixel = *q;
+                *q = ((pixel << 16) & 0xff0000) | ((pixel >> 16) & 0xff) | (pixel & 0xff00ff00);
+                q++;
+            }
+        }
+
     }
     return img.mirrored();
 }
@@ -2398,6 +2406,10 @@ bool QGLContext::create(const QGLContext* shareContext)
         return false;
     reset();
     d->valid = chooseContext(shareContext);
+    if (d->valid && d->paintDevice->devType() == QInternal::Widget) {
+        QWidgetPrivate *wd = qt_widget_private(static_cast<QWidget *>(d->paintDevice));
+        wd->usesDoubleBufferedGLContext = d->glFormat.doubleBuffer();
+    }
     if (d->sharing)  // ok, we managed to share
         qgl_share_reg()->addShare(this, shareContext);
     return d->valid;
@@ -2492,6 +2504,42 @@ const QGLContext* QGLContext::currentContext()
     visual. On other platforms it may work differently.
 */
 
+/*! \fn int QGLContext::choosePixelFormat(void* dummyPfd, HDC pdc)
+  
+    \bold{Win32 only:} This virtual function chooses a pixel format
+    that matches the OpenGL \link setFormat() format\endlink.
+    Reimplement this function in a subclass if you need a custom
+    context.
+
+    \warning The \a dummyPfd pointer and \a pdc are used as a \c
+    PIXELFORMATDESCRIPTOR*. We use \c void to avoid using
+    Windows-specific types in our header files.
+
+    \sa chooseContext()
+*/
+
+/*! \fn void *QGLContext::chooseVisual()
+  
+  \bold{X11 only:} This virtual function tries to find a visual that
+  matches the format, reducing the demands if the original request
+  cannot be met.
+
+  The algorithm for reducing the demands of the format is quite
+  simple-minded, so override this method in your subclass if your
+  application has spcific requirements on visual selection.
+
+  \sa chooseContext()
+*/
+
+/*! \fn void *QGLContext::tryVisual(const QGLFormat& f, int bufDepth)
+  \internal
+
+  \bold{X11 only:} This virtual function chooses a visual that matches
+  the OpenGL \link format() format\endlink. Reimplement this function
+  in a subclass if you need a custom visual.
+
+  \sa chooseContext()
+*/
 
 /*!
     \fn void QGLContext::reset()
@@ -2576,7 +2624,7 @@ const QGLContext* QGLContext::currentContext()
     \i paintGL() - Renders the OpenGL scene. Gets called whenever the widget
     needs to be updated.
     \i resizeGL() - Sets up the OpenGL viewport, projection, etc. Gets
-    called whenever the the widget has been resized (and also when it
+    called whenever the widget has been resized (and also when it
     is shown for the first time because all newly created widgets get a
     resize event automatically).
     \i initializeGL() - Sets up the OpenGL rendering context, defines display
@@ -3008,11 +3056,10 @@ void QGLWidget::setFormat(const QGLFormat &format)
 */
 
 /*
-  \obsolete
-
   \fn void QGLWidget::setContext(QGLContext *context,
-                                  const QGLContext* shareContext,
-                                  bool deleteOldContext)
+                                 const QGLContext* shareContext,
+                                 bool deleteOldContext)
+  \obsolete
 
   Sets a new context for this widget. The QGLContext \a context must
   be created using \e new. QGLWidget will delete \a context when
@@ -3162,9 +3209,10 @@ void QGLWidget::resizeOverlayGL(int, int)
 {
 }
 
-
+/*! \fn bool QGLWidget::event(QEvent *e)
+  \reimp
+*/
 #if !defined(Q_OS_WINCE) && !defined(Q_WS_QWS)
-/*! \reimp */
 bool QGLWidget::event(QEvent *e)
 {
     Q_D(QGLWidget);

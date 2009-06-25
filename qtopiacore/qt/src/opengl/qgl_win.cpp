@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtOpenGL module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -884,19 +884,9 @@ static bool qLogEq(bool a, bool b)
     return (((!a) && (!b)) || (a && b));
 }
 
-/*!
-    \bold{Win32 only:} This virtual function chooses a pixel
-    format that matches the OpenGL \link setFormat() format\endlink.
-    Reimplement this function in a subclass if you need a custom
-    context.
-
-    \warning The \a dummyPfd pointer and \a pdc are used as a \c
-    PIXELFORMATDESCRIPTOR*. We use \c void to avoid using
-    Windows-specific types in our header files.
-
-    \sa chooseContext()
-*/
-
+/*
+  See qgl.cpp for qdoc comment.
+ */
 int QGLContext::choosePixelFormat(void* dummyPfd, HDC pdc)
 {
     Q_D(QGLContext);

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -61,8 +61,6 @@ class BookmarkManager;
 class BookmarkWidget;
 class CmdLineParser;
 class QtDocInstaller;
-
-class SearchWidget;
 
 class MainWindow : public QMainWindow
 {
@@ -94,6 +92,7 @@ public slots:
     void showIndex();
     void showBookmarks();
     void showSearch();
+    void showSearchWidget();
     void syncContents();
     void activateCurrentCentralWidgetTab();
 
@@ -106,6 +105,7 @@ private slots:
     void showAboutDialog();
     void copyAvailable(bool yes);
     void updateNavigationItems();
+    void updateTabCloseAction();
     void showNewAddress(const QUrl &url);
     void addNewBookmark(const QString &title, const QString &url);
     void showTopicChooser(const QMap<QString, QUrl> &links, const QString &keyword);
@@ -159,7 +159,6 @@ private:
     QMenu *m_toolBarMenu;
 
     CmdLineParser *m_cmdLine;
-    SearchWidget *m_searchWidget;
 
     QWidget *m_progressWidget;
     QtDocInstaller *m_qtDocInstaller;

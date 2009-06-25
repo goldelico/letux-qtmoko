@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicsitem.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/graphicsview/qgraphicsitem.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsItem Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -248,7 +248,7 @@
      {
          qreal penWidth = 1;
          return QRectF(-10 - penWidth / 2, -10 - penWidth / 2,
-                       20 + penWidth / 2, 20 + penWidth / 2);
+                       20 + penWidth, 20 + penWidth);
      }
 
      void paint(QPainter *painter, const QStyleOptionGraphicsItem *option,
@@ -416,18 +416,20 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qgraphicsitem.html#isClipped">isClipped</a>(), <a href="qgraphicsitem.html#shape">shape</a>(), and <a href="qgraphicsitem.html#setFlags">setFlags</a>().</p>
 <h3 class="fn"><a name="collidesWithItem"></a>bool QGraphicsItem::collidesWithItem ( const QGraphicsItem * <i>other</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>Returns true if this item collides with <i>other</i>; otherwise returns false. The ways items collide is determined by <i>mode</i>. The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; <i>other</i> collides with this item if it either intersects, contains, or is contained by this item's shape.</p>
+<p>Returns true if this item collides with <i>other</i>; otherwise returns false.</p>
+<p>The <i>mode</i> is applied to <i>other</i>, and the resulting shape or bounding rectangle is then compared to this item's shape. The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; <i>other</i> collides with this item if it either intersects, contains, or is contained by this item's shape (see <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> for details).</p>
 <p>The default implementation is based on shape intersection, and it calls <a href="qgraphicsitem.html#shape">shape</a>() on both items. Because the complexity of arbitrary shape-shape intersection grows with an order of magnitude when the shapes are complex, this operation can be noticably time consuming. You have the option of reimplementing this function in a subclass of <a href="qgraphicsitem.html">QGraphicsItem</a> to provide a custom algorithm. This allows you to make use of natural constraints in the shapes of your own items, in order to improve the performance of the collision detection. For instance, two untransformed perfectly circular items' collision can be determined very efficiently by comparing their positions and radii.</p>
 <p>Keep in mind that when reimplementing this function and calling <a href="qgraphicsitem.html#shape">shape</a>() or <a href="qgraphicsitem.html#boundingRect">boundingRect</a>() on <i>other</i>, the returned coordinates must be mapped to this item's coordinate system before any intersection can take place.</p>
 <p>See also <a href="qgraphicsitem.html#contains">contains</a>() and <a href="qgraphicsitem.html#shape">shape</a>().</p>
 <h3 class="fn"><a name="collidesWithPath"></a>bool QGraphicsItem::collidesWithPath ( const <a href="qpainterpath.html">QPainterPath</a> &amp; <i>path</i>, <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Returns true if this item collides with <i>path</i>.</p>
 <p>The collision is determined by <i>mode</i>. The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; <i>path</i> collides with this item if it either intersects, contains, or is contained by this item's shape.</p>
+<p>Note that this function checks whether the item's shape or bounding rectangle (depending on <i>mode</i>) is contained within <i>path</i>, and not whether <i>path</i> is contained within the items shape or bounding rectangle.</p>
 <p>See also <a href="qgraphicsitem.html#collidesWithItem">collidesWithItem</a>(), <a href="qgraphicsitem.html#contains">contains</a>(), and <a href="qgraphicsitem.html#shape">shape</a>().</p>
 <h3 class="fn"><a name="collidingItems"></a><a href="qlist.html">QList</a>&lt;QGraphicsItem *&gt; QGraphicsItem::collidingItems ( <a href="qt.html#ItemSelectionMode-enum">Qt::ItemSelectionMode</a> <i>mode</i> = Qt::IntersectsItemShape ) const</h3>
 <p>Returns a list of all items that collide with this item.</p>
-<p>The way collisions are detected is determined by <i>mode</i>. The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>; All items whose shape intersects or is contained by this item's shape are returned.</p>
-<p>See also <a href="qgraphicsscene.html#collidingItems">QGraphicsScene::collidingItems</a>() and <a href="qgraphicsitem.html#collidesWithItem">collidesWithItem</a>().</p>
+<p>The way collisions are detected is determined by applying <i>mode</i> to items that are compared to this item, i.e&#x2e;, each item's shape or bounding rectangle is checked against this item's shape. The default value for <i>mode</i> is <a href="qt.html#ItemSelectionMode-enum">Qt::IntersectsItemShape</a>.</p>
+<p>See also <a href="qgraphicsitem.html#collidesWithItem">collidesWithItem</a>().</p>
 <h3 class="fn"><a name="commonAncestorItem"></a>QGraphicsItem * QGraphicsItem::commonAncestorItem ( const QGraphicsItem * <i>other</i> ) const</h3>
 <p>Returns the closest common ancestor item of this item and <i>other</i>, or 0 if either <i>other</i> is 0, or there is no common ancestor.</p>
 <p>This function was introduced in Qt 4.4.</p>
@@ -640,7 +642,7 @@
 <p>This convenience function is equivalent to calling isObscured(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="isObscured-3"></a>bool QGraphicsItem::isObscured ( const <a href="qrectf.html">QRectF</a> &amp; <i>rect</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if <i>rect</i> is completely obscured by the opaque shape of any of colliding items above it (i.e&#x2e;, with a higher Z value than this item).</p>
 <p>Unlike the default <a href="qgraphicsitem.html#isObscured">isObscured</a>() function, this function does not call <a href="qgraphicsitem.html#isObscuredBy">isObscuredBy</a>().</p>
 <p>This function was introduced in Qt 4.3.</p>
@@ -731,7 +733,7 @@
 <p>This convenience function is equivalent to calling mapFromItem(item, <a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapFromItem-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapFromItem ( const QGraphicsItem * <i>item</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapFromItem(<i>item</i>, <a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mapFromParent"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapFromParent ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i> ) const</h3>
 <p>Maps the point <i>point</i>, which is in this item's parent's coordinate system, to this item's coordinate system, and returns the mapped coordinate.</p>
@@ -749,7 +751,7 @@
 <p>This convenience function is equivalent to calling mapFromItem(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapFromParent-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapFromParent ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapFromParent(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mapFromScene"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapFromScene ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i> ) const</h3>
 <p>Maps the point <i>point</i>, which is in this item's scene's coordinate system, to this item's coordinate system, and returns the mapped coordinate.</p>
@@ -767,7 +769,7 @@
 <p>This convenience function is equivalent to calling mapFromScene(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapFromScene-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapFromScene ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapFromScene(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mapRectFromItem"></a><a href="qrectf.html">QRectF</a> QGraphicsItem::mapRectFromItem ( const QGraphicsItem * <i>item</i>, const <a href="qrectf.html">QRectF</a> &amp; <i>rect</i> ) const</h3>
 <p>Maps the rectangle <i>rect</i>, which is in <i>item</i>'s coordinate system, to this item's coordinate system, and returns the mapped rectangle as a new rectangle (i.e&#x2e;, the bounding rectangle of the resulting polygon).</p>
@@ -833,7 +835,7 @@
 <p>This convenience function is equivalent to calling mapToItem(item, <a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapToItem-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapToItem ( const QGraphicsItem * <i>item</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapToItem(<i>item</i>, <a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mapToParent"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapToParent ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i> ) const</h3>
 <p>Maps the point <i>point</i>, which is in this item's coordinate system, to its parent's coordinate system, and returns the mapped coordinate. If the item has no parent, <i>point</i> will be mapped to the scene's coordinate system.</p>
@@ -851,7 +853,7 @@
 <p>This convenience function is equivalent to calling mapToParent(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapToParent-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapToParent ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapToParent(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mapToScene"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapToScene ( const <a href="qpointf.html">QPointF</a> &amp; <i>point</i> ) const</h3>
 <p>Maps the point <i>point</i>, which is in this item's coordinate system, to the scene's coordinate system, and returns the mapped coordinate.</p>
@@ -869,7 +871,7 @@
 <p>This convenience function is equivalent to calling mapToScene(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>w</i>, <i>h</i>)).</p>
 <p>This function was introduced in Qt 4.3.</p>
 <h3 class="fn"><a name="mapToScene-6"></a><a href="qpointf.html">QPointF</a> QGraphicsItem::mapToScene ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling mapToScene(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="mouseDoubleClickEvent"></a>void QGraphicsItem::mouseDoubleClickEvent ( <a href="qgraphicsscenemouseevent.html">QGraphicsSceneMouseEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>This event handler, for event <i>event</i>, can be reimplemented to receive mouse doubleclick events for this item.</p>
@@ -1095,7 +1097,7 @@
 <p>The position of the item describes its origin (local coordinate (0, 0)) in parent coordinates.</p>
 <p>See also <a href="qgraphicsitem.html#pos">pos</a>(), <a href="qgraphicsitem.html#scenePos">scenePos</a>(), and <a href="graphicsview.html#the-graphics-view-coordinate-system">The Graphics View Coordinate System</a>.</p>
 <h3 class="fn"><a name="setPos-2"></a>void QGraphicsItem::setPos ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling setPos(<a href="qpointf.html">QPointF</a>(<i>x</i>, <i>y</i>)).</p>
 <h3 class="fn"><a name="setSelected"></a>void QGraphicsItem::setSelected ( bool <i>selected</i> )</h3>
 <p>If <i>selected</i> is true and this item is selectable, this item is selected; otherwise, it is unselected.</p>
@@ -1163,7 +1165,7 @@
 <p>If all you want is to move an item, you should call <a href="qgraphicsitem.html#moveBy">moveBy</a>() or <a href="qgraphicsitem.html#setPos">setPos</a>() instead; this function changes the item's translation, which is conceptually separate from its position.</p>
 <p>See also <a href="qgraphicsitem.html#setTransform">setTransform</a>(), <a href="qgraphicsitem.html#transform">transform</a>(), <a href="qgraphicsitem.html#rotate">rotate</a>(), <a href="qgraphicsitem.html#scale">scale</a>(), and <a href="qgraphicsitem.html#shear">shear</a>().</p>
 <h3 class="fn"><a name="type"></a>int QGraphicsItem::type () const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>Returns the type of an item as an int. All standard graphicsitem classes are associated with a unique value; see <a href="qgraphicsitem.html#Type-varx">QGraphicsItem::Type</a>. This type information is used by <a href="qgraphicsitem.html#qgraphicsitem_cast">qgraphicsitem_cast</a>() to distinguish between types.</p>
+<p>Returns the type of an item as an int. All standard graphicsitem classes are associated with a unique value; see <a href="qgraphicsitem.html#Type-var">QGraphicsItem::Type</a>. This type information is used by <a href="qgraphicsitem.html#qgraphicsitem_cast">qgraphicsitem_cast</a>() to distinguish between types.</p>
 <p>The default implementation (in <a href="qgraphicsitem.html">QGraphicsItem</a>) returns <a href="qgraphicsitem.html#UserType-var">UserType</a>.</p>
 <p>To enable use of <a href="qgraphicsitem.html#qgraphicsitem_cast">qgraphicsitem_cast</a>() with a custom item, reimplement this function and declare a Type enum value equal to your custom item's type. Custom items must return a value larger than or equal to <a href="qgraphicsitem.html#UserType-var">UserType</a> (65536).</p>
 <p>For example:</p>
@@ -1198,7 +1200,7 @@
 <p>If the item is invisible (i.e&#x2e;, <a href="qgraphicsitem.html#isVisible">isVisible</a>() returns false), this function does nothing.</p>
 <p>See also <a href="qgraphicsitem.html#paint">paint</a>() and <a href="qgraphicsitem.html#boundingRect">boundingRect</a>().</p>
 <h3 class="fn"><a name="update-2"></a>void QGraphicsItem::update ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>x</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>width</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>height</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This convenience function is equivalent to calling update(<a href="qrectf.html">QRectF</a>(<i>x</i>, <i>y</i>, <i>width</i>, <i>height</i>)).</p>
 <h3 class="fn"><a name="wheelEvent"></a>void QGraphicsItem::wheelEvent ( <a href="qgraphicsscenewheelevent.html">QGraphicsSceneWheelEvent</a> * <i>event</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
 <p>This event handler, for event <i>event</i>, can be reimplemented to receive wheel events for this item. If you reimplement this function, <i>event</i> will be accepted by default.</p>
@@ -1246,6 +1248,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

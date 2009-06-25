@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1187,8 +1187,9 @@ const QVariant::Handler *QVariant::handler = &qt_kernel_variant_handler;
     and versatile, but may prove less memory and speed efficient than
     storing specific types in standard data structures.
 
-    QVariant also supports the notion of null values, where you have
-    a defined type with no value set.
+    QVariant also supports the notion of null values, where you can 
+    have a defined type with no value set. However, note that QVariant 
+    types can only be cast when they have had a value set.
 
     \snippet doc/src/snippets/code/src_corelib_kernel_qvariant.cpp 1
 

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -205,14 +205,15 @@ PropertyEditor::PropertyEditor(QDesignerFormEditorInterface *core, QWidget *pare
     colors.push_back(QColor(234, 191, 255));
     colors.push_back(QColor(255, 191, 239));
     m_colors.reserve(colors.count());
+    const int darknessFactor = 250;
     for (int i = 0; i < colors.count(); i++) {
         QColor c = colors.at(i);
-        m_colors.push_back(qMakePair(c, c.darker(150)));
+        m_colors.push_back(qMakePair(c, c.darker(darknessFactor)));
     }
     QColor dynamicColor(191, 207, 255);
     QColor layoutColor(255, 191, 191);
-    m_dynamicColor = qMakePair(dynamicColor, dynamicColor.darker(150));
-    m_layoutColor = qMakePair(layoutColor, layoutColor.darker(150));
+    m_dynamicColor = qMakePair(dynamicColor, dynamicColor.darker(darknessFactor));
+    m_layoutColor = qMakePair(layoutColor, layoutColor.darker(darknessFactor));
 
     updateForegroundBrightness();
 

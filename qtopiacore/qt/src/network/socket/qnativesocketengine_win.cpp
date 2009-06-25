@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -146,41 +146,6 @@ static QByteArray qt_prettyDebug(const char *data, int len, int maxLength)
 #else
 
 #define WS_ERROR_DEBUG(x) Q_UNUSED(x)
-
-#endif
-
-#if !defined (QT_NO_IPV6)
-
-// Use our own defines and structs which we know are correct
-#  define QT_SS_MAXSIZE 128
-#  define QT_SS_ALIGNSIZE (sizeof(__int64))
-#  define QT_SS_PAD1SIZE (QT_SS_ALIGNSIZE - sizeof (short))
-#  define QT_SS_PAD2SIZE (QT_SS_MAXSIZE - (sizeof (short) + QT_SS_PAD1SIZE + QT_SS_ALIGNSIZE))
-struct qt_sockaddr_storage {
-      short ss_family;
-      char __ss_pad1[QT_SS_PAD1SIZE];
-      __int64 __ss_align;
-      char __ss_pad2[QT_SS_PAD2SIZE];
-};
-
-// sockaddr_in6 size changed between old and new SDK
-// Only the new version is the correct one, so always
-// use this structure.
-struct qt_in6_addr {
-    u_char qt_s6_addr[16];
-};
-typedef struct {
-    short   sin6_family;            /* AF_INET6 */
-    u_short sin6_port;              /* Transport level port number */
-    u_long  sin6_flowinfo;          /* IPv6 flow information */
-    struct  qt_in6_addr sin6_addr;  /* IPv6 address */
-    u_long  sin6_scope_id;          /* set of interfaces for a scope */
-} qt_sockaddr_in6;
-
-#else
-
-typedef void * qt_sockaddr_in6 ;
-
 
 #endif
 

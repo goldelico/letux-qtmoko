@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/graphicsview/qgraphicslayoutitem.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/graphicsview/qgraphicslayoutitem.cpp -->
 <head>
   <title>Qt 4.5: QGraphicsLayoutItem Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -83,7 +83,7 @@
 <p>The <a href="qgraphicslayoutitem.html#effectiveSizeHint">effectiveSizeHint</a>() function, on the other hand, returns a size hint for any given <a href="qt.html#SizeHint-enum">Qt::SizeHint</a>, and guarantees that the returned size is bound to the minimum and maximum sizes and size hints. You can set the item's vertical and horizontal size policy by calling <a href="qgraphicslayoutitem.html#setSizePolicy">setSizePolicy</a>(). The sizePolicy property is used by the layout system to describe how this item prefers to grow or shrink.</p>
 <a name="nesting-qgraphicslayoutitems"></a>
 <h3>Nesting QGraphicsLayoutItems</h3>
-<p>QGraphicsLayoutItems can be nested within other QGraphicsLayoutItems, similar to layouts that can contain sublayouts. This is done either by passing a QGraphicsLayoutItem pointer to QGraphicsLayoutItem's protected constructor, or by calling <a href="qgraphicslayoutitem.html#setParentLayoutItem">setParentLayoutItem</a>(). The <a href="qgraphicslayoutitem.html#parentLayoutItem">parentLayoutItem</a>() function returns a pointer to the item's layoutItem parent. If the item's parent is 0 or if the the parent does not inherit from <a href="qgraphicsitem.html">QGraphicsItem</a>, the <a href="qgraphicslayoutitem.html#parentLayoutItem">parentLayoutItem</a>() function then returns 0. <a href="qgraphicslayoutitem.html#isLayout">isLayout</a>() returns true if the QGraphicsLayoutItem subclass is itself a layout, or false otherwise.</p>
+<p>QGraphicsLayoutItems can be nested within other QGraphicsLayoutItems, similar to layouts that can contain sublayouts. This is done either by passing a QGraphicsLayoutItem pointer to QGraphicsLayoutItem's protected constructor, or by calling <a href="qgraphicslayoutitem.html#setParentLayoutItem">setParentLayoutItem</a>(). The <a href="qgraphicslayoutitem.html#parentLayoutItem">parentLayoutItem</a>() function returns a pointer to the item's layoutItem parent. If the item's parent is 0 or if the parent does not inherit from <a href="qgraphicsitem.html">QGraphicsItem</a>, the <a href="qgraphicslayoutitem.html#parentLayoutItem">parentLayoutItem</a>() function then returns 0. <a href="qgraphicslayoutitem.html#isLayout">isLayout</a>() returns true if the QGraphicsLayoutItem subclass is itself a layout, or false otherwise.</p>
 <p>Qt uses QGraphicsLayoutItem to provide layout functionality in the <a href="graphicsview.html">The Graphics View Framework</a>, but in the future its use may spread throughout Qt itself.</p>
 <p>See also <a href="qgraphicswidget.html">QGraphicsWidget</a>, <a href="qgraphicslayout.html">QGraphicsLayout</a>, <a href="qgraphicslinearlayout.html">QGraphicsLinearLayout</a>, and <a href="qgraphicsgridlayout.html">QGraphicsGridLayout</a>.</p>
 <hr />
@@ -206,7 +206,7 @@
 <p><a href="qgraphicslayoutitem.html">QGraphicsLayoutItem</a>'s default size policy is (<a href="qsizepolicy.html#Policy-enum">QSizePolicy::Fixed</a>, <a href="qsizepolicy.html#Policy-enum">QSizePolicy::Fixed</a>, <a href="qsizepolicy.html#ControlType-enum">QSizePolicy::DefaultType</a>), but it is common for subclasses to change the default. For example, <a href="qgraphicswidget.html">QGraphicsWidget</a> defaults to (<a href="qsizepolicy.html#Policy-enum">QSizePolicy::Preferred</a>, <a href="qsizepolicy.html#Policy-enum">QSizePolicy::Preferred</a>, <a href="qsizepolicy.html#ControlType-enum">QSizePolicy::DefaultType</a>).</p>
 <p>See also <a href="qgraphicslayoutitem.html#sizePolicy">sizePolicy</a>() and <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>().</p>
 <h3 class="fn"><a name="setSizePolicy-2"></a>void QGraphicsLayoutItem::setSizePolicy ( <a href="qsizepolicy.html#Policy-enum">QSizePolicy::Policy</a> <i>hPolicy</i>, <a href="qsizepolicy.html#Policy-enum">QSizePolicy::Policy</a> <i>vPolicy</i>, <a href="qsizepolicy.html#ControlType-enum">QSizePolicy::ControlType</a> <i>controlType</i> = QSizePolicy::DefaultType )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is equivalent to calling setSizePolicy(<a href="qsizepolicy.html">QSizePolicy</a>(<i>hPolicy</i>, <i>vPolicy</i>, <i>controlType</i>)).</p>
 <p>See also <a href="qgraphicslayoutitem.html#sizePolicy">sizePolicy</a>() and <a href="qwidget.html#sizePolicy-prop">QWidget::sizePolicy</a>().</p>
 <h3 class="fn"><a name="sizeHint"></a><a href="qsizef.html">QSizeF</a> QGraphicsLayoutItem::sizeHint ( <a href="qt.html#SizeHint-enum">Qt::SizeHint</a> <i>which</i>, const <a href="qsizef.html">QSizeF</a> &amp; <i>constraint</i> = QSizeF() ) const&nbsp;&nbsp;<tt> [pure virtual protected]</tt></h3>
@@ -223,6 +223,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

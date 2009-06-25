@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qtestlib.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/qtestlib.qdoc -->
 <head>
   <title>Qt 4.5: Chapter 1: Writing a Unit Test</title>
   <link rel="contents" href="qtestlib-tutorial.html" />
@@ -59,13 +59,13 @@
 <a name="executing-a-test"></a>
 <h2>Executing a Test</h2>
 <p>Now that we finished writing our test, we want to execute it. Assuming that our test was saved as <tt>testqstring.cpp</tt> in an empty directory: we build the test using qmake to create a project and generate a makefile.</p>
-<pre> /myTestDirectory$ qmake -project &quot;QT += testlib&quot;
+<pre> /myTestDirectory$ qmake -project &quot;CONFIG += qtestlib&quot;
  /myTestDirectory$ qmake
  /myTestDirectory$ make</pre>
 <p><b>Note:</b>If you're using windows, replace <tt>make</tt> with <tt>nmake</tt> or whatever build tool you use.</p>
 <p>Running the resulting executable should give you the following output:</p>
 <pre> ********* Start testing of TestQString *********
- Config: Using QTest library 4.5.1, Qt 4.5.1
+ Config: Using QTest library 4.5.2, Qt 4.5.2
  PASS   : TestQString::initTestCase()
  PASS   : TestQString::toUpper()
  PASS   : TestQString::cleanupTestCase()
@@ -80,6 +80,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

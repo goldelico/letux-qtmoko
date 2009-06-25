@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -996,15 +996,14 @@ void QCoreGraphicsPaintEngine::drawPixmap(const QRectF &r, const QPixmap &pm, co
     } else if (differentSize) {
 #if (MAC_OS_X_VERSION_MAX_ALLOWED >= MAC_OS_X_VERSION_10_4)
         if (QSysInfo::MacintoshVersion >= QSysInfo::MV_10_4) {
-            CGImageRef img = (CGImageRef)pm.macCGHandle();
+            QCFType<CGImageRef> img = pm.toMacCGImageRef();
             image = CGImageCreateWithImageInRect(img, CGRectMake(qRound(sr.x()), qRound(sr.y()), qRound(sr.width()), qRound(sr.height())));
-            CGImageRelease(img);
         } else
 #endif
         {
             const int sx = qRound(sr.x()), sy = qRound(sr.y()), sw = qRound(sr.width()), sh = qRound(sr.height());
             const QMacPixmapData *pmData = static_cast<const QMacPixmapData*>(pm.data);
-            quint32 *pantherData = pmData->pixels + (sy * pm.width() + sx);
+            quint32 *pantherData = pmData->pixels + sy * (pmData->bytesPerRow / 4) + sx;
             QCFType<CGDataProviderRef> provider = CGDataProviderCreateWithData(0, pantherData, sw*sh*pmData->bytesPerRow, 0);
             image = CGImageCreate(sw, sh, 8, 32, pmData->bytesPerRow,
                                   macGenericColorSpace(),

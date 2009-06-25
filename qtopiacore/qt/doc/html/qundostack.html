@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/util/qundostack.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/util/qundostack.cpp -->
 <head>
   <title>Qt 4.5: QUndoStack Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -242,7 +242,7 @@
 <p>Whenever the stack returns to this state through the use of undo/redo commands, it emits the signal <a href="qundostack.html#cleanChanged">cleanChanged</a>(). This signal is also emitted when the stack leaves the clean state.</p>
 <p>See also <a href="qundostack.html#isClean">isClean</a>() and <a href="qundostack.html#cleanIndex">cleanIndex</a>().</p>
 <h3 class="fn"><a name="setIndex"></a>void QUndoStack::setIndex ( int <i>idx</i> )&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>Repeatedly calls <a href="qundostack.html#undo">undo</a>() or <a href="qundostack.html#redo">redo</a>() until the the current command index reaches <i>idx</i>. This function can be used to roll the state of the document forwards of backwards. <a href="qundostack.html#indexChanged">indexChanged</a>() is emitted only once.</p>
+<p>Repeatedly calls <a href="qundostack.html#undo">undo</a>() or <a href="qundostack.html#redo">redo</a>() until the current command index reaches <i>idx</i>. This function can be used to roll the state of the document forwards of backwards. <a href="qundostack.html#indexChanged">indexChanged</a>() is emitted only once.</p>
 <p>See also <a href="qundostack.html#index">index</a>(), <a href="qundostack.html#count">count</a>(), <a href="qundostack.html#undo">undo</a>(), and <a href="qundostack.html#redo">redo</a>().</p>
 <h3 class="fn"><a name="text"></a><a href="qstring.html">QString</a> QUndoStack::text ( int <i>idx</i> ) const</h3>
 <p>Returns the text of the command at index <i>idx</i>.</p>
@@ -260,6 +260,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/kernel/qtimer.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/kernel/qtimer.cpp -->
 <head>
   <title>Qt 4.5: QTimer Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -87,7 +87,7 @@
 <p>From then on, the <tt>update()</tt> slot is called every second.</p>
 <p>You can set a timer to time out only once by calling setSingleShot(true). You can also use the static <a href="qtimer.html#singleShot">QTimer::singleShot</a>() function to call a slot after a specified interval:</p>
 <pre>     QTimer::singleShot(200, this, SLOT(updateCaption()));</pre>
-<p>In multithreaded applications, you can use QTimer in any thread that has an event loop. To start an event loop from a non-GUI thread, use <a href="qthread.html#exec">QThread::exec</a>(). Qt uses the the timer's <a href="qobject.html#thread">thread affinity</a> to determine which thread will emit the <a href="qtimer.html#timeout">timeout()</a> signal. Because of this, you must start and stop the timer in its thread; it is not possible to start a timer from another thread.</p>
+<p>In multithreaded applications, you can use QTimer in any thread that has an event loop. To start an event loop from a non-GUI thread, use <a href="qthread.html#exec">QThread::exec</a>(). Qt uses the timer's <a href="qobject.html#thread">thread affinity</a> to determine which thread will emit the <a href="qtimer.html#timeout">timeout()</a> signal. Because of this, you must start and stop the timer in its thread; it is not possible to start a timer from another thread.</p>
 <p>As a special case, a QTimer with a timeout of 0 will time out as soon as all the events in the window system's event queue have been processed. This can be used to do heavy work while providing a snappy user interface:</p>
 <pre>     QTimer *timer = new QTimer(this);
      connect(timer, SIGNAL(timeout()), this, SLOT(processOneThing()));
@@ -168,6 +168,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

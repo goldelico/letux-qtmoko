@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/other/q3process.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/other/q3process.cpp -->
 <head>
   <title>Qt 4.5: Q3Process Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -193,7 +193,7 @@
 <p>The object emits the signal <a href="q3process.html#launchFinished">launchFinished</a>() when this function call is finished. If the start was successful, this signal is emitted after all the data has been written to standard input. If the start failed, then this signal is emitted immediately.</p>
 <p>See also <a href="q3process.html#start">start</a>() and <a href="q3process.html#launchFinished">launchFinished</a>().</p>
 <h3 class="fn"><a name="launch-2"></a>bool Q3Process::launch ( const <a href="qstring.html">QString</a> &amp; <i>buf</i>, <a href="qstringlist.html">QStringList</a> * <i>env</i> = 0 )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The data <i>buf</i> is written to standard input with <a href="q3process.html#writeToStdin">writeToStdin</a>() using the <a href="qstring-qt3.html#local8Bit">QString::local8Bit</a>() representation of the strings.</p>
 <h3 class="fn"><a name="launchFinished"></a>void Q3Process::launchFinished ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the process was started with <a href="q3process.html#launch">launch</a>(). If the start was successful, this signal is emitted after all the data has been written to standard input. If the start failed, then this signal is emitted immediately.</p>
@@ -267,7 +267,7 @@
 <p>This function returns immediately; the <a href="q3process.html">Q3Process</a> class might write the data at a later point (you must enter the event loop for this to occur). When all the data is written to the process, the signal <a href="q3process.html#wroteToStdin">wroteToStdin</a>() is emitted. This does not mean that the process actually read the data, since this class only detects when it was able to write the data to the operating system.</p>
 <p>See also <a href="q3process.html#wroteToStdin">wroteToStdin</a>(), <a href="q3process.html#closeStdin">closeStdin</a>(), <a href="q3process.html#readStdout">readStdout</a>(), and <a href="q3process.html#readStderr">readStderr</a>().</p>
 <h3 class="fn"><a name="writeToStdin-2"></a>void Q3Process::writeToStdin ( const <a href="qstring.html">QString</a> &amp; <i>buf</i> )&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The string <i>buf</i> is handled as text using the <a href="qstring-qt3.html#local8Bit">QString::local8Bit</a>() representation.</p>
 <h3 class="fn"><a name="wroteToStdin"></a>void Q3Process::wroteToStdin ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted if the data sent to standard input (via <a href="q3process.html#writeToStdin">writeToStdin</a>()) was actually written to the process. This does not imply that the process really read the data, since this class only detects when it was able to write the data to the operating system. But it is now safe to close standard input without losing pending data.</p>
@@ -276,6 +276,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

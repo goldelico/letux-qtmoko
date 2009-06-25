@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -901,7 +901,7 @@ void QRect::moveCenter(const QPoint &p)
 /*!
     \fn bool QRect::contains(const QPoint &point, bool proper) const
 
-    Returns true if the the given \a point is inside or on the edge of
+    Returns true if the given \a point is inside or on the edge of
     the rectangle, otherwise returns false. If \a proper is true, this
     function only returns true if the given \a point is \e inside the
     rectangle (i.e., not on the edge).

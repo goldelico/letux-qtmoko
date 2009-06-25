@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/other/q3dragobject.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/other/q3dragobject.cpp -->
 <head>
   <title>Qt 4.5: Q3DragObject Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -100,7 +100,7 @@
 <p>If the drag contains <i>references</i> to information (e.g&#x2e; file names in a <a href="q3uridrag.html">Q3UriDrag</a> are references) then the return value should always be ignored, as the target is expected to directly manipulate the content referred to by the drag object. On X11 the return value should always be correct anyway, but on Windows this is not necessarily the case; e.g&#x2e; the file manager starts a background process to move files, so the source <i>must not</i> delete the files!</p>
 <p>Note that on Windows the drag operation will start a blocking modal event loop that will not dispatch any QTimers.</p>
 <h3 class="fn"><a name="drag-2"></a>bool Q3DragObject::drag ( <a href="q3dragobject.html#DragMode-enum">DragMode</a> <i>mode</i> )&nbsp;&nbsp;<tt> [virtual protected]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Starts a drag operation using the contents of this object.</p>
 <p>At this point, the object becomes owned by Qt, not the application. You should not delete the drag object or anything it references. The actual transfer of data to the target application will be done during future event processing - after that time the drag object will be deleted.</p>
 <p>Returns true if the dragged data was dragged as a <i>move</i>, indicating that the caller should remove the original source of the data (the drag object must continue to have a copy); otherwise returns false.</p>
@@ -127,7 +127,7 @@
 <p><b>Warning:</b> We have seen problems with drag cursors on different graphics hardware and driver software on Windows. Setting the graphics acceleration in the display settings down one tick solved the problems in all cases.</p>
 <p>See also <a href="q3dragobject.html#pixmap">pixmap</a>().</p>
 <h3 class="fn"><a name="setPixmap-2"></a>void Q3DragObject::setPixmap ( <a href="qpixmap.html">QPixmap</a> <i>pm</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Uses a hotspot that positions the pixmap below and to the right of the mouse pointer. This allows the user to clearly see the point on the window where they are dragging the data.</p>
 <h3 class="fn"><a name="source"></a><a href="qwidget.html">QWidget</a> * Q3DragObject::source ()</h3>
 <p>Returns a pointer to the widget where this object originated (the drag source).</p>
@@ -138,6 +138,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

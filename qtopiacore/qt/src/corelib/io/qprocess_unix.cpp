@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -137,15 +137,6 @@ static void qt_native_close(int fd)
     int ret;
     do {
         ret = ::close(fd);
-    } while (ret == -1 && errno == EINTR);
-}
-
-static void qt_native_sigaction(int signum, const struct sigaction *act,
-                                struct sigaction *oldact)
-{
-    int ret;
-    do {
-        ret = ::sigaction(signum, act, oldact);
     } while (ret == -1 && errno == EINTR);
 }
 
@@ -255,7 +246,7 @@ QProcessManager::QProcessManager()
     memset(&action, 0, sizeof(action));
     action.sa_handler = qt_sa_sigchld_handler;
     action.sa_flags = SA_NOCLDSTOP;
-    qt_native_sigaction(SIGCHLD, &action, &oldAction);
+    ::sigaction(SIGCHLD, &action, &oldAction);
     if (oldAction.sa_handler != qt_sa_sigchld_handler)
 	qt_sa_old_sigchld_handler = oldAction.sa_handler;
 }
@@ -282,9 +273,9 @@ QProcessManager::~QProcessManager()
     memset(&action, 0, sizeof(action));
     action.sa_handler = qt_sa_old_sigchld_handler;
     action.sa_flags = SA_NOCLDSTOP;
-    qt_native_sigaction(SIGCHLD, &action, &oldAction);
+    ::sigaction(SIGCHLD, &action, &oldAction);
     if (oldAction.sa_handler != qt_sa_sigchld_handler) {
-        qt_native_sigaction(SIGCHLD, &oldAction, 0);
+        ::sigaction(SIGCHLD, &oldAction, 0);
     }
 }
 
@@ -850,10 +841,10 @@ bool QProcessPrivate::processStarted()
 
 qint64 QProcessPrivate::bytesAvailableFromStdout() const
 {
-    size_t nbytes = 0;
+    int nbytes = 0;
     qint64 available = 0;
     if (::ioctl(stdoutChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
-        available = (qint64) *((int *) &nbytes);
+        available = (qint64) nbytes;
 #if defined (QPROCESS_DEBUG)
     qDebug("QProcessPrivate::bytesAvailableFromStdout() == %lld", available);
 #endif
@@ -862,10 +853,10 @@ qint64 QProcessPrivate::bytesAvailableFromStdout() const
 
 qint64 QProcessPrivate::bytesAvailableFromStderr() const
 {
-    size_t nbytes = 0;
+    int nbytes = 0;
     qint64 available = 0;
     if (::ioctl(stderrChannel.pipe[0], FIONREAD, (char *) &nbytes) >= 0)
-        available = (qint64) *((int *) &nbytes);
+        available = (qint64) nbytes;
 #if defined (QPROCESS_DEBUG)
     qDebug("QProcessPrivate::bytesAvailableFromStderr() == %lld", available);
 #endif
@@ -900,7 +891,7 @@ static void qt_ignore_sigpipe()
         struct sigaction noaction;
         memset(&noaction, 0, sizeof(noaction));
         noaction.sa_handler = SIG_IGN;
-        qt_native_sigaction(SIGPIPE, &noaction, 0);
+        ::sigaction(SIGPIPE, &noaction, 0);
     }
 }
 
@@ -1270,7 +1261,7 @@ bool QProcessPrivate::startDetached(const QString &program, const QStringList &a
         struct sigaction noaction;
         memset(&noaction, 0, sizeof(noaction));
         noaction.sa_handler = SIG_IGN;
-        qt_native_sigaction(SIGPIPE, &noaction, 0);
+        ::sigaction(SIGPIPE, &noaction, 0);
 
         ::setsid();
 
@@ -1316,7 +1307,7 @@ bool QProcessPrivate::startDetached(const QString &program, const QStringList &a
             struct sigaction noaction;
             memset(&noaction, 0, sizeof(noaction));
             noaction.sa_handler = SIG_IGN;
-            qt_native_sigaction(SIGPIPE, &noaction, 0);
+            ::sigaction(SIGPIPE, &noaction, 0);
 
             // '\1' means execv failed
             char c = '\1';
@@ -1327,7 +1318,7 @@ bool QProcessPrivate::startDetached(const QString &program, const QStringList &a
             struct sigaction noaction;
             memset(&noaction, 0, sizeof(noaction));
             noaction.sa_handler = SIG_IGN;
-            qt_native_sigaction(SIGPIPE, &noaction, 0);
+            ::sigaction(SIGPIPE, &noaction, 0);
 
             // '\2' means internal error
             char c = '\2';

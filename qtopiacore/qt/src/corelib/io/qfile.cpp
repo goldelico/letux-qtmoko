@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -718,38 +718,47 @@ QFile::rename(const QString &newName)
             return true;
         }
 
-        QFile in(fileName());
+        if (isSequential()) {
+            d->setError(QFile::RenameError, tr("Will not rename sequential file using block copy"));
+            return false;
+        }
+
         QFile out(newName);
-        if (in.open(QIODevice::ReadOnly)) {
+        if (open(QIODevice::ReadOnly)) {
             if (out.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
                 bool error = false;
                 char block[4096];
-                qint64 read;
-                while ((read = in.read(block, sizeof(block))) > 0) {
-                    if (read != out.write(block, read)) {
+                qint64 bytes;
+                while ((bytes = read(block, sizeof(block))) > 0) {
+                    if (bytes != out.write(block, bytes)) {
                         d->setError(QFile::RenameError, out.errorString());
                         error = true;
                         break;
                     }
                 }
-                if (read == -1) {
-                    d->setError(QFile::RenameError, in.errorString());
+                if (bytes == -1) {
+                    d->setError(QFile::RenameError, errorString());
                     error = true;
                 }
                 if(!error) {
-                    if (!in.remove()) {
+                    if (!remove()) {
                         d->setError(QFile::RenameError, tr("Cannot remove source file"));
                         error = true;
                     }
                 }
                 if (error)
                     out.remove();
-                else
+                else {
+                    setPermissions(permissions());
+                    unsetError();
                     setFileName(newName);
+                }
+                close();
                 return !error;
             }
+            close();
         }
-        d->setError(QFile::RenameError, out.isOpen() ? in.errorString() : out.errorString());
+        d->setError(QFile::RenameError, out.isOpen() ? errorString() : out.errorString());
     }
     return false;
 }
@@ -908,6 +917,7 @@ QFile::copy(const QString &newName)
                         out.setAutoRemove(false);
 #endif
                 }
+                close();
             }
             if(!error) {
                 QFile::setPermissions(newName, permissions());
@@ -1016,7 +1026,7 @@ bool QFile::open(OpenMode mode)
     \bold{Warning:}
     \list 1
         \o If \a fh is \c stdin, \c stdout, or \c stderr, you may not be able
-           to seek(). See QIODevice::isSequentialAccess() for more information.
+           to seek(). See QIODevice::isSequential() for more information.
         \o Since this function opens the file without specifying the file name,
            you cannot use this QFile with a QFileInfo.
     \endlist

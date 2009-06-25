@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -146,8 +146,13 @@ bool IndexWindow::eventFilter(QObject *obj, QEvent *e)
         && e->type() == QEvent::MouseButtonRelease) {
         QMouseEvent *mouseEvent = static_cast<QMouseEvent*>(e);
         QModelIndex idx = m_indexWidget->indexAt(mouseEvent->pos());
-        if (idx.isValid() && mouseEvent->button()==Qt::MidButton)
-            open(m_indexWidget, idx);
+        if (idx.isValid()) {
+            Qt::MouseButtons button = mouseEvent->button();
+            if (((button == Qt::LeftButton) && (mouseEvent->modifiers() & Qt::ControlModifier))
+                || (button == Qt::MidButton)) {
+                open(m_indexWidget, idx);
+            }
+        }
     }
 #ifdef Q_OS_MAC
     else if (obj == m_indexWidget && e->type() == QEvent::KeyPress) {
@@ -197,6 +202,8 @@ void IndexWindow::open(QHelpIndexWidget* indexWidget, const QModelIndex &index)
                 url = tc.link();
         } else if (links.count() == 1) {
             url = links.constBegin().value();
+        } else {
+            return;
         }
 
         if (url.path().endsWith(QLatin1String(".pdf"), Qt::CaseInsensitive))

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qpolygon.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/painting/qpolygon.cpp -->
 <head>
   <title>Qt 4.5: QPolygon Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -53,8 +53,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qpolygon.html#operator-lt-lt-120">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QPolygon &amp; <i>polygon</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qpolygon.html#operator-gt-gt-66">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QPolygon &amp; <i>polygon</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qpolygon.html#operator-lt-lt-75">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QPolygon &amp; <i>polygon</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qpolygon.html#operator-gt-gt-41">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QPolygon &amp; <i>polygon</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -106,7 +106,7 @@
 <p>Extracts the coordinates of the point at the given <i>index</i> to *<i>x</i> and *<i>y</i> (if they are valid pointers).</p>
 <p>See also <a href="qpolygon.html#setPoint">setPoint</a>().</p>
 <h3 class="fn"><a name="point-2"></a><a href="qpoint.html">QPoint</a> QPolygon::point ( int <i>index</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the point at the given <i>index</i>.</p>
 <h3 class="fn"><a name="putPoints"></a>void QPolygon::putPoints ( int <i>index</i>, int <i>nPoints</i>, int <i>firstx</i>, int <i>firsty</i>, ... )</h3>
 <p>Copies <i>nPoints</i> points from the variable argument list into this polygon from the given <i>index</i>.</p>
@@ -121,7 +121,7 @@
          polygon.putPoints(1, 1, 6,7);</pre>
 <p>See also <a href="qpolygon.html#setPoints">setPoints</a>().</p>
 <h3 class="fn"><a name="putPoints-3"></a>void QPolygon::putPoints ( int <i>index</i>, int <i>nPoints</i>, const QPolygon &amp; <i>fromPolygon</i>, int <i>fromIndex</i> = 0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Copies <i>nPoints</i> points from the given <i>fromIndex</i> ( 0 by default) in <i>fromPolygon</i> into this polygon, starting at the specified <i>index</i>. For example:</p>
 <pre>         QPolygon polygon1;
          polygon1.putPoints(0, 3, 1,2, 0,0, 5,6);
@@ -137,7 +137,7 @@
 <p>Sets the point at the given <i>index</i> to the point specified by (<i>x</i>, <i>y</i>).</p>
 <p>See also <a href="qpolygon.html#point">point</a>(), <a href="qpolygon.html#putPoints">putPoints</a>(), and <a href="qpolygon.html#setPoints">setPoints</a>().</p>
 <h3 class="fn"><a name="setPoint-2"></a>void QPolygon::setPoint ( int <i>index</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>point</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the point at the given <i>index</i> to the given <i>point</i>.</p>
 <h3 class="fn"><a name="setPoints"></a>void QPolygon::setPoints ( int <i>nPoints</i>, const int * <i>points</i> )</h3>
 <p>Resizes the polygon to <i>nPoints</i> and populates it with the given <i>points</i>.</p>
@@ -147,7 +147,7 @@
          polygon.setPoints(2, points);</pre>
 <p>See also <a href="qpolygon.html#setPoint">setPoint</a>() and <a href="qpolygon.html#putPoints">putPoints</a>().</p>
 <h3 class="fn"><a name="setPoints-2"></a>void QPolygon::setPoints ( int <i>nPoints</i>, int <i>firstx</i>, int <i>firsty</i>, ... )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Resizes the polygon to <i>nPoints</i> and populates it with the points specified by the variable argument list. The points are given as a sequence of integers, starting with <i>firstx</i> then <i>firsty</i>, and so on.</p>
 <p>The example code creates a polygon with two points (10, 20) and (30, 40):</p>
 <pre>         QPolygon polygon;
@@ -159,7 +159,7 @@
 <h3 class="fn"><a name="translate"></a>void QPolygon::translate ( int <i>dx</i>, int <i>dy</i> )</h3>
 <p>Translates all points in the polygon by (<i>dx</i>, <i>dy</i>).</p>
 <h3 class="fn"><a name="translate-2"></a>void QPolygon::translate ( const <a href="qpoint.html">QPoint</a> &amp; <i>offset</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Translates all points in the polygon by the given <i>offset</i>.</p>
 <h3 class="fn"><a name="united"></a>QPolygon QPolygon::united ( const QPolygon &amp; <i>r</i> ) const</h3>
 <p>Returns a polygon which is the union of this polygon and <i>r</i>.</p>
@@ -170,11 +170,11 @@
 <p>Returns the polygon as a <a href="qvariant.html">QVariant</a></p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-120"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QPolygon &amp; <i>polygon</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-75"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QPolygon &amp; <i>polygon</i> )</h3>
 <p>Writes the given <i>polygon</i> to the given <i>stream</i>, and returns a reference to the stream.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-66"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QPolygon &amp; <i>polygon</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-41"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QPolygon &amp; <i>polygon</i> )</h3>
 <p>Reads a polygon from the given <i>stream</i> into the given <i>polygon</i>, and returns a reference to the stream.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
@@ -182,6 +182,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

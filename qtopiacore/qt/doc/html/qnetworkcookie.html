@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/access/qnetworkcookie.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/access/qnetworkcookie.cpp -->
 <head>
   <title>Qt 4.5: QNetworkCookie Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -36,7 +36,7 @@
 <li><div class="fn"></div>bool <b><a href="qnetworkcookie.html#isSecure">isSecure</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="qnetworkcookie.html#isSessionCookie">isSessionCookie</a></b> () const</li>
 <li><div class="fn"></div>QByteArray <b><a href="qnetworkcookie.html#name">name</a></b> () const</li>
-<li><div class="fn"></div>QString <b><a href="qnetworkcookie.html#pathx">path</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qnetworkcookie.html#path">path</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qnetworkcookie.html#setDomain">setDomain</a></b> ( const QString &amp; <i>domain</i> )</li>
 <li><div class="fn"></div>void <b><a href="qnetworkcookie.html#setExpirationDate">setExpirationDate</a></b> ( const QDateTime &amp; <i>date</i> )</li>
 <li><div class="fn"></div>void <b><a href="qnetworkcookie.html#setHttpOnly">setHttpOnly</a></b> ( bool <i>enable</i> )</li>
@@ -113,7 +113,7 @@
 <p>Parses the cookie string <i>cookieString</i> as received from a server response in the &quot;Set-Cookie:&quot; header. If there's a parsing error, this function returns an empty list.</p>
 <p>Since the HTTP header can set more than one cookie at the same time, this function returns a <a href="qlist.html">QList</a>&lt;<a href="qnetworkcookie.html">QNetworkCookie</a>&gt;, one for each cookie that is parsed.</p>
 <p>See also <a href="qnetworkcookie.html#toRawForm">toRawForm</a>().</p>
-<h3 class="fn"><a name="pathx"></a><a href="qstring.html">QString</a> QNetworkCookie::path () const</h3>
+<h3 class="fn"><a name="path"></a><a href="qstring.html">QString</a> QNetworkCookie::path () const</h3>
 <p>Returns the path associated with this cookie. This corresponds to the &quot;path&quot; field of the cookie string.</p>
 <p>See also <a href="qnetworkcookie.html#setPath">setPath</a>().</p>
 <h3 class="fn"><a name="setDomain"></a>void QNetworkCookie::setDomain ( const <a href="qstring.html">QString</a> &amp; <i>domain</i> )</h3>
@@ -131,7 +131,7 @@
 <p>See also <a href="qnetworkcookie.html#name">name</a>() and <a href="qnetworkcookie.html#value">value</a>().</p>
 <h3 class="fn"><a name="setPath"></a>void QNetworkCookie::setPath ( const <a href="qstring.html">QString</a> &amp; <i>path</i> )</h3>
 <p>Sets the path associated with this cookie to be <i>path</i>.</p>
-<p>See also <a href="qnetworkcookie.html#pathx">path</a>().</p>
+<p>See also <a href="qnetworkcookie.html#path">path</a>().</p>
 <h3 class="fn"><a name="setSecure"></a>void QNetworkCookie::setSecure ( bool <i>enable</i> )</h3>
 <p>Sets the secure flag of this cookie to <i>enable</i>.</p>
 <p>Secure cookies may contain private information and should not be resent over unencrypted connections.</p>
@@ -159,6 +159,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

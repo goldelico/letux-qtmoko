@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/network/ssl/qsslsocket.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/network/ssl/qsslsocket.cpp -->
 <head>
   <title>Qt 4.5: QSslSocket Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -279,7 +279,7 @@
 <p>See also <a href="qsslsocket.html#sslErrors">sslErrors</a>().</p>
 <h3 class="fn"><a name="isEncrypted"></a>bool QSslSocket::isEncrypted () const</h3>
 <p>Returns true if the socket is encrypted; otherwise, false is returned.</p>
-<p>An encrypted socket encrypts all data that is written by calling <a href="qiodevice.html#write">write</a>() or <a href="qiodevice.html#putChar">putChar</a>() before the data is written to the network, and descrypts all incoming data as the data is received from the network, before you call <a href="qiodevice.html#read">read</a>(), <a href="qiodevice.html#readLine">readLine</a>() or <a href="qiodevice.html#getChar">getChar</a>().</p>
+<p>An encrypted socket encrypts all data that is written by calling <a href="qiodevice.html#write">write</a>() or <a href="qiodevice.html#putChar">putChar</a>() before the data is written to the network, and decrypts all incoming data as the data is received from the network, before you call <a href="qiodevice.html#read">read</a>(), <a href="qiodevice.html#readLine">readLine</a>() or <a href="qiodevice.html#getChar">getChar</a>().</p>
 <p><a href="qsslsocket.html">QSslSocket</a> emits <a href="qsslsocket.html#encrypted">encrypted</a>() when it enters encrypted mode.</p>
 <p>You can call <a href="qsslsocket.html#sessionCipher">sessionCipher</a>() to find which cryptographic cipher is used to encrypt and decrypt your data.</p>
 <p>See also <a href="qsslsocket.html#mode">mode</a>().</p>
@@ -359,7 +359,7 @@
 <p>The local certificate and private key are always necessary for server sockets, but are also rarely used by client sockets if the server requires the client to authenticate.</p>
 <p>See also <a href="qsslsocket.html#localCertificate">localCertificate</a>() and <a href="qsslsocket.html#setPrivateKey">setPrivateKey</a>().</p>
 <h3 class="fn"><a name="setLocalCertificate-2"></a>void QSslSocket::setLocalCertificate ( const <a href="qstring.html">QString</a> &amp; <i>path</i>, <a href="qssl.html#EncodingFormat-enum">QSsl::EncodingFormat</a> <i>format</i> = QSsl::Pem )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the socket's local <a href="qsslcertificate.html">certificate</a> to the first one found in file <i>path</i>, which is parsed according to the specified <i>format</i>.</p>
 <h3 class="fn"><a name="setPeerVerifyDepth"></a>void QSslSocket::setPeerVerifyDepth ( int <i>depth</i> )</h3>
 <p>Sets the maximum number of certificates in the peer's certificate chain to be checked during the SSL handshake phase, to <i>depth</i>. Setting a depth of 0 means that no maximum depth is set, indicating that the whole certificate chain should be checked.</p>
@@ -377,7 +377,7 @@
 <p>Both the key and the local certificate are required if you are creating an SSL server socket. If you are creating an SSL client socket, the key and local certificate are required if your client must identify itself to an SSL server.</p>
 <p>See also <a href="qsslsocket.html#privateKey">privateKey</a>() and <a href="qsslsocket.html#setLocalCertificate">setLocalCertificate</a>().</p>
 <h3 class="fn"><a name="setPrivateKey-2"></a>void QSslSocket::setPrivateKey ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i>, <a href="qssl.html#KeyAlgorithm-enum">QSsl::KeyAlgorithm</a> <i>algorithm</i> = QSsl::Rsa, <a href="qssl.html#EncodingFormat-enum">QSsl::EncodingFormat</a> <i>format</i> = QSsl::Pem, const <a href="qbytearray.html">QByteArray</a> &amp; <i>passPhrase</i> = QByteArray() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Reads the string in file <i>fileName</i> and decodes it using a specified <i>algorithm</i> and encoding <i>format</i> to construct an <a href="qsslkey.html">SSL key</a>. If the encoded key is encrypted, <i>passPhrase</i> is used to decrypt it.</p>
 <p>The socket's private key is set to the constructed key. The private key and the local <a href="qsslcertificate.html">certificate</a> are used by clients and servers that must prove their identity to SSL peers.</p>
 <p>Both the key and the local certificate are required if you are creating an SSL server socket. If you are creating an SSL client socket, the key and local certificate are required if your client must identify itself to an SSL server.</p>
@@ -446,6 +446,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

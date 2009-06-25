@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/network/q3urloperator.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/network/q3urloperator.cpp -->
 <head>
   <title>Qt 4.5: Q3UrlOperator Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -136,12 +136,12 @@
 <p>This signal is emitted whenever the URL operator's connection state changes. <i>state</i> describes the new state, which is a <a href="q3networkprotocol.html#ConnectionState-enum">Q3NetworkProtocol::ConnectionState</a> value.</p>
 <p><i>data</i> is a string that describes the change of the connection. This can be used to display a message to the user.</p>
 <h3 class="fn"><a name="copy"></a><a href="q3ptrlist.html">Q3PtrList</a>&lt;<a href="q3networkoperation.html">Q3NetworkOperation</a>&gt; Q3UrlOperator::copy ( const <a href="qstring.html">QString</a> &amp; <i>from</i>, const <a href="qstring.html">QString</a> &amp; <i>to</i>, bool <i>move</i> = false, bool <i>toPath</i> = true )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>Copies the file <i>from</i> to <i>to</i>. If <i>move</i> is true, the file is moved (copied and removed). <i>from</i> must point to a file and <i>to</i> must point to a directory (into which <i>from</i> is copied) unless <i>toPath</i> is set to false. If <i>toPath</i> is set to false then the <i>to</i> variable is assumed to be the absolute file path (destination file path + file name). The copying is done using the <a href="q3urloperator.html#get">get</a>() and <a href="q3urloperator.html#put">put</a>() operations. If you want to be notified about the progress of the operation, connect to the <a href="q3urloperator.html#dataTransferProgress">dataTransferProgress</a>() signal. Bear in mind that the <a href="q3urloperator.html#get">get</a>() and <a href="q3urloperator.html#put">put</a>() operations emit this signal through the <a href="q3urloperator.html">Q3UrlOperator</a>. The number of transferred bytes and the total bytes that you receive as arguments in this signal do not relate to the the whole copy operation; they relate first to the <a href="q3urloperator.html#get">get</a>() and then to the <a href="q3urloperator.html#put">put</a>() operation. Always check what type of operation the signal comes from; this is given in the signal's last argument.</p>
+<p>Copies the file <i>from</i> to <i>to</i>. If <i>move</i> is true, the file is moved (copied and removed). <i>from</i> must point to a file and <i>to</i> must point to a directory (into which <i>from</i> is copied) unless <i>toPath</i> is set to false. If <i>toPath</i> is set to false then the <i>to</i> variable is assumed to be the absolute file path (destination file path + file name). The copying is done using the <a href="q3urloperator.html#get">get</a>() and <a href="q3urloperator.html#put">put</a>() operations. If you want to be notified about the progress of the operation, connect to the <a href="q3urloperator.html#dataTransferProgress">dataTransferProgress</a>() signal. Bear in mind that the <a href="q3urloperator.html#get">get</a>() and <a href="q3urloperator.html#put">put</a>() operations emit this signal through the <a href="q3urloperator.html">Q3UrlOperator</a>. The number of transferred bytes and the total bytes that you receive as arguments in this signal do not relate to the whole copy operation; they relate first to the <a href="q3urloperator.html#get">get</a>() and then to the <a href="q3urloperator.html#put">put</a>() operation. Always check what type of operation the signal comes from; this is given in the signal's last argument.</p>
 <p>At the end, <a href="q3urloperator.html#finished">finished</a>() (with success or failure) is emitted, so check the state of the network operation object to see whether or not the operation was successful.</p>
 <p>Because a move or copy operation consists of multiple operations (<a href="q3urloperator.html#get">get</a>(), <a href="q3urloperator.html#put">put</a>() and maybe <a href="q3urloperator.html#remove">remove</a>()), this function doesn't return a single <a href="q3networkoperation.html">Q3NetworkOperation</a>, but rather a list of them. They are in the order: <a href="q3urloperator.html#get">get</a>(), <a href="q3urloperator.html#put">put</a>() and (if applicable) <a href="q3urloperator.html#remove">remove</a>().</p>
 <p>See also <a href="q3urloperator.html#get">get</a>() and <a href="q3urloperator.html#put">put</a>().</p>
 <h3 class="fn"><a name="copy-2"></a>void Q3UrlOperator::copy ( const <a href="qstringlist.html">QStringList</a> &amp; <i>files</i>, const <a href="qstring.html">QString</a> &amp; <i>dest</i>, bool <i>move</i> = false )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Copies the <i>files</i> to the directory <i>dest</i>. If <i>move</i> is true the files are moved, not copied. <i>dest</i> must point to a directory.</p>
 <p>This function calls <a href="q3urloperator.html#copy">copy</a>() for each entry in <i>files</i> in turn. You don't get a result from this function; each time a new copy begins, <a href="q3urloperator.html#startedNextCopy">startedNextCopy</a>() is emitted, with a list of Q3NetworkOperations that describe the new copy operation.</p>
 <h3 class="fn"><a name="createdDirectory"></a>void Q3UrlOperator::createdDirectory ( const <a href="qurlinfo.html">QUrlInfo</a> &amp; <i>i</i>, <a href="q3networkoperation.html">Q3NetworkOperation</a> * <i>op</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -245,6 +245,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

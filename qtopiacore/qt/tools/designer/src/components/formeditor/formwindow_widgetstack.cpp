@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -57,16 +57,20 @@ using namespace qdesigner_internal;
 FormWindowWidgetStack::FormWindowWidgetStack(QObject *parent) :
     QObject(parent),
     m_formContainer(new QWidget),
-    m_formContainerLayout(new QVBoxLayout),
+    m_formContainerLayout(new QStackedLayout),
     m_layout(new QStackedLayout)
 {
     m_layout->setMargin(0);
     m_layout->setSpacing(0);
     m_layout->setStackingMode(QStackedLayout::StackAll);
 
+    // We choose a QStackedLayout as immediate layout for
+    // the form windows as it ignores the sizePolicy of
+    // its child (for example, Fixed would cause undesired side effects).
     m_formContainerLayout->setMargin(0);
     m_formContainer->setObjectName(QLatin1String("formContainer"));
     m_formContainer->setLayout(m_formContainerLayout);
+    m_formContainerLayout->setStackingMode(QStackedLayout::StackAll);
     // System settings might have different background colors, autofill them
     // (affects for example mainwindow status bars)
     m_formContainer->setAutoFillBackground(true);

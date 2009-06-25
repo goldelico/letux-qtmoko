@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/widgets/qmainwindow.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/widgets/qmainwindow.cpp -->
 <head>
   <title>Qt 4.5: QMainWindow Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -102,7 +102,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -283,7 +283,7 @@
 <h3 class="fn"><a name="unifiedTitleAndToolBarOnMac-prop"></a>unifiedTitleAndToolBarOnMac : bool</h3>
 <p>This property holds whether the window uses the unified title and toolbar look on Mac OS X.</p>
 <p>This property is false by default and only has any effect on Mac OS X 10.4 or higher.</p>
-<p>If set to true, then the top toolbar area is replaced with a Carbon HIToolbar and all toolbars in the top toolbar area are moved to that. Any toolbars added afterwards will also be added to the Carbon HIToolbar. This means a couple of things.</p>
+<p>If set to true, then the top toolbar area is replaced with a Carbon HIToolbar or a Cocoa NSToolbar (depending on whether Qt was built with Carbon or Cocoa). All toolbars in the top toolbar area and any toolbars added afterwards are moved to that. This means a couple of things.</p>
 <ul>
 <li>QToolBars in this toolbar area are not movable and you cannot drag other toolbars to it</li>
 <li>Toolbar breaks are not respected or preserved</li>
@@ -313,10 +313,10 @@
 <p>Adds the <i>toolbar</i> into the specified <i>area</i> in this main window. The <i>toolbar</i> is placed at the end of the current tool bar block (i.e&#x2e; line). If the main window already manages <i>toolbar</i> then it will only move the toolbar to <i>area</i>.</p>
 <p>See also <a href="qmainwindow.html#insertToolBar">insertToolBar</a>(), <a href="qmainwindow.html#addToolBarBreak">addToolBarBreak</a>(), and <a href="qmainwindow.html#insertToolBarBreak">insertToolBarBreak</a>().</p>
 <h3 class="fn"><a name="addToolBar-2"></a>void QMainWindow::addToolBar ( <a href="qtoolbar.html">QToolBar</a> * <i>toolbar</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Equivalent of calling addToolBar(<a href="qt.html#ToolBarArea-enum">Qt::TopToolBarArea</a>, <i>toolbar</i>)</p>
 <h3 class="fn"><a name="addToolBar-3"></a><a href="qtoolbar.html">QToolBar</a> * QMainWindow::addToolBar ( const <a href="qstring.html">QString</a> &amp; <i>title</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a <a href="qtoolbar.html">QToolBar</a> object, setting its window title to <i>title</i>, and inserts it into the top toolbar area.</p>
 <p>See also <a href="qwidget.html#windowTitle-prop">setWindowTitle</a>().</p>
 <h3 class="fn"><a name="addToolBarBreak"></a>void QMainWindow::addToolBarBreak ( <a href="qt.html#ToolBarArea-enum">Qt::ToolBarArea</a> <i>area</i> = Qt::TopToolBarArea )</h3>
@@ -429,6 +429,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

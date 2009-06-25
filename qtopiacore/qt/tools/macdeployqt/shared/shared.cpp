@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -343,7 +343,7 @@ DeploymentInfo deployQtFrameworks(QList<FrameworkInfo> frameworks, const QString
         copiedFrameworks.append(framework.frameworkName);
         
         // Get the qt path from one of the Qt frameworks;
-        if (deploymenInfo.qtPath == QString() && framework.frameworkName.contains("Qt") 
+        if (deploymenInfo.qtPath.isNull() && framework.frameworkName.contains("Qt") 
             && framework.frameworkDirectory.contains("/lib"))
         {
                 deploymenInfo.qtPath = framework.frameworkDirectory;
@@ -364,7 +364,7 @@ DeploymentInfo deployQtFrameworks(QList<FrameworkInfo> frameworks, const QString
         // Copy farmework to app bundle.
         const QString deployedBinaryPath = copyFramework(framework, bundlePath);
         // Skip the rest if already was deployed.
-        if (deployedBinaryPath == QString())
+        if (deployedBinaryPath.isNull())
             continue;
         
         runStrip(deployedBinaryPath);

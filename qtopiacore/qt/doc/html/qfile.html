@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qfile.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/io/qfile.cpp -->
 <head>
   <title>Qt 4.5: QFile Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -248,7 +248,7 @@
 <p>The source file is closed before it is copied.</p>
 <p>See also <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="copy-2"></a>bool QFile::copy ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i>, const <a href="qstring.html">QString</a> &amp; <i>newName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Copies the file <i>fileName</i> to <i>newName</i>. Returns true if successful; otherwise returns false.</p>
 <p>If a file with the name <i>newName</i> already exists, <a href="qfile.html#copy">copy</a>() returns false (i.e&#x2e;, <a href="qfile.html">QFile</a> will not overwrite it).</p>
 <p>See also <a href="qfile.html#rename">rename</a>().</p>
@@ -256,7 +256,7 @@
 <p>This does the reverse of <a href="qfile.html#encodeName">QFile::encodeName</a>() using <i>localFileName</i>.</p>
 <p>See also <a href="qfile.html#setDecodingFunction">setDecodingFunction</a>() and <a href="qfile.html#encodeName">encodeName</a>().</p>
 <h3 class="fn"><a name="decodeName-2"></a><a href="qstring.html">QString</a> QFile::decodeName ( const char * <i>localFileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the Unicode version of the given <i>localFileName</i>. See <a href="qfile.html#encodeName">encodeName</a>() for details.</p>
 <h3 class="fn"><a name="encodeName"></a><a href="qbytearray.html">QByteArray</a> QFile::encodeName ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>By default, this function converts <i>fileName</i> to the local 8-bit encoding determined by the user's locale. This is sufficient for file names that the user chooses. File names hard-coded into the application should only use 7-bit ASCII filename characters.</p>
@@ -268,7 +268,7 @@
 <h3 class="fn"><a name="exists"></a>bool QFile::exists ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Returns true if the file specified by <i>fileName</i> exists; otherwise returns false.</p>
 <h3 class="fn"><a name="exists-2"></a>bool QFile::exists () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the file specified by <a href="qfile.html#fileName">fileName</a>() exists; otherwise returns false.</p>
 <p>See also <a href="qfile.html#fileName">fileName</a>() and <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="fileName"></a><a href="qstring.html">QString</a> QFile::fileName () const</h3>
@@ -293,7 +293,7 @@
 <p><b>Note:</b> To create a valid link on Windows, <i>linkName</i> must have a <tt>.lnk</tt> file extension.</p>
 <p>See also <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="link-2"></a>bool QFile::link ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i>, const <a href="qstring.html">QString</a> &amp; <i>linkName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a link named <i>linkName</i> that points to the file <i>fileName</i>. What a link is depends on the underlying filesystem (be it a shortcut on Windows or a symbolic link on Unix). Returns true if successful; otherwise returns false.</p>
 <p>See also <a href="qfile.html#link">link</a>().</p>
 <h3 class="fn"><a name="map"></a><a href="qtglobal.html#uchar-typedef">uchar</a> * QFile::map ( <a href="qtglobal.html#qint64-typedef">qint64</a> <i>offset</i>, <a href="qtglobal.html#qint64-typedef">qint64</a> <i>size</i>, <a href="qfile.html#MemoryMapFlags-enum">MemoryMapFlags</a> <i>flags</i> = NoOptions )</h3>
@@ -311,7 +311,7 @@
 <p>Reimplemented from <a href="qiodevice.html#open">QIODevice</a>.</p>
 <p>See also <a href="qiodevice.html#OpenModeFlag-enum">QIODevice::OpenMode</a> and <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="open-4"></a>bool QFile::open ( FILE * <i>fh</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>mode</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Opens the existing file handle <i>fh</i> in the given <i>mode</i>. Returns true if successful; otherwise returns false.</p>
 <p>Example:</p>
 <pre> #include &lt;stdio.h&gt;
@@ -326,7 +326,7 @@
 <p>When a <a href="qfile.html">QFile</a> is opened using this function, <a href="qfile.html#close">close</a>() does not actually close the file, but only flushes it.</p>
 <p><b>Warning:</b></p>
 <ol type="1">
-<li>If <i>fh</i> is <tt>stdin</tt>, <tt>stdout</tt>, or <tt>stderr</tt>, you may not be able to <a href="qiodevice.html#seek">seek</a>(). See <a href="qiodevice-qt3.html#isSequentialAccess">QIODevice::isSequentialAccess</a>() for more information.</li>
+<li>If <i>fh</i> is <tt>stdin</tt>, <tt>stdout</tt>, or <tt>stderr</tt>, you may not be able to <a href="qiodevice.html#seek">seek</a>(). See <a href="qiodevice.html#isSequential">QIODevice::isSequential</a>() for more information.</li>
 <li>Since this function opens the file without specifying the file name, you cannot use this <a href="qfile.html">QFile</a> with a <a href="qfileinfo.html">QFileInfo</a>.</li>
 </ol>
 <p><b>Note:</b> For Windows CE you may not be able to call <a href="qiodevice.html#seek">seek</a>() and <a href="qfile.html#resize">resize</a>(). Also, <a href="qfile.html#size">size</a>() is set to <tt>0</tt>.</p>
@@ -336,7 +336,7 @@
 <pre> CONFIG += console</pre>
 <p>See also <a href="qfile.html#close">close</a>() and <a href="qmake-variable-reference.html#config">qmake Variable Reference</a>.</p>
 <h3 class="fn"><a name="open-5"></a>bool QFile::open ( int <i>fd</i>, <a href="qiodevice.html#OpenModeFlag-enum">OpenMode</a> <i>mode</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Opens the existing file descripter <i>fd</i> in the given <i>mode</i>. Returns true if successful; otherwise returns false.</p>
 <p>When a <a href="qfile.html">QFile</a> is opened using this function, <a href="qfile.html#close">close</a>() does not actually close the file.</p>
 <p>The <a href="qfile.html">QFile</a> that is opened using this function is automatically set to be in raw mode; this means that the file input/output functions are slow. If you run into performance issues, you should try to use one of the other open functions.</p>
@@ -348,14 +348,14 @@
 <p>Returns the complete OR-ed together combination of <a href="qfile.html#Permission-enum">QFile::Permission</a> for the file.</p>
 <p>See also <a href="qfile.html#setPermissions">setPermissions</a>() and <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="permissions-2"></a><a href="qfile.html#Permission-enum">Permissions</a> QFile::permissions ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the complete OR-ed together combination of <a href="qfile.html#Permission-enum">QFile::Permission</a> for <i>fileName</i>.</p>
 <h3 class="fn"><a name="remove"></a>bool QFile::remove ()</h3>
 <p>Removes the file specified by <a href="qfile.html#fileName">fileName</a>(). Returns true if successful; otherwise returns false.</p>
 <p>The file is closed before it is removed.</p>
 <p>See also <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="remove-2"></a>bool QFile::remove ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Removes the file specified by the <i>fileName</i> given.</p>
 <p>Returns true if successful; otherwise returns false.</p>
 <p>See also <a href="qfile.html#remove">remove</a>().</p>
@@ -365,7 +365,7 @@
 <p>The file is closed before it is renamed.</p>
 <p>See also <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="rename-2"></a>bool QFile::rename ( const <a href="qstring.html">QString</a> &amp; <i>oldName</i>, const <a href="qstring.html">QString</a> &amp; <i>newName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Renames the file <i>oldName</i> to <i>newName</i>. Returns true if successful; otherwise returns false.</p>
 <p>If a file with the name <i>newName</i> already exists, <a href="qfile.html#rename">rename</a>() returns false (i.e&#x2e;, <a href="qfile.html">QFile</a> will not overwrite it).</p>
 <p>See also <a href="qfile.html#rename">rename</a>().</p>
@@ -373,7 +373,7 @@
 <p>Sets the file size (in bytes) <i>sz</i>. Returns true if the file if the resize succeeds; false otherwise. If <i>sz</i> is larger than the file currently is the new bytes will be set to 0, if <i>sz</i> is smaller the file is simply truncated.</p>
 <p>See also <a href="qfile.html#size">size</a>() and <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="resize-2"></a>bool QFile::resize ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i>, <a href="qtglobal.html#qint64-typedef">qint64</a> <i>sz</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets <i>fileName</i> to size (in bytes) <i>sz</i>. Returns true if the file if the resize succeeds; false otherwise. If <i>sz</i> is larger than <i>fileName</i> currently is the new bytes will be set to 0, if <i>sz</i> is smaller the file is simply truncated.</p>
 <p>See also <a href="qfile.html#resize">resize</a>().</p>
 <h3 class="fn"><a name="setDecodingFunction"></a>void QFile::setDecodingFunction ( <a href="qfile.html#DecoderFn-typedef">DecoderFn</a> <i>function</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
@@ -400,7 +400,7 @@
 <p>Sets the permissions for the file to the <i>permissions</i> specified. Returns true if successful, or false if the permissions cannot be modified.</p>
 <p>See also <a href="qfile.html#permissions">permissions</a>() and <a href="qfile.html#setFileName">setFileName</a>().</p>
 <h3 class="fn"><a name="setPermissions-2"></a>bool QFile::setPermissions ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i>, <a href="qfile.html#Permission-enum">Permissions</a> <i>permissions</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the permissions for <i>fileName</i> file to <i>permissions</i>.</p>
 <h3 class="fn"><a name="size"></a><a href="qtglobal.html#qint64-typedef">qint64</a> QFile::size () const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Returns the size of the file.</p>
@@ -411,7 +411,7 @@
 <p>This name may not represent an existing file; it is only a string. <a href="qfile.html#exists">QFile::exists</a>() returns true if the symlink points to an existing file.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <h3 class="fn"><a name="symLinkTarget-2"></a><a href="qstring.html">QString</a> QFile::symLinkTarget () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the absolute path of the file or directory a symlink (or shortcut on Windows) points to, or a an empty string if the object isn't a symbolic link.</p>
 <p>This name may not represent an existing file; it is only a string. <a href="qfile.html#exists">QFile::exists</a>() returns true if the symlink points to an existing file.</p>
 <p>This function was introduced in Qt 4.2.</p>
@@ -428,6 +428,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

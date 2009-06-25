@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1195,7 +1195,7 @@ void QSqlQuery::finish()
   The query will be repositioned on an \e invalid record in the new
   result set and must be navigated to a valid record before data
   values can be retrieved. If a new result set isn't available the
-  function returns false and the the query is set to inactive. In any
+  function returns false and the query is set to inactive. In any
   case the old result set will be discarded.
 
   When one of the statements is a non-select statement a count of

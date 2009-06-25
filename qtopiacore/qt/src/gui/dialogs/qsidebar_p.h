@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -55,6 +55,7 @@
 
 #include <qlistwidget.h>
 #include <qstandarditemmodel.h>
+#include <qstyleditemdelegate.h>
 #include <qurl.h>
 
 #ifndef QT_NO_FILEDIALOG
@@ -62,13 +63,23 @@
 QT_BEGIN_NAMESPACE
 
 class QFileSystemModel;
+
+class QSideBarDelegate : public QStyledItemDelegate
+{
+ public:
+     QSideBarDelegate(QWidget *parent = 0) : QStyledItemDelegate(parent) {}
+     void initStyleOption(QStyleOptionViewItem *option,
+                          const QModelIndex &index) const;
+};
+
 class Q_AUTOTEST_EXPORT QUrlModel : public QStandardItemModel
 {
     Q_OBJECT
 
 public:
     enum Roles {
-        UrlRole = Qt::UserRole + 1
+        UrlRole = Qt::UserRole + 1,
+        EnabledRole = Qt::UserRole + 2
     };
 
     QUrlModel(QObject *parent = 0);

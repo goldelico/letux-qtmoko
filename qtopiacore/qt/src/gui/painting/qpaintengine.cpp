@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -949,8 +949,8 @@ void QPaintEngine::setSystemClip(const QRegion &region)
     Q_D(QPaintEngine);
     d->systemClip = region;
     // Be backward compatible and only call d->systemStateChanged()
-    // if we currently have a system transform set.
-    if (d->hasSystemTransform) {
+    // if we currently have a system transform/viewport set.
+    if (d->hasSystemTransform || d->hasSystemViewport) {
         d->transformSystemClip();
         d->systemStateChanged();
     }

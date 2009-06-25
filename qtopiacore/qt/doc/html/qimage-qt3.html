@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/image/qimage.cpp -->
 <head>
   <title>Qt 4.5: Qt 3 Support Members for QImage</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -61,7 +61,7 @@
 </ul>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>void <b><a href="qimage-qt3.html#bitBlt">bitBlt</a></b> ( QImage * <i>dst</i>, int <i>dx</i>, int <i>dy</i>, const QImage * <i>src</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
+<li><div class="fn"></div>void <b><a href="qimage-qt3.html#bitBlt-4">bitBlt</a></b> ( QImage * <i>dst</i>, int <i>dx</i>, int <i>dy</i>, const QImage * <i>src</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, Qt::ImageConversionFlags <i>flags</i> = Qt::AutoColor )</li>
 </ul>
 <hr />
 <h2>Member Type Documentation</h2>
@@ -156,7 +156,7 @@
 <p>This function allocates a color table and a buffer for the image data. The image data is not initialized. The image buffer is allocated as a single block that consists of a table of <a href="qimage.html#scanLine">scanLine</a>() pointers (<a href="qimage-qt3.html#jumpTable">jumpTable</a>()) and the image data (<a href="qimage.html#bits">bits</a>()).</p>
 <p>Use a <a href="qimage.html">QImage</a> constructor instead.</p>
 <h3 class="fn"><a name="create-2"></a>bool QImage::create ( const <a href="qsize.html">QSize</a> &amp; <i>size</i>, int <i>depth</i>, int <i>numColors</i> = 0, <a href="qimage-qt3.html#Endian-enum">Endian</a> <i>bitOrder</i> = IgnoreEndian )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The width and height are specified in the <i>size</i> argument.</p>
 <p>Use a <a href="qimage.html">QImage</a> constructor instead.</p>
 <h3 class="fn"><a name="hasAlphaBuffer"></a>bool QImage::hasAlphaBuffer () const</h3>
@@ -168,7 +168,7 @@
 <p>Returns a pointer to the scanline pointer table. This is the beginning of the data block for the image.</p>
 <p>Use the <a href="qimage.html#bits">bits</a>() or <a href="qimage.html#scanLine">scanLine</a>() function instead.</p>
 <h3 class="fn"><a name="jumpTable-2"></a>const <a href="qtglobal.html#uchar-typedef">uchar</a> * const * QImage::jumpTable () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="mirror"></a>QImage QImage::mirror ( bool <i>horizontal</i> = false, bool <i>vertical</i> = true ) const</h3>
 <p>Use <a href="qimage.html#mirrored">mirrored</a>() instead.</p>
 <h3 class="fn"><a name="reset"></a>void QImage::reset ()</h3>
@@ -197,7 +197,7 @@
 <pre> QImage image;
  image.scaled(width, height, mode, Qt::SmoothTransformation);</pre>
 <h3 class="fn"><a name="smoothScale-2"></a>QImage QImage::smoothScale ( const <a href="qsize.html">QSize</a> &amp; <i>size</i>, <a href="qt.html#AspectRatioMode-enum">Qt::AspectRatioMode</a> <i>mode</i> = Qt::IgnoreAspectRatio ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qimage.html#scaled">scaled</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QImage image;
@@ -225,7 +225,7 @@
  image.transformed(matrix);</pre>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="bitBlt"></a>void bitBlt ( QImage * <i>dst</i>, int <i>dx</i>, int <i>dy</i>, const QImage * <i>src</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, <a href="qt.html#ImageConversionFlag-enum">Qt::ImageConversionFlags</a> <i>flags</i> = Qt::AutoColor )</h3>
+<h3 class="fn"><a name="bitBlt-4"></a>void bitBlt ( QImage * <i>dst</i>, int <i>dx</i>, int <i>dy</i>, const QImage * <i>src</i>, int <i>sx</i> = 0, int <i>sy</i> = 0, int <i>sw</i> = -1, int <i>sh</i> = -1, <a href="qt.html#ImageConversionFlag-enum">Qt::ImageConversionFlags</a> <i>flags</i> = Qt::AutoColor )</h3>
 <p>Copies a block of pixels from <i>src</i> to <i>dst</i>. The pixels copied from source (src) are converted according to <i>flags</i> if it is incompatible with the destination (<i>dst</i>).</p>
 <p><i>sx</i>, <i>sy</i> is the top-left pixel in <i>src</i>, <i>dx</i>, <i>dy</i> is the top-left position in <i>dst</i> and <i>sw</i>, <i>sh</i> is the size of the copied block. The copying is clipped if areas outside <i>src</i> or <i>dst</i> are specified. If <i>sw</i> is -1, it is adjusted to src-&gt;width(). Similarly, if <i>sh</i> is -1, it is adjusted to src-&gt;height().</p>
 <p>Currently inefficient for non 32-bit images.</p>
@@ -234,6 +234,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

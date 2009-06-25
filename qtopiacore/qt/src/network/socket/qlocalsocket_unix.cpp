@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtNetwork module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -322,11 +322,8 @@ void QLocalSocketPrivate::_q_connectToSocket()
     }
 
     // connected!
-    if (delayConnect) {
-        delayConnect->setEnabled(false);
-        delete delayConnect;
-        delayConnect = 0;
-    }
+    cancelDelayedConnect();
+
     serverName = connectingName;
     fullServerName = connectingPathName;
     if (unixSocket.setSocketDescriptor(connectingSocket,
@@ -371,6 +368,18 @@ void QLocalSocketPrivate::_q_abortConnectionAttempt()
 {
     Q_Q(QLocalSocket);
     q->close();
+}
+
+void QLocalSocketPrivate::cancelDelayedConnect()
+{
+    if (delayConnect) {
+        delayConnect->setEnabled(false);
+        delete delayConnect;
+        delayConnect = 0;
+        connectTimer->stop();
+        delete connectTimer;
+        connectTimer = 0;
+    }
 }
 
 quintptr QLocalSocket::socketDescriptor() const
@@ -419,14 +428,7 @@ void QLocalSocket::close()
 {
     Q_D(QLocalSocket);
     d->unixSocket.close();
-    if (d->delayConnect) {
-        d->delayConnect->setEnabled(false);
-        delete d->delayConnect;
-        d->delayConnect = 0;
-        d->connectTimer->stop();
-        delete d->connectTimer;
-        d->connectTimer = 0;
-    }
+    d->cancelDelayedConnect();
     if (d->connectingSocket != -1)
         ::close(d->connectingSocket);
     d->connectingSocket = -1;

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -280,6 +280,9 @@ void QMessageBoxPrivate::updateSize()
     int hardLimit = screenSize.width() - (q->frameGeometry().width() - q->geometry().width());
 #else
     int hardLimit = qMin(screenSize.width() - 480, 1000); // can never get bigger than this
+    // on small screens allows the messagebox be the same size as the screen
+    if (screenSize.width() <= 1024)
+        hardLimit = screenSize.width();
 #endif
 #ifdef Q_WS_MAC
     int softLimit = qMin(screenSize.width()/2, 420);
@@ -703,15 +706,10 @@ void QMessageBoxPrivate::_q_buttonClicked(QAbstractButton *button)
     Constructs a message box with no text and no buttons. \a parent is
     passed to the QDialog constructor.
 
-    If \a parent is 0, the message box is an \l{Qt::ApplicationModal}
-    {application modal} dialog box. If \a parent is a widget, the
-    message box is \l{Qt::WindowModal} {window modal} relative to \a
-    parent.
-
-    On Mac OS X, if \a parent is not 0 and you want your message box
-    to appear as a Qt::Sheet of that parent, set the message box's
-    \l{setWindowModality()} {window modality} to Qt::WindowModal
-    (default). Otherwise, the message box will be a standard dialog.
+    On Mac OS X, if you want your message box to appear
+    as a Qt::Sheet of its \a parent, set the message box's
+    \l{setWindowModality()} {window modality} to Qt::WindowModal or use open().
+    Otherwise, the message box will be a standard dialog.
 
 */
 QMessageBox::QMessageBox(QWidget *parent)
@@ -1725,7 +1723,7 @@ void QMessageBox::aboutQt(QWidget *parent, const QString &title)
     QMessageBox *msgBox = new QMessageBox(parent);
     msgBox->setAttribute(Qt::WA_DeleteOnClose);
     msgBox->setWindowTitle(title.isEmpty() ? tr("About Qt") : title);
-    msgBox->setText(translatedTextAboutQt);
+    msgBox->setInformativeText(translatedTextAboutQt);
 
     QPixmap pm(QLatin1String(":/trolltech/qmessagebox/images/qtlogo-64.png"));
     if (!pm.isNull())

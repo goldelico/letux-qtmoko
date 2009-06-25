@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qtemporaryfile.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/io/qtemporaryfile.cpp -->
 <head>
   <title>Qt 4.5: QTemporaryFile Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -75,7 +75,7 @@
      <span class="comment">// The QTemporaryFile destructor removes the temporary file</span>
      <span class="comment">// as it goes out of scope.</span></pre>
 <p>Reopening a QTemporaryFile after calling <a href="qfile.html#close">close</a>() is safe. For as long as the QTemporaryFile object itself is not destroyed, the unique temporary file will exist and be kept open internally by QTemporaryFile.</p>
-<p>The file name of the temporary file can be found by calling <a href="qtemporaryfile.html#fileName">fileName</a>(). Note that this is only defined while the file is open; the function returns an empty string before the file is opened and after it is closed.</p>
+<p>The file name of the temporary file can be found by calling <a href="qtemporaryfile.html#fileName">fileName</a>(). Note that this is only defined after the file is first opened; the function returns an empty string before this.</p>
 <p>A temporary file will have some static part of the name and some part that is calculated to be unique. The default filename <tt>qt_temp</tt> will be placed into the temporary path as returned by <a href="qdir.html#tempPath">QDir::tempPath</a>(). If you specify your own filename, a relative file path will not be placed in the temporary directory by default, but be relative to the current working directory.</p>
 <p>Specified filenames can contain the following template <tt>XXXXXX</tt> (six upper case &quot;X&quot; characters), which will be replaced by the auto-generated portion of the filename. Note that the template is case sensitive. If the template is not present in the filename, QTemporaryFile appends the generated part to the filename given.</p>
 <p>See also <a href="qdir.html#tempPath">QDir::tempPath</a>() and <a href="qfile.html">QFile</a>.</p>
@@ -107,7 +107,7 @@
 <h3 class="fn"><a name="createLocalFile"></a>QTemporaryFile * QTemporaryFile::createLocalFile ( <a href="qfile.html">QFile</a> &amp; <i>file</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>If <i>file</i> is not on a local disk, a temporary file is created on a local disk, <i>file</i> is copied into the temporary local file, and a pointer to the temporary local file is returned. If <i>file</i> is already on a local disk, a copy is not created and 0 is returned.</p>
 <h3 class="fn"><a name="createLocalFile-2"></a>QTemporaryFile * QTemporaryFile::createLocalFile ( const <a href="qstring.html">QString</a> &amp; <i>fileName</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Works on the given <i>fileName</i> rather than an existing <a href="qfile.html">QFile</a> object.</p>
 <h3 class="fn"><a name="fileName"></a><a href="qstring.html">QString</a> QTemporaryFile::fileName () const</h3>
 <p>Returns the complete unique filename backing the <a href="qtemporaryfile.html">QTemporaryFile</a> object. This string is null before the <a href="qtemporaryfile.html">QTemporaryFile</a> is opened, afterwards it will contain the <a href="qtemporaryfile.html#fileTemplate">fileTemplate</a>() plus additional characters to make it unique.</p>
@@ -130,6 +130,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -88,6 +88,7 @@ QAbstractItemViewPrivate::QAbstractItemViewPrivate()
         autoScroll(true),
         autoScrollMargin(16),
         autoScrollCount(0),
+        shouldScrollToCurrentOnShow(false),
         alternatingColors(false),
         textElideMode(Qt::ElideRight),
         verticalScrollMode(QAbstractItemView::ScrollPerItem),
@@ -1337,7 +1338,7 @@ QSize QAbstractItemView::iconSize() const
 /*!
     \property QAbstractItemView::textElideMode
 
-    \brief the the position of the "..." in elided text.
+    \brief the position of the "..." in elided text.
 
     The default value for all item views is Qt::ElideRight.
 */
@@ -1380,8 +1381,9 @@ bool QAbstractItemView::event(QEvent *event)
         d->executePostedLayout(); //make sure we set the layout properly
         break;
     case QEvent::Show:
-        {
-            d->executePostedLayout(); //make sure we set the layout properly
+        d->executePostedLayout(); //make sure we set the layout properly
+        if (d->shouldScrollToCurrentOnShow) {
+            d->shouldScrollToCurrentOnShow = false;
             const QModelIndex current = currentIndex();
             if (current.isValid() && (d->state == QAbstractItemView::EditingState || d->autoScroll))
                 scrollTo(current);
@@ -1399,6 +1401,9 @@ bool QAbstractItemView::event(QEvent *event)
         break;
     case QEvent::FocusOut:
         d->checkPersistentEditorFocus();
+        break;
+    case QEvent::FontChange:
+        d->doDelayedItemsLayout(); // the size of the items will change
         break;
     default:
         break;
@@ -3160,14 +3165,18 @@ void QAbstractItemView::currentChanged(const QModelIndex &current, const QModelI
             d->updateDirtyRegion();
         }
     }
-    if (isVisible() && current.isValid() && !d->autoScrollTimer.isActive()) {
-        if (d->autoScroll)
-            scrollTo(current);
-        d->setDirtyRegion(visualRect(current));
-        d->updateDirtyRegion();
-        edit(current, CurrentChanged, 0);
-        if (current.row() == (d->model->rowCount(d->root) - 1))
-            d->_q_fetchMore();
+    if (current.isValid() && !d->autoScrollTimer.isActive()) {
+        if (isVisible()) {
+            if (d->autoScroll)
+                scrollTo(current);
+            d->setDirtyRegion(visualRect(current));
+            d->updateDirtyRegion();
+            edit(current, CurrentChanged, 0);
+            if (current.row() == (d->model->rowCount(d->root) - 1))
+                d->_q_fetchMore();
+        } else {
+            d->shouldScrollToCurrentOnShow = d->autoScroll;
+        }
     }
 }
 
@@ -3211,9 +3220,9 @@ QStyleOptionViewItem QAbstractItemView::viewOptions() const
     option.state &= ~QStyle::State_MouseOver;
     option.font = font();
 
-#ifdef Q_WS_WIN
-    // Note this is currently required on Windows
-    // do give non-focused item views inactive appearance
+#ifndef Q_WS_MAC
+    // On mac the focus appearance follows window activation
+    // not widget activation
     if (!hasFocus())
         option.state &= ~QStyle::State_Active;
 #endif

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/widgets/q3combobox.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/widgets/q3combobox.cpp -->
 <head>
   <title>Qt 4.5: Q3ComboBox Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -101,7 +101,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -274,7 +274,7 @@
 <p>This signal is emitted when a new item has been activated (selected). The <i>index</i> is the position of the item in the combobox.</p>
 <p>This signal is not emitted if the item is changed programmatically, e.g&#x2e; using <a href="q3combobox.html#currentItem-prop">setCurrentItem</a>().</p>
 <h3 class="fn"><a name="activated-2"></a>void Q3ComboBox::activated ( const <a href="qstring.html">QString</a> &amp; <i>string</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when a new item has been activated (selected). <i>string</i> is the selected string.</p>
 <p>You can also use the activated(int) signal, but be aware that its argument is meaningful only for selected strings, not for user entered strings.</p>
 <h3 class="fn"><a name="autoResize"></a>bool Q3ComboBox::autoResize () const</h3>
@@ -283,11 +283,11 @@
 <h3 class="fn"><a name="changeItem"></a>void Q3ComboBox::changeItem ( const <a href="qstring.html">QString</a> &amp; <i>t</i>, int <i>index</i> )</h3>
 <p>Replaces the item at position <i>index</i> with the text <i>t</i>.</p>
 <h3 class="fn"><a name="changeItem-2"></a>void Q3ComboBox::changeItem ( const <a href="qpixmap.html">QPixmap</a> &amp; <i>im</i>, int <i>index</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Replaces the item at position <i>index</i> with the pixmap <i>im</i>, unless the combobox is editable.</p>
 <p>See also <a href="q3combobox.html#insertItem">insertItem</a>().</p>
 <h3 class="fn"><a name="changeItem-3"></a>void Q3ComboBox::changeItem ( const <a href="qpixmap.html">QPixmap</a> &amp; <i>im</i>, const <a href="qstring.html">QString</a> &amp; <i>t</i>, int <i>index</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Replaces the item at position <i>index</i> with the pixmap <i>im</i> and the text <i>t</i>.</p>
 <p>See also <a href="q3combobox.html#insertItem">insertItem</a>().</p>
 <h3 class="fn"><a name="clear"></a>void Q3ComboBox::clear ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
@@ -305,16 +305,16 @@
 <p>This signal is emitted when a new item has been set to be the current item. The <i>index</i> is the position of the item in the combobox.</p>
 <p>This signal is not emitted if the item is changed programmatically, e.g&#x2e; using <a href="q3combobox.html#currentItem-prop">setCurrentItem</a>().</p>
 <h3 class="fn"><a name="highlighted-2"></a>void Q3ComboBox::highlighted ( const <a href="qstring.html">QString</a> &amp; <i>string</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when a new item has been set to be the current item. <i>string</i> is the item's text.</p>
 <p>You can also use the highlighted(int) signal.</p>
 <h3 class="fn"><a name="insertItem"></a>void Q3ComboBox::insertItem ( const <a href="qstring.html">QString</a> &amp; <i>t</i>, int <i>index</i> = -1 )</h3>
 <p>Inserts a text item with text <i>t</i>, at position <i>index</i>. The item will be appended if <i>index</i> is negative.</p>
 <h3 class="fn"><a name="insertItem-2"></a>void Q3ComboBox::insertItem ( const <a href="qpixmap.html">QPixmap</a> &amp; <i>pixmap</i>, int <i>index</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a <i>pixmap</i> item at position <i>index</i>. The item will be appended if <i>index</i> is negative.</p>
 <h3 class="fn"><a name="insertItem-3"></a>void Q3ComboBox::insertItem ( const <a href="qpixmap.html">QPixmap</a> &amp; <i>pixmap</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i>, int <i>index</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a <i>pixmap</i> item with additional text <i>text</i> at position <i>index</i>. The item will be appended if <i>index</i> is negative.</p>
 <h3 class="fn"><a name="insertStrList"></a>void Q3ComboBox::insertStrList ( const char ** <i>strings</i>, int <i>numStrings</i> = -1, int <i>index</i> = -1 )</h3>
 <p>Inserts the array of char * <i>strings</i> at position <i>index</i> in the combobox.</p>
@@ -324,11 +324,11 @@
  combo-&gt;insertStrList( items );</pre>
 <p>See also <a href="q3combobox.html#insertStringList">insertStringList</a>().</p>
 <h3 class="fn"><a name="insertStrList-2"></a>void Q3ComboBox::insertStrList ( const <a href="q3strlist.html">Q3StrList</a> &amp; <i>list</i>, int <i>index</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts the <i>list</i> of strings at position <i>index</i> in the combobox.</p>
 <p>This is only for compatibility since it does not support Unicode strings. See <a href="q3combobox.html#insertStringList">insertStringList</a>().</p>
 <h3 class="fn"><a name="insertStrList-3"></a>void Q3ComboBox::insertStrList ( const <a href="q3strlist.html">Q3StrList</a> * <i>list</i>, int <i>index</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts the <i>list</i> of strings at position <i>index</i> in the combobox.</p>
 <p>This is only for compatibility since it does not support Unicode strings. See <a href="q3combobox.html#insertStringList">insertStringList</a>().</p>
 <h3 class="fn"><a name="insertStringList"></a>void Q3ComboBox::insertStringList ( const <a href="qstringlist.html">QStringList</a> &amp; <i>list</i>, int <i>index</i> = -1 )</h3>
@@ -387,6 +387,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

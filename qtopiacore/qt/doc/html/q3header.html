@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/widgets/q3header.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/widgets/q3header.cpp -->
 <head>
   <title>Qt 4.5: Q3Header Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -92,7 +92,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -229,7 +229,7 @@
 <h3 class="fn"><a name="addLabel"></a>int Q3Header::addLabel ( const <a href="qstring.html">QString</a> &amp; <i>s</i>, int <i>size</i> = -1 )</h3>
 <p>Adds a new section with label text <i>s</i>. Returns the index position where the section was added (at the right for horizontal headers, at the bottom for vertical headers). The section's width is set to <i>size</i>. If <i>size</i> &lt; 0, an appropriate size for the text <i>s</i> is chosen.</p>
 <h3 class="fn"><a name="addLabel-2"></a>int Q3Header::addLabel ( const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>s</i>, int <i>size</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Adds a new section with icon <i>icon</i> and label text <i>s</i>. Returns the index position where the section was added (at the right for horizontal headers, at the bottom for vertical headers). The section's width is set to <i>size</i>, unless size is negative in which case the size is calculated taking account of the size of the text.</p>
 <h3 class="fn"><a name="adjustHeaderSize"></a>void Q3Header::adjustHeaderSize ()</h3>
 <p>Adjusts the size of the sections to fit the size of the header as completely as possible. Only sections for which <a href="q3header.html#stretching-prop">isStretchEnabled</a>() is true will be resized.</p>
@@ -331,7 +331,7 @@
 <p>If the section does not exist, nothing happens.</p>
 <p>See also <a href="q3header.html#label">label</a>().</p>
 <h3 class="fn"><a name="setLabel-2"></a>void Q3Header::setLabel ( int <i>section</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>s</i>, int <i>size</i> = -1 )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the icon for section <i>section</i> to <i>icon</i> and the text to <i>s</i>. The section's width is set to <i>size</i> if <i>size</i> &gt;= 0; otherwise it is left unchanged.</p>
 <p>If the section does not exist, nothing happens.</p>
 <h3 class="fn"><a name="setResizeEnabled"></a>void Q3Header::setResizeEnabled ( bool <i>enable</i>, int <i>section</i> = -1 )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -348,7 +348,7 @@
 <p>Only one section can show a sort indicator at any one time. If you don't want any section to show a sort indicator pass a <i>section</i> number of -1.</p>
 <p>See also <a href="q3header.html#sortIndicatorSection">sortIndicatorSection</a>() and <a href="q3header.html#sortIndicatorOrder">sortIndicatorOrder</a>().</p>
 <h3 class="fn"><a name="setSortIndicator-2"></a>void Q3Header::setSortIndicator ( int <i>section</i>, bool <i>ascending</i> = true )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the sort indicator to <i>ascending</i>. Use the other overload instead.</p>
 <h3 class="fn"><a name="sizeChange"></a>void Q3Header::sizeChange ( int <i>section</i>, int <i>oldSize</i>, int <i>newSize</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the user has changed the size of a <i>section</i> from <i>oldSize</i> to <i>newSize</i>. This signal is typically connected to a slot that repaints the table or list that contains the header.</p>
@@ -362,6 +362,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

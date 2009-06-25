@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/dbus/qdbusabstractinterface.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/dbus/qdbusabstractinterface.cpp -->
 <head>
   <title>Qt 4.5: QDBusAbstractInterface Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -36,7 +36,7 @@
 <li><div class="fn"></div>QString <b><a href="qdbusabstractinterface.html#interface">interface</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="qdbusabstractinterface.html#isValid">isValid</a></b> () const</li>
 <li><div class="fn"></div>QDBusError <b><a href="qdbusabstractinterface.html#lastError">lastError</a></b> () const</li>
-<li><div class="fn"></div>QString <b><a href="qdbusabstractinterface.html#pathx">path</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qdbusabstractinterface.html#path">path</a></b> () const</li>
 <li><div class="fn"></div>QString <b><a href="qdbusabstractinterface.html#service">service</a></b> () const</li>
 </ul>
 <ul>
@@ -94,7 +94,7 @@
    reply = interface-&gt;call(QLatin1String(&quot;ProcessWork&quot;), QLatin1String(&quot;UTF-8&quot;), value.toUtf8());</pre>
 <p>This example illustrates function calling with 0, 1 and 2 parameters and illustrates different parameter types passed in each (the first call to <tt>&quot;ProcessWorkUnicode&quot;</tt> will contain one Unicode string, the second call to <tt>&quot;ProcessWork&quot;</tt> will contain one string and one byte array).</p>
 <h3 class="fn"><a name="call-2"></a><a href="qdbusmessage.html">QDBusMessage</a> QDBusAbstractInterface::call ( <a href="qdbus.html#CallMode-enum">QDBus::CallMode</a> <i>mode</i>, const <a href="qstring.html">QString</a> &amp; <i>method</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>arg1</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg2</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg3</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg4</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg5</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg6</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg7</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>arg8</i> = QVariant() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Calls the method <i>method</i> on this interface and passes the parameters to this function to the method. If <i>mode</i> is <tt>NoWaitForReply</tt>, then this function will return immediately after placing the call, without waiting for a reply from the remote method. Otherwise, <i>mode</i> indicates whether this function should activate the Qt Event Loop while waiting for the reply to arrive.</p>
 <p>This function can be used with up to 8 parameters, passed in arguments <i>arg1</i>, <i>arg2</i>, <i>arg3</i>, <i>arg4</i>, <i>arg5</i>, <i>arg6</i>, <i>arg7</i> and <i>arg8</i>. If you need more than 8 parameters or if you have a variable number of parameters to be passed, use <a href="qdbusabstractinterface.html#callWithArgumentList">callWithArgumentList</a>().</p>
 <p>If this function reenters the Qt event loop in order to wait for the reply, it will exclude user input. During the wait, it may deliver signals and other method calls to your application. Therefore, it must be prepared to handle a reentrancy whenever a call is placed with <a href="qdbusabstractinterface.html#call">call</a>().</p>
@@ -111,7 +111,7 @@
 <p>This function was introduced in Qt 4.3.</p>
 <p>See also <a href="qdbuserror.html">QDBusError</a> and <a href="qdbusmessage.html">QDBusMessage</a>.</p>
 <h3 class="fn"><a name="callWithCallback-2"></a>bool QDBusAbstractInterface::callWithCallback ( const <a href="qstring.html">QString</a> &amp; <i>method</i>, const <a href="qlist.html">QList</a>&lt;<a href="qvariant.html">QVariant</a>&gt; &amp; <i>args</i>, <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>slot</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function is deprecated. Please use the overloaded version.</p>
 <p>Places a call to the remote method specified by <i>method</i> on this interface, using <i>args</i> as arguments. This function returns immediately after queueing the call. The reply from the remote function or any errors emitted by it are delivered to the <i>slot</i> slot on object <i>receiver</i>.</p>
 <p>This function returns true if the queueing succeeded: it does not indicate that the call succeeded. If it failed, the slot will be called with an error message. <a href="qdbusabstractinterface.html#lastError">lastError</a>() will not be set under those circumstances.</p>
@@ -125,7 +125,7 @@
 <p>Note: when dealing with remote objects, it is not always possible to determine if it exists when creating a <a href="qdbusinterface.html">QDBusInterface</a>.</p>
 <h3 class="fn"><a name="lastError"></a><a href="qdbuserror.html">QDBusError</a> QDBusAbstractInterface::lastError () const</h3>
 <p>Returns the error the last operation produced, or an invalid error if the last operation did not produce an error.</p>
-<h3 class="fn"><a name="pathx"></a><a href="qstring.html">QString</a> QDBusAbstractInterface::path () const</h3>
+<h3 class="fn"><a name="path"></a><a href="qstring.html">QString</a> QDBusAbstractInterface::path () const</h3>
 <p>Returns the object path that this interface is associated with.</p>
 <h3 class="fn"><a name="service"></a><a href="qstring.html">QString</a> QDBusAbstractInterface::service () const</h3>
 <p>Returns the name of the service this interface is associated with.</p>
@@ -133,6 +133,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

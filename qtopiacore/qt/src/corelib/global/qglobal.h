@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -44,19 +44,19 @@
 
 #include <stddef.h>
 
-#define QT_VERSION_STR "4.5.1"
+#define QT_VERSION_STR "4.5.2"
 /*
    QT_VERSION is (major << 16) + (minor << 8) + patch.
 */
-#define QT_VERSION 0x040501
+#define QT_VERSION 0x040502
 /*
    can be used like #if (QT_VERSION >= QT_VERSION_CHECK(4, 4, 0))
 */
 #define QT_VERSION_CHECK(major, minor, patch) ((major<<16)|(minor<<8)|(patch))
 
-#define QT_PACKAGEDATE_STR "2009-04-22"
+#define QT_PACKAGEDATE_STR "2009-06-20"
 
-#define QT_PACKAGE_TAG "g8cfb0638c650b906fc0ddede4e5c1c391e81307c"
+#define QT_PACKAGE_TAG "g4b2b47ac6c9fe284dce45cf33ff674d7110c1619"
 
 #if !defined(QT_BUILD_MOC)
 #include <QtCore/qconfig.h>
@@ -2265,9 +2265,9 @@ QT3_SUPPORT Q_CORE_EXPORT const char *qInstallPathSysconf();
                                  | QT_MODULE_GRAPHICSVIEW \
                                  | QT_MODULE_HELP \
                                  | QT_MODULE_TEST \
-                                 | QT_MODULE_DBUS)
-#define QT_EDITION_DESKTOP      (QT_EDITION_OPENSOURCE \
+                                 | QT_MODULE_DBUS \
                                  | QT_MODULE_ACTIVEQT)
+#define QT_EDITION_DESKTOP      (QT_EDITION_OPENSOURCE)
 #define QT_EDITION_UNIVERSAL    QT_EDITION_DESKTOP
 #define QT_EDITION_ACADEMIC     QT_EDITION_DESKTOP
 #define QT_EDITION_EDUCATIONAL  QT_EDITION_DESKTOP

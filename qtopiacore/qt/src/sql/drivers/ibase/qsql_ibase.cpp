@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -55,6 +55,7 @@
 #include <limits.h>
 #include <math.h>
 #include <qdebug.h>
+#include <QVarLengthArray>
 
 QT_BEGIN_NAMESPACE
 
@@ -66,8 +67,11 @@ QT_BEGIN_NAMESPACE
 
 enum { QIBaseChunkSize = SHRT_MAX / 2 };
 
-static bool getIBaseError(QString& msg, ISC_STATUS* status, ISC_LONG &sqlcode,
-                          QTextCodec *tc)
+#if defined(FB_API_VER) && FB_API_VER >= 20
+static bool getIBaseError(QString& msg, const ISC_STATUS* status, ISC_LONG &sqlcode, QTextCodec *tc)
+#else
+static bool getIBaseError(QString& msg, ISC_STATUS* status, ISC_LONG &sqlcode, QTextCodec *tc)
+#endif
 {
     if (status[0] != 1 || status[1] <= 0)
         return false;
@@ -75,7 +79,11 @@ static bool getIBaseError(QString& msg, ISC_STATUS* status, ISC_LONG &sqlcode,
     msg.clear();
     sqlcode = isc_sqlcode(status);
     char buf[512];
+#if defined(FB_API_VER) && FB_API_VER >= 20
+    while(fb_interpret(buf, 512, &status)) {
+#else
     while(isc_interprete(buf, &status)) {
+#endif
         if(!msg.isEmpty())
             msg += QLatin1String(" - ");
         if (tc)
@@ -576,7 +584,7 @@ QVariant QIBaseResultPrivate::fetchArray(int pos, ISC_QUAD *arr)
 
     int arraySize = 1, subArraySize;
     short dimensions = desc.array_desc_dimensions;
-    short *numElements = new short[dimensions];
+    QVarLengthArray<short> numElements(dimensions);
 
     for(int i = 0; i < dimensions; ++i) {
         subArraySize = (desc.array_desc_bounds[i].array_bound_upper -
@@ -605,9 +613,7 @@ QVariant QIBaseResultPrivate::fetchArray(int pos, ISC_QUAD *arr)
                 QSqlError::StatementError))
         return list;
 
-    readArrayBuffer(list, ba.data(), 0, numElements, &desc, tc);
-
-    delete[] numElements;
+    readArrayBuffer(list, ba.data(), 0, numElements.data(), &desc, tc);
 
     return QVariant(list);
 }
@@ -871,7 +877,7 @@ QIBaseResult::~QIBaseResult()
 
 bool QIBaseResult::prepare(const QString& query)
 {
-    //qDebug("prepare: %s\n", qPrintable(query));
+//     qDebug("prepare: %s", qPrintable(query));
     if (!driver() || !driver()->isOpen() || driver()->isOpenError())
         return false;
     d->cleanup();
@@ -1025,7 +1031,7 @@ bool QIBaseResult::exec()
     }
 
     if (ok) {
-        if (colCount()) {
+        if (colCount() && d->queryType != isc_info_sql_stmt_exec_procedure) {
             isc_dsql_free_statement(d->status, &d->stmt, DSQL_close);
             if (d->isError(QT_TRANSLATE_NOOP("QIBaseResult", "Unable to close statement")))
                 return false;
@@ -1039,7 +1045,7 @@ bool QIBaseResult::exec()
             return false;
 
         // Not all stored procedures necessarily return values.
-        if (d->queryType == isc_info_sql_stmt_exec_procedure && d->sqlda->sqld == 0)
+        if (d->queryType == isc_info_sql_stmt_exec_procedure && d->sqlda && d->sqlda->sqld == 0)
             delDA(d->sqlda);
 
         if (d->sqlda)
@@ -1270,27 +1276,27 @@ QSqlRecord QIBaseResult::record() const
         v = d->sqlda->sqlvar[i];
         QSqlField f(QString::fromLatin1(v.aliasname, v.aliasname_length).simplified(),
                     qIBaseTypeName2(v.sqltype, v.sqlscale < 0));
-        QSqlQuery q(new QIBaseResult(d->db));
-        q.setForwardOnly(true);
-        q.exec(QLatin1String("select b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE, b.RDB$FIELD_LENGTH, a.RDB$NULL_FLAG "
-                "FROM RDB$RELATION_FIELDS a, RDB$FIELDS b "
-                "WHERE b.RDB$FIELD_NAME = a.RDB$FIELD_SOURCE "
-                "AND a.RDB$RELATION_NAME = '") + QString::fromAscii(v.relname, v.relname_length).toUpper() + QLatin1String("' "
-                "AND a.RDB$FIELD_NAME = '") + QString::fromAscii(v.sqlname, v.sqlname_length).toUpper() + QLatin1String("' "));
-        if(q.first()) {
-            if(v.sqlscale < 0) {
-                f.setLength(q.value(0).toInt());
-                f.setPrecision(qAbs(q.value(1).toInt()));
-            } else {
-                f.setLength(q.value(2).toInt());
-                f.setPrecision(0);
+        f.setLength(v.sqllen);
+        f.setPrecision(qAbs(v.sqlscale));
+        f.setRequiredStatus((v.sqltype & 1) == 0 ? QSqlField::Required : QSqlField::Optional);
+        if(v.sqlscale < 0) {
+            QSqlQuery q(new QIBaseResult(d->db));
+            q.setForwardOnly(true);
+            q.exec(QLatin1String("select b.RDB$FIELD_PRECISION, b.RDB$FIELD_SCALE, b.RDB$FIELD_LENGTH, a.RDB$NULL_FLAG "
+                    "FROM RDB$RELATION_FIELDS a, RDB$FIELDS b "
+                    "WHERE b.RDB$FIELD_NAME = a.RDB$FIELD_SOURCE "
+                    "AND a.RDB$RELATION_NAME = '") + QString::fromAscii(v.relname, v.relname_length).toUpper() + QLatin1String("' "
+                    "AND a.RDB$FIELD_NAME = '") + QString::fromAscii(v.sqlname, v.sqlname_length).toUpper() + QLatin1String("' "));
+            if(q.first()) {
+                if(v.sqlscale < 0) {
+                    f.setLength(q.value(0).toInt());
+                    f.setPrecision(qAbs(q.value(1).toInt()));
+                } else {
+                    f.setLength(q.value(2).toInt());
+                    f.setPrecision(0);
+                }
+                f.setRequiredStatus(q.value(3).toBool() ? QSqlField::Required : QSqlField::Optional);
             }
-            f.setRequiredStatus(q.value(3).toBool() ? QSqlField::Required : QSqlField::Optional);
-        }
-        else {
-            f.setLength(0);
-            f.setPrecision(0);
-            f.setRequiredStatus(QSqlField::Unknown);
         }
         f.setSqlType(v.sqltype);
         rec.append(f);

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-all-opensource-src-4.5.1/src/activeqt/container/qaxscript.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-all-opensource-src-4.5.2/src/activeqt/container/qaxscript.cpp -->
 <head>
   <title>Qt 4.5: QAxScriptManager Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -83,7 +83,7 @@
 <p>Adds <i>object</i> to the manager. Scripts handled by this manager can access the object in the code using the object's <a href="qobject.html#objectName-prop">objectName</a> property.</p>
 <p>You must add all the necessary objects before loading any scripts.</p>
 <h3 class="fn"><a name="addObject-2"></a>void QAxScriptManager::addObject ( <a href="qobject.html">QObject</a> * <i>object</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Adds a generic COM wrapper for <i>object</i> to the manager. <i>object</i> must be exposed as a COM object using the functionality provided by the <a href="qaxserver.html">QAxServer</a> module. Applications using this function you must link against the qaxserver library.</p>
 <a name="//apple_ref/cpp/instm/QAxScriptManager/call" />
 <h3 class="fn"><a name="call"></a><a href="qvariant.html">QVariant</a> QAxScriptManager::call ( const <a href="qstring.html">QString</a> &amp; <i>function</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>var1</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var2</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var3</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var4</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var5</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var6</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var7</i> = QVariant(), const <a href="qvariant.html">QVariant</a> &amp; <i>var8</i> = QVariant() )</h3>
@@ -103,7 +103,7 @@
 <p>Functions provided by script engines that don't support introspection are not available and must be called directly using <a href="qaxscript.html#call">QAxScript::call</a>() on the respective <a href="qaxscriptmanager.html#script">script</a> object.</p>
 <p>Note that calling this function can be significantely slower than using call() on the respective <a href="qaxscript.html">QAxScript</a> directly.</p>
 <h3 class="fn"><a name="call-2"></a><a href="qvariant.html">QVariant</a> QAxScriptManager::call ( const <a href="qstring.html">QString</a> &amp; <i>function</i>, <a href="qlist.html">QList</a>&lt;<a href="qvariant.html">QVariant</a>&gt; &amp; <i>arguments</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Calls <i>function</i> passing <i>arguments</i> as parameters, and returns the result. Returns when the script's execution has finished.</p>
 <a name="//apple_ref/cpp/instm/QAxScriptManager/error" />
 <h3 class="fn"><a name="error"></a>void QAxScriptManager::error ( <a href="qaxscript.html">QAxScript</a> * <i>script</i>, int <i>code</i>, const <a href="qstring.html">QString</a> &amp; <i>description</i>, int <i>sourcePosition</i>, const <a href="qstring.html">QString</a> &amp; <i>sourceText</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -121,7 +121,7 @@
 <p>You must add all the objects necessary (using <a href="qaxscriptmanager.html#addObject">addObject</a>()) <i>before</i> loading any scripts. If <i>code</i> declares a function that is already available (no matter in which language) the first function is overloaded and can no longer be called via <a href="qaxscriptmanager.html#call">call</a>(); but it will still be available by calling its <a href="qaxscriptmanager.html#script">script</a> directly.</p>
 <p>See also <a href="qaxscriptmanager.html#addObject">addObject</a>(), <a href="qaxscriptmanager.html#scriptNames">scriptNames</a>(), and <a href="qaxscriptmanager.html#functions">functions</a>().</p>
 <h3 class="fn"><a name="load-2"></a><a href="qaxscript.html">QAxScript</a> * QAxScriptManager::load ( const <a href="qstring.html">QString</a> &amp; <i>file</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Loads the source code from the <i>file</i>. The script can later be referred to using its <i>name</i> which should not be empty.</p>
 <p>The function returns a pointer to the script engine for the code in <i>file</i> if <i>file</i> was loaded successfully; otherwise it returns 0.</p>
 <p>The script engine used is determined from the file's extension. By default &quot;.js&quot; files are interpreted as JScript files, and &quot;.vbs&quot; and &quot;.dsm&quot; files are interpreted as VBScript. Additional script engines can be registered using <a href="qaxscriptmanager.html#registerEngine">registerEngine</a>().</p>
@@ -143,6 +143,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -743,7 +743,9 @@ int QString::grow(int size)
 /*!
     \since 4.2
 
-    Returns a copy of the \a string string encoded in ucs4.
+    Returns a copy of the \a string, where the encoding of \a string depends on 
+    the size of wchar. If wchar is 4 bytes, the \a string is interpreted as ucs-4,
+    if wchar is 2 bytes it is interpreted as ucs-2.
 
     If \a size is -1 (default), the \a string has to be 0 terminated.
 

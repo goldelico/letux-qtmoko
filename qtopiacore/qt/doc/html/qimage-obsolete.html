@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/image/qimage.cpp -->
 <head>
   <title>Qt 4.5: Obsolete Members for QImage</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -37,6 +37,7 @@
 <p>If <i>alphaChannel</i> is an 8 bit grayscale image, the intensity values are written into this buffer directly. Otherwise, <i>alphaChannel</i> is converted to 32 bit and the intensity of the RGB pixel values is used.</p>
 <p>Note that the image will be converted to the <a href="qimage.html#Format-enum">Format_ARGB32_Premultiplied</a> format if the function succeeds.</p>
 <p>Use one of the composition mods in <a href="qpainter.html#CompositionMode-enum">QPainter::CompositionMode</a> instead.</p>
+<p><b>Warning:</b> This function is expensive.</p>
 <p>See also <a href="qimage.html#alphaChannel">alphaChannel</a>(), <a href="qimage.html#image-transformations">Image Transformations</a>, and <a href="qimage.html#image-formats">Image Formats</a>.</p>
 <h3 class="fn"><a name="setText-2"></a>void QImage::setText ( const char * <i>key</i>, const char * <i>language</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
 <p>Sets the image text to the given <i>text</i> and associate it with the given <i>key</i>. The text is recorded in the specified <i>language</i>, or in a default language if <i>language</i> is 0.</p>
@@ -47,7 +48,7 @@
 <p>Use <a href="qimage.html#text">text</a>() instead.</p>
 <p>The language the text is recorded in is no longer relevant since the text is always set using <a href="qstring.html">QString</a> and UTF-8 representation.</p>
 <h3 class="fn"><a name="text-3"></a><a href="qstring.html">QString</a> QImage::text ( const QImageTextKeyLang &amp; <i>keywordAndLanguage</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the text recorded for the given <i>keywordAndLanguage</i>.</p>
 <p>Use <a href="qimage.html#text">text</a>() instead.</p>
 <p>The language the text is recorded in is no longer relevant since the text is always set using <a href="qstring.html">QString</a> and UTF-8 representation.</p>
@@ -62,6 +63,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

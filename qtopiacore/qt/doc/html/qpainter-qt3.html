@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qpainter.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/painting/qpainter.cpp -->
 <head>
   <title>Qt 4.5: Qt 3 Support Members for QPainter</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -92,7 +92,7 @@
 <p>you can rewrite it as</p>
 <pre> QRect rectangle = boundingRect(x, y, width, height, flags, text.left(length));</pre>
 <h3 class="fn"><a name="drawConvexPolygon-5"></a>void QPainter::drawConvexPolygon ( const <a href="qpolygonf.html">QPolygonF</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#drawConvexPolygon">drawConvexPolygon</a>() combined with <a href="qvector.html#constData">QPolygonF::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -103,7 +103,7 @@
  QPainter painter(this);
  painter.drawConvexPolygon(polygon.constData() + index, pointCount);</pre>
 <h3 class="fn"><a name="drawConvexPolygon-6"></a>void QPainter::drawConvexPolygon ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#drawConvexPolygon">drawConvexPolygon</a>() combined with <a href="qvector.html#constData">QPolygon::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -140,7 +140,7 @@
  QPainter painter(this);
  painter.drawLines(polygon.constData() + index * 2, lineCount);</pre>
 <h3 class="fn"><a name="drawPoints-5"></a>void QPainter::drawPoints ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Draws <i>count</i> points in the vector <i>polygon</i> starting on <i>index</i> using the current pen.</p>
 <p>Use <a href="qpainter.html#drawPoints">drawPoints</a>() combined with <a href="qvector.html#constData">QPolygon::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
@@ -152,7 +152,7 @@
  QPainter painter(this);
  painter.drawPoints(polygon.constData() + index, pointCount);</pre>
 <h3 class="fn"><a name="drawPolygon-3"></a>void QPainter::drawPolygon ( const <a href="qpolygonf.html">QPolygonF</a> &amp; <i>polygon</i>, bool <i>winding</i>, int <i>index</i> = 0, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#drawPolygon">drawPolygon</a>() combined with <a href="qvector.html#constData">QPolygonF::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -164,7 +164,7 @@
  QPainter painter(this);
  painter.drawPolygon( polygon.constData() + index, pointCount, fillRule);</pre>
 <h3 class="fn"><a name="drawPolygon-4"></a>void QPainter::drawPolygon ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, bool <i>winding</i>, int <i>index</i> = 0, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#drawPolygon">drawPolygon</a>() combined with <a href="qvector.html#constData">QPolygon::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -176,7 +176,7 @@
  QPainter painter(this);
  painter.drawPolygon( polygon.constData() + index, pointCount, fillRule);</pre>
 <h3 class="fn"><a name="drawPolyline-3"></a>void QPainter::drawPolyline ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> = -1 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Draws the polyline defined by the <i>count</i> lines of the given <i>polygon</i> starting at <i>index</i> (<i>index</i> defaults to 0).</p>
 <p>Use <a href="qpainter.html#drawPolyline">drawPolyline</a>() combined with <a href="qvector.html#constData">QPolygon::constData</a>() instead.</p>
 <p>For example, if you have code like</p>
@@ -273,13 +273,13 @@
 <h3 class="fn"><a name="xForm"></a><a href="qpoint.html">QPoint</a> QPainter::xForm ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i> ) const</h3>
 <p>Use <a href="qpainter.html#combinedTransform">combinedTransform</a>() instead.</p>
 <h3 class="fn"><a name="xForm-2"></a><a href="qrect.html">QRect</a> QPainter::xForm ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedTransform">combinedTransform</a>() instead of this function and call mapRect() on the result to obtain a <a href="qrect.html">QRect</a>.</p>
 <h3 class="fn"><a name="xForm-3"></a><a href="qpolygon.html">QPolygon</a> QPainter::xForm ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedTransform">combinedTransform</a>() instead.</p>
 <h3 class="fn"><a name="xForm-4"></a><a href="qpolygon.html">QPolygon</a> QPainter::xForm ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedTransform">combinedTransform</a>() combined with <a href="qvector.html#mid">QPolygon::mid</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -288,7 +288,7 @@
 <pre> QPainter painter(this);
  QPolygon transformed = polygon.mid(index, count) * painter.combinedMatrix();</pre>
 <h3 class="fn"><a name="xFormDev"></a><a href="qpoint.html">QPoint</a> QPainter::xFormDev ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedTransform">combinedTransform</a>() combined with <a href="qmatrix.html#inverted">QMatrix::inverted</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -297,17 +297,17 @@
 <pre> QPainter painter(this);
  QPoint transformed = point * painter.combinedMatrix().inverted();</pre>
 <h3 class="fn"><a name="xFormDev-2"></a><a href="qrect.html">QRect</a> QPainter::xFormDev ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
-<p>Use combineMatrix() combined with <a href="qmatrix.html#inverted">QMatrix::inverted</a>() instead.</p>
+<p>This is an overloaded function.</p>
+<p>Use mapRect() combined with <a href="qmatrix.html#inverted">QMatrix::inverted</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
  QRect transformed = painter.xFormDev(rectangle);</font></pre>
 <p>you can rewrite it as</p>
 <pre> QPainter painter(this);
- QRect transformed = rectangle * painter.combinedMatrix().inverted();</pre>
+ QRect transformed = painter.combinedMatrix().inverted(rectangle);</pre>
 <h3 class="fn"><a name="xFormDev-3"></a><a href="qpolygon.html">QPolygon</a> QPainter::xFormDev ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedMatrix">combinedMatrix</a>() combined with <a href="qmatrix.html#inverted">QMatrix::inverted</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -316,7 +316,7 @@
 <pre> QPainter painter(this);
  QPolygon transformed = polygon * painter.combinedMatrix().inverted();</pre>
 <h3 class="fn"><a name="xFormDev-4"></a><a href="qpolygon.html">QPolygon</a> QPainter::xFormDev ( const <a href="qpolygon.html">QPolygon</a> &amp; <i>polygon</i>, int <i>index</i>, int <i>count</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Use <a href="qpainter.html#combinedMatrix">combinedMatrix</a>() combined with <a href="qvector.html#mid">QPolygon::mid</a>() and <a href="qmatrix.html#inverted">QMatrix::inverted</a>() instead.</p>
 <p>For example, if you have code like</p>
 <pre><font color="#404040"> QPainter painter(this);
@@ -328,6 +328,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

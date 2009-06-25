@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qsettings.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/io/qsettings.cpp -->
 <head>
   <title>Qt 4.5: QSettings Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -239,7 +239,7 @@
 <h3>Platform-Specific Notes</h3>
 <a name="locations-where-application-settings-are-stored"></a>
 <h4>Locations Where Application Settings Are Stored</h4>
-<p>As mentioned in the <a href="#fallback-mechanism">Fallback Mechanism</a> section, QSettings stores settings for an application in up to four locations, depending on whether the settings are user-specific or system-wide and whether the the settings are application-specific or organization-wide. For simplicity, we're assuming the organization is called MySoft and the application is called Star Runner.</p>
+<p>As mentioned in the <a href="#fallback-mechanism">Fallback Mechanism</a> section, QSettings stores settings for an application in up to four locations, depending on whether the settings are user-specific or system-wide and whether the settings are application-specific or organization-wide. For simplicity, we're assuming the organization is called MySoft and the application is called Star Runner.</p>
 <p>On Unix systems, if the file format is <a href="qsettings.html#Format-enum">NativeFormat</a>, the following files are used by default:</p>
 <ol type="1">
 <li><tt>$HOME/.config/MySoft/Star Runner.conf</tt> (Qt for Embedded Linux: <tt>$HOME/Settings/MySoft/Star Runner.conf</tt>)</li>
@@ -344,6 +344,7 @@
 <h3 class="fn"><a name="ReadFunc-typedef"></a>typedef QSettings::ReadFunc</h3>
 <p>Typedef for a pointer to a function with the following signature:</p>
 <pre> bool myReadFunc(QIODevice &amp;device, QSettings::SettingsMap &amp;map);</pre>
+<p><tt>ReadFunc</tt> is used in <tt>registerFormat()</tt> as a pointer to a function that reads a set of key/value pairs. <tt>ReadFunc</tt> should read all the options in one pass, and return all the settings in the <tt>SettingsMap</tt> container, which is initially empty.</p>
 <p>See also <a href="qsettings.html#WriteFunc-typedef">WriteFunc</a> and <a href="qsettings.html#registerFormat">registerFormat</a>().</p>
 <h3 class="fn"><a name="Scope-enum"></a>enum QSettings::Scope</h3>
 <p>This enum specifies whether settings are user-specific or shared by all users of the same system.</p>
@@ -368,6 +369,7 @@
 <h3 class="fn"><a name="WriteFunc-typedef"></a>typedef QSettings::WriteFunc</h3>
 <p>Typedef for a pointer to a function with the following signature:</p>
 <pre> bool myWriteFunc(QIODevice &amp;device, const QSettings::SettingsMap &amp;map);</pre>
+<p><tt>WriteFunc</tt> is used in <tt>registerFormat()</tt> as a pointer to a function that writes a set of key/value pairs. <tt>WriteFunc</tt> is only called once, so you need to output the settings in one go.</p>
 <p>See also <a href="qsettings.html#ReadFunc-typedef">ReadFunc</a> and <a href="qsettings.html#registerFormat">registerFormat</a>().</p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -604,7 +606,7 @@
 <h3 class="fn"><a name="registerFormat"></a><a href="qsettings.html#Format-enum">Format</a> QSettings::registerFormat ( const <a href="qstring.html">QString</a> &amp; <i>extension</i>, <a href="qsettings.html#ReadFunc-typedef">ReadFunc</a> <i>readFunc</i>, <a href="qsettings.html#WriteFunc-typedef">WriteFunc</a> <i>writeFunc</i>, <a href="qt.html#CaseSensitivity-enum">Qt::CaseSensitivity</a> <i>caseSensitivity</i> = Qt::CaseSensitive )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Registers a custom storage format. On success, returns a special Format value that can then be passed to the <a href="qsettings.html">QSettings</a> constuctor. On failure, returns <a href="qsettings.html#Format-enum">InvalidFormat</a>.</p>
 <p>The <i>extension</i> is the file extension associated to the format (without the '.').</p>
-<p>The <i>readFunc</i> and <i>writeFunc</i> parameters are pointers to functions that read and write a set of (key, value) pairs. The <a href="qiodevice.html">QIODevice</a> parameter to the read and write functions is always opened in binary mode (i.e&#x2e;, without the <a href="qiodevice.html#OpenModeFlag-enum">QIODevice::Text</a> flag).</p>
+<p>The <i>readFunc</i> and <i>writeFunc</i> parameters are pointers to functions that read and write a set of key/value pairs. The <a href="qiodevice.html">QIODevice</a> parameter to the read and write functions is always opened in binary mode (i.e&#x2e;, without the <a href="qiodevice.html#OpenModeFlag-enum">QIODevice::Text</a> flag).</p>
 <p>The <i>caseSensitivity</i> parameter specifies whether keys are case sensitive or not. This makes a difference when looking up values using <a href="qsettings.html">QSettings</a>. The default is case sensitive.</p>
 <p>By default, if you use one of the constructors that work in terms of an organization name and an application name, the file system locations used are the same as for <a href="qsettings.html#Format-enum">IniFormat</a>. Use <a href="qsettings.html#setPath">setPath</a>() to specify other locations.</p>
 <p>Example:</p>
@@ -674,7 +676,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qsettings.html#iniCodec">iniCodec</a>().</p>
 <h3 class="fn"><a name="setIniCodec-2"></a>void QSettings::setIniCodec ( const char * <i>codecName</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the codec for accessing INI files (including <tt>.conf</tt> files on Unix) to the <a href="qtextcodec.html">QTextCodec</a> for the encoding specified by <i>codecName</i>. Common values for <tt>codecName</tt> include &quot;ISO 8859-1&quot;, &quot;UTF-8&quot;, and &quot;UTF-16&quot;. If the encoding isn't recognized, nothing happens.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qtextcodec.html#codecForName">QTextCodec::codecForName</a>().</p>
@@ -731,6 +733,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

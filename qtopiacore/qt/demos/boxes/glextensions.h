@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the demonstration applications of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -120,8 +120,11 @@ glUnmapBuffer
 //#define GL_TEXTURE_CUBE_MAP_NEGATIVE_Z 0x851A
 #endif
 
+#ifndef GL_ARB_vertex_buffer_object
+typedef ptrdiff_t GLsizeiptrARB;
+#endif
+
 #ifndef GL_VERSION_1_5
-typedef ptrdiff_t GLsizeiptr;
 #define GL_ARRAY_BUFFER 0x8892
 #define GL_ELEMENT_ARRAY_BUFFER 0x8893
 #define GL_READ_WRITE 0x88BA
@@ -185,7 +188,7 @@ typedef void (APIENTRY *_glTexImage3D) (GLenum, GLint, GLenum, GLsizei, GLsizei,
 
 typedef void (APIENTRY *_glGenBuffers) (GLsizei, GLuint *);
 typedef void (APIENTRY *_glBindBuffer) (GLenum, GLuint);
-typedef void (APIENTRY *_glBufferData) (GLenum, GLsizeiptr, const GLvoid *, GLenum);
+typedef void (APIENTRY *_glBufferData) (GLenum, GLsizeiptrARB, const GLvoid *, GLenum);
 typedef void (APIENTRY *_glDeleteBuffers) (GLsizei, const GLuint *);
 typedef void *(APIENTRY *_glMapBuffer) (GLenum, GLenum);
 typedef GLboolean (APIENTRY *_glUnmapBuffer) (GLenum);

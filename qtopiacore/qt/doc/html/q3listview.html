@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/itemviews/q3listview.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/itemviews/q3listview.cpp -->
 <head>
   <title>Qt 4.5: Q3ListView Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -133,7 +133,7 @@
 <li><div class="fn"></div>13 public functions inherited from <a href="qframe.html#public-functions">QFrame</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -429,7 +429,7 @@
 <p>If <i>width</i> is negative, the new column's <a href="q3listview.html#WidthMode-enum">WidthMode</a> is set to <tt>Maximum</tt> instead of <tt>Manual</tt>.</p>
 <p>See also <a href="q3listview.html#setColumnText">setColumnText</a>(), <a href="q3listview.html#setColumnWidth">setColumnWidth</a>(), and <a href="q3listview.html#setColumnWidthMode">setColumnWidthMode</a>().</p>
 <h3 class="fn"><a name="addColumn-2"></a>int Q3ListView::addColumn ( const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>label</i>, int <i>width</i> = -1 )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Adds a <i>width</i> pixels wide new column with the header <i>label</i> and the <i>icon</i> to the list view, and returns the index of the column.</p>
 <p>If <i>width</i> is negative, the new column's <a href="q3listview.html#WidthMode-enum">WidthMode</a> is set to <tt>Maximum</tt>, and to <tt>Manual</tt> otherwise.</p>
 <p>See also <a href="q3listview.html#setColumnText">setColumnText</a>(), <a href="q3listview.html#setColumnWidth">setColumnWidth</a>(), and <a href="q3listview.html#setColumnWidthMode">setColumnWidthMode</a>().</p>
@@ -445,7 +445,7 @@
 <p>This signal is emitted whenever the user clicks (mouse pressed <i>and</i> mouse released) in the list view. <i>item</i> is the clicked list view item, or 0 if the user didn't click on an item.</p>
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
 <h3 class="fn"><a name="clicked-2"></a>void Q3ListView::clicked ( <a href="q3listviewitem.html">Q3ListViewItem</a> * <i>item</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>pnt</i>, int <i>c</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted whenever the user clicks (mouse pressed <i>and</i> mouse released) in the list view. <i>item</i> is the clicked list view item, or 0 if the user didn't click on an item. <i>pnt</i> is the position where the user has clicked in global coordinates. If <i>item</i> is not 0, <i>c</i> is the list view column into which the user pressed; if <i>item</i> is 0 <i>c</i>'s value is undefined.</p>
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
 <h3 class="fn"><a name="collapsed"></a>void Q3ListView::collapsed ( <a href="q3listviewitem.html">Q3ListViewItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
@@ -570,7 +570,7 @@
 <p>This signal is emitted when <i>item</i> has been renamed to <i>text</i>, e.g&#x2e; by in in-place renaming, in column <i>col</i>.</p>
 <p>See also <a href="q3listviewitem.html#setRenameEnabled">Q3ListViewItem::setRenameEnabled</a>().</p>
 <h3 class="fn"><a name="itemRenamed-2"></a>void Q3ListView::itemRenamed ( <a href="q3listviewitem.html">Q3ListViewItem</a> * <i>item</i>, int <i>col</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when <i>item</i> has been renamed, e.g&#x2e; by in-place renaming, in column <i>col</i>.</p>
 <p>See also <a href="q3listviewitem.html#setRenameEnabled">Q3ListViewItem::setRenameEnabled</a>().</p>
 <h3 class="fn"><a name="lastItem"></a><a href="q3listviewitem.html">Q3ListViewItem</a> * Q3ListView::lastItem () const</h3>
@@ -593,7 +593,7 @@
 <p>This signal is emitted whenever the user presses the mouse button in a list view. <i>item</i> is the list view item on which the user pressed the mouse button, or 0 if the user didn't press the mouse on an item.</p>
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
 <h3 class="fn"><a name="pressed-2"></a>void Q3ListView::pressed ( <a href="q3listviewitem.html">Q3ListViewItem</a> * <i>item</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>pnt</i>, int <i>c</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted whenever the user presses the mouse button in a list view. <i>item</i> is the list view item on which the user pressed the mouse button, or 0 if the user didn't press the mouse on an item. <i>pnt</i> is the position of the mouse cursor in global coordinates, and <i>c</i> is the column where the mouse cursor was when the user pressed the mouse button.</p>
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
 <h3 class="fn"><a name="removeColumn"></a>void Q3ListView::removeColumn ( int <i>index</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -622,7 +622,7 @@
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
 <p>See also <a href="q3listview.html#setSelected">setSelected</a>() and <a href="q3listviewitem.html#setSelected">Q3ListViewItem::setSelected</a>().</p>
 <h3 class="fn"><a name="selectionChanged-2"></a>void Q3ListView::selectionChanged ( <a href="q3listviewitem.html">Q3ListViewItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted whenever the selected item has changed in <tt>Single</tt> selection mode (normally after the screen update). The argument is the newly selected <i>item</i>.</p>
 <p>In <tt>Multi</tt> selection mode, use the no argument overload of this signal.</p>
 <p><b>Warning:</b> Do not delete any <a href="q3listviewitem.html">Q3ListViewItem</a> objects in slots connected to this signal.</p>
@@ -634,7 +634,7 @@
 <p>Sets the heading of column <i>column</i> to <i>label</i>.</p>
 <p>See also <a href="q3listview.html#columnText">columnText</a>().</p>
 <h3 class="fn"><a name="setColumnText-2"></a>void Q3ListView::setColumnText ( int <i>column</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>label</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the heading of column <i>column</i> to <i>icon</i> and <i>label</i>.</p>
 <p>See also <a href="q3listview.html#columnText">columnText</a>().</p>
 <h3 class="fn"><a name="setColumnWidth"></a>void Q3ListView::setColumnWidth ( int <i>column</i>, int <i>w</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
@@ -692,6 +692,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

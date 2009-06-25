@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/widgets/qtabbar.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/widgets/qtabbar.cpp -->
 <head>
   <title>Qt 4.5: QTabBar Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -106,7 +106,7 @@
 <ul>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -329,7 +329,7 @@
 <h3 class="fn"><a name="addTab"></a>int QTabBar::addTab ( const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
 <p>Adds a new tab with text <i>text</i>. Returns the new tab's index.</p>
 <h3 class="fn"><a name="addTab-2"></a>int QTabBar::addTab ( const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Adds a new tab with icon <i>icon</i> and text <i>text</i>. Returns the new tab's index.</p>
 <h3 class="fn"><a name="currentChanged"></a>void QTabBar::currentChanged ( int <i>index</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the tab bar's current tab changes. The new current has the given <i>index</i>, or -1 if there isn't a new one (for example, if there are no tab in the <a href="qtabbar.html">QTabBar</a>)</p>
@@ -339,7 +339,7 @@
 <h3 class="fn"><a name="insertTab"></a>int QTabBar::insertTab ( int <i>index</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
 <p>Inserts a new tab with text <i>text</i> at position <i>index</i>. If <i>index</i> is out of range, the new tab is appened. Returns the new tab's index.</p>
 <h3 class="fn"><a name="insertTab-2"></a>int QTabBar::insertTab ( int <i>index</i>, const <a href="qicon.html">QIcon</a> &amp; <i>icon</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a new tab with icon <i>icon</i> and text <i>text</i> at position <i>index</i>. If <i>index</i> is out of range, the new tab is appended. Returns the new tab's index.</p>
 <p>If the <a href="qtabbar.html">QTabBar</a> was empty before this function is called, the inserted tab becomes the current tab.</p>
 <p>Inserting a new tab at an index less than or equal to the current index will increment the current index, but keep the current tab.</p>
@@ -392,7 +392,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qtabbar.html#tabsClosable-prop">setTabsClosable</a>().</p>
 <h3 class="fn"><a name="tabData"></a><a href="qvariant.html">QVariant</a> QTabBar::tabData ( int <i>index</i> ) const</h3>
-<p>Returns the datad of the tab at position <i>index</i>, or a null variant if <i>index</i> is out of range.</p>
+<p>Returns the data of the tab at position <i>index</i>, or a null variant if <i>index</i> is out of range.</p>
 <p>See also <a href="qtabbar.html#setTabData">setTabData</a>().</p>
 <h3 class="fn"><a name="tabIcon"></a><a href="qicon.html">QIcon</a> QTabBar::tabIcon ( int <i>index</i> ) const</h3>
 <p>Returns the icon of the tab at position <i>index</i>, or a null icon if <i>index</i> is out of range.</p>
@@ -432,6 +432,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

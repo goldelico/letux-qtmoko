@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -144,6 +144,7 @@ public:
         const QModelIndex &proxy_index) const
     {
         Q_ASSERT(proxy_index.isValid());
+        Q_ASSERT(proxy_index.model() == q_func());
         const void *p = proxy_index.internalPointer();
         Q_ASSERT(p);
         QMap<QModelIndex, Mapping *>::const_iterator it =
@@ -311,6 +312,10 @@ QModelIndex QSortFilterProxyModelPrivate::proxy_to_source(const QModelIndex &pro
 {
     if (!proxy_index.isValid())
         return QModelIndex(); // for now; we may want to be able to set a root index later
+    if (proxy_index.model() != q_func()) {
+        qWarning() << "QSortFilterProxyModel: index from wrong model passed to mapToSource";
+        return QModelIndex();
+    }
     IndexMap::const_iterator it = index_to_iterator(proxy_index);
     Mapping *m = it.value();
     if ((proxy_index.row() >= m->source_rows.size()) || (proxy_index.column() >= m->source_columns.size()))
@@ -324,6 +329,10 @@ QModelIndex QSortFilterProxyModelPrivate::source_to_proxy(const QModelIndex &sou
 {
     if (!source_index.isValid())
         return QModelIndex(); // for now; we may want to be able to set a root index later
+    if (source_index.model() != model) {
+        qWarning() << "QSortFilterProxyModel: index from wrong model passed to mapFromSource";
+        return QModelIndex();
+    }
     QModelIndex source_parent = source_index.parent();
     IndexMap::const_iterator it = create_mapping(source_parent);
     Mapping *m = it.value();
@@ -1032,9 +1041,21 @@ void QSortFilterProxyModelPrivate::_q_sourceDataChanged(const QModelIndex &sourc
         }
     }
 
-    if (!source_rows_remove.isEmpty())
+    if (!source_rows_remove.isEmpty()) {
         remove_source_items(m->proxy_rows, m->source_rows,
                             source_rows_remove, source_parent, Qt::Vertical);
+        QSet<int> source_rows_remove_set = source_rows_remove.toList().toSet();
+        QVector<QModelIndex>::iterator it = m->mapped_children.begin();
+        while (it != m->mapped_children.end()) {
+            const QModelIndex source_child_index = *it;
+            if (source_rows_remove_set.contains(source_child_index.row())) {
+                it = m->mapped_children.erase(it);
+                remove_from_mapping(source_child_index);
+            } else {
+                ++it;
+            }
+        }
+    }
 
     if (!source_rows_resort.isEmpty()) {
         // Re-sort the rows
@@ -1497,7 +1518,8 @@ void QSortFilterProxyModel::setSourceModel(QAbstractItemModel *sourceModel)
 
     d->clear_mapping();
     reset();
-    d->update_source_sort_column();
+    if (d->update_source_sort_column() && d->dynamic_sortfilter)
+        d->sort();
 }
 
 /*!

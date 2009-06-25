@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -107,9 +107,16 @@ QT_USE_NAMESPACE
 
 - (void)sendEvent:(NSEvent *)event
 {
-    [self retain];
-
     QWidget *widget = [[QT_MANGLE_NAMESPACE(QCocoaWindowDelegate) sharedDelegate] qt_qwidgetForWindow:self];
+
+    // Cocoa can hold onto the window after we've disavowed its knowledge. So,
+    // if we get sent an event afterwards just have it go through the super's
+    // version and don't do any stuff with Qt.
+    if (!widget) {
+        [super sendEvent:event];
+        return;
+    }
+    [self retain];
     QT_MANGLE_NAMESPACE(QCocoaView) *view = static_cast<QT_MANGLE_NAMESPACE(QCocoaView) *>(qt_mac_nativeview_for(widget));
     Qt::MouseButton mouseButton = cocoaButton2QtButton([event buttonNumber]);
 

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/kernel/qvariant.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/kernel/qvariant.cpp -->
 <head>
   <title>Qt 4.5: QVariant Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -126,8 +126,8 @@
 <li><div class="fn"></div>void <b><a href="qvariant.html#qVariantSetValue">qVariantSetValue</a></b> ( QVariant &amp; <i>variant</i>, const T &amp; <i>value</i> )</li>
 <li><div class="fn"></div>T <b><a href="qvariant.html#qVariantValue">qVariantValue</a></b> ( const QVariant &amp; <i>value</i> )</li>
 <li><div class="fn"></div>T <b><a href="qvariant.html#qvariant_cast">qvariant_cast</a></b> ( const QVariant &amp; <i>value</i> )</li>
-<li><div class="fn"></div>bool <b><a href="qvariant.html#operator-not-eq">operator!=</a></b> ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</li>
-<li><div class="fn"></div>bool <b><a href="qvariant.html#operator-eq-eq">operator==</a></b> ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qvariant.html#operator-not-eq-32">operator!=</a></b> ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</li>
+<li><div class="fn"></div>bool <b><a href="qvariant.html#operator-eq-eq-52">operator==</a></b> ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -155,7 +155,7 @@
  v = v.toInt() + 100;            <span class="comment">// The variant now hold the value 223</span>
  v = QVariant(QStringList());</pre>
 <p>You can even store <a href="qlist.html">QList</a>&lt;QVariant&gt; and <a href="qmap.html">QMap</a>&lt;<a href="qstring.html">QString</a>, QVariant&gt; values in a variant, so you can easily construct arbitrarily complex data structures of arbitrary types. This is very powerful and versatile, but may prove less memory and speed efficient than storing specific types in standard data structures.</p>
-<p>QVariant also supports the notion of null values, where you have a defined type with no value set.</p>
+<p>QVariant also supports the notion of null values, where you can have a defined type with no value set. However, note that QVariant types can only be cast when they have had a value set.</p>
 <pre> QVariant x, y(QString()), z(QString(&quot;&quot;));
  x.convert(QVariant::Int);
 <span class="comment"> // x.isNull() == true</span>
@@ -563,16 +563,16 @@
 <p>Returns the given <i>value</i> converted to the template type <tt>T</tt>.</p>
 <p>This function is equivalent to <a href="qvariant.html#qVariantValue">qVariantValue</a>().</p>
 <p>See also <a href="qvariant.html#qVariantValue">qVariantValue</a>() and <a href="qvariant.html#value">QVariant::value</a>().</p>
-<h3 class="fn"><a name="operator-not-eq"></a>bool operator!= ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</h3>
+<h3 class="fn"><a name="operator-not-eq-32"></a>bool operator!= ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</h3>
 <p>Returns false if <i>v1</i> and <i>v2</i> are equal; otherwise returns true.</p>
 <p><b>Warning:</b> This function doesn't support custom types registered with <a href="qmetatype.html#qRegisterMetaType">qRegisterMetaType</a>().</p>
-<h3 class="fn"><a name="operator-eq-eq"></a>bool operator== ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</h3>
+<h3 class="fn"><a name="operator-eq-eq-52"></a>bool operator== ( const QVariant &amp; <i>v1</i>, const QVariant &amp; <i>v2</i> )</h3>
 <p>Returns true if <i>v1</i> and <i>v2</i> are equal; otherwise returns false.</p>
 <p><b>Warning:</b> This function doesn't support custom types registered with <a href="qmetatype.html#qRegisterMetaType">qRegisterMetaType</a>().</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

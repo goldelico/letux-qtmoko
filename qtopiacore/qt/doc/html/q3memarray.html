@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/q3memarray.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/q3memarray.qdoc -->
 <head>
   <title>Qt 4.5: Q3MemArray Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -168,7 +168,7 @@
 <p>Shallow copy. Dereferences the current array and references the data contained in <i>a</i> instead. Returns a reference to this array.</p>
 <p>See also <a href="q3memarray.html#operator-eq">operator=</a>().</p>
 <h3 class="fn"><a name="assign-2"></a>Q3MemArray&lt;type&gt; &amp; Q3MemArray::assign ( const type * <i>data</i>, <a href="qtglobal.html#uint-typedef">uint</a> <i>size</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Shallow copy. Dereferences the current array and references the array data <i>data</i>, which contains <i>size</i> elements. Returns a reference to this array.</p>
 <p>Do not delete <i>data</i> later; <a href="q3memarray.html">Q3MemArray</a> will call free() on it at the right time.</p>
 <h3 class="fn"><a name="at"></a>type &amp; Q3MemArray::at ( <a href="qtglobal.html#uint-typedef">uint</a> <i>index</i> ) const</h3>
@@ -178,7 +178,7 @@
 <h3 class="fn"><a name="begin"></a><a href="q3memarray.html#Iterator-typedef">Iterator</a> Q3MemArray::begin ()</h3>
 <p>Returns an iterator pointing at the beginning of this array. This iterator can be used in the same way as the iterators of <a href="q3valuelist.html">Q3ValueList</a> and <a href="qmap.html">QMap</a>, for example.</p>
 <h3 class="fn"><a name="begin-2"></a><a href="q3memarray.html#ConstIterator-typedef">ConstIterator</a> Q3MemArray::begin () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a const iterator pointing at the beginning of this array. This iterator can be used in the same way as the iterators of <a href="q3valuelist.html">Q3ValueList</a> and <a href="qmap.html">QMap</a>, for example.</p>
 <h3 class="fn"><a name="bsearch"></a>int Q3MemArray::bsearch ( const type &amp; <i>v</i> ) const</h3>
 <p>In a sorted array (as sorted by <a href="q3memarray.html#sort">sort</a>()), finds the first occurrence of <i>v</i> by using a binary search. For a sorted array this is generally much faster than <a href="q3memarray.html#find">find</a>(), which does a linear search.</p>
@@ -205,13 +205,13 @@
 <p>Deep copy. Dereferences the current array and obtains a copy of the data contained in <i>a</i> instead. Returns a reference to this array.</p>
 <p>See also <a href="q3memarray.html#copy">copy</a>().</p>
 <h3 class="fn"><a name="duplicate-2"></a>Q3MemArray&lt;type&gt; &amp; Q3MemArray::duplicate ( const type * <i>data</i>, <a href="qtglobal.html#uint-typedef">uint</a> <i>size</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Deep copy. Dereferences the current array and obtains a copy of the array data <i>data</i> instead. Returns a reference to this array. The size of the array is given by <i>size</i>.</p>
 <p>See also <a href="q3memarray.html#copy">copy</a>().</p>
 <h3 class="fn"><a name="end"></a><a href="q3memarray.html#Iterator-typedef">Iterator</a> Q3MemArray::end ()</h3>
 <p>Returns an iterator pointing behind the last element of this array. This iterator can be used in the same way as the iterators of <a href="q3valuelist.html">Q3ValueList</a> and <a href="qmap.html">QMap</a>, for example.</p>
 <h3 class="fn"><a name="end-2"></a><a href="q3memarray.html#ConstIterator-typedef">ConstIterator</a> Q3MemArray::end () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a const iterator pointing behind the last element of this array. This iterator can be used in the same way as the iterators of <a href="q3valuelist.html">Q3ValueList</a> and <a href="qmap.html">QMap</a>, for example.</p>
 <h3 class="fn"><a name="fill"></a>bool Q3MemArray::fill ( const type &amp; <i>v</i>, int <i>size</i> = -1 )</h3>
 <p>Fills the array with the value <i>v</i>. If <i>size</i> is specified as different from -1, then the array will be resized before being filled.</p>
@@ -240,7 +240,7 @@
 <p><i>optim</i> is either <a href="q3garray.html#Optimization-enum">Q3GArray::MemOptim</a> (the default) or <a href="q3garray.html#Optimization-enum">Q3GArray::SpeedOptim</a>. When optimizing for speed rather than memory consumption, the array uses a smart grow and shrink algorithm that might allocate more memory than is actually needed for <i>size</i> elements. This speeds up subsequent resize operations, for example when appending many elements to an array, since the space has already been allocated.</p>
 <p>See also <a href="q3memarray.html#size">size</a>().</p>
 <h3 class="fn"><a name="resize-2"></a>bool Q3MemArray::resize ( <a href="qtglobal.html#uint-typedef">uint</a> <i>size</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Resizes (expands or shrinks) the array to <i>size</i> elements. The array becomes a null array if <i>size</i> == 0.</p>
 <p>Returns TRUE if successful, i.e&#x2e; if the memory can be allocated; otherwise returns FALSE.</p>
 <p>New elements are not initialized.</p>
@@ -302,6 +302,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

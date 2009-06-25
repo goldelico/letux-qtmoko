@@ -1,7 +1,7 @@
 /*******    *********************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -140,10 +140,7 @@ static const char * const dock_widget_restore_xpm[] =
 class QGtkStyleFilter : public QObject
 {
 public:
-    QGtkStyleFilter() {
-        qApp->installEventFilter(this);
-    }
-
+    QGtkStyleFilter() {}
 private:
     bool eventFilter(QObject *obj, QEvent *e);
 };
@@ -167,7 +164,12 @@ class QGtkStylePrivate : public QCleanlooksStylePrivate
 public:
     QGtkStylePrivate()
             : QCleanlooksStylePrivate()
-    {}
+    {
+        QGtk::initGtkWidgets();
+        if (QGtk::isThemeAvailable())
+            qApp->installEventFilter(&filter);
+
+    }
     QGtkStyleFilter filter;
 };
 
@@ -243,7 +245,6 @@ static QString uniqueName(const QString &key, const QStyleOption *option, const 
 QGtkStyle::QGtkStyle()
     : QCleanlooksStyle(*new QGtkStylePrivate)
 {
-    QGtk::initGtkWidgets();
 }
 
 /*!
@@ -951,14 +952,15 @@ void QGtkStyle::drawPrimitive(PrimitiveElement element,
                                "interior-focus", &interior_focus,
                                "focus-line-width", &focus_line_width, NULL);
 
+        // See https://bugzilla.mozilla.org/show_bug.cgi?id=405421 for info about this hack
+        g_object_set_data(G_OBJECT(gtkEntry), "transparent-bg-hint", GINT_TO_POINTER(TRUE));
+
         if (!interior_focus && option->state & State_HasFocus)
             rect.adjust(focus_line_width, focus_line_width, -focus_line_width, -focus_line_width);
-
         gtkPainter.paintShadow(gtkEntry, "entry", rect, option->state & State_Enabled ? 
                                GTK_STATE_NORMAL : GTK_STATE_INSENSITIVE, 
                                GTK_SHADOW_IN, gtkEntry->style,
                                option->state & State_HasFocus ? QLS("focus") : QString());
-
         if (!interior_focus && option->state & State_HasFocus)
             gtkPainter.paintShadow(gtkEntry, "entry", option->rect, option->state & State_Enabled ? 
                                    GTK_STATE_ACTIVE : GTK_STATE_INSENSITIVE,
@@ -977,7 +979,7 @@ void QGtkStyle::drawPrimitive(PrimitiveElement element,
 
             if (widget && widget->testAttribute(Qt::WA_SetPalette) &&
                 resolve_mask & (1 << QPalette::Base)) // Palette overridden by user
-                painter->fillRect(textRect, option->palette.base().color());
+                painter->fillRect(textRect, option->palette.base());
             else
                 gtkPainter.paintFlatBox( gtkEntry, "entry_bg", textRect,
                                          option->state & State_Enabled ? GTK_STATE_NORMAL : GTK_STATE_INSENSITIVE, GTK_SHADOW_NONE, gtkEntry->style);
@@ -2760,10 +2762,13 @@ void QGtkStyle::drawControl(ControlElement element,
             if (tab->state & State_Selected)
                 state = GTK_STATE_NORMAL;
 
-            bool first = tab->position == QStyleOptionTab::Beginning || tab->position == QStyleOptionTab::OnlyOneTab;
-            bool last = tab->position == QStyleOptionTab::End || tab->position == QStyleOptionTab::OnlyOneTab;
             bool selected = (tab->state & State_Selected);
-            if (option->direction == Qt::RightToLeft) {
+            bool first = false, last = false;
+            if (widget) {
+                // This is most accurate and avoids resizing tabs while moving
+                first = tab->rect.left() == widget->rect().left();
+                last = tab->rect.right() == widget->rect().right();
+            } else if (option->direction == Qt::RightToLeft) {
                 bool tmp = first;
                 first = last;
                 last = tmp;

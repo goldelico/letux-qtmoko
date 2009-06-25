@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/dialogs/qfontdialog.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/dialogs/qfontdialog.cpp -->
 <head>
   <title>Qt 4.5: QFontDialog Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -54,7 +54,7 @@
 <li><div class="fn"></div>5 public functions inherited from <a href="qdialog.html#public-functions">QDialog</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="signals"></a>
 <h3>Signals</h3>
@@ -202,12 +202,12 @@
 <p><b>Warning:</b> Do not delete <i>parent</i> during the execution of the dialog. If you want to do this, you should create the dialog yourself using one of the <a href="qfontdialog.html">QFontDialog</a> constructors.</p>
 <p>The <i>name</i> parameter is ignored.</p>
 <h3 class="fn"><a name="getFont-4"></a><a href="qfont.html">QFont</a> QFontDialog::getFont ( bool * <i>ok</i>, const <a href="qfont.html">QFont</a> &amp; <i>initial</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i>, const <a href="qstring.html">QString</a> &amp; <i>title</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="getFont-5"></a><a href="qfont.html">QFont</a> QFontDialog::getFont ( bool * <i>ok</i>, const <a href="qfont.html">QFont</a> &amp; <i>initial</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i> = 0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="getFont-6"></a><a href="qfont.html">QFont</a> QFontDialog::getFont ( bool * <i>ok</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i> = 0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Executes a modal font dialog and returns a font.</p>
 <p>If the user clicks <b>OK</b>, the selected font is returned. If the user clicks <b>Cancel</b>, the Qt default font is returned.</p>
 <p>The dialog is constructed with the given <i>parent</i>. If the <i>ok</i> parameter is not-null, the value it refers to is set to true if the user clicks <b>OK</b>, and false if the user clicks <b>Cancel</b>.</p>
@@ -222,8 +222,8 @@
  }</pre>
 <p><b>Warning:</b> Do not delete <i>parent</i> during the execution of the dialog. If you want to do this, you should create the dialog yourself using one of the <a href="qfontdialog.html">QFontDialog</a> constructors.</p>
 <h3 class="fn"><a name="open"></a>void QFontDialog::open ( <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>member</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
-<p>Opens the dialog and connects its <a href="qdialog.html#accepted">accepted</a>() signal to the slot specified by <i>receiver</i> and <i>member</i>.</p>
+<p>This is an overloaded function.</p>
+<p>Opens the dialog and connects its <a href="qfontdialog.html#fontSelected">fontSelected</a>() signal to the slot specified by <i>receiver</i> and <i>member</i>.</p>
 <p>The signal will be disconnected from the slot when the dialog is closed.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="selectedFont"></a><a href="qfont.html">QFont</a> QFontDialog::selectedFont () const</h3>
@@ -239,6 +239,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qregion.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/painting/qregion.cpp -->
 <head>
   <title>Qt 4.5: QRegion Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -76,8 +76,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-lt-lt-30">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-gt-gt-15">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, QRegion &amp; <i>r</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-lt-lt-125">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qregion.html#operator-gt-gt-63">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>s</i>, QRegion &amp; <i>r</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -145,7 +145,7 @@
 <p>The resulting region consists of the pixels in bitmap <i>bm</i> that are <a href="qt.html#GlobalColor-enum">Qt::color1</a>, as if each pixel was a 1 by 1 rectangle.</p>
 <p>This constructor may create complex regions that will slow down painting when used. Note that drawing masked pixmaps can be done much faster using <a href="qpixmap.html#setMask">QPixmap::setMask</a>().</p>
 <h3 class="fn"><a name="QRegion-7"></a>QRegion::QRegion ( const <a href="qrect.html">QRect</a> &amp; <i>r</i>, <a href="qregion.html#RegionType-enum">RegionType</a> <i>t</i> = Rectangle )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Create a region based on the rectange <i>r</i> with region type <i>t</i>.</p>
 <p>If the rectangle is invalid a null region will be created.</p>
 <p>See also <a href="qregion.html#RegionType-enum">QRegion::RegionType</a>.</p>
@@ -154,7 +154,7 @@
 <h3 class="fn"><a name="contains"></a>bool QRegion::contains ( const <a href="qpoint.html">QPoint</a> &amp; <i>p</i> ) const</h3>
 <p>Returns true if the region contains the point <i>p</i>; otherwise returns false.</p>
 <h3 class="fn"><a name="contains-2"></a>bool QRegion::contains ( const <a href="qrect.html">QRect</a> &amp; <i>r</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the region overlaps the rectangle <i>r</i>; otherwise returns false.</p>
 <h3 class="fn"><a name="handle"></a>Handle QRegion::handle () const</h3>
 <p>Returns a platform-specific region handle. The <tt>Handle</tt> type is <tt>HRGN</tt> on Windows, <tt>Region</tt> on X11, and <tt>RgnHandle</tt> on Mac OS X. On <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> it is <tt>void *</tt>.</p>
@@ -217,7 +217,7 @@
 <h3 class="fn"><a name="translate"></a>void QRegion::translate ( int <i>dx</i>, int <i>dy</i> )</h3>
 <p>Translates (moves) the region <i>dx</i> along the X axis and <i>dy</i> along the Y axis.</p>
 <h3 class="fn"><a name="translate-2"></a>void QRegion::translate ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Translates the region <i>point</i><i>.x()</i> along the x axis and <i>point</i><i>.y()</i> along the y axis, relative to the current position. Positive values move the region to the right and down.</p>
 <p>Translates to the given <i>point</i>.</p>
 <h3 class="fn"><a name="translated"></a>QRegion QRegion::translated ( int <i>dx</i>, int <i>dy</i> ) const</h3>
@@ -225,7 +225,7 @@
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qregion.html#translate">translate</a>().</p>
 <h3 class="fn"><a name="translated-2"></a>QRegion QRegion::translated ( const <a href="qpoint.html">QPoint</a> &amp; <i>p</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a copy of the regtion that is translated <i>p</i><i>.x()</i> along the x axis and <i>p</i><i>.y()</i> along the y axis, relative to the current position. Positive values move the rectangle to the right and down.</p>
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qregion.html#translate">translate</a>().</p>
@@ -251,19 +251,19 @@
 <p>Applies the <a href="qregion.html#intersected">intersected</a>() function to this region and <i>r</i>. <tt>r1&amp;r2</tt> is equivalent to <tt>r1.intersected(r2)</tt>.</p>
 <p>See also <a href="qregion.html#intersected">intersected</a>().</p>
 <h3 class="fn"><a name="operator-and-2"></a>const QRegion QRegion::operator&amp; ( const <a href="qrect.html">QRect</a> &amp; <i>r</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="operator-and-eq"></a>QRegion &amp; QRegion::operator&amp;= ( const QRegion &amp; <i>r</i> )</h3>
 <p>Applies the <a href="qregion.html#intersected">intersected</a>() function to this region and <i>r</i> and assigns the result to this region. <tt>r1&amp;=r2</tt> is equivalent to <tt>r1</tt> = r1.intersected(r2).</p>
 <p>See also <a href="qregion.html#intersected">intersected</a>().</p>
 <h3 class="fn"><a name="operator-and-eq-2"></a>QRegion &amp; QRegion::operator&amp;= ( const <a href="qrect.html">QRect</a> &amp; <i>r</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="operator-2b"></a>const QRegion QRegion::operator+ ( const QRegion &amp; <i>r</i> ) const</h3>
 <p>Applies the <a href="qregion.html#united">united</a>() function to this region and <i>r</i>. <tt>r1+r2</tt> is equivalent to <tt>r1.united(r2)</tt>.</p>
 <p>See also <a href="qregion.html#united">united</a>() and <a href="qregion.html#operator-7c">operator|</a>().</p>
 <h3 class="fn"><a name="operator-2b-2"></a>const QRegion QRegion::operator+ ( const <a href="qrect.html">QRect</a> &amp; <i>r</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.4.</p>
 <h3 class="fn"><a name="operator-2b-eq"></a>QRegion &amp; QRegion::operator+= ( const QRegion &amp; <i>r</i> )</h3>
 <p>Applies the <a href="qregion.html#united">united</a>() function to this region and <i>r</i> and assigns the result to this region. <tt>r1+=r2</tt> is equivalent to <tt>r1 = r1.united(r2)</tt>.</p>
@@ -295,16 +295,16 @@
 <p>See also <a href="qregion.html#united">united</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-30"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-125"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, const QRegion &amp; <i>r</i> )</h3>
 <p>Writes the region <i>r</i> to the stream <i>s</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-15"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, QRegion &amp; <i>r</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-63"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>s</i>, QRegion &amp; <i>r</i> )</h3>
 <p>Reads a region from the stream <i>s</i> into <i>r</i> and returns a reference to the stream.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

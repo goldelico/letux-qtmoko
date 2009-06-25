@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/stylesheet.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/stylesheet.qdoc -->
 <head>
   <title>Qt 4.5: Qt Style Sheets Reference</title>
   <link rel="prev" href="stylesheet-customizing.html" />
@@ -134,7 +134,7 @@
 <p>To change the position of the <a href="qtabbar.html">QTabBar</a> within a <a href="qtabwidget.html">QTabWidget</a>, use the <a href="#tab-bar-sub">tab-bar</a> subcontrol (and set subcontrol-position).</p>
 <p>See <a href="stylesheet-examples.html#customizing-qtabwidget-and-qtabbar">Customizing QTabBar</a> for an example.</p>
 </td></tr>
-<tr valign="top" class="even"><td><a href="qtabwidget.html">QTabWidget</a> <a name="qtabwidget-widget"></a></td><td>The frame of the tab widget is styled using the <a href="#pane-sub">::pane</a> subcontrol. The left and right corners are styled using the <a href="#left-corner-sub">::left-corner</a> and <a href="#right-corner-sub">::right-corner</a> respectively. The position of the the tab bar is controlled using the <a href="#tab-bar-sub">::tab-bar</a> subcontrol.<p>By default, the subcontrols have positions of a <a href="qtabwidget.html">QTabWidget</a> in the <a href="qwindowsstyle.html">QWindowsStyle</a>. To place the <a href="qtabbar.html">QTabBar</a> in the center, set the subcontrol-position of the tab-bar subcontrol.</p>
+<tr valign="top" class="even"><td><a href="qtabwidget.html">QTabWidget</a> <a name="qtabwidget-widget"></a></td><td>The frame of the tab widget is styled using the <a href="#pane-sub">::pane</a> subcontrol. The left and right corners are styled using the <a href="#left-corner-sub">::left-corner</a> and <a href="#right-corner-sub">::right-corner</a> respectively. The position of the tab bar is controlled using the <a href="#tab-bar-sub">::tab-bar</a> subcontrol.<p>By default, the subcontrols have positions of a <a href="qtabwidget.html">QTabWidget</a> in the <a href="qwindowsstyle.html">QWindowsStyle</a>. To place the <a href="qtabbar.html">QTabBar</a> in the center, set the subcontrol-position of the tab-bar subcontrol.</p>
 <p>The <a href="#top-ps">:top</a>, <a href="#left-ps">:left</a>, <a href="#right-ps">:right</a>, <a href="#bottom-ps">:bottom</a> pseudo states depending on the orientation of the tabs.</p>
 <p>See <a href="stylesheet-examples.html#customizing-qtabwidget-and-qtabbar">Customizing QTabWidget</a> for an example.</p>
 </td></tr>
@@ -157,7 +157,7 @@
 <p>See <a href="stylesheet-examples.html#customizing-qtoolbar">Customizing QToolBar</a> for an example.</p>
 </td></tr>
 <tr valign="top" class="even"><td><a href="qtoolbutton.html">QToolButton</a> <a name="qtoolbutton-widget"></a></td><td>Supports the <a href="stylesheet-customizing.html#box-model">box model</a>.<p>If the <a href="qtoolbutton.html">QToolButton</a> has a menu, is <a href="#menu-indicator-sub">::menu-indicator</a> subcontrol can be used to style the indicator. By default, the menu-indicator is positioned at the bottom right of the Padding rectangle of the widget.</p>
-<p>If the <a href="qtoolbutton.html">QToolButton</a> is in <a href="qtoolbutton.html#ToolButtonPopupMode-enum">QToolButton::MenuButtonPopup</a> mode, the <a href="#menu-button-sub">::menu-button</a> subcontrol is used to draw the menu button. <a href="#menu-arrow-sub">::menu-arrow</a> subcontrol is used to draw the menu arrow inside the menu-button. By default, it is positioned in the center of the Contents rectangle of the the menu-button subcontrol.</p>
+<p>If the <a href="qtoolbutton.html">QToolButton</a> is in <a href="qtoolbutton.html#ToolButtonPopupMode-enum">QToolButton::MenuButtonPopup</a> mode, the <a href="#menu-button-sub">::menu-button</a> subcontrol is used to draw the menu button. <a href="#menu-arrow-sub">::menu-arrow</a> subcontrol is used to draw the menu arrow inside the menu-button. By default, it is positioned in the center of the Contents rectangle of the menu-button subcontrol.</p>
 <p>When the <a href="qtoolbutton.html">QToolButton</a> displays arrows, the <a href="#up-arrow-sub">::up-arrow</a>, <a href="#down-arrow-sub">::down-arrow</a>, <a href="#left-arrow-sub">::left-arrow</a> and <a href="#right-arrow-sub">::right-arrow</a> subcontrols are used.</p>
 <p><b>Warning:</b> If you only set a background-color on a <a href="qtoolbutton.html">QToolButton</a>, the background will not appear unless you set the border property to some value. This is because, by default, the <a href="qtoolbutton.html">QToolButton</a> draws a native border which completely overlaps the background-color. For example,</p>
 <pre> QToolButton { background-color: red; border: none; }</pre>
@@ -356,7 +356,6 @@
 </td></tr>
 <tr valign="top" class="odd"><td><tt>font-family</tt></td><td>String</td><td>The font family.<p>Example:</p>
 <pre> QCheckBox { font-family: &quot;New Century Schoolbook&quot; }</pre>
-<p><b>Note:</b> If you specify more than one parameter in <tt>font-family</tt>, e.g&#x2e;, <tt>font-family: Verdana, Arial</tt>, Qt will only use the first font. If it cannot be found, Qt uses the system fallbacks instead.</p>
 </td></tr>
 <tr valign="top" class="even"><td><tt>font-size</tt></td><td><a href="#font-size">Font Size</a></td><td>The font size. In this version of Qt, only pt and px metrics are supported.<p>Example:</p>
 <pre> QTextEdit { font-size: 12px }</pre>
@@ -806,6 +805,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

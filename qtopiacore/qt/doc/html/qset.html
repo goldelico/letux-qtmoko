@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qset.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/qset.qdoc -->
 <head>
   <title>Qt 4.5: QSet Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -91,8 +91,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-lt-lt-162">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-gt-gt-93">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-lt-lt-140">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qset.html#operator-gt-gt-74">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -127,7 +127,7 @@
  foreach (QString value, set)
      qDebug() &lt;&lt; value;</pre>
 <p>Items can be removed from the set using <a href="qset.html#remove">remove</a>(). There is also a <a href="qset.html#clear">clear</a>() function that removes all items.</p>
-<p>QSet's value data type must be an <a href="containers.html#assignable-data-type">assignable data type</a>. You cannot, for example, store a <a href="qwidget.html">QWidget</a> as a value; instead, store a <a href="qwidget.html">QWidget</a> *. In addition, the type must provide <tt>operator==()</tt>, and there must also be a global <a href="qhash.html#qHash">qHash</a>() function that returns a hash value for an argument of the key's type. See the <a href="qhash.html">QHash</a> documentation for a list of types supported by <a href="qhash.html#qHash">qHash</a>().</p>
+<p>QSet's value data type must be an <a href="containers.html#assignable-data-type">assignable data type</a>. You cannot, for example, store a <a href="qwidget.html">QWidget</a> as a value; instead, store a <a href="qwidget.html">QWidget</a> *. In addition, the type must provide <tt>operator==()</tt>, and there must also be a global <a href="qsourcelocation.html#qHash">qHash</a>() function that returns a hash value for an argument of the key's type. See the <a href="qhash.html">QHash</a> documentation for a list of types supported by <a href="qsourcelocation.html#qHash">qHash</a>().</p>
 <p>Internally, QSet uses a hash table to perform lookups. The hash table automatically grows and shrinks to provide fast lookups without wasting memory. You can still control the size of the hash table by calling <a href="qset.html#reserve">reserve</a>(), if you already know approximately how many elements the QSet will contain, but this isn't necessary to obtain good performance. You can also call <a href="qset.html#capacity">capacity</a>() to retrieve the hash table's size.</p>
 <p>See also <a href="qsetiterator.html">QSetIterator</a>, <a href="qmutablesetiterator.html">QMutableSetIterator</a>, <a href="qhash.html">QHash</a>, and <a href="qmap.html">QMap</a>.</p>
 <hr />
@@ -166,7 +166,7 @@
 <p>Returns a const <a href="containers.html#stl-style-iterators">STL-style iterator</a> positioned at the first item in the set.</p>
 <p>See also <a href="qset.html#constBegin">constBegin</a>() and <a href="qset.html#end">end</a>().</p>
 <h3 class="fn"><a name="begin-2"></a><a href="qset-iterator.html">iterator</a> QSet::begin ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a non-const <a href="containers.html#stl-style-iterators">STL-style iterator</a> positioned at the first item in the set.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <h3 class="fn"><a name="capacity"></a>int QSet::capacity () const</h3>
@@ -197,7 +197,7 @@
 <p>Returns a const <a href="containers.html#stl-style-iterators">STL-style iterator</a> positioned at the imaginary item after the last item in the set.</p>
 <p>See also <a href="qset.html#constEnd">constEnd</a>() and <a href="qset.html#begin">begin</a>().</p>
 <h3 class="fn"><a name="end-2"></a><a href="qset-iterator.html">iterator</a> QSet::end ()</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a non-const <a href="containers.html#stl-style-iterators">STL-style iterator</a> pointing to the imaginary item after the last item in the set.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <h3 class="fn"><a name="erase"></a><a href="qset-iterator.html">iterator</a> QSet::erase ( <a href="qset-iterator.html">iterator</a> <i>pos</i> )</h3>
@@ -210,7 +210,7 @@
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="qset.html#constFind">constFind</a>() and <a href="qset.html#contains">contains</a>().</p>
 <h3 class="fn"><a name="find-2"></a><a href="qset-iterator.html">iterator</a> QSet::find ( const T &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a non-const iterator positioned at the item <i>value</i> in the set. If the set contains no item <i>value</i>, the function returns <a href="qset.html#end">end</a>().</p>
 <p>This function was introduced in Qt 4.2.</p>
 <h3 class="fn"><a name="fromList"></a>QSet&lt;T&gt; QSet::fromList ( const <a href="qlist.html">QList</a>&lt;T&gt; &amp; <i>list</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
@@ -225,7 +225,7 @@
  set.size();             // returns 2</pre>
 <p>See also <a href="qset.html#toList">toList</a>() and <a href="qlist.html#toSet">QList::toSet</a>().</p>
 <h3 class="fn"><a name="insert"></a><a href="qset-const-iterator.html">const_iterator</a> QSet::insert ( const T &amp; <i>value</i> )</h3>
-<p>Inserts item <i>value</i> into the set, if <i>value</i> isn't already in the set, and returns an iterator positioned at the inserted item.</p>
+<p>Inserts item <i>value</i> into the set, if <i>value</i> isn't already in the set, and returns an iterator pointing at the inserted item.</p>
 <p>See also <a href="qset.html#operator-lt-lt">operator&lt;&lt;</a>(), <a href="qset.html#remove">remove</a>(), and <a href="qset.html#contains">contains</a>().</p>
 <h3 class="fn"><a name="intersect"></a>QSet&lt;T&gt; &amp; QSet::intersect ( const QSet&lt;T&gt; &amp; <i>other</i> )</h3>
 <p>Removes all items from this set that are not contained in the <i>other</i> set. A reference to this set is returned.</p>
@@ -284,7 +284,7 @@
 <p>Same as intersect(<i>other</i>).</p>
 <p>See also <a href="qset.html#operator-and">operator&amp;</a>(), <a href="qset.html#operator-7c-eq">operator|=</a>(), and <a href="qset.html#operator--eq">operator-=</a>().</p>
 <h3 class="fn"><a name="operator-and-eq-2"></a>QSet&lt;T&gt; &amp; QSet::operator&amp;= ( const T &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Same as intersect(<i>other</i>), if we consider <i>other</i> to be a set that contains the singleton <i>value</i>.</p>
 <h3 class="fn"><a name="operator-2b"></a>QSet&lt;T&gt; QSet::operator+ ( const QSet&lt;T&gt; &amp; <i>other</i> ) const</h3>
 <p>Returns a new <a href="qset.html">QSet</a> that is the union of this set and the <i>other</i> set.</p>
@@ -325,11 +325,11 @@
 <p>See also <a href="qset.html#insert">insert</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-162"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-140"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>out</i>, const QSet&lt;T&gt; &amp; <i>set</i> )</h3>
 <p>Writes the <i>set</i> to stream <i>out</i>.</p>
 <p>This function requires the value type to implement <tt>operator&lt;&lt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-93"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-74"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>in</i>, QSet&lt;T&gt; &amp; <i>set</i> )</h3>
 <p>Reads a set from stream <i>in</i> into <i>set</i>.</p>
 <p>This function requires the value type to implement <tt>operator&gt;&gt;()</tt>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream operators</a>.</p>
@@ -337,6 +337,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

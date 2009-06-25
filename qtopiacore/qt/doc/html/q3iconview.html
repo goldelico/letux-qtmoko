@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/itemviews/q3iconview.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/itemviews/q3iconview.cpp -->
 <head>
   <title>Qt 4.5: Q3IconView Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -127,7 +127,7 @@
 <li><div class="fn"></div>13 public functions inherited from <a href="qframe.html#public-functions">QFrame</a></li>
 <li><div class="fn"></div>207 public functions inherited from <a href="qwidget.html#public-functions">QWidget</a></li>
 <li><div class="fn"></div>29 public functions inherited from <a href="qobject.html#public-functions">QObject</a></li>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="public-slots"></a>
 <h3>Public Slots</h3>
@@ -462,7 +462,7 @@
 <p>This variant uses <i>grid</i> instead of (<a href="q3iconview.html#gridX-prop">gridX</a>(), <a href="q3iconview.html#gridY-prop">gridY</a>()). If <i>grid</i> is invalid (see <a href="qsize.html#isValid">QSize::isValid</a>()), arrangeItemsInGrid() calculates a valid grid itself and uses that.</p>
 <p>If <i>update</i> is true (the default) the viewport is repainted.</p>
 <h3 class="fn"><a name="arrangeItemsInGrid-2"></a>void Q3IconView::arrangeItemsInGrid ( bool <i>update</i> = true )&nbsp;&nbsp;<tt> [virtual slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Arranges all the items in the grid specified by <a href="q3iconview.html#gridX-prop">gridX</a>() and <a href="q3iconview.html#gridY-prop">gridY</a>().</p>
 <p>Even if <a href="q3iconview.html#sorting-prop">sorting</a>() is enabled, the items are not sorted by this function. If you want to sort or rearrange the items, use iconview-&gt;sort(iconview-&gt;<a href="q3iconview.html#sortDirection-prop">sortDirection</a>()).</p>
 <p>If <i>update</i> is true (the default), the viewport is repainted as well.</p>
@@ -475,7 +475,7 @@
 <p>This signal is emitted when the user clicks any mouse button. If <i>item</i> is non-null, the cursor is on <i>item</i>. If <i>item</i> is null, the mouse cursor isn't on any item.</p>
 <p>See also <a href="q3iconview.html#mouseButtonClicked">mouseButtonClicked</a>(), <a href="q3iconview.html#rightButtonClicked">rightButtonClicked</a>(), and <a href="q3iconview.html#pressed">pressed</a>().</p>
 <h3 class="fn"><a name="clicked-2"></a>void Q3IconView::clicked ( <a href="q3iconviewitem.html">Q3IconViewItem</a> * <i>item</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>pos</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when the user clicks any mouse button on an icon view item. <i>item</i> is a pointer to the item that has been clicked.</p>
 <p><i>pos</i> is the position of the mouse cursor in the global coordinate system (<a href="qmouseevent.html#globalPos">QMouseEvent::globalPos</a>()). (If the click's press and release differ by a pixel or two, <i>pos</i> is the position at release time.)</p>
 <p>See also <a href="q3iconview.html#mouseButtonClicked">mouseButtonClicked</a>(), <a href="q3iconview.html#rightButtonClicked">rightButtonClicked</a>(), and <a href="q3iconview.html#pressed">pressed</a>().</p>
@@ -518,7 +518,7 @@
 <h3 class="fn"><a name="findItem"></a><a href="q3iconviewitem.html">Q3IconViewItem</a> * Q3IconView::findItem ( const <a href="qpoint.html">QPoint</a> &amp; <i>pos</i> ) const</h3>
 <p>Returns a pointer to the item that contains point <i>pos</i>, which is given in contents coordinates, or 0 if no item contains point <i>pos</i>.</p>
 <h3 class="fn"><a name="findItem-3"></a><a href="q3iconviewitem.html">Q3IconViewItem</a> * Q3IconView::findItem ( const <a href="qstring.html">QString</a> &amp; <i>text</i>, <a href="q3iconview.html#ComparisonFlags-typedef">ComparisonFlags</a> <i>compare</i> = BeginsWith | Qt::CaseSensitive ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a pointer to the first item whose text begins with <i>text</i>, or 0 if no such item could be found. Use the <i>compare</i> flag to control the comparison behavior.</p>
 <h3 class="fn"><a name="findLastVisibleItem"></a><a href="q3iconviewitem.html">Q3IconViewItem</a> * Q3IconView::findLastVisibleItem ( const <a href="qrect.html">QRect</a> &amp; <i>r</i> ) const</h3>
 <p>Finds the last item whose bounding rectangle overlaps <i>r</i> and returns a pointer to that item. <i>r</i> is given in content coordinates. Returns 0 if no item overlaps <i>r</i>.</p>
@@ -542,7 +542,7 @@
 <p>This signal is emitted when <i>item</i> has been renamed to <i>name</i>, usually by in-place renaming.</p>
 <p>See also <a href="q3iconviewitem.html#setRenameEnabled">Q3IconViewItem::setRenameEnabled</a>() and <a href="q3iconviewitem.html#rename">Q3IconViewItem::rename</a>().</p>
 <h3 class="fn"><a name="itemRenamed-2"></a>void Q3IconView::itemRenamed ( <a href="q3iconviewitem.html">Q3IconViewItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when <i>item</i> has been renamed, usually by in-place renaming.</p>
 <p>See also <a href="q3iconviewitem.html#setRenameEnabled">Q3IconViewItem::setRenameEnabled</a>() and <a href="q3iconviewitem.html#rename">Q3IconViewItem::rename</a>().</p>
 <h3 class="fn"><a name="lastItem"></a><a href="q3iconviewitem.html">Q3IconViewItem</a> * Q3IconView::lastItem () const</h3>
@@ -570,7 +570,7 @@
 <p>This signal is emitted when the user presses any mouse button. If <i>item</i> is non-null, the cursor is on <i>item</i>. If <i>item</i> is null, the mouse cursor isn't on any item.</p>
 <p>See also <a href="q3iconview.html#mouseButtonPressed">mouseButtonPressed</a>(), <a href="q3iconview.html#rightButtonPressed">rightButtonPressed</a>(), and <a href="q3iconview.html#clicked">clicked</a>().</p>
 <h3 class="fn"><a name="pressed-2"></a>void Q3IconView::pressed ( <a href="q3iconviewitem.html">Q3IconViewItem</a> * <i>item</i>, const <a href="qpoint.html">QPoint</a> &amp; <i>pos</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when the user presses any mouse button. If <i>item</i> is non-null, the cursor is on <i>item</i>. If <i>item</i> is null, the mouse cursor isn't on any item.</p>
 <p><i>pos</i> is the position of the mouse cursor in the global coordinate system (<a href="qmouseevent.html#globalPos">QMouseEvent::globalPos</a>()). (If the click's press and release differ by a pixel or two, <i>pos</i> is the position at release time.)</p>
 <p>See also <a href="q3iconview.html#mouseButtonPressed">mouseButtonPressed</a>(), <a href="q3iconview.html#rightButtonPressed">rightButtonPressed</a>(), and <a href="q3iconview.html#clicked">clicked</a>().</p>
@@ -593,7 +593,7 @@
 <h3 class="fn"><a name="selectionChanged"></a>void Q3IconView::selectionChanged ()&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted when the selection has been changed. It's emitted in each selection mode.</p>
 <h3 class="fn"><a name="selectionChanged-2"></a>void Q3IconView::selectionChanged ( <a href="q3iconviewitem.html">Q3IconViewItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This signal is emitted when the selection changes. <i>item</i> is the newly selected item. This signal is emitted only in single selection mode.</p>
 <h3 class="fn"><a name="setCurrentItem"></a>void Q3IconView::setCurrentItem ( <a href="q3iconviewitem.html">Q3IconViewItem</a> * <i>item</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Makes <i>item</i> the new current item of the icon view.</p>
@@ -628,6 +628,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

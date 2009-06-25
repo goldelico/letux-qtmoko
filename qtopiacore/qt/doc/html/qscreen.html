@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/embedded/qscreen_qws.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/embedded/qscreen_qws.cpp -->
 <head>
   <title>Qt 4.5: QScreen Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -150,7 +150,7 @@
 <p>When a screen update is required, the <a href="qt-embedded-linux.html">Qt for Embedded Linux</a> server runs through all the top-level windows that intersect with the region that is about to be updated, and ensures that the associated clients have updated their memory buffer. Then the server calls the <a href="qscreen.html#exposeRegion">exposeRegion</a>() function that composes the window surfaces and copies the content of memory to screen by calling the <a href="qscreen.html#blit">blit</a>() and <a href="qscreen.html#solidFill">solidFill</a>() functions.</p>
 <p>The <a href="qscreen.html#blit">blit</a>() function copies a given region in a given image to a specified point using device coordinates, while the <a href="qscreen.html#solidFill">solidFill</a>() function fills the given region of the screen with the specified color. Note that normally there is no need to call either of these functions explicitly.</p>
 <p>In addition, QScreen provides the <a href="qscreen.html#blank">blank</a>() function that can be reimplemented to prevent any contents from being displayed on the screen, and the <a href="qscreen.html#setDirty">setDirty</a>() function that can be reimplemented to indicate that a given rectangle of the screen has been altered. Note that the default implementations of these functions do nothing.</p>
-<p>Reimplement the the <a href="qscreen.html#mapFromDevice">mapFromDevice</a>() and <a href="qscreen.html#mapToDevice">mapToDevice</a>() functions to map objects from the framebuffer coordinate system to the coordinate space used by the application, and vice versa. Be aware that the default implementations simply return the given objects as they are.</p>
+<p>Reimplement the <a href="qscreen.html#mapFromDevice">mapFromDevice</a>() and <a href="qscreen.html#mapToDevice">mapToDevice</a>() functions to map objects from the framebuffer coordinate system to the coordinate space used by the application, and vice versa. Be aware that the default implementations simply return the given objects as they are.</p>
 <a name="properties"></a>
 <h3>Properties</h3>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
@@ -260,7 +260,7 @@
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="qt-embedded-architecture.html">Qt for Embedded Linux Architecture</a>.</p>
 <h3 class="fn"><a name="createSurface-2"></a>QWSWindowSurface * QScreen::createSurface ( <a href="qwidget.html">QWidget</a> * <i>widget</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates and returns a new window surface for the given <i>widget</i>.</p>
 <h3 class="fn"><a name="depth"></a>int QScreen::depth () const</h3>
 <p>Returns the depth of the framebuffer, in bits per pixel.</p>
@@ -309,32 +309,32 @@
 <p>Reimplement this function to use the given device's coordinate system when mapping.</p>
 <p>See also <a href="qscreen.html#mapToDevice">mapToDevice</a>().</p>
 <h3 class="fn"><a name="mapFromDevice-2"></a><a href="qpoint.html">QPoint</a> QScreen::mapFromDevice ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>point</i> from the framebuffer coordinate system to the coordinate space used by the application, passing the device's <i>screenSize</i> as argument. Note that the default implementation simply returns the given <i>point</i> as it is.</p>
 <h3 class="fn"><a name="mapFromDevice-3"></a><a href="qrect.html">QRect</a> QScreen::mapFromDevice ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>rectangle</i> from the framebuffer coordinate system to the coordinate space used by the application, passing the device's <i>screenSize</i> as argument. Note that the default implementation simply returns the given <i>rectangle</i> as it is.</p>
 <h3 class="fn"><a name="mapFromDevice-4"></a><a href="qimage.html">QImage</a> QScreen::mapFromDevice ( const <a href="qimage.html">QImage</a> &amp; <i>image</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>image</i> from the framebuffer coordinate system to the coordinate space used by the application. Note that the default implementation simply returns the given <i>image</i> as it is.</p>
 <h3 class="fn"><a name="mapFromDevice-5"></a><a href="qregion.html">QRegion</a> QScreen::mapFromDevice ( const <a href="qregion.html">QRegion</a> &amp; <i>region</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>region</i> from the framebuffer coordinate system to the coordinate space used by the application, passing the device's <i>screenSize</i> as argument. Note that the default implementation simply returns the given <i>region</i> as it is.</p>
 <h3 class="fn"><a name="mapToDevice"></a><a href="qsize.html">QSize</a> QScreen::mapToDevice ( const <a href="qsize.html">QSize</a> &amp; <i>size</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Maps the given <i>size</i> from the coordinate space used by the application to the framebuffer coordinate system. Note that the default implementation simply returns the given <i>size</i> as it is.</p>
 <p>Reimplement this function to use the given device's coordinate system when mapping.</p>
 <p>See also <a href="qscreen.html#mapFromDevice">mapFromDevice</a>().</p>
 <h3 class="fn"><a name="mapToDevice-2"></a><a href="qpoint.html">QPoint</a> QScreen::mapToDevice ( const <a href="qpoint.html">QPoint</a> &amp; <i>point</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>point</i> from the coordinate space used by the application to the framebuffer coordinate system, passing the device's <i>screenSize</i> as argument. Note that the default implementation returns the given <i>point</i> as it is.</p>
 <h3 class="fn"><a name="mapToDevice-3"></a><a href="qrect.html">QRect</a> QScreen::mapToDevice ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>rectangle</i> from the coordinate space used by the application to the framebuffer coordinate system, passing the device's <i>screenSize</i> as argument. Note that the default implementation returns the given <i>rectangle</i> as it is.</p>
 <h3 class="fn"><a name="mapToDevice-4"></a><a href="qimage.html">QImage</a> QScreen::mapToDevice ( const <a href="qimage.html">QImage</a> &amp; <i>image</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>image</i> from the coordinate space used by the application to the framebuffer coordinate system. Note that the default implementation returns the given <i>image</i> as it is.</p>
 <h3 class="fn"><a name="mapToDevice-5"></a><a href="qregion.html">QRegion</a> QScreen::mapToDevice ( const <a href="qregion.html">QRegion</a> &amp; <i>region</i>, const <a href="qsize.html">QSize</a> &amp; <i>screenSize</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Maps the given <i>region</i> from the coordinate space used by the application to the framebuffer coordinate system, passing the device's <i>screenSize</i> as argument. Note that the default implementation returns the given <i>region</i> as it is.</p>
 <h3 class="fn"><a name="numCols"></a>int QScreen::numCols ()</h3>
 <p>Returns the number of entries in the screen's color lookup table (i.e&#x2e; its color palette). A pointer to the color table can be retrieved using the <a href="qscreen.html#clut">clut</a>() function.</p>
@@ -346,7 +346,7 @@
 <p>Returns true if the specified <i>buffer</i> is within the graphics card's memory; otherwise returns false (i.e&#x2e; if it's in main RAM).</p>
 <p>See also <a href="qscreen.html#base">base</a>() and <a href="qscreen.html#totalSize">totalSize</a>().</p>
 <h3 class="fn"><a name="onCard-2"></a>bool QScreen::onCard ( const unsigned char * <i>buffer</i>, <a href="qtglobal.html#ulong-typedef">ulong</a> &amp; <i>offset</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>If the specified <i>buffer</i> is within the graphics card's memory, this function stores the offset from the start of graphics card memory (in bytes), in the location specified by the <i>offset</i> parameter.</p>
 <h3 class="fn"><a name="physicalHeight"></a>int QScreen::physicalHeight () const</h3>
 <p>Returns the physical height of the screen in millimeters.</p>
@@ -494,6 +494,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

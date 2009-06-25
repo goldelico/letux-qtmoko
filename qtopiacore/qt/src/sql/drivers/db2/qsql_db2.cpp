@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -49,6 +49,7 @@
 #include <qstringlist.h>
 #include <qvarlengtharray.h>
 #include <qvector.h>
+#include <QDebug>
 
 #ifndef UNICODE
 #define UNICODE
@@ -87,8 +88,19 @@ public:
     {}
     ~QDB2ResultPrivate()
     {
-        for (int i = 0; i < valueCache.count(); ++i)
+        emptyValueCache();
+    }
+    void clearValueCache()
+    {
+        for (int i = 0; i < valueCache.count(); ++i) {
             delete valueCache[i];
+            valueCache[i] = NULL;
+        }
+    }
+    void emptyValueCache()
+    {
+        clearValueCache();
+        valueCache.clear();
     }
 
     const QDB2DriverPrivate* dp;
@@ -544,7 +556,7 @@ bool QDB2Result::reset (const QString& query)
     SQLRETURN r;
 
     d->recInf.clear();
-    d->valueCache.clear();
+    d->emptyValueCache();
 
     if (!qMakeStatement(d, isForwardOnly()))
         return false;
@@ -568,6 +580,7 @@ bool QDB2Result::reset (const QString& query)
         setSelect(false);
     }
     d->valueCache.resize(count);
+    d->valueCache.fill(NULL);
     setActive(true);
     return true;
 }
@@ -579,7 +592,7 @@ bool QDB2Result::prepare(const QString& query)
     SQLRETURN r;
 
     d->recInf.clear();
-    d->valueCache.clear();
+    d->emptyValueCache();
 
     if (!qMakeStatement(d, isForwardOnly()))
         return false;
@@ -607,7 +620,7 @@ bool QDB2Result::exec()
     SQLRETURN r;
 
     d->recInf.clear();
-    d->valueCache.clear();
+    d->emptyValueCache();
 
     if (!qMakeStatement(d, isForwardOnly(), false))
         return false;
@@ -811,6 +824,7 @@ bool QDB2Result::exec()
     }
     setActive(true);
     d->valueCache.resize(count);
+    d->valueCache.fill(NULL);
 
     //get out parameters
     if (!hasOutValues())
@@ -858,7 +872,7 @@ bool QDB2Result::fetch(int i)
         return false;
     if (i == at())
         return true;
-    d->valueCache.fill(0);
+    d->clearValueCache();
     int actualIdx = i + 1;
     if (actualIdx <= 0) {
         setAt(QSql::BeforeFirstRow);
@@ -887,7 +901,7 @@ bool QDB2Result::fetch(int i)
 bool QDB2Result::fetchNext()
 {
     SQLRETURN r;
-    d->valueCache.fill(0);
+    d->clearValueCache();
     r = SQLFetchScroll(d->hStmt,
                        SQL_FETCH_NEXT,
                        0);
@@ -907,7 +921,7 @@ bool QDB2Result::fetchFirst()
         return false;
     if (isForwardOnly())
         return fetchNext();
-    d->valueCache.fill(0);
+    d->clearValueCache();
     SQLRETURN r;
     r = SQLFetchScroll(d->hStmt,
                        SQL_FETCH_FIRST,
@@ -923,7 +937,7 @@ bool QDB2Result::fetchFirst()
 
 bool QDB2Result::fetchLast()
 {
-    d->valueCache.fill(0);
+    d->clearValueCache();
 
     int i = at();
     if (i == QSql::AfterLastRow) {
@@ -1044,7 +1058,7 @@ QVariant QDB2Result::data(int field)
                 case QSql::HighPrecision:
                 default:
                     // length + 1 for the comma
-                    v = new QVariant(qGetStringData(d->hStmt, field, info.length() + 1, isNull));
+                    v = new QVariant(value);
                     ok = true;
                     break;
             }
@@ -1101,7 +1115,7 @@ bool QDB2Result::nextResult()
     setActive(false);
     setAt(QSql::BeforeFirstRow);
     d->recInf.clear();
-    d->valueCache.clear();
+    d->emptyValueCache();
     setSelect(false);
 
     SQLRETURN r = SQLMoreResults(d->hStmt);
@@ -1120,6 +1134,7 @@ bool QDB2Result::nextResult()
         d->recInf.append(qMakeFieldInfo(d, i));
 
     d->valueCache.resize(fieldCount);
+    d->valueCache.fill(NULL);
     setActive(true);
 
     return true;

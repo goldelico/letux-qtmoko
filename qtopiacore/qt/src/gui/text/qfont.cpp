@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -890,7 +890,10 @@ int QFont::pointSize() const
 */
 void QFont::setPointSize(int pointSize)
 {
-    Q_ASSERT_X (pointSize > 0, "QFont::setPointSize", "point size must be greater than 0");
+    if (pointSize <= 0) {
+        qWarning("QFont::setPointSize: Point size <= 0 (%d), must be greater than 0", pointSize);
+        return;
+    }
 
     detach();
 
@@ -909,7 +912,10 @@ void QFont::setPointSize(int pointSize)
 */
 void QFont::setPointSizeF(qreal pointSize)
 {
-    Q_ASSERT_X(pointSize > 0.0, "QFont::setPointSizeF", "point size must be greater than 0");
+    if (pointSize <= 0) {
+        qWarning("QFont::setPointSizeF: Point size <= 0 (%f), must be greater than 0", pointSize);
+        return;
+    }
 
     detach();
 
@@ -1890,6 +1896,20 @@ void QFont::insertSubstitutions(const QString &familyName,
         it++;
     }
 }
+
+/*! \fn void QFont::initialize()
+  \internal
+
+  Internal function that initializes the font system.  The font cache
+  and font dict do not alloc the keys. The key is a QString which is
+  shared between QFontPrivate and QXFontName.
+*/
+
+/*! \fn void QFont::cleanup()
+  \internal
+
+  Internal function that cleans up the font system.
+*/
 
 // ### mark: should be called removeSubstitutions()
 /*!

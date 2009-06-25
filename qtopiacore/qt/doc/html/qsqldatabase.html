@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/sql/kernel/qsqldatabase.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/sql/kernel/qsqldatabase.cpp -->
 <head>
   <title>Qt 4.5: QSqlDatabase Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -81,7 +81,7 @@
 <h2>Detailed Description</h2>
 <p>The QSqlDatabase class represents a connection to a database.</p>
 <p>The QSqlDatabase class provides an interface for accessing a database through a connection. An instance of QSqlDatabase represents the connection. The connection provides access to the database via one of the <a href="sql-driver.html#supported-databases">supported database drivers</a>, which are derived from <a href="qsqldriver.html">QSqlDriver</a>. Alternatively, you can subclass your own database driver from <a href="qsqldriver.html">QSqlDriver</a>. See <a href="sql-driver.html#how-to-write-your-own-database-driver">How to Write Your Own Database Driver</a> for more information.</p>
-<p>Create a connection (i.e&#x2e;, an instance of QSqlDatabase) by calling one of the static <a href="qsqldatabase.html#addDatabase">addDatabase</a>() functions, where you specify <a href="sql-driver.html#supported-databases">the driver or type of driver</a> to use (i.e&#x2e;, what kind of database will you access?) and a connection name. A connection is known by its own name, <i>not</i> by the name of the database it connects to. You can have multiple connections to one database. QSqlDatabase also supports the concept of a <i>default</i> connection, which is the unnamed connection. To create the default connection, don't pass the connection name argument when you call <a href="qsqldatabase.html#addDatabase">addDatabase</a>(). Subsequently, when you call any static member function that takes the connection name argument, if you don't pass the connection name argument, the default connection is assumed. The following snippet shows how to create and open a default connection to a MySQL database:</p>
+<p>Create a connection (i.e&#x2e;, an instance of QSqlDatabase) by calling one of the static <a href="qsqldatabase.html#addDatabase">addDatabase</a>() functions, where you specify <a href="sql-driver.html#supported-databases">the driver or type of driver</a> to use (i.e&#x2e;, what kind of database will you access?) and a connection name. A connection is known by its own name, <i>not</i> by the name of the database it connects to. You can have multiple connections to one database. QSqlDatabase also supports the concept of a <i>default</i> connection, which is the unnamed connection. To create the default connection, don't pass the connection name argument when you call <a href="qsqldatabase.html#addDatabase">addDatabase</a>(). Subsequently, when you call any static member function that takes the connection name argument, if you don't pass the connection name argument, the default connection is assumed. The following snippet shows how to create and open a default connection to a PostgreSQL database:</p>
 <pre>     QSqlDatabase db = QSqlDatabase::addDatabase(&quot;QPSQL&quot;);
      db.setHostName(&quot;acidalia&quot;);
      db.setDatabaseName(&quot;customdb&quot;);
@@ -106,7 +106,7 @@
 <h3 class="fn"><a name="QSqlDatabase-2"></a>QSqlDatabase::QSqlDatabase ( const QSqlDatabase &amp; <i>other</i> )</h3>
 <p>Creates a copy of <i>other</i>.</p>
 <h3 class="fn"><a name="QSqlDatabase-3"></a>QSqlDatabase::QSqlDatabase ( const <a href="qstring.html">QString</a> &amp; <i>type</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a <a href="qsqldatabase.html">QSqlDatabase</a> connection that uses the driver referred to by <i>type</i>. If the <i>type</i> is not recognized, the database connection will have no functionality.</p>
 <p>The currently available driver types are:</p>
 <p><table align="center" cellpadding="2" cellspacing="1" border="0">
@@ -124,7 +124,7 @@
 <p>Additional third party drivers, including your own custom drivers, can be loaded dynamically.</p>
 <p>See also <a href="sql-driver.html">SQL Database Drivers</a>, <a href="qsqldatabase.html#registerSqlDriver">registerSqlDriver</a>(), and <a href="qsqldatabase.html#drivers">drivers</a>().</p>
 <h3 class="fn"><a name="QSqlDatabase-4"></a>QSqlDatabase::QSqlDatabase ( <a href="qsqldriver.html">QSqlDriver</a> * <i>driver</i> )&nbsp;&nbsp;<tt> [protected]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a database connection using the given <i>driver</i>.</p>
 <h3 class="fn"><a name="dtor.QSqlDatabase"></a>QSqlDatabase::~QSqlDatabase ()</h3>
 <p>Destroys the object and frees any allocated resources.</p>
@@ -244,7 +244,7 @@
 <p>Opens the database connection using the current connection values. Returns true on success; otherwise returns false. Error information can be retrieved using <a href="qsqldatabase.html#lastError">lastError</a>().</p>
 <p>See also <a href="qsqldatabase.html#lastError">lastError</a>(), <a href="qsqldatabase.html#setDatabaseName">setDatabaseName</a>(), <a href="qsqldatabase.html#setUserName">setUserName</a>(), <a href="qsqldatabase.html#setPassword">setPassword</a>(), <a href="qsqldatabase.html#setHostName">setHostName</a>(), <a href="qsqldatabase.html#setPort">setPort</a>(), and <a href="qsqldatabase.html#setConnectOptions">setConnectOptions</a>().</p>
 <h3 class="fn"><a name="open-2"></a>bool QSqlDatabase::open ( const <a href="qstring.html">QString</a> &amp; <i>user</i>, const <a href="qstring.html">QString</a> &amp; <i>password</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Opens the database connection using the given <i>user</i> name and <i>password</i>. Returns true on success; otherwise returns false. Error information can be retrieved using the <a href="qsqldatabase.html#lastError">lastError</a>() function.</p>
 <p>This function does not store the password it is given. Instead, the password is passed directly to the driver for opening the connection and it is then discarded.</p>
 <p>See also <a href="qsqldatabase.html#lastError">lastError</a>().</p>
@@ -418,6 +418,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

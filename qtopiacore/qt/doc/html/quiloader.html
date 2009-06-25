@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/tools/designer/src/uitools/quiloader.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/tools/designer/src/uitools/quiloader.cpp -->
 <head>
   <title>Qt 4.5: QUiLoader Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -14,7 +14,7 @@
 <td width="1">&nbsp;&nbsp;</td><td class="postheader" valign="center"><a href="index.html"><font color="#004faf">Home</font></a>&nbsp;&middot; <a href="namespaces.html"><font color="#004faf">All&nbsp;Namespaces</font></a>&nbsp;&middot; <a href="classes.html"><font color="#004faf">All&nbsp;Classes</font></a>&nbsp;&middot; <a href="mainclasses.html"><font color="#004faf">Main&nbsp;Classes</font></a>&nbsp;&middot; <a href="groups.html"><font color="#004faf">Grouped&nbsp;Classes</font></a>&nbsp;&middot; <a href="modules.html"><font color="#004faf">Modules</font></a>&nbsp;&middot; <a href="functions.html"><font color="#004faf">Functions</font></a></td>
 <td align="right" valign="top" width="230"></td></tr></table><h1 class="title">QUiLoader Class Reference<br /><span class="small-subtitle">[<a href="qtuitools.html">QtUiTools</a> module]</span>
 </h1>
-<p>The QUiLoader class allows standalone applications dynamically create user interfaces at run-time using the information stored in .ui files or specified plugin paths. <a href="#details">More...</a></p>
+<p>The QUiLoader class enables standalone applications to dynamically create user interfaces at run-time using the information stored in .ui files or specified in plugin paths. <a href="#details">More...</a></p>
 <pre> #include &lt;QUiLoader&gt;</pre><p>Inherits <a href="qobject.html">QObject</a>.</p>
 <ul>
 <li><a href="quiloader-members.html">List of all members, including inherited members</a></li>
@@ -53,10 +53,10 @@
 <a name="details"></a>
 <hr />
 <h2>Detailed Description</h2>
-<p>The QUiLoader class allows standalone applications dynamically create user interfaces at run-time using the information stored in .ui files or specified plugin paths.</p>
-<p>In addition, you can customize of creating an user interface by deriving your own loader class.</p>
-<p>If you have a custom component or an application that embeds Qt Designer, you can also use the <a href="qformbuilder.html">QFormBuilder</a> class provided by the <a href="qtdesigner.html">QtDesigner</a> module to create user interfaces from .ui files.</p>
-<p>The QUiLoader class provides a collection of functions that allows you to create widgets based on the information stored in <tt>.ui</tt> files (created with Qt Designer) or available in the specified plugin paths. The specified plugin paths can be retrieved using the <a href="quiloader.html#pluginPaths">pluginPaths</a>() function. You can retrieve the contents of an <tt>.ui</tt> file using the <a href="quiloader.html#load">load</a>() function. For example:</p>
+<p>The QUiLoader class enables standalone applications to dynamically create user interfaces at run-time using the information stored in .ui files or specified in plugin paths.</p>
+<p>In addition, you can customize or create your own user interface by deriving your own loader class.</p>
+<p>If you have a custom component or an application that embeds <i>Qt Designer</i>, you can also use the <a href="qformbuilder.html">QFormBuilder</a> class provided by the <a href="qtdesigner.html">QtDesigner</a> module to create user interfaces from <tt>.ui</tt> files.</p>
+<p>The QUiLoader class provides a collection of functions allowing you to create widgets based on the information stored in <tt>.ui</tt> files (created with <i>Qt Designer</i>) or available in the specified plugin paths. The specified plugin paths can be retrieved using the <a href="quiloader.html#pluginPaths">pluginPaths</a>() function. Similarly, the contents of a <tt>.ui</tt> file can be retrieved using the <a href="quiloader.html#load">load</a>() function. For example:</p>
 <pre> MyWidget::MyWidget(QWidget *parent)
      : QWidget(parent)
  {
@@ -76,7 +76,7 @@
  &lt;file&gt;myform.ui&lt;/file&gt;
  &lt;/qresource&gt;
  &lt;/RCC&gt;</pre>
-<p>The <a href="quiloader.html#availableWidgets">availableWidgets</a>() function returns a <a href="qstringlist.html">QStringList</a> with the class names of the widgets available in the specified plugin paths. You can create any of these widgets using the <a href="quiloader.html#createWidget">createWidget</a>() function. For example:</p>
+<p>The <a href="quiloader.html#availableWidgets">availableWidgets</a>() function returns a <a href="qstringlist.html">QStringList</a> with the class names of the widgets available in the specified plugin paths. To create these widgets, simply use the <a href="quiloader.html#createWidget">createWidget</a>() function. For example:</p>
 <pre> QWidget *loadCustomWidget(QWidget *parent)
  {
      QUiLoader loader;
@@ -89,9 +89,9 @@
 
      return myWidget;
  }</pre>
-<p>You can make a custom widget available to the loader using the <a href="quiloader.html#addPluginPath">addPluginPath</a>() function, and you can remove all the available widgets by calling the <a href="quiloader.html#clearPluginPaths">clearPluginPaths</a>() function.</p>
-<p>The <a href="quiloader.html#createAction">createAction</a>(), <a href="quiloader.html#createActionGroup">createActionGroup</a>(), <a href="quiloader.html#createLayout">createLayout</a>() and <a href="quiloader.html#createWidget">createWidget</a>() functions are used internally by the QUiLoader class whenever it has to create an action, action group, layout or widget respectively. For that reason, you can subclass the QUiLoader class and reimplement these functions to intervene the process of constructing an user interface. For example, you might want to create a list of the actions created when loading a form or creating a custom widget.</p>
-<p>For a complete example using the QUiLoader class, see the <a href="designer-calculatorbuilder.html">Calculator Builder</a> example.</p>
+<p>To make a custom widget available to the loader, you can use the <a href="quiloader.html#addPluginPath">addPluginPath</a>() function; to remove all available widgets, you can call the <a href="quiloader.html#clearPluginPaths">clearPluginPaths</a>() function.</p>
+<p>The <a href="quiloader.html#createAction">createAction</a>(), <a href="quiloader.html#createActionGroup">createActionGroup</a>(), <a href="quiloader.html#createLayout">createLayout</a>(), and <a href="quiloader.html#createWidget">createWidget</a>() functions are used internally by the QUiLoader class whenever it has to create an action, action group, layout, or widget respectively. For that reason, you can subclass the QUiLoader class and reimplement these functions to intervene the process of constructing a user interface. For example, you might want to have a list of the actions created when loading a form or creating a custom widget. However, in your reimplementation, you must call QUiLoader's original implementation of these functions first.</p>
+<p>For a complete example using the QUiLoader class, see the <a href="designer-calculatorbuilder.html">Calculator Builder Example</a>.</p>
 <p>See also <a href="qtuitools.html">QtUiTools</a> and <a href="qformbuilder.html">QFormBuilder</a>.</p>
 <hr />
 <h2>Member Function Documentation</h2>
@@ -100,50 +100,50 @@
 <h3 class="fn"><a name="dtor.QUiLoader"></a>QUiLoader::~QUiLoader ()&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Destroys the loader.</p>
 <h3 class="fn"><a name="addPluginPath"></a>void QUiLoader::addPluginPath ( const <a href="qstring.html">QString</a> &amp; <i>path</i> )</h3>
-<p>Adds the given <i>path</i> to the list of paths the loader searches when locating plugins.</p>
+<p>Adds the given <i>path</i> to the list of paths in which the loader will search when locating plugins.</p>
 <p>See also <a href="quiloader.html#pluginPaths">pluginPaths</a>() and <a href="quiloader.html#clearPluginPaths">clearPluginPaths</a>().</p>
 <h3 class="fn"><a name="availableLayouts"></a><a href="qstringlist.html">QStringList</a> QUiLoader::availableLayouts () const</h3>
-<p>Returns a list naming the available layouts that can be built using the <a href="quiloader.html#createLayout">createLayout</a>() function</p>
+<p>Returns a list naming all available layouts that can be built using the <a href="quiloader.html#createLayout">createLayout</a>() function</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="quiloader.html#createLayout">createLayout</a>().</p>
 <h3 class="fn"><a name="availableWidgets"></a><a href="qstringlist.html">QStringList</a> QUiLoader::availableWidgets () const</h3>
-<p>Returns a list naming the available widgets that can be built using the <a href="quiloader.html#createWidget">createWidget</a>() function, i.e all the widgets specified within the given plugin paths.</p>
+<p>Returns a list naming all available widgets that can be built using the <a href="quiloader.html#createWidget">createWidget</a>() function, i.e all the widgets specified within the given plugin paths.</p>
 <p>See also <a href="quiloader.html#pluginPaths">pluginPaths</a>() and <a href="quiloader.html#createWidget">createWidget</a>().</p>
 <h3 class="fn"><a name="clearPluginPaths"></a>void QUiLoader::clearPluginPaths ()</h3>
-<p>Clears the list of paths the loader searches when locating plugins.</p>
+<p>Clears the list of paths in which the loader will search when locating plugins.</p>
 <p>See also <a href="quiloader.html#addPluginPath">addPluginPath</a>() and <a href="quiloader.html#pluginPaths">pluginPaths</a>().</p>
 <h3 class="fn"><a name="createAction"></a><a href="qaction.html">QAction</a> * QUiLoader::createAction ( <a href="qobject.html">QObject</a> * <i>parent</i> = 0, const <a href="qstring.html">QString</a> &amp; <i>name</i> = QString() )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Creates a new action with the given <i>parent</i> and <i>name</i>.</p>
-<p>The function is used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it has to create an action. For that reason, you can subclass the <a href="quiloader.html">QUiLoader</a> class and reimplement this function to intervene the process of constructing an user interface or widget.</p>
+<p>The function is also used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it creates a widget. Hence, you can subclass <a href="quiloader.html">QUiLoader</a> and reimplement this function to intervene process of constructing a user interface or widget. However, in your implementation, ensure that you call <a href="quiloader.html">QUiLoader</a>'s version first.</p>
 <p>See also <a href="quiloader.html#createActionGroup">createActionGroup</a>(), <a href="quiloader.html#createWidget">createWidget</a>(), and <a href="quiloader.html#load">load</a>().</p>
 <h3 class="fn"><a name="createActionGroup"></a><a href="qactiongroup.html">QActionGroup</a> * QUiLoader::createActionGroup ( <a href="qobject.html">QObject</a> * <i>parent</i> = 0, const <a href="qstring.html">QString</a> &amp; <i>name</i> = QString() )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Creates a new action group with the given <i>parent</i> and <i>name</i>.</p>
-<p>The function is used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it has to create an action group. For that reason, you can subclass the <a href="quiloader.html">QUiLoader</a> class and reimplement this function to intervene the process of constructing an user interface or widget.</p>
+<p>The function is also used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it creates a widget. Hence, you can subclass <a href="quiloader.html">QUiLoader</a> and reimplement this function to intervene process of constructing a user interface or widget. However, in your implementation, ensure that you call <a href="quiloader.html">QUiLoader</a>'s version first.</p>
 <p>See also <a href="quiloader.html#createAction">createAction</a>(), <a href="quiloader.html#createWidget">createWidget</a>(), and <a href="quiloader.html#load">load</a>().</p>
 <h3 class="fn"><a name="createLayout"></a><a href="qlayout.html">QLayout</a> * QUiLoader::createLayout ( const <a href="qstring.html">QString</a> &amp; <i>className</i>, <a href="qobject.html">QObject</a> * <i>parent</i> = 0, const <a href="qstring.html">QString</a> &amp; <i>name</i> = QString() )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Creates a new layout with the given <i>parent</i> and <i>name</i> using the class specified by <i>className</i>.</p>
-<p>The function is used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it has to create a layout. For that reason, you can subclass the <a href="quiloader.html">QUiLoader</a> class and reimplement this function to intervene the process of constructing an user interface or widget.</p>
+<p>The function is also used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it creates a widget. Hence, you can subclass <a href="quiloader.html">QUiLoader</a> and reimplement this function to intervene process of constructing a user interface or widget. However, in your implementation, ensure that you call <a href="quiloader.html">QUiLoader</a>'s version first.</p>
 <p>See also <a href="quiloader.html#createWidget">createWidget</a>() and <a href="quiloader.html#load">load</a>().</p>
 <h3 class="fn"><a name="createWidget"></a><a href="qwidget.html">QWidget</a> * QUiLoader::createWidget ( const <a href="qstring.html">QString</a> &amp; <i>className</i>, <a href="qwidget.html">QWidget</a> * <i>parent</i> = 0, const <a href="qstring.html">QString</a> &amp; <i>name</i> = QString() )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Creates a new widget with the given <i>parent</i> and <i>name</i> using the class specified by <i>className</i>. You can use this function to create any of the widgets returned by the <a href="quiloader.html#availableWidgets">availableWidgets</a>() function.</p>
-<p>The function is also used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it has to create a widget. For that reason, you can subclass the <a href="quiloader.html">QUiLoader</a> class and reimplement this function to intervene in the process of constructing a user interface or widget.</p>
+<p>The function is also used internally by the <a href="quiloader.html">QUiLoader</a> class whenever it creates a widget. Hence, you can subclass <a href="quiloader.html">QUiLoader</a> and reimplement this function to intervene process of constructing a user interface or widget. However, in your implementation, ensure that you call <a href="quiloader.html">QUiLoader</a>'s version first.</p>
 <p>See also <a href="quiloader.html#availableWidgets">availableWidgets</a>() and <a href="quiloader.html#load">load</a>().</p>
 <h3 class="fn"><a name="isLanguageChangeEnabled"></a>bool QUiLoader::isLanguageChangeEnabled () const</h3>
-<p>Returns whether dynamic retranslation on language change is enabled.</p>
+<p>Returns true if dynamic retranslation on language change is enabled; returns false otherwise.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="quiloader.html#setLanguageChangeEnabled">setLanguageChangeEnabled</a>().</p>
 <h3 class="fn"><a name="load"></a><a href="qwidget.html">QWidget</a> * QUiLoader::load ( <a href="qiodevice.html">QIODevice</a> * <i>device</i>, <a href="qwidget.html">QWidget</a> * <i>parentWidget</i> = 0 )</h3>
 <p>Loads a form from the given <i>device</i> and creates a new widget with the given <i>parentWidget</i> to hold its contents.</p>
 <p>See also <a href="quiloader.html#createWidget">createWidget</a>().</p>
 <h3 class="fn"><a name="pluginPaths"></a><a href="qstringlist.html">QStringList</a> QUiLoader::pluginPaths () const</h3>
-<p>Returns a list naming the paths the loader searches when locating custom widget plugins.</p>
+<p>Returns a list naming the paths in which the loader will search when locating custom widget plugins.</p>
 <p>See also <a href="quiloader.html#addPluginPath">addPluginPath</a>() and <a href="quiloader.html#clearPluginPaths">clearPluginPaths</a>().</p>
 <h3 class="fn"><a name="setLanguageChangeEnabled"></a>void QUiLoader::setLanguageChangeEnabled ( bool <i>enabled</i> )</h3>
-<p>Sets whether user interfaces loaded by this loader automatically retranslate themselves upon receiving a language change event or not, depending on <i>enabled</i>.</p>
+<p>If <i>enabled</i> is true, user interfaces loaded by this loader will automatically retranslate themselves upon receiving a language change event. Otherwise, the user interfaces will not be retranslated.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="quiloader.html#isLanguageChangeEnabled">isLanguageChangeEnabled</a>().</p>
 <h3 class="fn"><a name="setWorkingDirectory"></a>void QUiLoader::setWorkingDirectory ( const <a href="qdir.html">QDir</a> &amp; <i>dir</i> )</h3>
-<p>Sets the working directory of the loader to <i>dir</i>. The loader looks for other resources, such as icons and resource files, in paths relative to this directory.</p>
+<p>Sets the working directory of the loader to <i>dir</i>. The loader will look for other resources, such as icons and resource files, in paths relative to this directory.</p>
 <p>See also <a href="quiloader.html#workingDirectory">workingDirectory</a>().</p>
 <h3 class="fn"><a name="workingDirectory"></a><a href="qdir.html">QDir</a> QUiLoader::workingDirectory () const</h3>
 <p>Returns the working directory of the loader.</p>
@@ -152,6 +152,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

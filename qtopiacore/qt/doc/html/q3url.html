@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/qt3support/network/q3url.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/qt3support/network/q3url.cpp -->
 <head>
   <title>Qt 4.5: Q3Url Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -43,7 +43,7 @@
 <li><div class="fn"></div>bool <b><a href="q3url.html#isLocalFile">isLocalFile</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="q3url.html#isValid">isValid</a></b> () const</li>
 <li><div class="fn"></div>QString <b><a href="q3url.html#password">password</a></b> () const</li>
-<li><div class="fn"></div>QString <b><a href="q3url.html#pathx">path</a></b> ( bool <i>correct</i> = true ) const</li>
+<li><div class="fn"></div>QString <b><a href="q3url.html#path">path</a></b> ( bool <i>correct</i> = true ) const</li>
 <li><div class="fn"></div>int <b><a href="q3url.html#port">port</a></b> () const</li>
 <li><div class="fn"></div>QString <b><a href="q3url.html#protocol">protocol</a></b> () const</li>
 <li><div class="fn"></div>QString <b><a href="q3url.html#query">query</a></b> () const</li>
@@ -92,7 +92,7 @@
 <tr valign="top" class="odd"><td><a href="q3url.html#protocol">protocol</a>()</td><td>&quot;http&quot;</td></tr>
 <tr valign="top" class="even"><td><a href="q3url.html#host">host</a>()</td><td>&quot;qtsoftware.com&quot;</td></tr>
 <tr valign="top" class="odd"><td><a href="q3url.html#port">port</a>()</td><td>80</td></tr>
-<tr valign="top" class="even"><td><a href="q3url.html#pathx">path</a>()</td><td>&quot;/cgi-bin/test&amp;nbsp;me.pl&quot;</td></tr>
+<tr valign="top" class="even"><td><a href="q3url.html#path">path</a>()</td><td>&quot;/cgi-bin/test&amp;nbsp;me.pl&quot;</td></tr>
 <tr valign="top" class="odd"><td><a href="q3url.html#fileName">fileName</a>()</td><td>&quot;test&amp;nbsp;me.pl&quot;</td></tr>
 <tr valign="top" class="even"><td><a href="q3url.html#query">query</a>()</td><td>&quot;cmd=Hello%20you&quot;</td></tr>
 </table></p>
@@ -180,7 +180,7 @@
 <p>See also <a href="q3url.html#setPassword">setPassword</a>() and <a href="q3url.html#setUser">setUser</a>().</p>
 <h3 class="fn"><a name="hasPath"></a>bool Q3Url::hasPath () const</h3>
 <p>Returns true if the URL contains a path; otherwise returns false.</p>
-<p>See also <a href="q3url.html#pathx">path</a>() and <a href="q3url.html#setPath">setPath</a>().</p>
+<p>See also <a href="q3url.html#path">path</a>() and <a href="q3url.html#setPath">setPath</a>().</p>
 <h3 class="fn"><a name="hasPort"></a>bool Q3Url::hasPort () const</h3>
 <p>Returns true if the URL contains a port; otherwise returns false.</p>
 <p>See also <a href="q3url.html#setPort">setPort</a>().</p>
@@ -205,7 +205,7 @@
 <p>Returns the password of the URL.</p>
 <p><b>Warning:</b> Passwords passed in URLs are normally <i>insecure</i>; this is due to the mechanism, not because of Qt.</p>
 <p>See also <a href="q3url.html#setPassword">setPassword</a>() and <a href="q3url.html#setUser">setUser</a>().</p>
-<h3 class="fn"><a name="pathx"></a><a href="qstring.html">QString</a> Q3Url::path ( bool <i>correct</i> = true ) const</h3>
+<h3 class="fn"><a name="path"></a><a href="qstring.html">QString</a> Q3Url::path ( bool <i>correct</i> = true ) const</h3>
 <p>Returns the path of the URL. If <i>correct</i> is true, the path is cleaned (deals with too many or too few slashes, cleans things like &quot;/../&#x2e;.&quot;, etc). Otherwise path() returns exactly the path that was parsed or set.</p>
 <p>See also <a href="q3url.html#setPath">setPath</a>() and <a href="q3url.html#hasPath">hasPath</a>().</p>
 <h3 class="fn"><a name="port"></a>int Q3Url::port () const</h3>
@@ -238,7 +238,7 @@
 <p>See also <a href="q3url.html#password">password</a>() and <a href="q3url.html#setUser">setUser</a>().</p>
 <h3 class="fn"><a name="setPath"></a>void Q3Url::setPath ( const <a href="qstring.html">QString</a> &amp; <i>path</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Sets the path of the URL to <i>path</i>.</p>
-<p>See also <a href="q3url.html#pathx">path</a>() and <a href="q3url.html#hasPath">hasPath</a>().</p>
+<p>See also <a href="q3url.html#path">path</a>() and <a href="q3url.html#hasPath">hasPath</a>().</p>
 <h3 class="fn"><a name="setPort"></a>void Q3Url::setPort ( int <i>port</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <p>Sets the port of the URL to <i>port</i>.</p>
 <p>See also <a href="q3url.html#port">port</a>().</p>
@@ -266,18 +266,18 @@
 <h3 class="fn"><a name="operator-eq"></a>Q3Url &amp; Q3Url::operator= ( const Q3Url &amp; <i>url</i> )</h3>
 <p>Assigns the data of <i>url</i> to this class.</p>
 <h3 class="fn"><a name="operator-eq-2"></a>Q3Url &amp; Q3Url::operator= ( const <a href="qstring.html">QString</a> &amp; <i>url</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Parses <i>url</i> and assigns the resulting data to this class.</p>
 <p>If you pass a string like &quot;/home/qt&quot; the &quot;file&quot; protocol will be assumed.</p>
 <h3 class="fn"><a name="operator-eq-eq"></a>bool Q3Url::operator== ( const Q3Url &amp; <i>url</i> ) const</h3>
 <p>Compares this URL with <i>url</i> and returns true if they are equal; otherwise returns false.</p>
 <h3 class="fn"><a name="operator-eq-eq-2"></a>bool Q3Url::operator== ( const <a href="qstring.html">QString</a> &amp; <i>url</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Compares this URL with <i>url</i>. <i>url</i> is parsed first. Returns true if <i>url</i> is equal to this url; otherwise returns false.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

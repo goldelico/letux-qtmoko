@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the tools applications of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -82,7 +82,6 @@ static QStringList wantedInterfaces;
 static const char help[] =
     "Usage: " PROGRAMNAME " [options...] [xml-or-xml-file] [interfaces...]\n"
     "Produces the C++ code to implement the interfaces defined in the input file.\n"
-    "If no options are given, the code is written to the standard output.\n"
     "\n"
     "Options:\n"
     "  -a <filename>    Write the adaptor code to <filename>\n"
@@ -99,7 +98,10 @@ static const char help[] =
     "If the file name given to the options -a and -p does not end in .cpp or .h, the\n"
     "program will automatically append the suffixes and produce both files.\n"
     "You can also use a colon (:) to separate the header name from the source file\n"
-    "name, as in '-a filename_p.h:filename.cpp'.\n";
+    "name, as in '-a filename_p.h:filename.cpp'.\n"
+    "\n"
+    "If you pass a dash (-) as the argument to either -p or -a, the output is written\n"
+    "to the standard output\n";
 
 static const char includeList[] =
     "#include <QtCore/QByteArray>\n"

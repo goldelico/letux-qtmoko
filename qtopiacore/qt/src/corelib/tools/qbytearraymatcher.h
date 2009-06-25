@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -67,7 +67,12 @@ public:
 
     int indexIn(const QByteArray &ba, int from = 0) const;
     int indexIn(const char *str, int len, int from = 0) const;
-    inline QByteArray pattern() const { return q_pattern; }
+    inline QByteArray pattern() const
+    {
+        if (q_pattern.isNull())
+            return QByteArray(reinterpret_cast<const char*>(p.p), p.l);
+        return q_pattern;
+    }
 
 private:
     QByteArrayMatcherPrivate *d;

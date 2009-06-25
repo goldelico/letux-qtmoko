@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -63,15 +63,22 @@
 #include <QtGui/qtoolbar.h>
 #include <QtGui/qboxlayout.h>
 
+// this has to be outside the namespace
+static void initScriptEngineDebuggerResources()
+{
+    Q_INIT_RESOURCE(scripttools_debugging);
+}
+
+QT_BEGIN_NAMESPACE
+
 class QtScriptDebuggerResourceInitializer
 {
 public:
     QtScriptDebuggerResourceInitializer() {
-        Q_INIT_RESOURCE(scripttools_debugging);
+        // call outside-the-namespace function
+        initScriptEngineDebuggerResources();
     }
 };
-
-QT_BEGIN_NAMESPACE
 
 /*!
   \since 4.5

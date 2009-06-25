@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/properties.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/properties.qdoc -->
 <head>
   <title>Qt 4.5: Qt's Property System</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -22,6 +22,7 @@
             READ getFunction
             [WRITE setFunction]
             [RESET resetFunction]
+            [NOTIFY notifySignal]
             [DESIGNABLE bool]
             [SCRIPTABLE bool]
             [STORED bool]
@@ -34,7 +35,8 @@
 <ul>
 <li>A <tt>READ</tt> accessor function is required. It is for reading the property value. It must be const and must return either the property's type or a pointer or reference to that type. e.g&#x2e;, <a href="qwidget.html#focus-prop">QWidget::focus</a> is a read-only property with <tt>READ</tt> function <a href="qwidget.html#focus-prop">QWidget::hasFocus</a>().</li>
 <li>A <tt>WRITE</tt> accessor function is optional. It is for setting the property value. It must return void and must take exactly one argument, either of the property's type or a pointer or reference to that type. e.g&#x2e;, <a href="qwidget.html#enabled-prop">QWidget::enabled</a> has the <tt>WRITE</tt> function <a href="qwidget.html#enabled-prop">QWidget::setEnabled</a>(). Read-only properties do not need <tt>WRITE</tt> functions. e.g&#x2e;, <a href="qwidget.html#focus-prop">QWidget::focus</a> has no <tt>WRITE</tt> function.</li>
-<li>A <tt>RESET</tt> function is optional. It is for setting the property back to its context specific default value. e.g&#x2e;, <a href="qwidget.html#cursor-prop">QWidget::cursor</a> has the typical <tt>READ</tt> and <tt>WRITE</tt> functions, <a href="qwidget.html#cursor-prop">QWidget::cursor</a>() and <a href="qwidget.html#cursor-prop">QWidget::setCursor</a>(), and it also has a <tt>RESET</tt> function, <a href="qwidget.html#cursor-prop">QWidget::unsetCursor</a>(), since no call to <a href="qwidget.html#cursor-prop">QWidget::setCursor</a>() can mean <i>reset to the context specific cursor</i>. The <tt>RESET</tt> function musrt return void and take no parameters.</li>
+<li>A <tt>RESET</tt> function is optional. It is for setting the property back to its context specific default value. e.g&#x2e;, <a href="qwidget.html#cursor-prop">QWidget::cursor</a> has the typical <tt>READ</tt> and <tt>WRITE</tt> functions, <a href="qwidget.html#cursor-prop">QWidget::cursor</a>() and <a href="qwidget.html#cursor-prop">QWidget::setCursor</a>(), and it also has a <tt>RESET</tt> function, <a href="qwidget.html#cursor-prop">QWidget::unsetCursor</a>(), since no call to <a href="qwidget.html#cursor-prop">QWidget::setCursor</a>() can mean <i>reset to the context specific cursor</i>. The <tt>RESET</tt> function must return void and take no parameters.</li>
+<li>A <tt>NOTIFY</tt> signal is optional. If defined, the signal will be emitted whenever the value of the property changes. The signal must take one parameter, which must be of the same type as the property; the parameter will take the new value of the property.</li>
 <li>The <tt>DESIGNABLE</tt> attribute indicates whether the property should be visible in the property editor of GUI design tool (e.g&#x2e;, <a href="designer-manual.html#qt-designer">Qt Designer</a>). Most properties are <tt>DESIGNABLE</tt> (default true). Instead of true or false, you can specify a boolean member function.</li>
 <li>The <tt>SCRIPTABLE</tt> attribute indicates whether this property should be accessible by a scripting engine (default true). Instead of true or false, you can specify a boolean member function.</li>
 <li>The <tt>STORED</tt> attribute indicates whether the property should be thought of as existing on its own or as depending on other values. It also indicates whether the property value must be saved when storing the object's state. Most properties are <tt>STORED</tt> (default true), but e.g&#x2e;, <a href="qwidget.html#minimumWidth-prop">QWidget::minimumWidth</a>() has <tt>STORED</tt> false, because its value is just taken from the width component of property <a href="qwidget.html#minimumSize-prop">QWidget::minimumSize</a>(), which is a <a href="qsize.html">QSize</a>.</li>
@@ -110,6 +112,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

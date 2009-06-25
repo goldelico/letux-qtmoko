@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSvg module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1673,10 +1673,19 @@ static void parseCSStoXMLAttrs(const QVector<QCss::Declaration> &declarations,
         const QCss::Declaration &decl = declarations.at(i);
         if (decl.d->property.isEmpty())
             continue;
-        if (decl.d->values.count() != 1)
-            continue;
         QCss::Value val = decl.d->values.first();
-        QString valueStr = val.toString();
+        QString valueStr;
+        if (decl.d->values.count() != 1) {
+            for (int i=0; i<decl.d->values.count(); ++i) {
+                const QString &value = decl.d->values[i].toString();
+                if (value.isEmpty())
+                    valueStr += QLatin1Char(',');
+                else
+                    valueStr += value;
+            }
+        } else {
+            valueStr = val.toString();
+        }
         if (val.type == QCss::Value::Uri) {
             valueStr.prepend(QLatin1String("url("));
             valueStr.append(QLatin1Char(')'));

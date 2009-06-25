@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/3rdparty/webkit/WebKit/qt/Api/qwebframe.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/3rdparty/webkit/WebKit/qt/Api/qwebframe.cpp -->
 <head>
   <title>Qt 4.5: QWebFrame Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -175,7 +175,7 @@
 <p>If you want to ensure that your QObjects remain accessible after loading a new URL, you should add them in a slot connected to the <a href="qwebframe.html#javaScriptWindowObjectCleared">javaScriptWindowObjectCleared</a>() signal.</p>
 <p>The <i>object</i> will never be explicitly deleted by <a href="qtwebkit.html">QtWebKit</a>.</p>
 <h3 class="fn"><a name="addToJavaScriptWindowObject-2"></a>void QWebFrame::addToJavaScriptWindowObject ( const <a href="qstring.html">QString</a> &amp; <i>name</i>, <a href="qobject.html">QObject</a> * <i>object</i>, <a href="qscriptengine.html#ValueOwnership-enum">QScriptEngine::ValueOwnership</a> <i>own</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Make <i>object</i> available under <i>name</i> from within the frame's JavaScript context. The <i>object</i> will be inserted as a child of the frame's window object.</p>
 <p>Qt properties will be exposed as JavaScript properties and slots as JavaScript methods.</p>
 <p>If you want to ensure that your QObjects remain accessible after loading a new URL, you should add them in a slot connected to the <a href="qwebframe.html#javaScriptWindowObjectCleared">javaScriptWindowObjectCleared</a>() signal.</p>
@@ -293,10 +293,10 @@
 <p>This signal is emitted whenever the title of the frame changes. The <i>title</i> string specifies the new title.</p>
 <p>See also <a href="qwebframe.html#title-prop">title</a>().</p>
 <h3 class="fn"><a name="toHtml"></a><a href="qstring.html">QString</a> QWebFrame::toHtml () const</h3>
-<p>Returns the frame's content, converted to HTML.</p>
+<p>Returns the frame's content as HTML, enclosed in HTML and BODY tags.</p>
 <p>See also <a href="qwebframe.html#setHtml">setHtml</a>() and <a href="qwebframe.html#toPlainText">toPlainText</a>().</p>
 <h3 class="fn"><a name="toPlainText"></a><a href="qstring.html">QString</a> QWebFrame::toPlainText () const</h3>
-<p>Returns the content of this frame converted to plain text.</p>
+<p>Returns the content of this frame converted to plain text, completely stripped of all HTML formatting.</p>
 <p>See also <a href="qwebframe.html#toHtml">toHtml</a>().</p>
 <h3 class="fn"><a name="urlChanged"></a>void QWebFrame::urlChanged ( const <a href="qurl.html">QUrl</a> &amp; <i>url</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted with the URL of the frame when the frame's title is received. The new URL is specified by <i>url</i>.</p>
@@ -305,6 +305,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

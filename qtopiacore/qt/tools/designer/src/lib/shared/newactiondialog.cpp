@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Designer of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -134,7 +134,7 @@ ActionData NewActionDialog::actionData() const
     rc.toolTip = m_ui->tooltipEditor->text();
     rc.icon = m_ui->iconSelector->icon();
     rc.checkable = m_ui->checkableCheckBox->checkState() == Qt::Checked;
-    rc.keysequence = m_ui->keySequenceEdit->keySequence();
+    rc.keysequence = PropertySheetKeySequenceValue(m_ui->keySequenceEdit->keySequence());
     return rc;
 }
 
@@ -144,7 +144,7 @@ void NewActionDialog::setActionData(const ActionData &d)
     m_ui->editObjectName->setText(d.name);
     m_ui->iconSelector->setIcon(d.icon);
     m_ui->tooltipEditor->setText(d.toolTip);
-    m_ui->keySequenceEdit->setKeySequence(d.keysequence);
+    m_ui->keySequenceEdit->setKeySequence(d.keysequence.value());
     m_ui->checkableCheckBox->setCheckState(d.checkable ? Qt::Checked : Qt::Unchecked);
 
     m_auto_update_object_name = false;

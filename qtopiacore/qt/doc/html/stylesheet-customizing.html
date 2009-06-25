@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/stylesheet.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/stylesheet.qdoc -->
 <head>
   <title>Qt 4.5: Customizing Qt Widgets Using Style Sheets</title>
   <link rel="prev" href="stylesheet-designer.html" />
@@ -45,14 +45,14 @@
 </ul>
 <a name="sub-controls"></a><a name="sub-controls"></a>
 <h2>Sub-controls</h2>
-<p>A widget is considered as a heirarchy (tree) of subcontrols drawn on top of each other. For example, the <a href="qcombobox.html">QComboBox</a> draws the drop-down sub-control followed by the down-arrow sub-control. A <a href="qcombobox.html">QComboBox</a> is thus rendered as follows:</p>
+<p>A widget is considered as a hierarchy (tree) of subcontrols drawn on top of each other. For example, the <a href="qcombobox.html">QComboBox</a> draws the drop-down sub-control followed by the down-arrow sub-control. A <a href="qcombobox.html">QComboBox</a> is thus rendered as follows:</p>
 <ul>
 <li>Render the <a href="qcombobox.html">QComboBox</a> { } rule</li>
 <li>Render the QComboBox::drop-down { } rule</li>
 <li>Render the QComboBox::down-arrow { } rule</li>
 </ul>
 <p>Sub-controls share a parent-child relationship. In the case of <a href="qcombobox.html">QComboBox</a>, the parent of down-arrow is the drop-down and the parent of drop-down is the widget itself. Sub-controls are positioned within their parent using the <a href="stylesheet-reference.html#subcontrol-position-prop">subcontrol-position</a> and <a href="stylesheet-reference.html#subcontrol-origin-prop">subcontrol-origin</a> properties.</p>
-<p>Once positioned, sub-controls can be styled using the the <a href="#box-model">box model</a>.</p>
+<p>Once positioned, sub-controls can be styled using the <a href="#box-model">box model</a>.</p>
 <p><b>Note:</b> With complex widgets such as <a href="qcombobox.html">QComboBox</a> and <a href="qscrollbar.html">QScrollBar</a>, if one property or sub-control is customized, <b>all</b> the other properties or sub-controls must be customized as well.</p>
 <p>
 [Previous: <a href="stylesheet-designer.html">Qt Designer Integration</a>]
@@ -63,6 +63,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/tutorials/addressbook.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/tutorials/addressbook.qdoc -->
 <head>
   <title>Qt 4.5: Address Book 4 - Editing and Removing Addresses</title>
   <link rel="prev" href="tutorials-addressbook-part3.html" />
@@ -29,8 +29,8 @@
 <li><a href="tutorials-addressbook-part4-main-cpp.html">tutorials/addressbook/part4/main.cpp</a></li>
 <li><a href="tutorials-addressbook-part4-part4-pro.html">tutorials/addressbook/part4/part4.pro</a></li>
 </ul>
-<p>In this chapter, we look at ways to modify the contents of contact stored in the address book application.</p>
-<p align="center"><img src="images/addressbook-tutorial-screenshot.png" /></p><p>We now have an address book that not only holds contacts in an organized manner, but also allows navigation. It would be convenient to include edit and remove functions so that a contact's details can be changed when needed. However, this requires a little improvement, in the form of enums. In our previous chapters, we had two modes: <tt>AddingMode</tt> and <tt>NavigationMode</tt> - but they weren't defined as enums. Instead, we enabled and disabled the corresponding buttons manually, resulting in multiple lines of repeated code.</p>
+<p>In this chapter, we look at ways to modify the contents of contacts stored in the address book application.</p>
+<p align="center"><img src="images/addressbook-tutorial-screenshot.png" /></p><p>We now have an address book that not only holds contacts in an organized manner, but also allows navigation. It would be convenient to include edit and remove functions so that a contact's details can be changed when needed. However, this requires a little improvement, in the form of enums. In our previous chapters, we had two modes: <tt>AddingMode</tt> and <tt>NavigationMode</tt> - but they were not defined as enums. Instead, we enabled and disabled the corresponding buttons manually, resulting in multiple lines of repeated code.</p>
 <p>In this chapter, we define the <tt>Mode</tt> enum with three different values:</p>
 <ul>
 <li><tt>NavigationMode</tt>,</li>
@@ -51,7 +51,7 @@
      QPushButton *removeButton;
      ...
      Mode currentMode;</pre>
-<p>Lastly, we declare <tt>currentMode</tt> to keep track of the current mode of the enum.</p>
+<p>Lastly, we declare <tt>currentMode</tt> to keep track of the enum's current mode.</p>
 <a name="implementing-the-addressbook-class"></a>
 <h2>Implementing the AddressBook Class</h2>
 <p>We now have to implement the mode-changing features of the address book application. The <tt>editButton</tt> and <tt>removeButton</tt> are instantiated and disabled by default, as the address book starts up with zero contacts in memory.</p>
@@ -165,7 +165,7 @@
          submitButton-&gt;show();
          cancelButton-&gt;show();
          break;</pre>
-<p>For <tt>NavigationMode</tt>, however, we include conditions within the parameters of the <a href="qwidget.html#enabled-prop">QPushButton::setEnabled</a>(). This is to ensure that the <tt>editButton</tt> and <tt>removeButton</tt> push buttons are enabled when there is at least one contact in the address book; <tt>nextButton</tt> and <tt>previousButton</tt> are only enabled when there is more than one contact in the address book.</p>
+<p>For <tt>NavigationMode</tt>, however, we include conditions within the parameters of the <a href="qwidget.html#enabled-prop">QPushButton::setEnabled</a>() function. This is to ensure that <tt>editButton</tt> and <tt>removeButton</tt> are enabled when there is at least one contact in the address book; <tt>nextButton</tt> and <tt>previousButton</tt> are only enabled when there is more than one contact in the address book.</p>
 <pre>     case NavigationMode:
 
          if (contacts.isEmpty()) {
@@ -198,6 +198,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

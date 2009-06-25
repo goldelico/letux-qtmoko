@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/dbus/qdbusconnection.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/dbus/qdbusconnection.cpp -->
 <head>
   <title>Qt 4.5: QDBusConnection Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -147,7 +147,7 @@
 <p>Returns true if the message was sent, or false if the message could not be sent.</p>
 <h3 class="fn"><a name="callWithCallback-2"></a>bool QDBusConnection::callWithCallback ( const <a href="qdbusmessage.html">QDBusMessage</a> &amp; <i>message</i>, <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>returnMethod</i>, int <i>timeout</i> = -1 ) const</h3>
 <p>This function is deprecated.</p>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sends the <i>message</i> over this connection and returns immediately. When the reply is received, the method <i>returnMethod</i> is called in the <i>receiver</i> object.</p>
 <p>This function is suitable for method calls only. It is guaranteed that the slot will be called exactly once with the reply, as long as the parameter types match and no error occurs.</p>
 <p>This function is dangerous because it cannot report errors, including the expiration of the timeout.</p>
@@ -157,7 +157,7 @@
 <p>Returns true if the connection was successful.</p>
 <p><b>Warning:</b> The signal will only be delivered to the slot if the parameters match. This verification can be done only when the signal is received, not at connection time.</p>
 <h3 class="fn"><a name="connect-2"></a>bool QDBusConnection::connect ( const <a href="qstring.html">QString</a> &amp; <i>service</i>, const <a href="qstring.html">QString</a> &amp; <i>path</i>, const <a href="qstring.html">QString</a> &amp; <i>interface</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i>, const <a href="qstring.html">QString</a> &amp; <i>signature</i>, <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>slot</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Connects the signal to the slot <i>slot</i> in object <i>receiver</i>. Unlike the other <a href="qdbusconnection.html#connect">connect</a>() overload, this function allows one to specify the parameter signature to be connected using the <i>signature</i> variable. The function will then verify that this signature can be delivered to the slot specified by <i>slot</i> and return false otherwise.</p>
 <p><b>Note:</b> This function verifies that the signal signature matches the slot's parameters, but it does not verify that the actual signal exists with the given signature in the remote service.</p>
 <h3 class="fn"><a name="connectToBus"></a>QDBusConnection QDBusConnection::connectToBus ( <a href="qdbusconnection.html#BusType-enum">BusType</a> <i>type</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
@@ -168,7 +168,7 @@
 <p>Disconnects the signal specified by the <i>service</i>, <i>path</i>, <i>interface</i> and <i>name</i> parameters from the slot <i>slot</i> in object <i>receiver</i>. The arguments <i>service</i> and <i>path</i> can be empty, denoting a disconnection from all signals of the (<i>interface</i>, <i>name</i>) pair, from all remote applications.</p>
 <p>Returns true if the disconnection was successful.</p>
 <h3 class="fn"><a name="disconnect-2"></a>bool QDBusConnection::disconnect ( const <a href="qstring.html">QString</a> &amp; <i>service</i>, const <a href="qstring.html">QString</a> &amp; <i>path</i>, const <a href="qstring.html">QString</a> &amp; <i>interface</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i>, const <a href="qstring.html">QString</a> &amp; <i>signature</i>, <a href="qobject.html">QObject</a> * <i>receiver</i>, const char * <i>slot</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Disconnects the signal from the slot <i>slot</i> in object <i>receiver</i>. Unlike the other <a href="qdbusconnection.html#disconnect">disconnect</a>() overload, this function allows one to specify the parameter signature to be disconnected using the <i>signature</i> variable. The function will then verify that this signature is connected to the slot specified by <i>slot</i> and return false otherwise.</p>
 <h3 class="fn"><a name="disconnectFromBus"></a>void QDBusConnection::disconnectFromBus ( const <a href="qstring.html">QString</a> &amp; <i>name</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Closes the connection of name <i>name</i>.</p>
@@ -225,6 +225,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

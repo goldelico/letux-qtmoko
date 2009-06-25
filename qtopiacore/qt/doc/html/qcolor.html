@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qcolor.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/painting/qcolor.cpp -->
 <head>
   <title>Qt 4.5: QColor Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -124,8 +124,8 @@
 <li><div class="fn"></div>int <b><a href="qcolor.html#qRed">qRed</a></b> ( QRgb <i>rgb</i> )</li>
 <li><div class="fn"></div>QRgb <b><a href="qcolor.html#qRgb">qRgb</a></b> ( int <i>r</i>, int <i>g</i>, int <i>b</i> )</li>
 <li><div class="fn"></div>QRgb <b><a href="qcolor.html#qRgba">qRgba</a></b> ( int <i>r</i>, int <i>g</i>, int <i>b</i>, int <i>a</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qcolor.html#operator-lt-lt-105">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QColor &amp; <i>color</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qcolor.html#operator-gt-gt-57">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qcolor.html#operator-lt-lt-72">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QColor &amp; <i>color</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qcolor.html#operator-gt-gt-39">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QColor &amp; <i>color</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -230,7 +230,7 @@
 <p>Constructs a color that is a copy of <i>color</i>.</p>
 <p>See also <a href="qcolor.html#isValid">isValid</a>().</p>
 <h3 class="fn"><a name="QColor-9"></a>QColor::QColor ( <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Constructs a new color with a color value of <i>color</i>.</p>
 <p>See also <a href="qcolor.html#isValid">isValid</a>() and <a href="qcolor.html#predefined-colors">Predefined Colors</a>.</p>
 <h3 class="fn"><a name="allowX11ColorNames"></a>bool QColor::allowX11ColorNames ()&nbsp;&nbsp;<tt> [static]</tt></h3>
@@ -278,7 +278,7 @@
 <p>All the values must be in the range 0-255.</p>
 <p>See also <a href="qcolor.html#toCmyk">toCmyk</a>(), <a href="qcolor.html#fromCmykF">fromCmykF</a>(), <a href="qcolor.html#isValid">isValid</a>(), and <a href="qcolor.html#the-cmyk-color-model">The CMYK Color Model</a>.</p>
 <h3 class="fn"><a name="fromCmykF"></a>QColor QColor::fromCmykF ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>c</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>k</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>a</i> = 1.0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Static convenience function that returns a <a href="qcolor.html">QColor</a> constructed from the given CMYK color values: <i>c</i> (cyan), <i>m</i> (magenta), <i>y</i> (yellow), <i>k</i> (black), and <i>a</i> (alpha-channel, i.e&#x2e; transparency).</p>
 <p>All the values must be in the range 0.0-1.0&#x2e;</p>
 <p>See also <a href="qcolor.html#toCmyk">toCmyk</a>(), <a href="qcolor.html#fromCmyk">fromCmyk</a>(), <a href="qcolor.html#isValid">isValid</a>(), and <a href="qcolor.html#the-cmyk-color-model">The CMYK Color Model</a>.</p>
@@ -287,7 +287,7 @@
 <p>The value of <i>s</i>, <i>v</i>, and <i>a</i> must all be in the range 0-255; the value of <i>h</i> must be in the range 0-359.</p>
 <p>See also <a href="qcolor.html#toHsv">toHsv</a>(), <a href="qcolor.html#fromHsvF">fromHsvF</a>(), <a href="qcolor.html#isValid">isValid</a>(), and <a href="qcolor.html#the-hsv-color-model">The HSV Color Model</a>.</p>
 <h3 class="fn"><a name="fromHsvF"></a>QColor QColor::fromHsvF ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>h</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>s</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>v</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>a</i> = 1.0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Static convenience function that returns a <a href="qcolor.html">QColor</a> constructed from the HSV color values, <i>h</i> (hue), <i>s</i> (saturation), <i>v</i> (value), and <i>a</i> (alpha-channel, i.e&#x2e; transparency).</p>
 <p>All the values must be in the range 0.0-1.0&#x2e;</p>
 <p>See also <a href="qcolor.html#toHsv">toHsv</a>(), <a href="qcolor.html#fromHsv">fromHsv</a>(), <a href="qcolor.html#isValid">isValid</a>(), and <a href="qcolor.html#the-hsv-color-model">The HSV Color Model</a>.</p>
@@ -400,7 +400,7 @@
 <p>All the values must be in the range 0-255.</p>
 <p>See also <a href="qcolor.html#getCmyk">getCmyk</a>(), <a href="qcolor.html#setCmykF">setCmykF</a>(), and <a href="qcolor.html#the-cmyk-color-model">The CMYK Color Model</a>.</p>
 <h3 class="fn"><a name="setCmykF"></a>void QColor::setCmykF ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>c</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>m</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>y</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>k</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>a</i> = 1.0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the color to CMYK values, <i>c</i> (cyan), <i>m</i> (magenta), <i>y</i> (yellow), <i>k</i> (black), and <i>a</i> (alpha-channel, i.e&#x2e; transparency).</p>
 <p>All the values must be in the range 0.0-1.0&#x2e;</p>
 <p>See also <a href="qcolor.html#getCmykF">getCmykF</a>(), <a href="qcolor.html#setCmyk">setCmyk</a>(), and <a href="qcolor.html#the-cmyk-color-model">The CMYK Color Model</a>.</p>
@@ -443,7 +443,7 @@
 <p>All the values must be in the range 0-255.</p>
 <p>See also <a href="qcolor.html#rgb">rgb</a>(), <a href="qcolor.html#getRgb">getRgb</a>(), and <a href="qcolor.html#setRgbF">setRgbF</a>().</p>
 <h3 class="fn"><a name="setRgb-2"></a>void QColor::setRgb ( <a href="qcolor.html#QRgb-typedef">QRgb</a> <i>rgb</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the RGB value to <i>rgb</i>, ignoring the alpha.</p>
 <h3 class="fn"><a name="setRgbF"></a>void QColor::setRgbF ( <a href="qtglobal.html#qreal-typedef">qreal</a> <i>r</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>g</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>b</i>, <a href="qtglobal.html#qreal-typedef">qreal</a> <i>a</i> = 1.0 )</h3>
 <p>Sets the color channels of this color to <i>r</i> (red), <i>g</i> (green), <i>b</i> (blue) and <i>a</i> (alpha, transparency).</p>
@@ -483,7 +483,7 @@
 <h3 class="fn"><a name="operator-eq"></a>QColor &amp; QColor::operator= ( const QColor &amp; <i>color</i> )</h3>
 <p>Assigns a copy of <i>color</i> to this color, and returns a reference to it.</p>
 <h3 class="fn"><a name="operator-eq-2"></a>QColor &amp; QColor::operator= ( <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Assigns a copy of <i>color</i> and returns a reference to this color.</p>
 <h3 class="fn"><a name="operator-eq-eq"></a>bool QColor::operator== ( const QColor &amp; <i>color</i> ) const</h3>
 <p>Returns true if this color has the same RGB and alpha values as <i>color</i>; otherwise returns false.</p>
@@ -503,7 +503,7 @@
 <p>Returns a gray value (0 to 255) from the (<i>r</i>, <i>g</i>, <i>b</i>) triplet.</p>
 <p>The gray value is calculated using the formula (<i>r</i> * 11 + <i>g</i> * 16 + <i>b</i> * 5)/32.</p>
 <h3 class="fn"><a name="qGray-2"></a>int qGray ( <a href="qcolor.html#QRgb-typedef">QRgb</a> <i>rgb</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a gray value (0 to 255) from the given ARGB quadruplet <i>rgb</i>.</p>
 <p>The gray value is calculated using the formula (R * 11 + G * 16 + B * 5)/32; the alpha-channel is ignored.</p>
 <h3 class="fn"><a name="qGreen"></a>int qGreen ( <a href="qcolor.html#QRgb-typedef">QRgb</a> <i>rgb</i> )</h3>
@@ -518,16 +518,16 @@
 <h3 class="fn"><a name="qRgba"></a><a href="qcolor.html#QRgb-typedef">QRgb</a> qRgba ( int <i>r</i>, int <i>g</i>, int <i>b</i>, int <i>a</i> )</h3>
 <p>Returns the ARGB quadruplet (<i>a</i>, <i>r</i>, <i>g</i>, <i>b</i>).</p>
 <p>See also <a href="qcolor.html#qRgb">qRgb</a>(), <a href="qcolor.html#qRed">qRed</a>(), <a href="qcolor.html#qGreen">qGreen</a>(), and <a href="qcolor.html#qBlue">qBlue</a>().</p>
-<h3 class="fn"><a name="operator-lt-lt-105"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QColor &amp; <i>color</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-72"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QColor &amp; <i>color</i> )</h3>
 <p>Writes the <i>color</i> to the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-57"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QColor &amp; <i>color</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-39"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QColor &amp; <i>color</i> )</h3>
 <p>Reads the <i>color</i> from the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

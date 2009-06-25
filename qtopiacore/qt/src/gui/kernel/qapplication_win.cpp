@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1371,13 +1371,6 @@ QString QApplicationPrivate::appName() const
 
 extern uint qGlobalPostedEventsCount();
 
-/*!
-    \internal
-    \since 4.1
-
-    If \a gotFocus is true, \a widget will become the active window.
-    Otherwise the active window is reset to 0.
-*/
 void QApplication::winFocus(QWidget *widget, bool gotFocus)
 {
     if (d_func()->inPopupMode()) // some delayed focus event to ignore
@@ -1682,20 +1675,23 @@ LRESULT CALLBACK QtWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
                     // send the context menu event is a different one
                     if (!alienWidget->testAttribute(Qt::WA_NativeWindow) && !alienWidget->testAttribute(Qt::WA_PaintOnScreen)) {
                         alienWidget = QApplication::widgetAt(globalPos);
-                        pos = alienWidget->mapFromGlobal(globalPos);
+                        if (alienWidget)
+                            pos = alienWidget->mapFromGlobal(globalPos);
                     }
-                    SHRGINFO shrg;
-                    shrg.cbSize = sizeof(shrg);
-                    shrg.hwndClient = hwnd;
-                    shrg.ptDown.x = GET_X_LPARAM(lParam);
-                    shrg.ptDown.y = GET_Y_LPARAM(lParam);
-                    shrg.dwFlags = SHRG_RETURNCMD | SHRG_NOANIMATION;
-                    resolveAygLibs();
-                    if (ptrRecognizeGesture && (ptrRecognizeGesture(&shrg) == GN_CONTEXTMENU)) {
-                        if (qApp->activePopupWidget())
-                            qApp->activePopupWidget()->close();
-                        QContextMenuEvent e(QContextMenuEvent::Mouse, pos, globalPos);
-                        result = qt_sendSpontaneousEvent(alienWidget, &e);
+                    if (alienWidget) {
+                        SHRGINFO shrg;
+                        shrg.cbSize = sizeof(shrg);
+                        shrg.hwndClient = hwnd;
+                        shrg.ptDown.x = GET_X_LPARAM(lParam);
+                        shrg.ptDown.y = GET_Y_LPARAM(lParam);
+                        shrg.dwFlags = SHRG_RETURNCMD | SHRG_NOANIMATION;
+                        resolveAygLibs();
+                        if (ptrRecognizeGesture && (ptrRecognizeGesture(&shrg) == GN_CONTEXTMENU)) {
+                            if (qApp->activePopupWidget())
+                                qApp->activePopupWidget()->close();
+                            QContextMenuEvent e(QContextMenuEvent::Mouse, pos, globalPos);
+                            result = qt_sendSpontaneousEvent(alienWidget, &e);
+                        }
                     }
                 }
             }
@@ -1732,6 +1728,21 @@ LRESULT CALLBACK QtWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
             // fall-through intended
         case WM_KEYUP:
         case WM_SYSKEYUP:
+#if Q_OS_WINCE_WM
+        case WM_HOTKEY:
+            if(HIWORD(msg.lParam) == VK_TBACK) {
+                const bool hotKeyDown = !(LOWORD(msg.lParam) & MOD_KEYUP);
+                msg.lParam = 0x69 << 16;
+                msg.wParam = VK_BACK;
+                if (hotKeyDown) {
+                    msg.message = WM_KEYDOWN;
+                    qt_keymapper_private()->updateKeyMap(msg);
+                } else {
+                    msg.message = WM_KEYUP;
+                }
+            }
+            // fall-through intended
+#endif
         case WM_IME_CHAR:
         case WM_IME_KEYDOWN:
         case WM_CHAR: {
@@ -2432,10 +2443,12 @@ LRESULT CALLBACK QtWndProc(HWND hwnd, UINT message, WPARAM wParam, LPARAM lParam
                     widget = (QETWidget*)qApp->focusWidget();
                 HWND focus = ::GetFocus();
                 //if there is a current widget and the new widget belongs to the same toplevel window
+                //or if the current widget was embedded into non-qt window (i.e. we won't get WM_ACTIVATEAPP)
                 //then we clear the focus on the widget
                 //in case the new widget belongs to a different widget hierarchy, clearing the focus
                 //will be handled because the active window will change
-                if (widget && ::IsChild(widget->window()->internalWinId(), focus)) {
+                const bool embedded = widget && ((QETWidget*)widget->window())->topData()->embedded;
+                if (widget && (embedded || ::IsChild(widget->window()->internalWinId(), focus))) {
                     widget->clearFocus();
                     result = true;
                 } else {
@@ -2919,7 +2932,6 @@ void qt_win_eatMouseMove()
 
 // In DnD, the mouse release event never appears, so the
 // mouse button state machine must be manually reset
-/*! \internal */
 void QApplication::winMouseButtonUp()
 {
     qt_button_down = 0;

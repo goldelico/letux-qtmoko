@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/text/qtexttable.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/text/qtexttable.cpp -->
 <head>
   <title>Qt 4.5: QTextTable Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -72,6 +72,7 @@
 <p>A table's size can be changed with <a href="qtexttable.html#resize">resize</a>(), or by using <a href="qtexttable.html#insertRows">insertRows</a>(), <a href="qtexttable.html#insertColumns">insertColumns</a>(), <a href="qtexttable.html#removeRows">removeRows</a>(), or <a href="qtexttable.html#removeColumns">removeColumns</a>(). Use <a href="qtexttable.html#cellAt">cellAt</a>() to retrieve table cells.</p>
 <p>The starting and ending positions of table rows can be found by moving a cursor within a table, and using the <a href="qtexttable.html#rowStart">rowStart</a>() and <a href="qtexttable.html#rowEnd">rowEnd</a>() functions to obtain cursors at the start and end of each row.</p>
 <p>Rows and columns within a QTextTable can be merged and split using the <a href="qtexttable.html#mergeCells">mergeCells</a>() and <a href="qtexttable.html#splitCell">splitCell</a>() functions. However, only cells that span multiple rows or columns can be split. (Merging or splitting does not increase or decrease the number of rows and columns.)</p>
+<p>Note that if you have merged multiple columns and rows into one cell, you will not be able to split the merged cell into new cells spanning over more than one row or column. To be able to split cells spanning over several rows and columns you need to do this over several iterations.</p>
 <p><table width="80%" align="center" cellpadding="2" cellspacing="1" border="0">
 <tr valign="top" class="odd"><td><img src="images/texttable-split.png" alt="Original Table" /></td><td>Suppose we have a 2x3 table of names and addresses. To merge both columns in the first row we invoke <a href="qtexttable.html#mergeCells">mergeCells</a>() with <i>row</i> = 0, <i>column</i> = 0, <i>numRows</i> = 1 and <i>numColumns</i> = 2.<pre>     table-&gt;mergeCells(0, 0, 1, 2);</pre>
 </td></tr>
@@ -94,10 +95,10 @@
 <p>Returns the table cell at the given <i>row</i> and <i>column</i> in the table.</p>
 <p>See also <a href="qtexttable.html#columns">columns</a>() and <a href="qtexttable.html#rows">rows</a>().</p>
 <h3 class="fn"><a name="cellAt-2"></a><a href="qtexttablecell.html">QTextTableCell</a> QTextTable::cellAt ( int <i>position</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the table cell that contains the character at the given <i>position</i> in the document.</p>
 <h3 class="fn"><a name="cellAt-3"></a><a href="qtexttablecell.html">QTextTableCell</a> QTextTable::cellAt ( const <a href="qtextcursor.html">QTextCursor</a> &amp; <i>cursor</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the table cell containing the given <i>cursor</i>.</p>
 <h3 class="fn"><a name="columns"></a>int QTextTable::columns () const</h3>
 <p>Returns the number of columns in the table.</p>
@@ -116,7 +117,7 @@
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qtexttable.html#splitCell">splitCell</a>().</p>
 <h3 class="fn"><a name="mergeCells-2"></a>void QTextTable::mergeCells ( const <a href="qtextcursor.html">QTextCursor</a> &amp; <i>cursor</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Merges the cells selected by the provided <i>cursor</i>.</p>
 <p>This function was introduced in Qt 4.1.</p>
 <p>See also <a href="qtexttable.html#splitCell">splitCell</a>().</p>
@@ -150,6 +151,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

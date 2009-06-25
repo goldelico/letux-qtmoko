@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -225,7 +225,9 @@ void QTimeLinePrivate::setCurrentTime(int msecs)
     valueForTime() and emitting valueChanged(). By default, valueForTime()
     applies an interpolation algorithm to generate these value. You can choose
     from a set of predefined timeline algorithms by calling
-    setCurveShape(). By default, QTimeLine uses the EaseInOut curve shape,
+    setCurveShape().
+   
+    Note that by default, QTimeLine uses the EaseInOut curve shape,
     which provides a value that grows slowly, then grows steadily, and
     finally grows slowly. For a custom timeline, you can reimplement
     valueForTime(), in which case QTimeLine's curveShape property is ignored.

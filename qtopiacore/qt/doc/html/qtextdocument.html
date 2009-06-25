@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/text/qtextdocument.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/text/qtextdocument.cpp -->
 <head>
   <title>Qt 4.5: QTextDocument Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -176,7 +176,7 @@
 <p>The layout of a document is determined by the <a href="qtextdocument.html#documentLayout">documentLayout</a>(); you can create your own <a href="qabstracttextdocumentlayout.html">QAbstractTextDocumentLayout</a> subclass and set it using <a href="qtextdocument.html#setDocumentLayout">setDocumentLayout</a>() if you want to use your own layout logic. The document's title and other meta-information can be obtained by calling the <a href="qtextdocument.html#metaInformation">metaInformation</a>() function. For documents that are exposed to users through the <a href="qtextedit.html">QTextEdit</a> class, the document title is also available via the <a href="qtextedit.html#documentTitle-prop">QTextEdit::documentTitle</a>() function.</p>
 <p>The <a href="qtextdocument.html#toPlainText">toPlainText</a>() and <a href="qtextdocument.html#toHtml">toHtml</a>() convenience functions allow you to retrieve the contents of the document as plain text and HTML. The document's text can be searched using the <a href="qtextdocument.html#find">find</a>() functions.</p>
 <p>Undo/redo of operations performed on the document can be controlled using the <a href="qtextdocument.html#undoRedoEnabled-prop">setUndoRedoEnabled</a>() function. The undo/redo system can be controlled by an editor widget through the <a href="qtextdocument.html#undo">undo</a>() and <a href="qtextdocument.html#redo">redo</a>() slots; the document also provides <a href="qtextdocument.html#contentsChanged">contentsChanged</a>(), <a href="qtextdocument.html#undoAvailable">undoAvailable</a>(), and <a href="qtextdocument.html#redoAvailable">redoAvailable</a>() signals that inform connected editor widgets about the state of the undo/redo system.</p>
-<p>See also <a href="qtextcursor.html">QTextCursor</a>, <a href="qtextedit.html">QTextEdit</a>, and <a href="richtext.html">Rich Text Processing</a>.</p>
+<p>See also <a href="qtextcursor.html">QTextCursor</a>, <a href="qtextedit.html">QTextEdit</a>, <a href="richtext.html">Rich Text Processing</a>, and <a href="richtext-textobject.html">Text Object Example</a>.</p>
 <hr />
 <h2>Member Type Documentation</h2>
 <h3 class="flags"><a name="FindFlag-enum"></a>enum QTextDocument::FindFlag<br />flags QTextDocument::FindFlags</h3>
@@ -418,12 +418,12 @@
 <p>If the given <i>cursor</i> has a selection, the search begins after the selection; otherwise it begins at the cursor's position.</p>
 <p>By default the search is case-sensitive, and can match text anywhere in the document.</p>
 <h3 class="fn"><a name="find-3"></a><a href="qtextcursor.html">QTextCursor</a> QTextDocument::find ( const <a href="qstring.html">QString</a> &amp; <i>subString</i>, int <i>position</i> = 0, <a href="qtextdocument.html#FindFlag-enum">FindFlags</a> <i>options</i> = 0 ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Finds the next occurrence of the string, <i>subString</i>, in the document. The search starts at the given <i>position</i>, and proceeds forwards through the document unless specified otherwise in the search options. The <i>options</i> control the type of search performed.</p>
 <p>Returns a cursor with the match selected if <i>subString</i> was found; otherwise returns a null cursor.</p>
 <p>If the <i>position</i> is 0 (the default) the search begins from the beginning of the document; otherwise it begins at the specified position.</p>
 <h3 class="fn"><a name="find-4"></a><a href="qtextcursor.html">QTextCursor</a> QTextDocument::find ( const <a href="qregexp.html">QRegExp</a> &amp; <i>expr</i>, int <i>position</i> = 0, <a href="qtextdocument.html#FindFlag-enum">FindFlags</a> <i>options</i> = 0 ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Finds the next occurrence, matching the regular expression, <i>expr</i>, in the document. The search starts at the given <i>position</i>, and proceeds forwards through the document unless specified otherwise in the search options. The <i>options</i> control the type of search performed. The <a href="qtextdocument.html#FindFlag-enum">FindCaseSensitively</a> option is ignored for this overload, use QRegExp::caseSensitivity instead.</p>
 <p>Returns a cursor with the match selected if a match was found; otherwise returns a null cursor.</p>
 <p>If the <i>position</i> is 0 (the default) the search begins from the beginning of the document; otherwise it begins at the specified position.</p>
@@ -488,7 +488,7 @@
 <p>The provided <i>cursor</i> is positioned at the end of the location where the edition operation was redone.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <h3 class="fn"><a name="redo-2"></a>void QTextDocument::redo ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Redoes the last editing operation on the document if <a href="qtextdocument.html#isRedoAvailable">redo is available</a>.</p>
 <h3 class="fn"><a name="redoAvailable"></a>void QTextDocument::redoAvailable ( bool <i>available</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted whenever redo operations become available (<i>available</i> is true) or unavailable (<i>available</i> is false).</p>
@@ -534,7 +534,7 @@
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="qtextdocument.html#undoAvailable">undoAvailable</a>() and <a href="qtextdocument.html#undoRedoEnabled-prop">isUndoRedoEnabled</a>().</p>
 <h3 class="fn"><a name="undo-2"></a>void QTextDocument::undo ()&nbsp;&nbsp;<tt> [slot]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="undoAvailable"></a>void QTextDocument::undoAvailable ( bool <i>available</i> )&nbsp;&nbsp;<tt> [signal]</tt></h3>
 <p>This signal is emitted whenever undo operations become available (<i>available</i> is true) or unavailable (<i>available</i> is false).</p>
 <p>See the <a href="qundo.html">Qt Undo Framework</a> documentation for details.</p>
@@ -546,6 +546,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the qmake application of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1030,7 +1030,6 @@ void VcprojGenerator::initCompilerTool()
     conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS"));
     if(project->isActiveConfig("debug")){
         // Debug version
-        conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS"));
         conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS_DEBUG"));
         if((projectTarget == Application) || (projectTarget == StaticLib))
             conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS_MT_DBG"));
@@ -1038,7 +1037,6 @@ void VcprojGenerator::initCompilerTool()
             conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS_MT_DLLDBG"));
     } else {
         // Release version
-        conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS"));
         conf.compiler.parseOptions(project->values("QMAKE_CXXFLAGS_RELEASE"));
         conf.compiler.PreprocessorDefinitions += "QT_NO_DEBUG";
         conf.compiler.PreprocessorDefinitions += "NDEBUG";

@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -90,7 +90,16 @@ QT_DECL_MEMROTATE(quint32, quint24);
 QT_DECL_MEMROTATE(quint32, quint18);
 QT_DECL_MEMROTATE(quint32, quint8);
 QT_DECL_MEMROTATE(quint16, quint8);
+QT_DECL_MEMROTATE(qrgb444, quint8);
 QT_DECL_MEMROTATE(quint8, quint8);
+
+#ifdef QT_QWS_ROTATE_BGR
+QT_DECL_MEMROTATE(quint16, qbgr565);
+QT_DECL_MEMROTATE(quint32, qbgr565);
+QT_DECL_MEMROTATE(qrgb555, qbgr555);
+QT_DECL_MEMROTATE(quint32, qbgr555);
+#endif
+
 #ifdef QT_QWS_DEPTH_GENERIC
 QT_DECL_MEMROTATE(quint32, qrgb_generic16);
 QT_DECL_MEMROTATE(quint16, qrgb_generic16);

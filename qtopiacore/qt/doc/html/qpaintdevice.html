@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/qpaintdevice.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/qpaintdevice.qdoc -->
 <head>
   <title>Qt 4.5: QPaintDevice Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -30,7 +30,6 @@
 <ul>
 <li><div class="fn"></div>virtual <b><a href="qpaintdevice.html#dtor.QPaintDevice">~QPaintDevice</a></b> ()</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#depth">depth</a></b> () const</li>
-<li><div class="fn"></div>virtual HDC <b><a href="qpaintdevice.html#getDC">getDC</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#height">height</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#heightMM">heightMM</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#logicalDpiX">logicalDpiX</a></b> () const</li>
@@ -40,7 +39,6 @@
 <li><div class="fn"></div>bool <b><a href="qpaintdevice.html#paintingActive">paintingActive</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#physicalDpiX">physicalDpiX</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#physicalDpiY">physicalDpiY</a></b> () const</li>
-<li><div class="fn"></div>virtual void <b><a href="qpaintdevice.html#releaseDC">releaseDC</a></b> ( HDC <i>hdc</i> ) const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#width">width</a></b> () const</li>
 <li><div class="fn"></div>int <b><a href="qpaintdevice.html#widthMM">widthMM</a></b> () const</li>
 </ul>
@@ -87,7 +85,6 @@
 <p>Destroys the paint device and frees window system resources.</p>
 <h3 class="fn"><a name="depth"></a>int QPaintDevice::depth () const</h3>
 <p>Returns the bit depth (number of bit planes) of the paint device.</p>
-<h3 class="fn"><a name="getDC"></a>HDC QPaintDevice::getDC () const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <h3 class="fn"><a name="height"></a>int QPaintDevice::height () const</h3>
 <p>Returns the height of the paint device in default coordinate system units (e.g&#x2e; pixels for <a href="qpixmap.html">QPixmap</a> and <a href="qwidget.html">QWidget</a>).</p>
 <p>See also <a href="qpaintdevice.html#heightMM">heightMM</a>().</p>
@@ -120,7 +117,6 @@
 <p>Returns the horizontal resolution of the device in dots per inch. For example, when printing, this resolution refers to the physical printer's resolution. The logical DPI on the other hand, refers to the resolution used by the actual paint engine.</p>
 <p>Note that if the physicalDpiY() doesn't equal the <a href="qpaintdevice.html#logicalDpiY">logicalDpiY</a>(), the corresponding <a href="qpaintengine.html">QPaintEngine</a> must handle the resolution mapping.</p>
 <p>See also <a href="qpaintdevice.html#physicalDpiX">physicalDpiX</a>() and <a href="qpaintdevice.html#logicalDpiY">logicalDpiY</a>().</p>
-<h3 class="fn"><a name="releaseDC"></a>void QPaintDevice::releaseDC ( HDC <i>hdc</i> ) const&nbsp;&nbsp;<tt> [virtual]</tt></h3>
 <h3 class="fn"><a name="width"></a>int QPaintDevice::width () const</h3>
 <p>Returns the width of the paint device in default coordinate system units (e.g&#x2e; pixels for <a href="qpixmap.html">QPixmap</a> and <a href="qwidget.html">QWidget</a>).</p>
 <p>See also <a href="qpaintdevice.html#widthMM">widthMM</a>().</p>
@@ -131,6 +127,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

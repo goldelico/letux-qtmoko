@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/transformations.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/examples/transformations.qdoc -->
 <head>
   <title>Qt 4.5: Transformations Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -127,7 +127,7 @@
      painter.restore();</pre>
 <p>Before we start to render the shape, we call the <a href="qpainter.html#save">QPainter::save</a>() function.</p>
 <p><a href="qpainter.html#save">QPainter::save</a>() saves the current painter state (i.e&#x2e; pushes the state onto a stack) including the current coordinate system. The rationale for saving the painter state is that the following call to the <tt>transformPainter()</tt> function will transform the coordinate system depending on the currently chosen transformation operations, and we need a way to get back to the original state to draw the outline.</p>
-<p>After transforming the coordinate system, we draw the <tt>RenderArea</tt>'s shape, and then we restore the painter state using the the <a href="qpainter.html#restore">QPainter::restore</a>() function (i.e&#x2e; popping the saved state off the stack).</p>
+<p>After transforming the coordinate system, we draw the <tt>RenderArea</tt>'s shape, and then we restore the painter state using the <a href="qpainter.html#restore">QPainter::restore</a>() function (i.e&#x2e; popping the saved state off the stack).</p>
 <pre>     drawOutline(painter);</pre>
 <p>Then we draw the square outline.</p>
 <pre>     transformPainter(painter);
@@ -303,6 +303,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

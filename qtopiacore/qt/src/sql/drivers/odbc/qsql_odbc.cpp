@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSql module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -55,6 +55,7 @@
 #include <qvarlengtharray.h>
 #include <qvector.h>
 #include <QDebug>
+#include <QSqlQuery>
 
 QT_BEGIN_NAMESPACE
 
@@ -69,17 +70,14 @@ QT_BEGIN_NAMESPACE
 #endif
 
 // newer platform SDKs use SQLLEN instead of SQLINTEGER
-#if defined(SQLLEN) || defined(Q_OS_WIN64)
-# define QSQLLEN SQLLEN
-#else
+#if defined(WIN32) && (_MSC_VER < 1300)
 # define QSQLLEN SQLINTEGER
+# define QSQLULEN SQLUINTEGER
+#else
+# define QSQLLEN SQLLEN
+# define QSQLULEN SQLULEN
 #endif
 
-#if defined(SQLULEN) || defined(Q_OS_WIN64)
-# define QSQLULEN SQLULEN
-#else
-# define QSQLULEN SQLUINTEGER
-#endif
 
 static const int COLNAMESIZE = 256;
 //Map Qt parameter types to ODBC types
@@ -350,7 +348,7 @@ static QString qGetStringData(SQLHANDLE hStmt, int column, int colSize, bool uni
             } else {
                 fieldVal += QString::fromAscii(buf, rSize);
             }
-            if (fieldVal.size() + lengthIndicator >= colSize) {
+            if (lengthIndicator - fieldVal.size() <= 0) {
                 // workaround for Drivermanagers that don't return SQL_NO_DATA
                 break;
             }
@@ -1714,6 +1712,10 @@ bool QODBCDriver::open(const QString & db,
     d->checkHasMultiResults();
     setOpen(true);
     setOpenError(false);
+    if(d->isMSSqlServer) {
+        QSqlQuery i(createResult());
+        i.exec(QLatin1String("SET QUOTED_IDENTIFIER ON"));
+    }
     return true;
 }
 

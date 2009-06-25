@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the Qt Assistant of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -269,7 +269,10 @@ bool HelpPage::acceptNavigationRequest(QWebFrame *,
 }
 
 HelpViewer::HelpViewer(QHelpEngine *engine, CentralWidget *parent)
-    : QWebView(parent), helpEngine(engine), parentWidget(parent)
+    : QWebView(parent)
+    , helpEngine(engine)
+    , parentWidget(parent)
+    , loadFinished(false)
 {
     setAcceptDrops(false);
 
@@ -295,10 +298,12 @@ HelpViewer::HelpViewer(QHelpEngine *engine, CentralWidget *parent)
     connect(page(), SIGNAL(linkHovered(QString, QString, QString)), this,
         SIGNAL(highlighted(QString)));
     connect(this, SIGNAL(urlChanged(QUrl)), this, SIGNAL(sourceChanged(QUrl)));
+    connect(this, SIGNAL(loadFinished(bool)), this, SLOT(setLoadFinished(bool)));
 }
 
 void HelpViewer::setSource(const QUrl &url)
 {
+    loadFinished = false;
     if (url.toString() == QLatin1String("help")) {
         load(QUrl(QLatin1String("qthelp://com.trolltech.com."
             "assistantinternal_1.0.0/assistant/assistant.html")));
@@ -383,6 +388,12 @@ void HelpViewer::mousePressEvent(QMouseEvent *event)
         currentPage->m_keyboardModifiers = event->modifiers();
     }
     QWebView::mousePressEvent(event);
+}
+
+void HelpViewer::setLoadFinished(bool ok)
+{
+    loadFinished = ok;
+    emit sourceChanged(url());
 }
 
 #else  // !defined(QT_NO_WEBKIT)

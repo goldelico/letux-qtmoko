@@ -58,6 +58,7 @@
 #include "MouseEvent.h"
 #include "Page.h"
 #include "PlatformMouseEvent.h"
+#include "PluginMainThreadScheduler.h"
 #include "RenderLayer.h"
 #include "Settings.h"
 
@@ -112,7 +113,9 @@ void PluginView::show()
     if (isParentVisible() && platformPluginWidget())
         platformPluginWidget()->setVisible(true);
 
-    Widget::show();
+    // do not call parent impl. here as it will set the platformWidget
+    // (same as platformPluginWidget in the Qt port) to visible, even
+    // when parent isn't visible.
 }
 
 void PluginView::hide()
@@ -122,7 +125,9 @@ void PluginView::hide()
     if (isParentVisible() && platformPluginWidget())
         platformPluginWidget()->setVisible(false);
 
-    Widget::hide();
+    // do not call parent impl. here as it will set the platformWidget
+    // (same as platformPluginWidget in the Qt port) to invisible, even
+    // when parent isn't visible.
 }
 
 void PluginView::paint(GraphicsContext* context, const IntRect& rect)
@@ -225,6 +230,8 @@ void PluginView::stop()
 
     JSC::JSLock::DropAllLocks dropAllLocks(false);
 
+    PluginMainThreadScheduler::scheduler().unregisterPlugin(m_instance);
+
     // Clear the window
     m_npWindow.window = 0;
     if (m_plugin->pluginFuncs()->setwindow && !m_plugin->quirks().contains(PluginQuirkDontSetNullWindowHandleOnDestroy)) {
@@ -301,15 +308,15 @@ NPError PluginView::getValueStatic(NPNVariable variable, void* value)
 {
     switch (variable) {
     case NPNVToolkit:
-        *((uint32 *)value) = 0;
+        *static_cast<uint32*>(value) = 0;
         return NPERR_NO_ERROR;
 
     case NPNVSupportsXEmbedBool:
-        *((uint32 *)value) = true;
+        *static_cast<NPBool*>(value) = true;
         return NPERR_NO_ERROR;
 
     case NPNVjavascriptEnabledBool:
-        *((uint32 *)value) = true;
+        *static_cast<NPBool*>(value) = true;
         return NPERR_NO_ERROR;
 
     default:

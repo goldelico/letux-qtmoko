@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/examples/trollprint.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/examples/trollprint.qdoc -->
 <head>
   <title>Qt 4.5: Troll Print Example</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -91,7 +91,7 @@
 <p>Set the <tt>LANG</tt> environment variable to <tt>pt</tt>, and then run <tt>trollprint</tt>. You should still see the English version. Now run <tt>lrelease</tt>, e.g&#x2e; <tt>lrelease trollprint.pro</tt>, and then run the example again. Now you should see the Portuguese edition (Troll Imprimir 1.0):</p>
 <p align="center"><img src="images/linguist-trollprint_10_pt_bad.png" /></p><p>Whilst the translation has appeared correctly, it is in fact wrong. In good Portuguese, the second occurrence of &quot;Enabled&quot; should be &quot;Ativadas&quot;, not &quot;Ativado&quot; and the ending for the second translation of &quot;Disabled&quot; must change similarly too.</p>
 <p>If you open <tt>trollprint_pt.ts</tt> using <i>Qt Linguist</i>, you will see that there is just one occurrence of &quot;Enabled&quot; and of &quot;Disabled&quot; in the translation source file, even though there are two of each in the source code. This is because <i>Qt Linguist</i> tries to minimize the translator's work by using the same translation for duplicate source texts. In cases such as this where an identical translation is wrong, the programmer must disambiguate the duplicate occurrences. This is easily achieved by using the two argument form of <tt>tr()</tt>.</p>
-<p>We can easily determine which file must be changed because the translator's &quot;context&quot; is in fact the class name for the class where the texts that must be changed appears. In this case the file is <tt>printpanel.cpp</tt>, where the there are four lines to change. Add the second argument &quot;two-sided&quot; in the appropriate <tt>tr()</tt> calls to the first pair of radio buttons:</p>
+<p>We can easily determine which file must be changed because the translator's &quot;context&quot; is in fact the class name for the class where the texts that must be changed appears. In this case the file is <tt>printpanel.cpp</tt>, where there are four lines to change. Add the second argument &quot;two-sided&quot; in the appropriate <tt>tr()</tt> calls to the first pair of radio buttons:</p>
 <pre> twoSidedEnabledRadio = new QRadioButton(tr(&quot;Enabled&quot;, &quot;two-sided&quot;));
  twoSidedDisabledRadio = new QRadioButton(tr(&quot;Disabled&quot;, &quot;two-sided&quot;));</pre>
 <p>and add the second argument &quot;colors&quot; in the appropriate <tt>tr()</tt> calls for the second pair of radio buttons:</p>
@@ -160,6 +160,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

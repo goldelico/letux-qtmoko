@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/global/qglobal.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/global/qglobal.cpp -->
 <head>
   <title>Qt 4.5: QFlags Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -64,7 +64,8 @@
 <p>Qt uses QFlags to provide type safety. For example, the <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> type is simply a typedef for QFlags&lt;<a href="qt.html#AlignmentFlag-enum">Qt::AlignmentFlag</a>&gt;. <a href="qlabel.html#alignment-prop">QLabel::setAlignment</a>() takes a <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> parameter, which means that any combination of <a href="qt.html#AlignmentFlag-enum">Qt::AlignmentFlag</a> values,or 0, is legal:</p>
 <pre> label-&gt;setAlignment(Qt::AlignLeft | Qt::AlignTop);</pre>
 <p>If you try to pass a value from another enum or just a plain integer other than 0, the compiler will report an error. If you need to cast integer values to flags in a untyped fashion, you can use the explicit QFlags constructor as cast operator.</p>
-<p>If you want to use QFlags for your own enum types, use the <a href="qflags.html#Q_DECLARE_FLAGS">Q_DECLARE_FLAGS</a>() and <a href="qflags.html#Q_DECLARE_OPERATORS_FOR_FLAGS">Q_DECLARE_OPERATORS_FOR_FLAGS</a>(). For example:</p>
+<p>If you want to use QFlags for your own enum types, use the <a href="qflags.html#Q_DECLARE_FLAGS">Q_DECLARE_FLAGS</a>() and <a href="qflags.html#Q_DECLARE_OPERATORS_FOR_FLAGS">Q_DECLARE_OPERATORS_FOR_FLAGS</a>().</p>
+<p>Example:</p>
 <pre> class MyClass
  {
  public:
@@ -114,36 +115,36 @@
 <p>Returns a <a href="qflags.html">QFlags</a> object containing the result of the bitwise AND operation on this object and <i>mask</i>.</p>
 <p>See also <a href="qflags.html#operator-and-eq">operator&amp;=</a>(), <a href="qflags.html#operator-7c">operator|</a>(), <a href="qflags.html#operator-5e">operator^</a>(), and <a href="qflags.html#operator-7e">operator~</a>().</p>
 <h3 class="fn"><a name="operator-and-2"></a>QFlags QFlags::operator&amp; ( <a href="qtglobal.html#uint-typedef">uint</a> <i>mask</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-and-3"></a>QFlags QFlags::operator&amp; ( Enum <i>mask</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-and-eq"></a>QFlags &amp; QFlags::operator&amp;= ( int <i>mask</i> )</h3>
 <p>Performs a bitwise AND operation with <i>mask</i> and stores the result in this <a href="qflags.html">QFlags</a> object. Returns a reference to this object.</p>
 <p>See also <a href="qflags.html#operator-and">operator&amp;</a>(), <a href="qflags.html#operator-7c-eq">operator|=</a>(), and <a href="qflags.html#operator-5e-eq">operator^=</a>().</p>
 <h3 class="fn"><a name="operator-and-eq-2"></a>QFlags &amp; QFlags::operator&amp;= ( <a href="qtglobal.html#uint-typedef">uint</a> <i>mask</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-eq"></a>QFlags &amp; QFlags::operator= ( const QFlags &amp; <i>other</i> )</h3>
 <p>Assigns <i>other</i> to this object and returns a reference to this object.</p>
 <h3 class="fn"><a name="operator-5e"></a>QFlags QFlags::operator^ ( QFlags <i>other</i> ) const</h3>
 <p>Returns a <a href="qflags.html">QFlags</a> object containing the result of the bitwise XOR operation on this object and <i>other</i>.</p>
 <p>See also <a href="qflags.html#operator-5e-eq">operator^=</a>(), <a href="qflags.html#operator-and">operator&amp;</a>(), <a href="qflags.html#operator-7c">operator|</a>(), and <a href="qflags.html#operator-7e">operator~</a>().</p>
 <h3 class="fn"><a name="operator-5e-2"></a>QFlags QFlags::operator^ ( Enum <i>other</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-5e-eq"></a>QFlags &amp; QFlags::operator^= ( QFlags <i>other</i> )</h3>
 <p>Performs a bitwise XOR operation with <i>other</i> and stores the result in this <a href="qflags.html">QFlags</a> object. Returns a reference to this object.</p>
 <p>See also <a href="qflags.html#operator-5e">operator^</a>(), <a href="qflags.html#operator-and-eq">operator&amp;=</a>(), and <a href="qflags.html#operator-7c-eq">operator|=</a>().</p>
 <h3 class="fn"><a name="operator-5e-eq-2"></a>QFlags &amp; QFlags::operator^= ( Enum <i>other</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-7c"></a>QFlags QFlags::operator| ( QFlags <i>other</i> ) const</h3>
 <p>Returns a <a href="qflags.html">QFlags</a> object containing the result of the bitwise OR operation on this object and <i>other</i>.</p>
 <p>See also <a href="qflags.html#operator-7c-eq">operator|=</a>(), <a href="qflags.html#operator-5e">operator^</a>(), <a href="qflags.html#operator-and">operator&amp;</a>(), and <a href="qflags.html#operator-7e">operator~</a>().</p>
 <h3 class="fn"><a name="operator-7c-2"></a>QFlags QFlags::operator| ( Enum <i>other</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-7c-eq"></a>QFlags &amp; QFlags::operator|= ( QFlags <i>other</i> )</h3>
 <p>Performs a bitwise OR operation with <i>other</i> and stores the result in this <a href="qflags.html">QFlags</a> object. Returns a reference to this object.</p>
 <p>See also <a href="qflags.html#operator-7c">operator|</a>(), <a href="qflags.html#operator-and-eq">operator&amp;=</a>(), and <a href="qflags.html#operator-5e-eq">operator^=</a>().</p>
 <h3 class="fn"><a name="operator-7c-eq-2"></a>QFlags &amp; QFlags::operator|= ( Enum <i>other</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-7e"></a>QFlags QFlags::operator~ () const</h3>
 <p>Returns a <a href="qflags.html">QFlags</a> object that contains the bitwise negation of this object.</p>
 <p>See also <a href="qflags.html#operator-and">operator&amp;</a>(), <a href="qflags.html#operator-7c">operator|</a>(), and <a href="qflags.html#operator-5e">operator^</a>().</p>
@@ -163,6 +164,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

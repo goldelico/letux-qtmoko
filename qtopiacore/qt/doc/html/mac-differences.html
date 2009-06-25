@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/mac-differences.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/mac-differences.qdoc -->
 <head>
   <title>Qt 4.5: Qt for Mac OS X - Specific Issues</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -62,7 +62,7 @@
 <p>Note that the <tt>DYLD_LIBRARY_PATH</tt> environment variable will override these settings, and any other default paths, such as a lookup of dynamic libraries inside <tt>/usr/lib</tt> and similar default locations.</p>
 <a name="combining-libraries"></a>
 <h4>Combining Libraries</h4>
-<p>If you want to build a new dynamic library combining the Qt 4 dynamic libraries, you need to introduce the <tt>ld -r</tt> flag. Then relocation information is stored in the the output file, so that this file could be the subject of another <tt>ld</tt> run. This is done by setting the <tt>-r</tt> flag in the <tt>.pro</tt> file, and the <tt>LFLAGS</tt> settings.</p>
+<p>If you want to build a new dynamic library combining the Qt 4 dynamic libraries, you need to introduce the <tt>ld -r</tt> flag. Then relocation information is stored in the output file, so that this file could be the subject of another <tt>ld</tt> run. This is done by setting the <tt>-r</tt> flag in the <tt>.pro</tt> file, and the <tt>LFLAGS</tt> settings.</p>
 <a name="initialization-order"></a>
 <h4>Initialization Order</h4>
 <p>dyld(1) calls global static initializers in the order they are linked into your application. If a library links against Qt and references globals in Qt (from global initializers in your own library), be sure to link your application against Qt before linking it against the library. Otherwise the result will be undefined because Qt's global initializers have not been called yet.</p>
@@ -123,6 +123,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

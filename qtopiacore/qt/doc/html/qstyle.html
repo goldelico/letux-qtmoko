@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/styles/qstyle.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/styles/qstyle.cpp -->
 <head>
   <title>Qt 4.5: QStyle Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -1031,10 +1031,10 @@
 <p>The <a href="qobject.html#inherits">QWidget::inherits</a>() function may provide enough information to allow class-specific customizations. But because new <a href="qstyle.html">QStyle</a> subclasses are expected to work reasonably with all current and <i>future</i> widgets, limited use of hard-coded customization is recommended.</p>
 <p>See also <a href="qstyle.html#unpolish">unpolish</a>().</p>
 <h3 class="fn"><a name="polish-2"></a>void QStyle::polish ( <a href="qapplication.html">QApplication</a> * <i>application</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Late initialization of the given <i>application</i> object.</p>
 <h3 class="fn"><a name="polish-3"></a>void QStyle::polish ( <a href="qpalette.html">QPalette</a> &amp; <i>palette</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Changes the <i>palette</i> according to style specific requirements for color palettes (if any).</p>
 <p>See also <a href="qpalette.html">QPalette</a> and <a href="qapplication.html#setPalette">QApplication::setPalette</a>().</p>
 <h3 class="fn"><a name="sizeFromContents"></a><a href="qsize.html">QSize</a> QStyle::sizeFromContents ( <a href="qstyle.html#ContentsType-enum">ContentsType</a> <i>type</i>, const <a href="qstyleoption.html">QStyleOption</a> * <i>option</i>, const <a href="qsize.html">QSize</a> &amp; <i>contentsSize</i>, const <a href="qwidget.html">QWidget</a> * <i>widget</i> = 0 ) const&nbsp;&nbsp;<tt> [pure virtual]</tt></h3>
@@ -1111,7 +1111,7 @@
 <p>Note that unpolish() will only be called if the widget is destroyed. This can cause problems in some cases, e.g, if you remove a widget from the UI, cache it, and then reinsert it after the style has changed; some of Qt's classes cache their widgets.</p>
 <p>See also <a href="qstyle.html#polish">polish</a>().</p>
 <h3 class="fn"><a name="unpolish-2"></a>void QStyle::unpolish ( <a href="qapplication.html">QApplication</a> * <i>application</i> )&nbsp;&nbsp;<tt> [virtual]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Uninitialize the given <i>application</i>.</p>
 <h3 class="fn"><a name="visualAlignment"></a><a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> QStyle::visualAlignment ( <a href="qt.html#LayoutDirection-enum">Qt::LayoutDirection</a> <i>direction</i>, <a href="qt.html#AlignmentFlag-enum">Qt::Alignment</a> <i>alignment</i> )&nbsp;&nbsp;<tt> [static]</tt></h3>
 <p>Transforms an <i>alignment</i> of <a href="qt.html#AlignmentFlag-enum">Qt::AlignLeft</a> or <a href="qt.html#AlignmentFlag-enum">Qt::AlignRight</a> without <a href="qt.html#AlignmentFlag-enum">Qt::AlignAbsolute</a> into <a href="qt.html#AlignmentFlag-enum">Qt::AlignLeft</a> or <a href="qt.html#AlignmentFlag-enum">Qt::AlignRight</a> with <a href="qt.html#AlignmentFlag-enum">Qt::AlignAbsolute</a> according to the layout <i>direction</i>. The other alignment flags are left untouched.</p>
@@ -1128,6 +1128,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

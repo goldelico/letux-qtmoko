@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -165,11 +165,10 @@ public:
     void setPosHelper(const QPointF &pos);
     void setVisibleHelper(bool newVisible, bool explicitly, bool update = true);
     void setEnabledHelper(bool newEnabled, bool explicitly, bool update = true);
-    bool discardUpdateRequest(bool ignoreClipping = false,
-                              bool ignoreVisibleBit = false,
-                              bool ignoreDirtyBit = false) const;
+    bool discardUpdateRequest(bool ignoreClipping = false, bool ignoreVisibleBit = false,
+                              bool ignoreDirtyBit = false, bool ignoreOpacity = false) const;
     void updateHelper(const QRectF &rect = QRectF(), bool force = false, bool maybeDirtyClipPath = false);
-    void fullUpdateHelper(bool childrenOnly = false, bool maybeDirtyClipPath = false);
+    void fullUpdateHelper(bool childrenOnly = false, bool maybeDirtyClipPath = false, bool ignoreOpacity = false);
     void updateEffectiveOpacity();
     void resolveEffectiveOpacity(qreal effectiveParentOpacity);
     void resolveDepth(int parentDepth);

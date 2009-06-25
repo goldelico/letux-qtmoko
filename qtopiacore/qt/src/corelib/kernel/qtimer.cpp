@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -77,7 +77,7 @@ QT_BEGIN_NAMESPACE
 
     In multithreaded applications, you can use QTimer in any thread
     that has an event loop. To start an event loop from a non-GUI
-    thread, use QThread::exec(). Qt uses the the timer's
+    thread, use QThread::exec(). Qt uses the timer's
     \l{QObject::thread()}{thread affinity} to determine which thread
     will emit the \l{QTimer::}{timeout()} signal. Because of this, you
     must start and stop the timer in its thread; it is not possible to

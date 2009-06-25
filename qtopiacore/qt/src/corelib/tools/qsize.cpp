@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtCore module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -781,7 +781,7 @@ void QSizeF::scale(const QSizeF &s, Qt::AspectRatioMode mode)
     \fn QDataStream &operator<<(QDataStream &stream, const QSizeF &size)
     \relates QSizeF
 
-    Writes the the given \a size to the given \a stream and returns a
+    Writes the given \a size to the given \a stream and returns a
     reference to the stream.
 
     \sa {Format of the QDataStream Operators}

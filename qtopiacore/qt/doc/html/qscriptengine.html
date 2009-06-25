@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/script/qscriptengine.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/script/qscriptengine.cpp -->
 <head>
   <title>Qt 4.5: QScriptEngine Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -423,7 +423,7 @@
 <p>The prototype of the created object will be the Object prototype object.</p>
 <p>See also <a href="qscriptengine.html#newArray">newArray</a>() and <a href="qscriptvalue.html#setProperty">QScriptValue::setProperty</a>().</p>
 <h3 class="fn"><a name="newObject-2"></a><a href="qscriptvalue.html">QScriptValue</a> QScriptEngine::newObject ( <a href="qscriptclass.html">QScriptClass</a> * <i>scriptClass</i>, const <a href="qscriptvalue.html">QScriptValue</a> &amp; <i>data</i> = QScriptValue() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a <a href="qtscript.html">QtScript</a> Object of the given class, <i>scriptClass</i>.</p>
 <p>The prototype of the created object will be the Object prototype object.</p>
 <p><i>data</i>, if specified, is set as the internal data of the new object (using <a href="qscriptvalue.html#setData">QScriptValue::setData</a>()).</p>
@@ -457,7 +457,7 @@
 <p>If the given <i>object</i> is deleted outside of <a href="qtscript.html">QtScript</a>'s control, any attempt to access the deleted <a href="qobject.html">QObject</a>'s members through the <a href="qtscript.html">QtScript</a> wrapper object (either by script code or C++) will result in a script exception.</p>
 <p>See also <a href="qscriptvalue.html#toQObject">QScriptValue::toQObject</a>().</p>
 <h3 class="fn"><a name="newQObject-2"></a><a href="qscriptvalue.html">QScriptValue</a> QScriptEngine::newQObject ( const <a href="qscriptvalue.html">QScriptValue</a> &amp; <i>scriptObject</i>, <a href="qobject.html">QObject</a> * <i>qtObject</i>, <a href="qscriptengine.html#ValueOwnership-enum">ValueOwnership</a> <i>ownership</i> = QtOwnership, const <a href="qscriptengine.html#QObjectWrapOption-enum">QObjectWrapOptions</a> &amp; <i>options</i> = 0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Initializes the given <i>scriptObject</i> to hold the given <i>qtObject</i>, and returns the <i>scriptObject</i>.</p>
 <p>This function enables you to &quot;promote&quot; a plain Qt Script object (created by the <a href="qscriptengine.html#newObject">newObject</a>() function) to a <a href="qobject.html">QObject</a> proxy, or to replace the <a href="qobject.html">QObject</a> contained inside an object previously created by the <a href="qscriptengine.html#newQObject">newQObject</a>() function.</p>
 <p>The prototype() of the <i>scriptObject</i> will remain unchanged.</p>
@@ -475,7 +475,7 @@
 <p>If a default prototype has been registered with the meta type id of <i>value</i>, then the prototype of the created object will be that prototype; otherwise, the prototype will be the Object prototype object.</p>
 <p>See also <a href="qscriptengine.html#setDefaultPrototype">setDefaultPrototype</a>() and <a href="qscriptvalue.html#toVariant">QScriptValue::toVariant</a>().</p>
 <h3 class="fn"><a name="newVariant-2"></a><a href="qscriptvalue.html">QScriptValue</a> QScriptEngine::newVariant ( const <a href="qscriptvalue.html">QScriptValue</a> &amp; <i>object</i>, const <a href="qvariant.html">QVariant</a> &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Initializes the given Qt Script <i>object</i> to hold the given variant <i>value</i>, and returns the <i>object</i>.</p>
 <p>This function enables you to &quot;promote&quot; a plain Qt Script object (created by the <a href="qscriptengine.html#newObject">newObject</a>() function) to a variant, or to replace the variant contained inside an object previously created by the <a href="qscriptengine.html#newVariant">newVariant</a>() function.</p>
 <p>The prototype() of the <i>object</i> will remain unchanged.</p>
@@ -696,6 +696,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

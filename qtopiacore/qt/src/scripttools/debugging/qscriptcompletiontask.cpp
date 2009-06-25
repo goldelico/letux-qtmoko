@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtSCriptTools module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -162,11 +162,7 @@ void QScriptCompletionTaskPrivate::completeScriptExpression()
             obj = ctx->thisObject();
         } else {
             QScriptValueList scopeChain;
-#if QT_VERSION >= 0x040500
             scopeChain = ctx->scopeChain();
-#else
-            scopeChain.append(ctx->activationObject());
-#endif
             for (int i = 0; i < scopeChain.size(); ++i) {
                 QScriptValue oo = scopeChain.at(i).property(topLevelIdent);
                 if (oo.isObject()) {
@@ -180,11 +176,7 @@ void QScriptCompletionTaskPrivate::completeScriptExpression()
         if (obj.isValid())
             objects.append(obj);
     } else {
-#if QT_VERSION >= 0x040500
         objects << ctx->scopeChain();
-#else
-        objects.append(ctx->activationObject());
-#endif
         QStringList keywords;
         keywords.append(QString::fromLatin1("this"));
         keywords.append(QString::fromLatin1("true"));

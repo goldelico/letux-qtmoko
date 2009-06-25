@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/text/qtextcursor.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/text/qtextcursor.cpp -->
 <head>
   <title>Qt 4.5: QTextCursor Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -244,7 +244,7 @@
 <p>Creates and returns a new list with the given <i>format</i>, and makes the current paragraph the cursor is in the first list item.</p>
 <p>See also <a href="qtextcursor.html#insertList">insertList</a>() and <a href="qtextcursor.html#currentList">currentList</a>().</p>
 <h3 class="fn"><a name="createList-2"></a><a href="qtextlist.html">QTextList</a> * QTextCursor::createList ( <a href="qtextlistformat.html#Style-enum">QTextListFormat::Style</a> <i>style</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates and returns a new list with the given <i>style</i>, making the cursor's current paragraph the first list item.</p>
 <p>The style to be used is defined by the <a href="qtextlistformat.html#Style-enum">QTextListFormat::Style</a> enum.</p>
 <p>See also <a href="qtextcursor.html#insertList">insertList</a>() and <a href="qtextcursor.html#currentList">currentList</a>().</p>
@@ -278,11 +278,11 @@
 <p>Inserts a new empty block at the cursor <a href="qtextcursor.html#position">position</a>() with the current <a href="qtextcursor.html#blockFormat">blockFormat</a>() and <a href="qtextcursor.html#charFormat">charFormat</a>().</p>
 <p>See also <a href="qtextcursor.html#setBlockFormat">setBlockFormat</a>().</p>
 <h3 class="fn"><a name="insertBlock-2"></a>void QTextCursor::insertBlock ( const <a href="qtextblockformat.html">QTextBlockFormat</a> &amp; <i>format</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a new empty block at the cursor <a href="qtextcursor.html#position">position</a>() with block format <i>format</i> and the current <a href="qtextcursor.html#charFormat">charFormat</a>() as block char format.</p>
 <p>See also <a href="qtextcursor.html#setBlockFormat">setBlockFormat</a>().</p>
 <h3 class="fn"><a name="insertBlock-3"></a>void QTextCursor::insertBlock ( const <a href="qtextblockformat.html">QTextBlockFormat</a> &amp; <i>format</i>, const <a href="qtextcharformat.html">QTextCharFormat</a> &amp; <i>charFormat</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a new empty block at the cursor <a href="qtextcursor.html#position">position</a>() with block format <i>format</i> and <i>charFormat</i> as block char format.</p>
 <p>See also <a href="qtextcursor.html#setBlockFormat">setBlockFormat</a>().</p>
 <h3 class="fn"><a name="insertFragment"></a>void QTextCursor::insertFragment ( const <a href="qtextdocumentfragment.html">QTextDocumentFragment</a> &amp; <i>fragment</i> )</h3>
@@ -298,25 +298,25 @@
 <h3 class="fn"><a name="insertImage"></a>void QTextCursor::insertImage ( const <a href="qtextimageformat.html">QTextImageFormat</a> &amp; <i>format</i> )</h3>
 <p>Inserts the image defined by <i>format</i> at the current <a href="qtextcursor.html#position">position</a>().</p>
 <h3 class="fn"><a name="insertImage-2"></a>void QTextCursor::insertImage ( const <a href="qtextimageformat.html">QTextImageFormat</a> &amp; <i>format</i>, <a href="qtextframeformat.html#Position-enum">QTextFrameFormat::Position</a> <i>alignment</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts the image defined by the given <i>format</i> at the cursor's current position with the specified <i>alignment</i>.</p>
 <p>This function was introduced in Qt 4.2.</p>
 <p>See also <a href="qtextcursor.html#position">position</a>().</p>
 <h3 class="fn"><a name="insertImage-3"></a>void QTextCursor::insertImage ( const <a href="qstring.html">QString</a> &amp; <i>name</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Convenience method for inserting the image with the given <i>name</i> at the current <a href="qtextcursor.html#position">position</a>().</p>
 <pre> QImage img = ...
  textDocument-&gt;addResource(QTextDocument::ImageResource, QUrl(&quot;myimage&quot;), img);
  cursor.insertImage(&quot;myimage&quot;);</pre>
 <h3 class="fn"><a name="insertImage-4"></a>void QTextCursor::insertImage ( const <a href="qimage.html">QImage</a> &amp; <i>image</i>, const <a href="qstring.html">QString</a> &amp; <i>name</i> = QString() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Convenience function for inserting the given <i>image</i> with an optional <i>name</i> at the current <a href="qtextcursor.html#position">position</a>().</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="insertList"></a><a href="qtextlist.html">QTextList</a> * QTextCursor::insertList ( const <a href="qtextlistformat.html">QTextListFormat</a> &amp; <i>format</i> )</h3>
 <p>Inserts a new block at the current position and makes it the first list item of a newly created list with the given <i>format</i>. Returns the created list.</p>
 <p>See also <a href="qtextcursor.html#currentList">currentList</a>(), <a href="qtextcursor.html#createList">createList</a>(), and <a href="qtextcursor.html#insertBlock">insertBlock</a>().</p>
 <h3 class="fn"><a name="insertList-2"></a><a href="qtextlist.html">QTextList</a> * QTextCursor::insertList ( <a href="qtextlistformat.html#Style-enum">QTextListFormat::Style</a> <i>style</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts a new block at the current position and makes it the first list item of a newly created list with the given <i>style</i>. Returns the created list.</p>
 <p>See also <a href="qtextcursor.html#currentList">currentList</a>(), <a href="qtextcursor.html#createList">createList</a>(), and <a href="qtextcursor.html#insertBlock">insertBlock</a>().</p>
 <h3 class="fn"><a name="insertTable"></a><a href="qtexttable.html">QTextTable</a> * QTextCursor::insertTable ( int <i>rows</i>, int <i>columns</i>, const <a href="qtexttableformat.html">QTextTableFormat</a> &amp; <i>format</i> )</h3>
@@ -324,7 +324,7 @@
 <p>There must be at least one row and one column in the table.</p>
 <p>See also <a href="qtextcursor.html#currentTable">currentTable</a>().</p>
 <h3 class="fn"><a name="insertTable-2"></a><a href="qtexttable.html">QTextTable</a> * QTextCursor::insertTable ( int <i>rows</i>, int <i>columns</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Creates a new table with the given number of <i>rows</i> and <i>columns</i>, inserts it at the current cursor <a href="qtextcursor.html#position">position</a>() in the document, and returns the table object. The cursor is moved to the beginning of the first cell.</p>
 <p>There must be at least one row and one column in the table.</p>
 <p>See also <a href="qtextcursor.html#currentTable">currentTable</a>().</p>
@@ -338,7 +338,7 @@
 <p>Any ASCII linefeed characters (\n) in the inserted text are transformed into unicode block separators, corresponding to <a href="qtextcursor.html#insertBlock">insertBlock</a>() calls.</p>
 <p>See also <a href="qtextcursor.html#charFormat">charFormat</a>() and <a href="qtextcursor.html#hasSelection">hasSelection</a>().</p>
 <h3 class="fn"><a name="insertText-2"></a>void QTextCursor::insertText ( const <a href="qstring.html">QString</a> &amp; <i>text</i>, const <a href="qtextcharformat.html">QTextCharFormat</a> &amp; <i>format</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Inserts <i>text</i> at the current position with the given <i>format</i>.</p>
 <h3 class="fn"><a name="isCopyOf"></a>bool QTextCursor::isCopyOf ( const QTextCursor &amp; <i>other</i> ) const</h3>
 <p>Returns true if this cursor and <i>other</i> are copies of each other, i.e&#x2e; one of them was created as a copy of the other and neither has moved since. This is much stricter than equality.</p>
@@ -430,7 +430,7 @@
 <h3 class="fn"><a name="operator-lt-eq"></a>bool QTextCursor::operator&lt;= ( const QTextCursor &amp; <i>other</i> ) const</h3>
 <p>Returns true if the <i>other</i> cursor is positioned later or at the same position in the document as this cursor; otherwise returns false.</p>
 <h3 class="fn"><a name="operator-eq"></a>QTextCursor &amp; QTextCursor::operator= ( const QTextCursor &amp; <i>cursor</i> )</h3>
-<p>Makes a copy of <i>cursor</i> and assigns it to this <a href="qtextcursor.html">QTextCursor</a>.</p>
+<p>Makes a copy of <i>cursor</i> and assigns it to this <a href="qtextcursor.html">QTextCursor</a>. Note that <a href="qtextcursor.html">QTextCursor</a> is an <a href="shared.html">implicitly shared</a> class.</p>
 <h3 class="fn"><a name="operator-eq-eq"></a>bool QTextCursor::operator== ( const QTextCursor &amp; <i>other</i> ) const</h3>
 <p>Returns true if the <i>other</i> cursor is at the same position in the document as this cursor; otherwise returns false.</p>
 <h3 class="fn"><a name="operator-gt"></a>bool QTextCursor::operator&gt; ( const QTextCursor &amp; <i>other</i> ) const</h3>
@@ -441,6 +441,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

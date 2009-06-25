@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,10 +34,15 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
+
+/*
+  Note: The qdoc comments for QMacStyle are contained in
+  .../doc/src/qstyles.qdoc. 
+*/
 
 #include "qmacstyle_mac.h"
 
@@ -549,7 +554,6 @@ extern QPaintDevice *qt_mac_safe_pdev; //qapplication_mac.cpp
   QMacCGStyle globals
  *****************************************************************************/
 const int qt_mac_hitheme_version = 0; //the HITheme version we speak
-const int macSpinBoxSep        = 5;    // distance between spinwidget and the lineedit
 const int macItemFrame         = 2;    // menu item frame width
 const int macItemHMargin       = 3;    // menu item hor text margin
 const int macItemVMargin       = 2;    // menu item ver text margin
@@ -1989,87 +1993,12 @@ void QMacStylePrivate::drawColorlessButton(const HIRect &macRect, HIThemeButtonD
     p->drawPixmap(int(macRect.origin.x), int(macRect.origin.y) + finalyoff, width, height, pm);
 }
 
-/*!
-    \class QMacStyle
-    \brief The QMacStyle class provides a Mac OS X style using the Apple Appearance Manager.
-
-    \ingroup appearance
-
-    This class is implemented as a wrapper to the HITheme
-    APIs, allowing applications to be styled according to the current
-    theme in use on Mac OS X. This is done by having primitives
-    in QStyle implemented in terms of what Mac OS X would normally theme.
-
-    \warning This style is only available on Mac OS X because it relies on the
-    HITheme APIs.
-
-    There are additional issues that should be taken
-    into consideration to make an application compatible with the
-    \link http://developer.apple.com/documentation/UserExperience/Conceptual/OSXHIGuidelines/index.html
-    Apple Human Interface Guidelines \endlink. Some of these issues are outlined
-    below.
-
-    \list
-
-    \i Layout - The restrictions on window layout are such that some
-    aspects of layout that are style-dependent cannot be achieved
-    using QLayout. Changes are being considered (and feedback would be
-    appreciated) to make layouts QStyle-able. Some of the restrictions
-    involve horizontal and vertical widget alignment and widget size
-    (covered below).
-
-    \i Widget size - Mac OS X allows widgets to have specific fixed sizes.  Qt
-    does not fully implement this behavior so as to maintain cross-platform
-    compatibility. As a result some widgets sizes may be inappropriate (and
-    subsequently not rendered correctly by the HITheme APIs).The
-    QWidget::sizeHint() will return the appropriate size for many
-    managed widgets (widgets enumerated in \l QStyle::ContentsType).
-
-    \i Effects - QMacStyle uses HITheme for performing most of the drawing, but
-    also uses emulation in a few cases where HITheme does not provide the
-    required functionality (for example, tab bars on Panther, the toolbar
-    separator, etc). We tried to make the emulation as close to the original as
-    possible. Please report any issues you see in effects or non-standard
-    widgets.
-
-    \endlist
-
-    There are other issues that need to be considered in the feel of
-    your application (including the general color scheme to match the
-    Aqua colors). The Guidelines mentioned above will remain current
-    with new advances and design suggestions for Mac OS X.
-
-    Note that the functions provided by QMacStyle are
-    reimplementations of QStyle functions; see QStyle for their
-    documentation.
-
-    \img qmacstyle.png
-    \sa QWindowsXPStyle, QWindowsStyle, QPlastiqueStyle, QCDEStyle, QMotifStyle
-*/
-
-
-/*!
-    \enum QMacStyle::WidgetSizePolicy
-
-    \value SizeSmall
-    \value SizeLarge
-    \value SizeMini
-    \value SizeDefault
-    \omitvalue SizeNone
-*/
-
-/*!
-    Constructs a QMacStyle object.
-*/
 QMacStyle::QMacStyle()
     : QWindowsStyle()
 {
     d = new QMacStylePrivate(this);
 }
 
-/*!
-    Destructs a QMacStyle object.
-*/
 QMacStyle::~QMacStyle()
 {
     delete qt_mac_backgroundPattern;
@@ -2143,11 +2072,13 @@ void qt_mac_fill_background(QPainter *painter, const QRegion &rgn, const QPoint 
     }
 }
 
-/*! \reimp */
 void QMacStyle::polish(QPalette &pal)
 {
-    if (qt_mac_backgroundPattern == 0)
+    if (!qt_mac_backgroundPattern) {
+        if (!qApp)
+            return;
         qt_mac_backgroundPattern = new QPixmap(d->generateBackgroundPattern());
+    }
 
     QColor pc(Qt::black);
     pc = qcolorForTheme(kThemeBrushDialogBackgroundActive);
@@ -2164,17 +2095,14 @@ void QMacStyle::polish(QPalette &pal)
     }
 }
 
-/*! \reimp */
 void QMacStyle::polish(QApplication *)
 {
 }
 
-/*! \reimp */
 void QMacStyle::unpolish(QApplication *)
 {
 }
 
-/*! \reimp */
 void QMacStyle::polish(QWidget* w)
 {
     d->addWidget(w);
@@ -2238,7 +2166,6 @@ void QMacStyle::polish(QWidget* w)
     }
 }
 
-/*! \reimp */
 void QMacStyle::unpolish(QWidget* w)
 {
     d->removeWidget(w);
@@ -2269,7 +2196,6 @@ void QMacStyle::unpolish(QWidget* w)
     QWindowsStyle::unpolish(w);
 }
 
-/*! \reimp */
 int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt, const QWidget *widget) const
 {
     int controlSize = getControlSize(opt, widget);
@@ -2373,7 +2299,14 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt, const QW
         break;
     case PM_SpinBoxFrameWidth:
         GetThemeMetric(kThemeMetricEditTextFrameOutset, &ret);
-        ret += 2;
+        switch (d->aquaSizeConstrain(opt, widget)) {
+        default:
+            ret += 2;
+            break;
+        case QAquaSizeMini:
+            ret += 1;
+            break;
+        }
         break;
     case PM_ButtonShiftHorizontal:
     case PM_ButtonShiftVertical:
@@ -2641,7 +2574,6 @@ int QMacStyle::pixelMetric(PixelMetric metric, const QStyleOption *opt, const QW
     return ret;
 }
 
-/*! \reimp */
 QPalette QMacStyle::standardPalette() const
 {
     QPalette pal = QWindowsStyle::standardPalette();
@@ -2651,7 +2583,6 @@ QPalette QMacStyle::standardPalette() const
     return pal;
 }
 
-/*! \reimp */
 int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w,
                          QStyleHintReturn *hret) const
 {
@@ -2946,7 +2877,6 @@ int QMacStyle::styleHint(StyleHint sh, const QStyleOption *opt, const QWidget *w
     return ret;
 }
 
-/*! \reimp */
 QPixmap QMacStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixmap,
                                        const QStyleOption *opt) const
 {
@@ -2972,7 +2902,6 @@ QPixmap QMacStyle::generatedIconPixmap(QIcon::Mode iconMode, const QPixmap &pixm
 }
 
 
-/*! \reimp */
 QPixmap QMacStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOption *opt,
                                   const QWidget *widget) const
 {
@@ -3003,31 +2932,7 @@ QPixmap QMacStyle::standardPixmap(StandardPixmap standardPixmap, const QStyleOpt
     }
     return icon.pixmap(size, size);
 }
-/*!
-    \enum QMacStyle::FocusRectPolicy
 
-    This type is used to signify a widget's focus rectangle policy.
-
-    \value FocusEnabled  show a focus rectangle when the widget has focus.
-    \value FocusDisabled  never show a focus rectangle for the widget.
-    \value FocusDefault  show a focus rectangle when the widget has
-    focus and the widget is a QSpinWidget, QDateTimeEdit, QLineEdit,
-    QListBox, QListView, editable QTextEdit, or one of their
-    subclasses.
-*/
-
-/*!
-    \obsolete
-    Sets the focus rectangle policy of \a w. The \a policy can be one of
-    \l{QMacStyle::FocusRectPolicy}.
-
-    This is now simply an interface to the Qt::WA_MacShowFocusRect attribute and the
-    FocusDefault value does nothing anymore. If you want to set a widget back
-    to its default value, you must save the old value of the attribute before
-    you change it.
-
-    \sa focusRectPolicy() QWidget::setAttribute()
-*/
 void QMacStyle::setFocusRectPolicy(QWidget *w, FocusRectPolicy policy)
 {
     switch (policy) {
@@ -3040,29 +2945,11 @@ void QMacStyle::setFocusRectPolicy(QWidget *w, FocusRectPolicy policy)
     }
 }
 
-/*!
-    \obsolete
-    Returns the focus rectangle policy for the widget \a w.
-
-    The focus rectangle policy can be one of \l{QMacStyle::FocusRectPolicy}.
-
-    In 4.3 and up this function will simply test for the
-    Qt::WA_MacShowFocusRect attribute and will never return
-    QMacStyle::FocusDefault.
-
-    \sa setFocusRectPolicy(), QWidget::testAttribute()
-*/
 QMacStyle::FocusRectPolicy QMacStyle::focusRectPolicy(const QWidget *w)
 {
     return w->testAttribute(Qt::WA_MacShowFocusRect) ? FocusEnabled : FocusDisabled;
 }
 
-/*!
-    \obsolete
-
-    Call QWidget::setAttribute() with Qt::WA_MacMiniSize, Qt::WA_MacSmallSize,
-    or Qt::WA_MacNormalSize instead.
-*/
 void QMacStyle::setWidgetSizePolicy(const QWidget *widget, WidgetSizePolicy policy)
 {
     QWidget *wadget = const_cast<QWidget *>(widget);
@@ -3071,12 +2958,6 @@ void QMacStyle::setWidgetSizePolicy(const QWidget *widget, WidgetSizePolicy poli
     wadget->setAttribute(Qt::WA_MacMiniSize, policy == SizeMini);
 }
 
-/*!
-    \obsolete
-
-    Call QWidget::testAttribute() with Qt::WA_MacMiniSize, Qt::WA_MacSmallSize,
-    or Qt::WA_MacNormalSize instead.
-*/
 QMacStyle::WidgetSizePolicy QMacStyle::widgetSizePolicy(const QWidget *widget)
 {
     while (widget) {
@@ -3092,7 +2973,6 @@ QMacStyle::WidgetSizePolicy QMacStyle::widgetSizePolicy(const QWidget *widget)
     return SizeDefault;
 }
 
-/*! \reimp */
 void QMacStyle::drawPrimitive(PrimitiveElement pe, const QStyleOption *opt, QPainter *p,
                               const QWidget *w) const
 {
@@ -3525,7 +3405,6 @@ static inline QPixmap darkenPixmap(const QPixmap &pixmap)
 
 
 
-/*! \reimp */
 void QMacStyle::drawControl(ControlElement ce, const QStyleOption *opt, QPainter *p,
                             const QWidget *w) const
 {
@@ -4549,7 +4428,7 @@ static void setLayoutItemMargins(int left, int top, int right, int bottom, QRect
         rect->adjust(left, top, right, bottom);
     }
 }
-/*! \reimp */
+
 QRect QMacStyle::subElementRect(SubElement sr, const QStyleOption *opt,
                                 const QWidget *widget) const
 {
@@ -4843,7 +4722,6 @@ static inline void drawToolbarButtonArrow(const QRect &toolButtonRect, ThemeDraw
     HIThemeDrawPopupArrow(&hirect, &padi, cg, kHIThemeOrientationNormal);
 }
 
-/*! \reimp */
 void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex *opt, QPainter *p,
                                    const QWidget *widget) const
 {
@@ -5014,11 +4892,10 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                         bdi.kind = kThemeIncDecButton;
                         break;
                     case QAquaSizeMini:
+                        bdi.kind = kThemeIncDecButtonMini;
+                        break;
                     case QAquaSizeSmall:
-                        if (aquaSize == QAquaSizeMini)
-                            bdi.kind = kThemeIncDecButtonMini;
-                        else
-                            bdi.kind = kThemeIncDecButtonSmall;
+                        bdi.kind = kThemeIncDecButtonSmall;
                         break;
                 }
                 if (!(sb->stepEnabled & (QAbstractSpinBox::StepUpEnabled
@@ -5038,8 +4915,8 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                 bdi.value = kThemeButtonOff;
                 bdi.adornment = kThemeAdornmentNone;
 
-                QRect updown = subControlRect(CC_SpinBox, sb, SC_SpinBoxUp,
-                                                 widget);
+                QRect updown = subControlRect(CC_SpinBox, sb, SC_SpinBoxUp, widget);
+
                 updown |= subControlRect(CC_SpinBox, sb, SC_SpinBoxDown, widget);
                 HIRect newRect = qt_hirectForQRect(updown);
                 QRect off_rct;
@@ -5049,15 +4926,6 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                                 int(newRect.origin.y - outRect.origin.y),
                                 int(outRect.size.width - newRect.size.width),
                                 int(outRect.size.height - newRect.size.height));
-
-                // HIThemeGetButtonBackgroundBounds offsets non-focused normal sized
-                // buttons by one in de y direction, account for that here.
-                if (bdi.adornment == kThemeAdornmentNone && bdi.kind == kThemeIncDecButton)
-                    off_rct.adjust(0, 1, 0, 0);
-
-                // Adjust the rect for small buttos also.
-                if (bdi.adornment == kThemeAdornmentFocus && bdi.kind == kThemeIncDecButtonSmall)
-                    off_rct.adjust(0, 0, 0, -1);
 
                 newRect = qt_hirectForQRect(updown, off_rct);
                 HIThemeDrawButton(&newRect, &bdi, cg, kHIThemeOrientationNormal, 0);
@@ -5236,7 +5104,8 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
                     arrowOpt.state = tb->state;
                     arrowOpt.palette = tb->palette;
                     drawPrimitive(PE_IndicatorArrowDown, &arrowOpt, p, widget);
-                } else if (tb->features & QStyleOptionToolButton::HasMenu) {
+                } else if ((tb->features & QStyleOptionToolButton::HasMenu)
+                            && (tb->toolButtonStyle != Qt::ToolButtonTextOnly && !tb->icon.isNull())) {
                     drawToolbarButtonArrow(tb->rect, tds, cg);
                 }
                 if (tb->state & State_On) {
@@ -5350,7 +5219,6 @@ void QMacStyle::drawComplexControl(ComplexControl cc, const QStyleOptionComplex 
     }
 }
 
-/*! \reimp */
 QStyle::SubControl QMacStyle::hitTestComplexControl(ComplexControl cc,
                                                     const QStyleOptionComplex *opt,
                                                     const QPoint &pt, const QWidget *widget) const
@@ -5481,7 +5349,6 @@ QStyle::SubControl QMacStyle::hitTestComplexControl(ComplexControl cc,
     return sc;
 }
 
-/*! \reimp */
 QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *opt, SubControl sc,
                                 const QWidget *widget) const
 {
@@ -5723,39 +5590,61 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
         break;
     case CC_SpinBox:
         if (const QStyleOptionSpinBox *spin = qstyleoption_cast<const QStyleOptionSpinBox *>(opt)) {
-            const int spinner_w = 14,
-                      fw = pixelMetric(PM_SpinBoxFrameWidth, spin, widget);
+            QAquaWidgetSize aquaSize = d->aquaSizeConstrain(spin, widget);
+            int spinner_w;
+            int spinBoxSep;
+            int fw = pixelMetric(PM_SpinBoxFrameWidth, spin, widget);
+            switch (aquaSize) {
+            default:
+            case QAquaSizeUnknown:
+            case QAquaSizeLarge:
+                spinner_w = 14;
+                spinBoxSep = 2;
+                break;
+            case QAquaSizeSmall:
+                spinner_w = 12;
+                spinBoxSep = 2;
+                break;
+            case QAquaSizeMini:
+                spinner_w = 10;
+                spinBoxSep = 1;
+                break;
+            }
+
             switch (sc) {
             case SC_SpinBoxUp:
             case SC_SpinBoxDown: {
                 if (spin->buttonSymbols == QAbstractSpinBox::NoButtons)
                     break;
-                const int frameWidth = pixelMetric(PM_SpinBoxFrameWidth, spin, widget);
-                const int spinner_w = 18;
-                const int y = frameWidth;
-                const int x = spin->rect.width() - spinner_w + frameWidth;
+
+                const int y = fw;
+                const int x = spin->rect.width() - spinner_w;
                 ret.setRect(x + spin->rect.x(), y + spin->rect.y(), spinner_w, spin->rect.height() - y * 2);
                 HIThemeButtonDrawInfo bdi;
                 bdi.version = qt_mac_hitheme_version;
                 bdi.kind = kThemeIncDecButton;
-                QAquaWidgetSize aquaSize = d->aquaSizeConstrain(opt, widget);
+                int hackTranslateX;
                 switch (aquaSize) {
-                    case QAquaSizeUnknown:
-                    case QAquaSizeLarge:
-                        bdi.kind = kThemeIncDecButton;
-                        break;
-                    case QAquaSizeMini:
-                    case QAquaSizeSmall:
-                        if (aquaSize == QAquaSizeMini)
-                            bdi.kind = kThemeIncDecButtonMini;
-                        else
-                            bdi.kind = kThemeIncDecButtonSmall;
-                        break;
+                default:
+                case QAquaSizeUnknown:
+                case QAquaSizeLarge:
+                    bdi.kind = kThemeIncDecButton;
+                    hackTranslateX = 0;
+                    break;
+                case QAquaSizeSmall:
+                    bdi.kind = kThemeIncDecButtonSmall;
+                    hackTranslateX = -2;
+                    break;
+                case QAquaSizeMini:
+                    bdi.kind = kThemeIncDecButtonMini;
+                    hackTranslateX = -1;
+                    break;
                 }
                 bdi.state = kThemeStateActive;
                 bdi.value = kThemeButtonOff;
                 bdi.adornment = kThemeAdornmentNone;
                 HIRect hirect = qt_hirectForQRect(ret);
+
                 HIRect outRect;
                 HIThemeGetButtonBackgroundBounds(&hirect, &bdi, &outRect);
                 ret = qt_qrectForHIRect(outRect);
@@ -5770,13 +5659,13 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
                     Q_ASSERT(0);
                     break;
                 }
-                ret.translate(-1, -2); // hack: position the buttons correctly (weird that we need this)
+                ret.translate(hackTranslateX, 0); // hack: position the buttons correctly (weird that we need this)
                 ret = visualRect(spin->direction, spin->rect, ret);
                 break;
             }
             case SC_SpinBoxEditField:
                 ret.setRect(fw, fw,
-                            spin->rect.width() - spinner_w - fw * 2 - macSpinBoxSep + 1,
+                            spin->rect.width() - spinner_w - fw * 2 - spinBoxSep,
                             spin->rect.height() - fw * 2);
                 ret = visualRect(spin->direction, spin->rect, ret);
                 break;
@@ -5799,7 +5688,6 @@ QRect QMacStyle::subControlRect(ComplexControl cc, const QStyleOptionComplex *op
     return ret;
 }
 
-/*! \reimp */
 QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
                                   const QSize &csz, const QWidget *widget) const
 {
@@ -5808,8 +5696,8 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
 
     switch (ct) {
     case QStyle::CT_SpinBox:
-        sz.setWidth(sz.width() + macSpinBoxSep);
-        sz.setHeight(sz.height() - 3); // hack to work around horrible sizeHint() code in QAbstractSpinBox
+         // hack to work around horrible sizeHint() code in QAbstractSpinBox
+        sz.setHeight(sz.height() - 3);
         break;
     case QStyle::CT_TabBarTab:
         if (const QStyleOptionTabV3 *tab = qstyleoption_cast<const QStyleOptionTabV3 *>(opt)) {
@@ -6086,9 +5974,6 @@ QSize QMacStyle::sizeFromContents(ContentsType ct, const QStyleOption *opt,
     return sz;
 }
 
-/*!
-    \reimp
-*/
 void QMacStyle::drawItemText(QPainter *p, const QRect &r, int flags, const QPalette &pal,
                              bool enabled, const QString &text, QPalette::ColorRole textRole) const
 {
@@ -6097,9 +5982,6 @@ void QMacStyle::drawItemText(QPainter *p, const QRect &r, int flags, const QPale
     QWindowsStyle::drawItemText(p, r, flags, pal, enabled, text, textRole);
 }
 
-/*!
-  \reimp
-*/
 bool QMacStyle::event(QEvent *e)
 {
     if(e->type() == QEvent::FocusIn) {
@@ -6174,9 +6056,6 @@ void qt_mac_constructQIconFromIconRef(const IconRef icon, const IconRef overlayI
     }
 }
 
-/*!
-    \internal
-*/
 QIcon QMacStyle::standardIconImplementation(StandardPixmap standardIcon, const QStyleOption *opt,
                                             const QWidget *widget) const
 {
@@ -6290,9 +6169,6 @@ QIcon QMacStyle::standardIconImplementation(StandardPixmap standardIcon, const Q
     return QWindowsStyle::standardIconImplementation(standardIcon, opt, widget);
 }
 
-/*!
-  \internal
-*/
 int QMacStyle::layoutSpacingImplementation(QSizePolicy::ControlType control1,
                                            QSizePolicy::ControlType control2,
                                            Qt::Orientation orientation,

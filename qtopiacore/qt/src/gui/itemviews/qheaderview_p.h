@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -90,7 +90,6 @@ public:
           highlightSelected(false),
           stretchLastSection(false),
           cascadingResizing(false),
-          forceInitializing(false),
           stretchSections(0),
           contentsSections(0),
           minimumSectionSize(-1),
@@ -275,7 +274,6 @@ public:
     bool highlightSelected;
     bool stretchLastSection;
     bool cascadingResizing;
-    bool forceInitializing;
     int stretchSections;
     int contentsSections;
     int defaultSectionSize;
@@ -310,6 +308,7 @@ public:
     void createSectionSpan(int start, int end, int size, QHeaderView::ResizeMode mode);
     void removeSectionsFromSpans(int start, int end);
     void resizeSectionSpan(int visualIndex, int oldSize, int newSize);
+    void setDefaultSectionSize(int size);
 
     inline int headerSectionCount() const { // for debugging
         int count = 0;

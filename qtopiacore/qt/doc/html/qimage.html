@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/image/qimage.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/image/qimage.cpp -->
 <head>
   <title>Qt 4.5: QImage Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -113,7 +113,7 @@
 <li><div class="fn"></div>bool <b><a href="qimage.html#operator-eq-eq">operator==</a></b> ( const QImage &amp; <i>image</i> ) const</li>
 </ul>
 <ul>
-<li><div class="fn"></div>14 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
+<li><div class="fn"></div>12 public functions inherited from <a href="qpaintdevice.html#public-functions">QPaintDevice</a></li>
 </ul>
 <a name="static-public-members"></a>
 <h3>Static Public Members</h3>
@@ -126,8 +126,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-106">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-58">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-lt-lt-15">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qimage.html#operator-gt-gt-5">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QImage &amp; <i>image</i> )</li>
 </ul>
 <h3>Additional Inherited Members</h3>
 <ul>
@@ -356,13 +356,15 @@
 <h3 class="fn"><a name="alphaChannel"></a>QImage QImage::alphaChannel () const</h3>
 <p>Returns the alpha channel of the image as a new grayscale <a href="qimage.html">QImage</a> in which each pixel's red, green, and blue values are given the alpha value of the original image. The color depth of the returned image is 8-bit.</p>
 <p>You can see an example of use of this function in <a href="qpixmap.html">QPixmap</a>'s <a href="qpixmap.html#alphaChannel">alphaChannel()</a>, which works in the same way as this function on QPixmaps.</p>
+<p>Most usecases for this function can be replaced with <a href="qpainter.html">QPainter</a> and using composition modes.</p>
+<p><b>Warning:</b> This is an expensive function.</p>
 <p>See also <a href="qimage-obsolete.html#setAlphaChannel">setAlphaChannel</a>(), <a href="qimage.html#hasAlphaChannel">hasAlphaChannel</a>(), <a href="qpixmap.html#pixmap-information">Pixmap</a>, and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="bits"></a><a href="qtglobal.html#uchar-typedef">uchar</a> * QImage::bits ()</h3>
 <p>Returns a pointer to the first pixel data. This is equivalent to scanLine(0).</p>
 <p>Note that <a href="qimage.html">QImage</a> uses <a href="shared.html#implicit-data-sharing">implicit data sharing</a>. This function performs a deep copy of the shared pixel data, thus ensuring that this <a href="qimage.html">QImage</a> is the only one using the current return value.</p>
 <p>See also <a href="qimage.html#scanLine">scanLine</a>() and <a href="qimage.html#numBytes">numBytes</a>().</p>
 <h3 class="fn"><a name="bits-2"></a>const <a href="qtglobal.html#uchar-typedef">uchar</a> * QImage::bits () const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Note that <a href="qimage.html">QImage</a> uses <a href="shared.html#implicit-data-sharing">implicit data sharing</a>, but this function does <i>not</i> perform a deep copy of the shared pixel data, because the returned data is const.</p>
 <h3 class="fn"><a name="bytesPerLine"></a>int QImage::bytesPerLine () const</h3>
 <p>Returns the number of bytes per image scanline.</p>
@@ -383,7 +385,7 @@
 <p>The specified image conversion <i>flags</i> control how the image data is handled during the conversion process.</p>
 <p>See also <a href="qimage.html#image-formats">Image Format</a>.</p>
 <h3 class="fn"><a name="convertToFormat-2"></a>QImage QImage::convertToFormat ( <a href="qimage.html#Format-enum">Format</a> <i>format</i>, const <a href="qvector.html">QVector</a>&lt;<a href="qcolor.html#QRgb-typedef">QRgb</a>&gt; &amp; <i>colorTable</i>, <a href="qt.html#ImageConversionFlag-enum">Qt::ImageConversionFlags</a> <i>flags</i> = Qt::AutoColor ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a copy of the image converted to the given <i>format</i>, using the specified <i>colorTable</i>.</p>
 <p>Conversion from 32 bit to 8 bit indexed is a slow operation and will use a straightforward nearest color approach, with no dithering.</p>
 <h3 class="fn"><a name="copy"></a>QImage QImage::copy ( const <a href="qrect.html">QRect</a> &amp; <i>rectangle</i> = QRect() ) const</h3>
@@ -393,7 +395,7 @@
 <p>If the given <i>rectangle</i> is a null rectangle the entire image is copied.</p>
 <p>See also <a href="qimage.html#QImage">QImage</a>().</p>
 <h3 class="fn"><a name="copy-4"></a>QImage QImage::copy ( int <i>x</i>, int <i>y</i>, int <i>width</i>, int <i>height</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The returned image is copied from the position (<i>x</i>, <i>y</i>) in this image, and will always have the given <i>width</i> and <i>height</i>. In areas beyond this image, pixels are set to 0.</p>
 <h3 class="fn"><a name="createAlphaMask"></a>QImage QImage::createAlphaMask ( <a href="qt.html#ImageConversionFlag-enum">Qt::ImageConversionFlags</a> <i>flags</i> = Qt::AutoColor ) const</h3>
 <p>Builds and returns a 1-bpp mask from the alpha buffer in this image. Returns a null image if the image's format is <a href="qimage.html#Format-enum">QImage::Format_RGB32</a>.</p>
@@ -434,7 +436,7 @@
 <p>If the loading of the image failed, this object is a null image.</p>
 <p>See also <a href="qimage.html#load">load</a>(), <a href="qimage.html#save">save</a>(), and <a href="qimage.html#reading-and-writing-image-files">Reading and Writing Image Files</a>.</p>
 <h3 class="fn"><a name="fromData-2"></a>QImage QImage::fromData ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i>, const char * <i>format</i> = 0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Loads an image from the given <a href="qbytearray.html">QByteArray</a> <i>data</i>.</p>
 <h3 class="fn"><a name="hasAlphaChannel"></a>bool QImage::hasAlphaChannel () const</h3>
 <p>Returns true if the image has a format that respects the alpha channel, otherwise returns false.</p>
@@ -460,14 +462,14 @@
 <p>The file name can either refer to an actual file on disk or to one of the application's embedded resources. See the <a href="resources.html">Resource System</a> overview for details on how to embed images and other resource files in the application's executable.</p>
 <p>See also <a href="qimage.html#reading-and-writing-image-files">Reading and Writing Image Files</a>.</p>
 <h3 class="fn"><a name="load-2"></a>bool QImage::load ( <a href="qiodevice.html">QIODevice</a> * <i>device</i>, const char * <i>format</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function reads a <a href="qimage.html">QImage</a> from the given <i>device</i>. This can, for example, be used to load an image directly into a <a href="qbytearray.html">QByteArray</a>.</p>
 <h3 class="fn"><a name="loadFromData"></a>bool QImage::loadFromData ( const <a href="qtglobal.html#uchar-typedef">uchar</a> * <i>data</i>, int <i>len</i>, const char * <i>format</i> = 0 )</h3>
 <p>Loads an image from the first <i>len</i> bytes of the given binary <i>data</i>. Returns true if the image was successfully loaded; otherwise returns false.</p>
 <p>The loader attempts to read the image using the specified <i>format</i>, e.g&#x2e;, PNG or JPG. If <i>format</i> is not specified (which is the default), the loader probes the file for a header to guess the file format.</p>
 <p>See also <a href="qimage.html#reading-and-writing-image-files">Reading and Writing Image Files</a>.</p>
 <h3 class="fn"><a name="loadFromData-2"></a>bool QImage::loadFromData ( const <a href="qbytearray.html">QByteArray</a> &amp; <i>data</i>, const char * <i>format</i> = 0 )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Loads an image from the given <a href="qbytearray.html">QByteArray</a> <i>data</i>.</p>
 <h3 class="fn"><a name="mirrored"></a>QImage QImage::mirrored ( bool <i>horizontal</i> = false, bool <i>vertical</i> = true ) const</h3>
 <p>Returns a mirror of the image, mirrored in the horizontal and/or the vertical direction depending on whether <i>horizontal</i> and <i>vertical</i> are set to true or false.</p>
@@ -486,16 +488,17 @@
 <h3 class="fn"><a name="pixel"></a><a href="qcolor.html#QRgb-typedef">QRgb</a> QImage::pixel ( const <a href="qpoint.html">QPoint</a> &amp; <i>position</i> ) const</h3>
 <p>Returns the color of the pixel at the given <i>position</i>.</p>
 <p>If the <i>position</i> is not valid, the results are undefined.</p>
+<p><b>Warning:</b> This function is expensive when used for massive pixel manipulations.</p>
 <p>See also <a href="qimage.html#setPixel">setPixel</a>(), <a href="qimage.html#valid">valid</a>(), and <a href="qimage.html#pixel-manipulation">Pixel Manipulation</a>.</p>
 <h3 class="fn"><a name="pixel-2"></a><a href="qcolor.html#QRgb-typedef">QRgb</a> QImage::pixel ( int <i>x</i>, int <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the color of the pixel at coordinates (<i>x</i>, <i>y</i>).</p>
 <h3 class="fn"><a name="pixelIndex"></a>int QImage::pixelIndex ( const <a href="qpoint.html">QPoint</a> &amp; <i>position</i> ) const</h3>
 <p>Returns the pixel index at the given <i>position</i>.</p>
 <p>If <i>position</i> is not valid, or if the image is not a paletted image (<a href="qimage.html#depth">depth</a>() &gt; 8), the results are undefined.</p>
 <p>See also <a href="qimage.html#valid">valid</a>(), <a href="qimage.html#depth">depth</a>(), and <a href="qimage.html#pixel-manipulation">Pixel Manipulation</a>.</p>
 <h3 class="fn"><a name="pixelIndex-2"></a>int QImage::pixelIndex ( int <i>x</i>, int <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the pixel index at (<i>x</i>, <i>y</i>).</p>
 <h3 class="fn"><a name="rect"></a><a href="qrect.html">QRect</a> QImage::rect () const</h3>
 <p>Returns the enclosing rectangle (0, 0, <a href="qimage.html#width">width</a>(), <a href="qimage.html#height">height</a>()) of the image.</p>
@@ -510,7 +513,7 @@
 <p>Returns true if the image was successfully saved; otherwise returns false.</p>
 <p>See also <a href="qimage.html#reading-and-writing-image-files">Reading and Writing Image Files</a>.</p>
 <h3 class="fn"><a name="save-2"></a>bool QImage::save ( <a href="qiodevice.html">QIODevice</a> * <i>device</i>, const char * <i>format</i> = 0, int <i>quality</i> = -1 ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function writes a <a href="qimage.html">QImage</a> to the given <i>device</i>.</p>
 <p>This can, for example, be used to save an image directly into a <a href="qbytearray.html">QByteArray</a>:</p>
 <pre>         QImage image;
@@ -528,7 +531,7 @@
 <p>If the given <i>size</i> is empty, this function returns a null image.</p>
 <p>See also <a href="qimage.html#isNull">isNull</a>() and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="scaled-2"></a>QImage QImage::scaled ( int <i>width</i>, int <i>height</i>, <a href="qt.html#AspectRatioMode-enum">Qt::AspectRatioMode</a> <i>aspectRatioMode</i> = Qt::IgnoreAspectRatio, <a href="qt.html#TransformationMode-enum">Qt::TransformationMode</a> <i>transformMode</i> = Qt::FastTransformation ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns a copy of the image scaled to a rectangle with the given <i>width</i> and <i>height</i> according to the given <i>aspectRatioMode</i> and <i>transformMode</i>.</p>
 <p>If either the <i>width</i> or the <i>height</i> is zero or negative, this function returns a null image.</p>
 <h3 class="fn"><a name="scaledToHeight"></a>QImage QImage::scaledToHeight ( int <i>height</i>, <a href="qt.html#TransformationMode-enum">Qt::TransformationMode</a> <i>mode</i> = Qt::FastTransformation ) const</h3>
@@ -547,7 +550,7 @@
 <p><b>Warning:</b> If you are accessing 32-bpp image data, cast the returned pointer to <tt>QRgb*</tt> (<a href="qcolor.html#QRgb-typedef">QRgb</a> has a 32-bit size) and use it to read/write the pixel value. You cannot use the <tt>uchar*</tt> pointer directly, because the pixel format depends on the byte order on the underlying platform. Use <a href="qcolor.html#qRed">qRed</a>(), <a href="qcolor.html#qGreen">qGreen</a>(), <a href="qcolor.html#qBlue">qBlue</a>(), and <a href="qcolor.html#qAlpha">qAlpha</a>() to access the pixels.</p>
 <p>See also <a href="qimage.html#bytesPerLine">bytesPerLine</a>(), <a href="qimage.html#bits">bits</a>(), and <a href="qimage.html#pixel-manipulation">Pixel Manipulation</a>.</p>
 <h3 class="fn"><a name="scanLine-2"></a>const <a href="qtglobal.html#uchar-typedef">uchar</a> * QImage::scanLine ( int <i>i</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="setColor"></a>void QImage::setColor ( int <i>index</i>, <a href="qcolor.html#QRgb-typedef">QRgb</a> <i>colorValue</i> )</h3>
 <p>Sets the color at the given <i>index</i> in the color table, to the given to <i>colorValue</i>. The color value is an ARGB quadruplet.</p>
 <p>If <i>index</i> is outside the current size of the color table, it is expanded with <a href="qimage.html#setNumColors">setNumColors</a>().</p>
@@ -570,7 +573,7 @@
 <p>When the image is used, the color table must be large enough to have entries for all the pixel/index values present in the image, otherwise the results are undefined.</p>
 <p>See also <a href="qimage.html#numColors">numColors</a>(), <a href="qimage.html#colorTable">colorTable</a>(), <a href="qimage.html#setColor">setColor</a>(), and <a href="qimage.html#image-transformations">Image Transformations</a>.</p>
 <h3 class="fn"><a name="setOffset"></a>void QImage::setOffset ( const <a href="qpoint.html">QPoint</a> &amp; <i>offset</i> )</h3>
-<p>Sets the the number of pixels by which the image is intended to be offset by when positioning relative to other images, to <i>offset</i>.</p>
+<p>Sets the number of pixels by which the image is intended to be offset by when positioning relative to other images, to <i>offset</i>.</p>
 <p>See also <a href="qimage.html#offset">offset</a>() and <a href="qimage.html#image-information">Image Information</a>.</p>
 <h3 class="fn"><a name="setPixel"></a>void QImage::setPixel ( const <a href="qpoint.html">QPoint</a> &amp; <i>position</i>, <a href="qtglobal.html#uint-typedef">uint</a> <i>index_or_rgb</i> )</h3>
 <p>Sets the pixel index or color at the given <i>position</i> to <i>index_or_rgb</i>.</p>
@@ -579,7 +582,7 @@
 <p><b>Warning:</b> This function is expensive due to the call of the internal <tt>detach()</tt> function called within; if performance is a concern, we recommend the use of <a href="qimage.html#scanLine">scanLine()</a> to access pixel data directly.</p>
 <p>See also <a href="qimage.html#pixel">pixel</a>() and <a href="qimage.html#pixel-manipulation">Pixel Manipulation</a>.</p>
 <h3 class="fn"><a name="setPixel-2"></a>void QImage::setPixel ( int <i>x</i>, int <i>y</i>, <a href="qtglobal.html#uint-typedef">uint</a> <i>index_or_rgb</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the pixel index or color at (<i>x</i>, <i>y</i>) to <i>index_or_rgb</i>.</p>
 <h3 class="fn"><a name="setText"></a>void QImage::setText ( const <a href="qstring.html">QString</a> &amp; <i>key</i>, const <a href="qstring.html">QString</a> &amp; <i>text</i> )</h3>
 <p>Sets the image text to the given <i>text</i> and associate it with the given <i>key</i>.</p>
@@ -624,7 +627,7 @@
 <p>Returns true if <i>pos</i> is a valid coordinate pair within the image; otherwise returns false.</p>
 <p>See also <a href="qimage.html#rect">rect</a>() and <a href="qrect.html#contains">QRect::contains</a>().</p>
 <h3 class="fn"><a name="valid-2"></a>bool QImage::valid ( int <i>x</i>, int <i>y</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if <a href="qpoint.html">QPoint</a>(<i>x</i>, <i>y</i>) is a valid coordinate pair within the image; otherwise returns false.</p>
 <h3 class="fn"><a name="width"></a>int QImage::width () const</h3>
 <p>Returns the width of the image.</p>
@@ -645,16 +648,16 @@
 <p>See also <a href="qimage.html#operator-eq">operator=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-106"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-15"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QImage &amp; <i>image</i> )</h3>
 <p>Writes the given <i>image</i> to the given <i>stream</i> as a PNG image, or as a BMP image if the stream's version is 1. Note that writing the stream to a file will not produce a valid image file.</p>
 <p>See also <a href="qimage.html#save">QImage::save</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-58"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-5"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QImage &amp; <i>image</i> )</h3>
 <p>Reads an image from the given <i>stream</i> and stores it in the given <i>image</i>.</p>
 <p>See also <a href="qimage.html#load">QImage::load</a>() and <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

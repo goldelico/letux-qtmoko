@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/porting4.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/porting4.qdoc -->
 <head>
   <title>Qt 4.5: Porting to Qt 4</title>
   <link rel="prev" href="porting.html" />
@@ -633,6 +633,7 @@
 <tr valign="top" class="odd"><td>QToolButton::offIconSet</td><td>Use the <a href="qicon.html#State-enum">off component</a> of <a href="qabstractbutton.html#icon-prop">QAbstractButton::icon</a> instead.</td></tr>
 <tr valign="top" class="even"><td>QToolButton::onIconSet</td><td>Use the <a href="qicon.html#State-enum">on component</a> of <a href="qabstractbutton.html#icon-prop">QAbstractButton::icon</a> instead.</td></tr>
 <tr valign="top" class="odd"><td>QWidget::microFocusHint</td><td>N/A</td></tr>
+<tr valign="top" class="even"><td>QMimeSource::serialNumber ()</td><td>N/A</td></tr>
 </table></p>
 <a name="explicit-sharing"></a>
 <h3>Explicit Sharing</h3>
@@ -1624,7 +1625,7 @@
 <a name="qpaintdevice"></a>
 <h3>QPaintDevice</h3>
 <p>To reimplement painter backends one previously needed to reimplement the virtual function QPaintDevice::cmd(). This function is taken out and should is replaced with the function <a href="qpaintdevice.html#paintEngine">QPaintDevice::paintEngine</a>() and the abstract class <a href="qpaintengine.html">QPaintEngine</a>. <a href="qpaintengine.html">QPaintEngine</a> provides virtual functions for all drawing operations that can be performed on a painter backend.</p>
-<p><a href="qimage-qt3.html#bitBlt">bitBlt</a>() and copyBlt() are now only compatibility functions. Use <a href="qpainter.html#drawPixmap">QPainter::drawPixmap</a>() instead.</p>
+<p>bitBlt() and copyBlt() are now only compatibility functions. Use <a href="qpainter.html#drawPixmap">QPainter::drawPixmap</a>() instead.</p>
 <a name="qpaintdevicemetrics"></a>
 <h3>QPaintDeviceMetrics</h3>
 <p>All functions that used to be provided by the <tt>QPaintDeviceMetrics</tt> class have now been moved to <a href="qpaintdevice.html">QPaintDevice</a>.</p>
@@ -2375,7 +2376,7 @@
 <ul>
 <li>Q3Url::Q3Url(const <a href="q3url.html">Q3Url</a> &amp;, const <a href="qstring.html">QString</a> &amp;, bool) can be simulated by combining the URLs manually (using QString::operator+(), for example).</li>
 <li>Q3Url::setEncodedPathAndQuery(const <a href="qstring.html">QString</a> &amp;) is replaced by <a href="qurl.html#setPath">QUrl::setPath</a>() and <a href="qurl.html#setEncodedQuery">QUrl::setEncodedQuery</a>().</li>
-<li><a href="q3url.html#encodedPathAndQuery">Q3Url::encodedPathAndQuery</a>() is replaced by <a href="qurl.html#pathx">QUrl::path</a>() and <a href="qurl.html#encodedQuery">QUrl::encodedQuery</a>().</li>
+<li><a href="q3url.html#encodedPathAndQuery">Q3Url::encodedPathAndQuery</a>() is replaced by <a href="qurl.html#path">QUrl::path</a>() and <a href="qurl.html#encodedQuery">QUrl::encodedQuery</a>().</li>
 <li><a href="q3url.html#isLocalFile">Q3Url::isLocalFile</a>() can be simulated by checking that <a href="qurl-qt3.html#protocol">QUrl::protocol</a>() is &quot;file&quot;.</li>
 <li>Q3Url::toString(bool, bool) is replaced by QUrl::toString(int), where the <tt>int</tt> parameter specifies a combination of <a href="qurl.html#FormattingOption-enum">formatting options</a>.</li>
 </ul>
@@ -2616,6 +2617,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

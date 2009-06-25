@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/gui/painting/qbrush.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/gui/painting/qbrush.cpp -->
 <head>
   <title>Qt 4.5: QBrush Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -56,8 +56,8 @@
 <a name="related-non-members"></a>
 <h3>Related Non-Members</h3>
 <ul>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qbrush.html#operator-lt-lt-37">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QBrush &amp; <i>brush</i> )</li>
-<li><div class="fn"></div>QDataStream &amp; <b><a href="qbrush.html#operator-gt-gt-17">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qbrush.html#operator-lt-lt-56">operator&lt;&lt;</a></b> ( QDataStream &amp; <i>stream</i>, const QBrush &amp; <i>brush</i> )</li>
+<li><div class="fn"></div>QDataStream &amp; <b><a href="qbrush.html#operator-gt-gt-32">operator&gt;&gt;</a></b> ( QDataStream &amp; <i>stream</i>, QBrush &amp; <i>brush</i> )</li>
 </ul>
 <a name="details"></a>
 <hr />
@@ -150,7 +150,7 @@
 <p>Note that calling setColor() will not make a difference if the style is a gradient. The same is the case if the style is <a href="qt.html#BrushStyle-enum">Qt::TexturePattern</a> style unless the current texture is a <a href="qbitmap.html">QBitmap</a>.</p>
 <p>See also <a href="qbrush.html#color">color</a>().</p>
 <h3 class="fn"><a name="setColor-2"></a>void QBrush::setColor ( <a href="qt.html#GlobalColor-enum">Qt::GlobalColor</a> <i>color</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the brush color to the given <i>color</i>.</p>
 <h3 class="fn"><a name="setMatrix"></a>void QBrush::setMatrix ( const <a href="qmatrix.html">QMatrix</a> &amp; <i>matrix</i> )</h3>
 <p>Sets <i>matrix</i> as an explicit transformation matrix on the current brush. The brush transformation matrix is merged with <a href="qpainter.html">QPainter</a> transformation matrix to produce the final result.</p>
@@ -201,16 +201,16 @@
 <p>See also <a href="qbrush.html#operator-not-eq">operator!=</a>().</p>
 <hr />
 <h2>Related Non-Members</h2>
-<h3 class="fn"><a name="operator-lt-lt-37"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QBrush &amp; <i>brush</i> )</h3>
+<h3 class="fn"><a name="operator-lt-lt-56"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&lt;&lt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, const QBrush &amp; <i>brush</i> )</h3>
 <p>Writes the given <i>brush</i> to the given <i>stream</i> and returns a reference to the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
-<h3 class="fn"><a name="operator-gt-gt-17"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QBrush &amp; <i>brush</i> )</h3>
+<h3 class="fn"><a name="operator-gt-gt-32"></a><a href="qdatastream.html">QDataStream</a> &amp; operator&gt;&gt; ( <a href="qdatastream.html">QDataStream</a> &amp; <i>stream</i>, QBrush &amp; <i>brush</i> )</h3>
 <p>Reads the given <i>brush</i> from the given <i>stream</i> and returns a reference to the <i>stream</i>.</p>
 <p>See also <a href="datastreamformat.html">Format of the QDataStream Operators</a>.</p>
 <p /><address><hr /><div align="center">
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

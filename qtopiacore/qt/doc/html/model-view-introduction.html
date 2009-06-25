@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/doc/src/model-view-programming.qdoc -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/doc/src/model-view-programming.qdoc -->
 <head>
   <title>Qt 4.5: An Introduction to Model/View Programming</title>
   <link rel="prev" href="model-view-programming.html" />
@@ -75,7 +75,7 @@
 <a name="sorting"></a>
 <h3>Sorting</h3>
 <p>There are two ways of approaching sorting in the model/view architecture; which approach to choose depends on your underlying model.</p>
-<p>If your model is sortable, i.e, if it reimplements the <a href="qabstractitemmodel.html#sort">QAbstractItemModel::sort</a>() function, both <a href="qtableview.html">QTableView</a> and <a href="qtreeview.html">QTreeView</a> provide an API that allows you to sort your model data programmatically. In addition, you can enable interactive sorting (i.e&#x2e; allowing the users to sort the data by clicking the view's headers), by connecting the <a href="qheaderview.html#sectionClicked">QHeaderView::sectionClicked</a>() signal to the <a href="qtableview.html#sortByColumn">QTableView::sortByColumn</a>() slot or the <a href="qtreeview.html#sortByColumn">QTreeView::sortByColumn</a>() slot, respectively.</p>
+<p>If your model is sortable, i.e, if it reimplements the <a href="qabstractitemmodel.html#sort">QAbstractItemModel::sort</a>() function, both <a href="qtableview.html">QTableView</a> and <a href="qtreeview.html">QTreeView</a> provide an API that allows you to sort your model data programmatically. In addition, you can enable interactive sorting (i.e&#x2e; allowing the users to sort the data by clicking the view's headers), by connecting the <a href="qheaderview.html#sortIndicatorChanged">QHeaderView::sortIndicatorChanged</a>() signal to the <a href="qtableview.html#sortByColumn">QTableView::sortByColumn</a>() slot or the <a href="qtreeview.html#sortByColumn">QTreeView::sortByColumn</a>() slot, respectively.</p>
 <p>The alternative approach, if your model do not have the required interface or if you want to use a list view to present your data, is to use a proxy model to transform the structure of your model before presenting the data in the view. This is covered in detail in the section on <a href="model-view-proxy-models.html">Proxy Models</a>.</p>
 <a name="convenience-classes"></a>
 <h3>Convenience Classes</h3>
@@ -93,6 +93,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

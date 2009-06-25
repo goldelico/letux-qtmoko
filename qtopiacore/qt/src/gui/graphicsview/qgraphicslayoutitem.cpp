@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -255,7 +255,7 @@ QGraphicsItem *QGraphicsLayoutItemPrivate::parentItem() const
     passing a QGraphicsLayoutItem pointer to QGraphicsLayoutItem's
     protected constructor, or by calling setParentLayoutItem(). The
     parentLayoutItem() function returns a pointer to the item's layoutItem
-    parent. If the item's parent is 0 or if the the parent does not inherit
+    parent. If the item's parent is 0 or if the parent does not inherit
     from QGraphicsItem, the parentLayoutItem() function then returns 0.
     isLayout() returns true if the QGraphicsLayoutItem subclass is itself a
     layout, or false otherwise.

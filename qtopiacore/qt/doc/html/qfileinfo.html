@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/io/qfileinfo.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/io/qfileinfo.cpp -->
 <head>
   <title>Qt 4.5: QFileInfo Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -68,7 +68,7 @@
 <li><div class="fn"></div>bool <b><a href="qfileinfo.html#makeAbsolute">makeAbsolute</a></b> ()</li>
 <li><div class="fn"></div>QString <b><a href="qfileinfo.html#owner">owner</a></b> () const</li>
 <li><div class="fn"></div>uint <b><a href="qfileinfo.html#ownerId">ownerId</a></b> () const</li>
-<li><div class="fn"></div>QString <b><a href="qfileinfo.html#pathx">path</a></b> () const</li>
+<li><div class="fn"></div>QString <b><a href="qfileinfo.html#path">path</a></b> () const</li>
 <li><div class="fn"></div>bool <b><a href="qfileinfo.html#permission">permission</a></b> ( QFile::Permissions <i>permissions</i> ) const</li>
 <li><div class="fn"></div>QFile::Permissions <b><a href="qfileinfo.html#permissions">permissions</a></b> () const</li>
 <li><div class="fn"></div>void <b><a href="qfileinfo.html#refresh">refresh</a></b> ()</li>
@@ -128,11 +128,11 @@
  info1.size();               <span class="comment">// returns 63942</span>
 
  #endif</pre>
-<p>Elements of the file's name can be extracted with <a href="qfileinfo.html#pathx">path</a>() and <a href="qfileinfo.html#fileName">fileName</a>(). The <a href="qfileinfo.html#fileName">fileName</a>()'s parts can be extracted with <a href="qfileinfo.html#baseName">baseName</a>(), <a href="qfileinfo.html#suffix">suffix</a>() or <a href="qfileinfo.html#completeSuffix">completeSuffix</a>(). QFileInfo objects to directories created by Qt classes will not have a trailing file separator. If you wish to use trailing separators in your own file info objects, just append one to the file name given to the constructors or <a href="qfileinfo.html#setFile">setFile</a>().</p>
+<p>Elements of the file's name can be extracted with <a href="qfileinfo.html#path">path</a>() and <a href="qfileinfo.html#fileName">fileName</a>(). The <a href="qfileinfo.html#fileName">fileName</a>()'s parts can be extracted with <a href="qfileinfo.html#baseName">baseName</a>(), <a href="qfileinfo.html#suffix">suffix</a>() or <a href="qfileinfo.html#completeSuffix">completeSuffix</a>(). QFileInfo objects to directories created by Qt classes will not have a trailing file separator. If you wish to use trailing separators in your own file info objects, just append one to the file name given to the constructors or <a href="qfileinfo.html#setFile">setFile</a>().</p>
 <p>The file's dates are returned by <a href="qfileinfo.html#created">created</a>(), <a href="qfileinfo.html#lastModified">lastModified</a>() and <a href="qfileinfo.html#lastRead">lastRead</a>(). Information about the file's access permissions is obtained with <a href="qfileinfo.html#isReadable">isReadable</a>(), <a href="qfileinfo.html#isWritable">isWritable</a>() and <a href="qfileinfo.html#isExecutable">isExecutable</a>(). The file's ownership is available from <a href="qfileinfo.html#owner">owner</a>(), <a href="qfileinfo.html#ownerId">ownerId</a>(), <a href="qfileinfo.html#group">group</a>() and <a href="qfileinfo.html#groupId">groupId</a>(). You can examine a file's permissions and ownership in a single statement using the <a href="qfileinfo.html#permission">permission</a>() function.</p>
 <a name="performance-issues"></a>
 <h3>Performance Issues</h3>
-<p>Some of QFileInfo's functions query the file system, but for performance reasons, some functions only operate on the file name itself. For example: To return the absolute path of a relative file name, <a href="qfileinfo.html#absolutePath">absolutePath</a>() has to query the file system. The <a href="qfileinfo.html#pathx">path</a>() function, however, can work on the file name directly, and so it is faster.</p>
+<p>Some of QFileInfo's functions query the file system, but for performance reasons, some functions only operate on the file name itself. For example: To return the absolute path of a relative file name, <a href="qfileinfo.html#absolutePath">absolutePath</a>() has to query the file system. The <a href="qfileinfo.html#path">path</a>() function, however, can work on the file name directly, and so it is faster.</p>
 <p><b>Note:</b> To speed up performance, QFileInfo caches information about the file.</p>
 <p>To speed up performance, QFileInfo caches information about the file. Because files can be changed by other users or programs, or even by other parts of the same program, there is a function that refreshes the file information: <a href="qfileinfo.html#refresh">refresh</a>(). If you want to switch off a QFileInfo's caching and force it to access the file system every time you request information from it call setCaching(false).</p>
 <p>See also <a href="qdir.html">QDir</a> and <a href="qfile.html">QFile</a>.</p>
@@ -173,7 +173,7 @@
 <p>On Unix the absolute path will always begin with the root, '/', directory. On Windows this will always begin 'D:/' where D is a drive letter, except for network shares that are not mapped to a drive letter, in which case the path will begin '//sharename/'.</p>
 <p>In contrast to <a href="qfileinfo.html#canonicalPath">canonicalPath</a>() symbolic links or redundant &quot;.&quot; or &quot;..&quot; elements are not necessarily removed.</p>
 <p><b>Warning:</b> If the <a href="qfileinfo.html">QFileInfo</a> object was created with an empty <a href="qstring.html">QString</a>, the behavior of this function is undefined.</p>
-<p>See also <a href="qfileinfo.html#absoluteFilePath">absoluteFilePath</a>(), <a href="qfileinfo.html#pathx">path</a>(), <a href="qfileinfo.html#canonicalPath">canonicalPath</a>(), <a href="qfileinfo.html#fileName">fileName</a>(), and <a href="qfileinfo.html#isRelative">isRelative</a>().</p>
+<p>See also <a href="qfileinfo.html#absoluteFilePath">absoluteFilePath</a>(), <a href="qfileinfo.html#path">path</a>(), <a href="qfileinfo.html#canonicalPath">canonicalPath</a>(), <a href="qfileinfo.html#fileName">fileName</a>(), and <a href="qfileinfo.html#isRelative">isRelative</a>().</p>
 <h3 class="fn"><a name="baseName"></a><a href="qstring.html">QString</a> QFileInfo::baseName () const</h3>
 <p>Returns the base name of the file without the path.</p>
 <p>The base name consists of all characters in the file up to (but not including) the <i>first</i> '.' character.</p>
@@ -200,7 +200,7 @@
 <h3 class="fn"><a name="canonicalPath"></a><a href="qstring.html">QString</a> QFileInfo::canonicalPath () const</h3>
 <p>Returns the file's path canonical path (excluding the file name), i.e&#x2e; an absolute path without symbolic links or redundant &quot;.&quot; or &quot;..&quot; elements.</p>
 <p>If the file does not exist, canonicalPath() returns an empty string.</p>
-<p>See also <a href="qfileinfo.html#pathx">path</a>() and <a href="qfileinfo.html#absolutePath">absolutePath</a>().</p>
+<p>See also <a href="qfileinfo.html#path">path</a>() and <a href="qfileinfo.html#absolutePath">absolutePath</a>().</p>
 <h3 class="fn"><a name="completeBaseName"></a><a href="qstring.html">QString</a> QFileInfo::completeBaseName () const</h3>
 <p>Returns the complete base name of the file without the path.</p>
 <p>The complete base name consists of all characters in the file up to (but not including) the <i>last</i> '.' character.</p>
@@ -310,7 +310,7 @@
 <p>Returns the id of the owner of the file.</p>
 <p>On Windows and on systems where files do not have owners this function returns ((uint) -2).</p>
 <p>See also <a href="qfileinfo.html#owner">owner</a>(), <a href="qfileinfo.html#group">group</a>(), and <a href="qfileinfo.html#groupId">groupId</a>().</p>
-<h3 class="fn"><a name="pathx"></a><a href="qstring.html">QString</a> QFileInfo::path () const</h3>
+<h3 class="fn"><a name="path"></a><a href="qstring.html">QString</a> QFileInfo::path () const</h3>
 <p>Returns the file's path. This doesn't include the file name.</p>
 <p>Note that, if this <a href="qfileinfo.html">QFileInfo</a> object is given a path ending in a slash, the name of the file is considered empty and this function will return the entire path.</p>
 <p>See also <a href="qfileinfo.html#filePath">filePath</a>(), <a href="qfileinfo.html#absolutePath">absolutePath</a>(), <a href="qfileinfo.html#canonicalPath">canonicalPath</a>(), <a href="qfileinfo.html#dir">dir</a>(), <a href="qfileinfo.html#fileName">fileName</a>(), and <a href="qfileinfo.html#isRelative">isRelative</a>().</p>
@@ -351,12 +351,12 @@
 <span class="comment"> // while relFile points to &quot;/tmp/local/bin&quot;</span></pre>
 <p>See also <a href="qfileinfo.html#isFile">isFile</a>(), <a href="qfileinfo.html#isRelative">isRelative</a>(), <a href="qdir.html#setCurrent">QDir::setCurrent</a>(), and <a href="qdir.html#isRelativePath">QDir::isRelativePath</a>().</p>
 <h3 class="fn"><a name="setFile-2"></a>void QFileInfo::setFile ( const <a href="qfile.html">QFile</a> &amp; <i>file</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the file that the <a href="qfileinfo.html">QFileInfo</a> provides information about to <i>file</i>.</p>
 <p>If <i>file</i> includes a relative path, the <a href="qfileinfo.html">QFileInfo</a> will also have a relative path.</p>
 <p>See also <a href="qfileinfo.html#isRelative">isRelative</a>().</p>
 <h3 class="fn"><a name="setFile-3"></a>void QFileInfo::setFile ( const <a href="qdir.html">QDir</a> &amp; <i>dir</i>, const <a href="qstring.html">QString</a> &amp; <i>file</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the file that the <a href="qfileinfo.html">QFileInfo</a> provides information about to <i>file</i> in directory <i>dir</i>.</p>
 <p>If <i>file</i> includes a relative path, the <a href="qfileinfo.html">QFileInfo</a> will also have a relative path.</p>
 <p>See also <a href="qfileinfo.html#isRelative">isRelative</a>().</p>
@@ -380,7 +380,7 @@
 <p>Returns true if this <a href="qfileinfo.html">QFileInfo</a> object refers to a different file than the one specified by <i>fileinfo</i>; otherwise returns false.</p>
 <p>See also <a href="qfileinfo.html#operator-eq-eq">operator==</a>().</p>
 <h3 class="fn"><a name="operator-not-eq-2"></a>bool QFileInfo::operator!= ( const QFileInfo &amp; <i>fileinfo</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <h3 class="fn"><a name="operator-eq"></a>QFileInfo &amp; QFileInfo::operator= ( const QFileInfo &amp; <i>fileinfo</i> )</h3>
 <p>Makes a copy of the given <i>fileinfo</i> and assigns it to this <a href="qfileinfo.html">QFileInfo</a>.</p>
 <h3 class="fn"><a name="operator-eq-eq"></a>bool QFileInfo::operator== ( const QFileInfo &amp; <i>fileinfo</i> )</h3>
@@ -390,7 +390,7 @@
 <p><b>Warning:</b> Long and short file names that refer to the same file on Windows are treated as if they referred to different files.</p>
 <p>See also <a href="qfileinfo.html#operator-not-eq">operator!=</a>().</p>
 <h3 class="fn"><a name="operator-eq-eq-2"></a>bool QFileInfo::operator== ( const QFileInfo &amp; <i>fileinfo</i> ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <hr />
 <h2>Related Non-Members</h2>
 <h3 class="fn"><a name="QFileInfoList-typedef"></a>typedef QFileInfoList</h3>
@@ -399,6 +399,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

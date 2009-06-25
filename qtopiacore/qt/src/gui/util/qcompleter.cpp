@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -824,7 +824,7 @@ void QCompleterPrivate::_q_complete(QModelIndex index, bool highlighted)
     Q_Q(QCompleter);
     QString completion;
 
-    if (!index.isValid() || (index.row() >= proxy->engine->matchCount())) {
+    if (!index.isValid() || (!proxy->showAll && (index.row() >= proxy->engine->matchCount()))) {
         completion = prefix;
     } else {
         QModelIndex si = proxy->mapToSource(index);
@@ -1077,10 +1077,14 @@ void QCompleter::setPopup(QAbstractItemView *popup)
         delete d->popup;
     if (popup->model() != d->proxy)
         popup->setModel(d->proxy);
-    popup->hide();
+#ifdef Q_OS_MAC
+     popup->show();
+#else
+     popup->hide();
+#endif
     popup->setParent(0, Qt::Popup);
 
-    Qt::FocusPolicy origPolicy;
+    Qt::FocusPolicy origPolicy = Qt::NoFocus;
     if (d->widget)
         origPolicy = d->widget->focusPolicy();
     popup->setFocusPolicy(Qt::NoFocus);

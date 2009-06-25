@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the QtGui module of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -1317,11 +1317,15 @@ QRegion QTransform::map(const QRegion &r) const
     TransformationType t = type();
     if (t == TxNone)
         return r;
+
     if (t == TxTranslate) {
         QRegion copy(r);
         copy.translate(qRound(affine._dx), qRound(affine._dy));
         return copy;
     }
+
+    if (t == TxScale && r.numRects() == 1)
+        return QRegion(mapRect(r.boundingRect()));
 
     QPainterPath p = map(qt_regionToPath(r));
     return p.toFillPolygon(QTransform()).toPolygon();
@@ -1351,7 +1355,8 @@ static inline QHomogeneousCoordinate mapHomogeneous(const QTransform &transform,
     return c;
 }
 
-static inline bool lineTo_clipped(QPainterPath &path, const QTransform &transform, const QPointF &a, const QPointF &b, bool needsMoveTo)
+static inline bool lineTo_clipped(QPainterPath &path, const QTransform &transform, const QPointF &a, const QPointF &b,
+                                  bool needsMoveTo, bool needsLineTo = true)
 {
     QHomogeneousCoordinate ha = mapHomogeneous(transform, a);
     QHomogeneousCoordinate hb = mapHomogeneous(transform, b);
@@ -1384,7 +1389,8 @@ static inline bool lineTo_clipped(QPainterPath &path, const QTransform &transfor
     if (needsMoveTo)
         path.moveTo(ha.toPoint());
 
-    path.lineTo(hb.toPoint());
+    if (needsLineTo)
+        path.lineTo(hb.toPoint());
 
     return true;
 }
@@ -1451,7 +1457,7 @@ static QPainterPath mapProjective(const QTransform &transform, const QPainterPat
     }
 
     if (path.elementCount() > 0 && lastMoveTo != last)
-        lineTo_clipped(result, transform, last, lastMoveTo, needsMoveTo);
+        lineTo_clipped(result, transform, last, lastMoveTo, needsMoveTo, false);
 
     return result;
 }
@@ -1715,13 +1721,12 @@ QRect QTransform::mapRect(const QRect &rect) const
         return QRect(x, y, w, h);
     } else if (t < TxProject) {
         // see mapToPolygon for explanations of the algorithm.
-        qreal x0 = 0, y0 = 0;
-        qreal x, y;
-        MAP(rect.left(), rect.top(), x0, y0);
-        qreal xmin = x0;
-        qreal ymin = y0;
-        qreal xmax = x0;
-        qreal ymax = y0;
+        qreal x = 0, y = 0;
+        MAP(rect.left(), rect.top(), x, y);
+        qreal xmin = x;
+        qreal ymin = y;
+        qreal xmax = x;
+        qreal ymax = y;
         MAP(rect.right() + 1, rect.top(), x, y);
         xmin = qMin(xmin, x);
         ymin = qMin(ymin, y);
@@ -1782,13 +1787,12 @@ QRectF QTransform::mapRect(const QRectF &rect) const
         }
         return QRectF(x, y, w, h);
     } else if (t < TxProject) {
-        qreal x0 = 0, y0 = 0;
-        qreal x, y;
-        MAP(rect.x(), rect.y(), x0, y0);
-        qreal xmin = x0;
-        qreal ymin = y0;
-        qreal xmax = x0;
-        qreal ymax = y0;
+        qreal x = 0, y = 0;
+        MAP(rect.x(), rect.y(), x, y);
+        qreal xmin = x;
+        qreal ymin = y;
+        qreal xmax = x;
+        qreal ymax = y;
         MAP(rect.x() + rect.width(), rect.y(), x, y);
         xmin = qMin(xmin, x);
         ymin = qMin(ymin, y);
@@ -1882,7 +1886,7 @@ const QMatrix &QTransform::toAffine() const
 QTransform::TransformationType QTransform::type() const
 {
     if (m_dirty >= m_type) {
-        if (m_dirty > TxShear && (!qFuzzyCompare(m_13 + 1, 1) || !qFuzzyCompare(m_23 + 1, 1)))
+        if (m_dirty > TxShear && (!qFuzzyCompare(m_13 + 1, 1) || !qFuzzyCompare(m_23 + 1, 1) || !qFuzzyCompare(m_33, 1)))
              m_type = TxProject;
         else if (m_dirty > TxScale && (!qFuzzyCompare(affine._m12 + 1, 1) || !qFuzzyCompare(affine._m21 + 1, 1))) {
             const qreal dot = affine._m11 * affine._m12 + affine._m21 * affine._m22;
@@ -1890,7 +1894,7 @@ QTransform::TransformationType QTransform::type() const
                 m_type = TxRotate;
             else
                 m_type = TxShear;
-        } else if (m_dirty > TxTranslate && (!qFuzzyCompare(affine._m11, 1) || !qFuzzyCompare(affine._m22, 1) || !qFuzzyCompare(m_33, 1)))
+        } else if (m_dirty > TxTranslate && (!qFuzzyCompare(affine._m11, 1) || !qFuzzyCompare(affine._m22, 1)))
             m_type = TxScale;
         else if (m_dirty > TxNone && (!qFuzzyCompare(affine._dx + 1, 1) || !qFuzzyCompare(affine._dy + 1, 1)))
             m_type = TxTranslate;

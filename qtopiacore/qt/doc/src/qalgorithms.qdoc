@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
-** Contact: Qt Software Information (qt-info@nokia.com)
+** Contact: Nokia Corporation (qt-info@nokia.com)
 **
 ** This file is part of the documentation of the Qt Toolkit.
 **
@@ -34,7 +34,7 @@
 ** met: http://www.gnu.org/copyleft/gpl.html.
 **
 ** If you are unsure which license is appropriate for your use, please
-** contact the sales department at qt-sales@nokia.com.
+** contact the sales department at http://www.qtsoftware.com/contact.
 ** $QT_END_LICENSE$
 **
 ****************************************************************************/
@@ -59,7 +59,7 @@
 
     If STL is available on all your target platforms, you can use the
     STL algorithms instead of their Qt counterparts. One reason why
-    you might want to use the the STL algorithms is that STL provides
+    you might want to use the STL algorithms is that STL provides
     dozens and dozens of algorithms, whereas Qt only provides the most
     important ones, making no attempt to duplicate functionality that
     is already provided by the C++ standard.

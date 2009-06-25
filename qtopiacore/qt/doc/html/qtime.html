@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/corelib/tools/qdatetime.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/corelib/tools/qdatetime.cpp -->
 <head>
   <title>Qt 4.5: QTime Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -99,7 +99,7 @@
  t = n.addSecs(-15 * 60 * 60);     <span class="comment">// t == 23:00:00</span></pre>
 <p>See also <a href="qtime.html#addMSecs">addMSecs</a>(), <a href="qtime.html#secsTo">secsTo</a>(), and <a href="qdatetime.html#addSecs">QDateTime::addSecs</a>().</p>
 <h3 class="fn"><a name="currentTime"></a>QTime QTime::currentTime ()&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the current time as reported by the system clock.</p>
 <p>Note that the accuracy depends on the accuracy of the underlying operating system; not all systems provide 1-millisecond accuracy.</p>
 <h3 class="fn"><a name="elapsed"></a>int QTime::elapsed () const</h3>
@@ -147,7 +147,7 @@
 <p>Returns true if the time is valid; otherwise returns false. For example, the time 23:30:55.746 is valid, but 24:12:30 is invalid.</p>
 <p>See also <a href="qtime.html#isNull">isNull</a>().</p>
 <h3 class="fn"><a name="isValid-2"></a>bool QTime::isValid ( int <i>h</i>, int <i>m</i>, int <i>s</i>, int <i>ms</i> = 0 )&nbsp;&nbsp;<tt> [static]</tt></h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns true if the specified time is valid; otherwise returns false.</p>
 <p>The time is valid if <i>h</i> is in the range 0 to 23, <i>m</i> and <i>s</i> are in the range 0 to 59, and <i>ms</i> is in the range 0 to 999.</p>
 <p>Example:</p>
@@ -217,7 +217,7 @@
 <p>If the datetime is invalid, an empty string will be returned.</p>
 <p>See also <a href="qdate.html#toString">QDate::toString</a>() and <a href="qdatetime.html#toString">QDateTime::toString</a>().</p>
 <h3 class="fn"><a name="toString-2"></a><a href="qstring.html">QString</a> QTime::toString ( <a href="qt.html#DateFormat-enum">Qt::DateFormat</a> <i>format</i> = Qt::TextDate ) const</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Returns the time as a string. Milliseconds are not included. The <i>format</i> parameter determines the format of the string.</p>
 <p>If <i>format</i> is <a href="qt.html#DateFormat-enum">Qt::TextDate</a>, the string format is HH:MM:SS; e.g&#x2e; 1 second before midnight would be &quot;23:59:59&quot;.</p>
 <p>If <i>format</i> is <a href="qt.html#DateFormat-enum">Qt::ISODate</a>, the string format corresponds to the ISO 8601 extended specification for representations of dates, which is also HH:MM:SS. (However, contrary to ISO 8601, dates before 15 October 1582 are handled as Julian dates, not Gregorian dates. See <a href="qdate.html#qdate-g-and-j">Use of Gregorian and Julian Calendars</a>. This might change in a future version of Qt.)</p>
@@ -248,6 +248,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>

@@ -2,7 +2,7 @@
 <!DOCTYPE html
     PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
-<!-- /fasttmp/mkdist-qt-4.5.1-1240358187/qt-embedded-linux-opensource-src-4.5.1/src/xmlpatterns/api/qxmlquery.cpp -->
+<!-- /fasttmp/mkdist-qt-4.5.2-1245473805/qt-embedded-linux-opensource-src-4.5.2/src/xmlpatterns/api/qxmlquery.cpp -->
 <head>
   <title>Qt 4.5: QXmlQuery Class Reference</title>
   <link href="classic.css" rel="stylesheet" type="text/css" />
@@ -189,19 +189,19 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qxmlquery.html#isValid">isValid</a>().</p>
 <h3 class="fn"><a name="bindVariable-4"></a>void QXmlQuery::bindVariable ( const <a href="qstring.html">QString</a> &amp; <i>localName</i>, const <a href="qxmlitem.html">QXmlItem</a> &amp; <i>value</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function constructs a <a href="qxmlname.html">QXmlName</a> from <i>localName</i> using the query's <a href="qxmlnamepool.html">namespace</a>. The function then behaves as the overloaded function. It is equivalent to the following snippet.</p>
 <pre>     QXmlNamePool namePool(query.namePool());
      query.bindVariable(QXmlName(namePool, localName), value);</pre>
 <h3 class="fn"><a name="bindVariable-5"></a>void QXmlQuery::bindVariable ( const <a href="qstring.html">QString</a> &amp; <i>localName</i>, <a href="qiodevice.html">QIODevice</a> * <i>device</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>If <i>localName</i> is a valid <a href="qxmlname.html#isNCName">NCName</a>, this function is equivalent to the following snippet.</p>
 <pre>     QXmlNamePool namePool(query.namePool());
      query.bindVariable(QXmlName(namePool, localName), device);</pre>
 <p>A <a href="qxmlname.html">QXmlName</a> is constructed from <i>localName</i>, and is passed to the appropriate overload along with <i>device</i>.</p>
 <p>See also <a href="qxmlname.html#isNCName">QXmlName::isNCName</a>().</p>
 <h3 class="fn"><a name="bindVariable-6"></a>void QXmlQuery::bindVariable ( const <a href="qstring.html">QString</a> &amp; <i>localName</i>, const QXmlQuery &amp; <i>query</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Has the same behavior and effects as the function being overloaded, but takes the variable name <i>localName</i> as a <a href="qstring.html">QString</a>. <i>query</i> is used as in the overloaded function.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="evaluateTo"></a>void QXmlQuery::evaluateTo ( <a href="qxmlresultitems.html">QXmlResultItems</a> * <i>result</i> ) const</h3>
@@ -228,7 +228,7 @@
 <p><a href="qxmlserializer.html">QXmlSerializer</a> is used to write the output to <i>target</i>. In a future release, it is expected that this function will be changed to respect serialization options set in the stylesheet.</p>
 <p>If an error occurs during the evaluation, error messages are sent to <a href="qxmlquery.html#messageHandler">messageHandler</a>() and <tt>false</tt> is returned.</p>
 <p>If <i>target</i> is <tt>null</tt>, or is not opened in at least <a href="qiodevice.html#OpenModeFlag-enum">QIODevice::WriteOnly</a> mode, the behavior is undefined. <a href="qxmlquery.html">QXmlQuery</a> does not take ownership of <i>target</i>.</p>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="initialTemplateName"></a><a href="qxmlname.html">QXmlName</a> QXmlQuery::initialTemplateName () const</h3>
 <p>Returns the name of the XSL-T stylesheet template that the processor will call first when running an XSL-T stylesheet. This function only applies when using <a href="qxmlquery.html">QXmlQuery</a> to process XSL-T stylesheets. By default, no initial template is set. In that case, a default constructed <a href="qxmlname.html">QXmlName</a> is returned.</p>
@@ -254,14 +254,14 @@
 <p>By default, the focus is not set and is undefined. It will therefore result in a dynamic error, <tt>XPDY0002</tt>, if the focus is attempted to be accessed. The focus must be set before the query is set with <a href="qxmlquery.html#setQuery">setQuery</a>().</p>
 <p>There is no behavior defined for setting an item which is null.</p>
 <h3 class="fn"><a name="setFocus-2"></a>bool QXmlQuery::setFocus ( const <a href="qurl.html">QUrl</a> &amp; <i>documentURI</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the focus to be the document located at <i>documentURI</i> and returns true. If <i>documentURI</i> cannot be loaded, false is returned. It is undefined at what time the document may be loaded. When loading the document, the message handler and URI resolver set on this <a href="qxmlquery.html">QXmlQuery</a> are used.</p>
 <p>If <i>documentURI</i> is empty or is not a valid URI, the behavior of this function is undefined.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="setFocus-3"></a>bool QXmlQuery::setFocus ( <a href="qiodevice.html">QIODevice</a> * <i>document</i> )</h3>
 <p>Sets the focus to be the <i>document</i> read from the <a href="qiodevice.html">QIODevice</a> and returns true. If <i>document</i> cannot be loaded, false is returned.</p>
 <p><a href="qxmlquery.html">QXmlQuery</a> does not take ownership of <i>document</i>. The user guarantees that a document is available from the <i>document</i> device and that the document is not empty. The device must be opened in at least read-only mode. <i>document</i> must stay in scope as long as the current query is active.</p>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>This function was introduced in Qt 4.5.</p>
 <h3 class="fn"><a name="setInitialTemplateName"></a>void QXmlQuery::setInitialTemplateName ( const <a href="qxmlname.html">QXmlName</a> &amp; <i>name</i> )</h3>
 <p>Sets the <i>name</i> of the initial template. The initial template is the one the processor calls first, instead of attempting to match a template to the context node (if any). If an initial template is not set, the standard order of template invocation will be used.</p>
@@ -270,7 +270,7 @@
 <p>This function was introduced in Qt 4.5.</p>
 <p>See also <a href="qxmlquery.html#initialTemplateName">initialTemplateName</a>().</p>
 <h3 class="fn"><a name="setInitialTemplateName-2"></a>void QXmlQuery::setInitialTemplateName ( const <a href="qstring.html">QString</a> &amp; <i>localName</i> )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>Sets the name of the initial template to <i>localName</i>, which must be a valid <a href="qxmlname.html#localName">local name</a>. The initial template is the one the processor calls first, instead of attempting to match a template to the context node (if any). If an initial template is not set, the standard order of template invocation will be used.</p>
 <p>This function only applies when using <a href="qxmlquery.html">QXmlQuery</a> to process XSL-T stylesheets. The name becomes part of the compiled stylesheet. Therefore, this function must be called before calling <a href="qxmlquery.html#setQuery">setQuery</a>().</p>
 <p>If <i>localName</i> is not a valid <a href="qxmlname.html#localName">local name</a>, the effect is undefined. If the stylesheet has no template named <i>localName</i>, the processor will use the standard order of template invocation.</p>
@@ -307,7 +307,7 @@
 <p><i>baseURI</i> is the Base URI of the static context, as defined in the <a href="http://www.w3.org/TR/xquery/">XQuery language</a>. It is used internally to resolve relative URIs that appear in the query, and for message reporting. If <i>baseURI</i> is empty, <i>queryURI</i> is used. Otherwise, <i>baseURI</i> is used, and it is resolved against the <a href="qcoreapplication.html#applicationFilePath">application file path</a> if it is relative.</p>
 <p>If <i>queryURI</i> is empty or invalid, or if <i>baseURI</i> is invalid, the behavior of this function is undefined.</p>
 <h3 class="fn"><a name="setQuery-3"></a>void QXmlQuery::setQuery ( const <a href="qstring.html">QString</a> &amp; <i>sourceCode</i>, const <a href="qurl.html">QUrl</a> &amp; <i>documentURI</i> = QUrl() )</h3>
-<p>This is an overloaded member function, provided for convenience.</p>
+<p>This is an overloaded function.</p>
 <p>The behavior and requirements of this function are the same as for setQuery(<a href="qiodevice.html">QIODevice</a>*, const <a href="qurl.html">QUrl</a>&amp;), after the XQuery has been read from the IO device into a string. Because <i>sourceCode</i> is already a Unicode string, detection of its encoding is unnecessary.</p>
 <h3 class="fn"><a name="setUriResolver"></a>void QXmlQuery::setUriResolver ( const <a href="qabstracturiresolver.html">QAbstractUriResolver</a> * <i>resolver</i> )</h3>
 <p>Sets the URI resolver to <i>resolver</i>. <a href="qxmlquery.html">QXmlQuery</a> does not take ownership of <i>resolver</i>.</p>
@@ -325,6 +325,6 @@
 <table width="100%" cellspacing="0" border="0"><tr class="address">
 <td width="30%" align="left">Copyright &copy; 2009 Nokia Corporation and/or its subsidiary(-ies)</td>
 <td width="40%" align="center"><a href="trademarks.html">Trademarks</a></td>
-<td width="30%" align="right"><div align="right">Qt 4.5.1</div></td>
+<td width="30%" align="right"><div align="right">Qt 4.5.2</div></td>
 </tr></table></div></address></body>
 </html>
