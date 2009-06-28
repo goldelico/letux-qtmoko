@@ -6,3 +6,6 @@
   keyboard in password input fields. This patch (or modified version) should go
   to upstream QT and then we can delete it. Now we have to apply it always when
   updating QT.
+
+* no_voip.patch - disables voip stuff. This patch is applied for qtmoko-debian
+  releases to get rid of no sound in incomming calls.
