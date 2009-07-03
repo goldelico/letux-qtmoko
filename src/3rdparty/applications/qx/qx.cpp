@@ -9,14 +9,17 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     Q_UNUSED(f);
 #endif
     bOk = new QPushButton(this);
-    bOk->setText("Full screen");
+    bOk->setText("Start");
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
 
     bBack = new QPushButton(this);
     connect(bBack, SIGNAL(clicked()), this, SLOT(backClicked()));
 
     label = new QLabel(this);
+    label->setText("Command");
+
     lineEdit = new QLineEdit(this);
+    lineEdit->setText("xclock");
 
     buttonLayout = new QHBoxLayout();
     buttonLayout->setAlignment(Qt::AlignBottom);
@@ -72,13 +75,90 @@ void QX::mousePressEvent(QMouseEvent *event)
     Q_UNUSED(event);
 }
 
+void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+    exitFullScreen();
+    process = NULL;
+}
+
+void QX::keyPressEvent(QKeyEvent *e)
+{
+    switch (e->key())
+    {
+        case Qt::Key_Back:
+        {
+            close();
+            if(process != NULL)
+            {
+                 process->close();
+                 process = NULL;
+            }
+            e->accept();
+        }
+        break;
+    }
+}
+
 void QX::okClicked()
 {
-    resize(qApp->desktop()->size());
-    fullScreen = true;
-    enableFullscreen();
+//    resize(qApp->desktop()->size());
+//    fullScreen = true;
+//    enableFullscreen();
+    enterFullScreen();
+
+    process = new QProcess(this);
+    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
+    process->setProcessChannelMode(QProcess::ForwardedChannels);
+    process->start(lineEdit->text(), NULL);
 }
 
 void QX::backClicked()
 {
 }
+
+bool QX::event(QEvent *event)
+{
+    if( event->type() == QEvent::WindowDeactivate && is_fullscreen )
+    {
+        lower();
+    }
+    else if( event->type() == QEvent::WindowActivate && is_fullscreen )
+    {
+        QString title = windowTitle();
+
+        setWindowTitle( QLatin1String( "_allow_on_top_" ) );
+
+        raise();
+
+        setWindowTitle( title );
+    }
+
+     return QWidget::event( event );
+}
+
+void QX::enterFullScreen()
+{
+    // Show editor view in full screen
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    setWindowState(Qt::WindowFullScreen);
+
+    raise();
+
+    //emit fullScreenDisabled(false);
+
+    is_fullscreen = true;
+}
+
+void QX::exitFullScreen()
+{
+    is_fullscreen = false;
+
+    //emit showFullScreenWidgets(m_fullScreenWidgetsVisible = false);
+    //emit fullScreenDisabled(true);
+
+    //QTimer::singleShot(0, this, SLOT(showMaximized()));
+}
+
+

@@ -2,6 +2,7 @@
 #define QX_H
 
 #include <QWidget>
+#include <QEvent>
 #include <QVBoxLayout>
 #include <QPushButton>
 #include <QLabel>
@@ -31,16 +32,23 @@ private:
     QPushButton* bBack;
     QProcess* process;
     bool fullScreen;
+    bool is_fullscreen;
 
 protected:
-    void mousePressEvent(QMouseEvent * event);
+    void mousePressEvent(QMouseEvent *);
+    void keyPressEvent(QKeyEvent *);
     void resizeEvent(QResizeEvent *);
     void focusInEvent(QFocusEvent *);
     void enableFullscreen();
+	
+	bool event(QEvent *event);
+    void enterFullScreen();
+    void exitFullScreen();
 
 private slots:
     void okClicked();
     void backClicked();
+    void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
 #endif // QX_H

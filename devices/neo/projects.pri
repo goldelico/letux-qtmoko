@@ -21,5 +21,6 @@ PROJECTS*=\
     3rdparty/applications/qterminal \
     3rdparty/applications/screenshot \
     3rdparty/applications/qmplayer \
+    3rdparty/applications/qx \
     3rdparty/applications/gqsync \
     3rdparty/applications/simplefm 
