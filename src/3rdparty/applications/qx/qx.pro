@@ -4,12 +4,12 @@
 #
 #-------------------------------------------------
 
-TARGET = qmplayer
+TARGET = qx
 TEMPLATE = app
 
 QT          += core gui network
 
 SOURCES += main.cpp\
-        qmplayer.cpp
+        qx.cpp
 
-HEADERS  += qmplayer.h
+HEADERS  += qx.h

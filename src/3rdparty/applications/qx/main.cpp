@@ -8,7 +8,7 @@ QTOPIA_MAIN
 #else
 
 #include <QtGui/QApplication>
-#include "qmplayer.h"
+#include "qx.h"
 
 int main(int argc, char *argv[])
 {

@@ -1,37 +1,36 @@
 #include "qx.h"
 
 QX::QX(QWidget *parent, Qt::WFlags f)
-    : QWidget(parent)
+        : QWidget(parent)
 {
 #ifdef QT_QWS_FICGTA01
     this->setWindowState(Qt::WindowMaximized);
 #else
     Q_UNUSED(f);
 #endif
-    bOk = new QPushButton(this);
-    bOk->setText("Start");
-    connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
+    bRun = new QPushButton(tr("Run"), this);
+    connect(bRun, SIGNAL(clicked()), this, SLOT(runClicked()));
 
-    bBack = new QPushButton(this);
-    connect(bBack, SIGNAL(clicked()), this, SLOT(backClicked()));
+    bQuit = new QPushButton(tr("Quit"), this);
+    connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    label = new QLabel(this);
-    label->setText("Command");
+    label = new QLabel(tr("5s touch to quit application"), this);
+    label->setVisible(false);
 
-    lineEdit = new QLineEdit(this);
-    lineEdit->setText("xclock");
-
-    buttonLayout = new QHBoxLayout();
-    buttonLayout->setAlignment(Qt::AlignBottom);
-    buttonLayout->addWidget(bOk);
-    buttonLayout->addWidget(bBack);
+    lineEdit = new QLineEdit("xclock", this);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(label);
     layout->addWidget(lineEdit);
-    layout->addLayout(buttonLayout);
+    layout->addWidget(bRun);
+    layout->addWidget(bQuit);
 
-    fullScreen = false;
+    killTimer = new QTimer(this);
+    killTimer->setSingleShot(true);
+    connect(killTimer, SIGNAL(timeout()), this, SLOT(killTimerElapsed()));
+
+    process = NULL;
+    is_fullscreen = false;
 }
 
 QX::~QX()
@@ -39,74 +38,13 @@ QX::~QX()
 
 }
 
-void QX::resizeEvent(QResizeEvent *)
+void QX::runClicked()
 {
-    if(size() != qApp->desktop()->size()) {
-        // Widget is not the correct size, so do the fullscreen magic
-         enableFullscreen();
-    }
-}
-
-void QX::focusInEvent(QFocusEvent *) {
-    // Always do it here, no matter the size.
-    enableFullscreen();
-}
-
-void QX::enableFullscreen() {
-    if(!fullScreen)
-    {
-        return;
-    }
-    // Make sure size is correct
-    setFixedSize(qApp->desktop()->size());
-    // This call is needed because showFullScreen won't work
-    // correctly if the widget already considers itself to be fullscreen.
-    showNormal();
-    // This is needed because showNormal() forcefully changes the window
-    // style to WSTyle_TopLevel.
-    //reparent(0, WStyle_Customize | WStyle_NoBorder, QPoint(0,0));
-    // Enable fullscreen.
-    showFullScreen();
-}
-
-
-void QX::mousePressEvent(QMouseEvent *event)
-{
-    Q_UNUSED(event);
-}
-
-void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
-{
-    Q_UNUSED(exitCode);
-    Q_UNUSED(exitStatus);
-    exitFullScreen();
-    process = NULL;
-}
-
-void QX::keyPressEvent(QKeyEvent *e)
-{
-    switch (e->key())
-    {
-        case Qt::Key_Back:
-        {
-            close();
-            if(process != NULL)
-            {
-                 process->close();
-                 process = NULL;
-            }
-            e->accept();
-        }
-        break;
-    }
-}
-
-void QX::okClicked()
-{
-//    resize(qApp->desktop()->size());
-//    fullScreen = true;
-//    enableFullscreen();
     enterFullScreen();
+    bRun->setVisible(false);
+    bQuit->setVisible(false);
+    lineEdit->setVisible(false);
+    label->setVisible(true);
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
@@ -114,51 +52,97 @@ void QX::okClicked()
     process->start(lineEdit->text(), NULL);
 }
 
-void QX::backClicked()
+void QX::quitClicked()
 {
+    if(process)
+    {
+        process->close();
+        process = NULL;
+    }
+    else
+    {
+        close();
+    }
+}
+
+void QX::mousePressEvent(QMouseEvent *e)
+{
+    Q_UNUSED(e);
+    if(killTimer->isActive())
+    {
+        killTimer->stop();
+    }
+    if(process)
+    {
+        if(bQuit->isVisible())
+        {
+            bQuit->setVisible(false);
+            system(QString("kill -CONT %1").arg(process->pid()).toAscii());
+        }
+        else
+        {
+            killTimer->start(5000);
+        }
+    }
+}
+
+void QX::mouseReleaseEvent(QMouseEvent *e)
+{
+    Q_UNUSED(e);
+    killTimer->stop();
+}
+
+void QX::killTimerElapsed()
+{
+    system(QString("kill -STOP %1").arg(process->pid()).toAscii());
+    bQuit->setVisible(true);
+}
+
+void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+    exitFullScreen();
+    bRun->setVisible(true);
+    bQuit->setVisible(true);
+    lineEdit->setVisible(true);
+    label->setVisible(false);
+    process = NULL;
 }
 
 bool QX::event(QEvent *event)
 {
-    if( event->type() == QEvent::WindowDeactivate && is_fullscreen )
+    if(event->type() == QEvent::WindowDeactivate && is_fullscreen)
     {
         lower();
     }
-    else if( event->type() == QEvent::WindowActivate && is_fullscreen )
+    else if(event->type() == QEvent::WindowActivate && is_fullscreen)
     {
         QString title = windowTitle();
-
-        setWindowTitle( QLatin1String( "_allow_on_top_" ) );
-
+        setWindowTitle(QLatin1String("_allow_on_top_"));
         raise();
-
-        setWindowTitle( title );
+        setWindowTitle(title);
     }
-
-     return QWidget::event( event );
+    return QWidget::event(event);
 }
 
 void QX::enterFullScreen()
 {
+#ifdef QT_QWS_FICGTA01
     // Show editor view in full screen
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     setWindowState(Qt::WindowFullScreen);
-
     raise();
-
-    //emit fullScreenDisabled(false);
-
     is_fullscreen = true;
+#endif
 }
 
 void QX::exitFullScreen()
 {
+#ifdef QT_QWS_FICGTA01
     is_fullscreen = false;
-
-    //emit showFullScreenWidgets(m_fullScreenWidgetsVisible = false);
-    //emit fullScreenDisabled(true);
-
-    //QTimer::singleShot(0, this, SLOT(showMaximized()));
+    showMaximized();
+#endif
 }
 
 
