@@ -12,6 +12,7 @@
 #include <QLineEdit>
 #include <QTimer>
 #include <QDesktopWidget>
+#include <QFile>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
@@ -29,10 +30,13 @@ private:
     QLineEdit *lineEdit;
     QLabel *label;
     QPushButton *bRun;
+    QPushButton *bTango;
     QPushButton *bQuit;
     QProcess *process;
     QTimer *killTimer;
     bool is_fullscreen;
+
+    void runApp(QString filename);
 
 protected:
     void mousePressEvent(QMouseEvent *);
@@ -43,6 +47,7 @@ protected:
 
 private slots:
     void runClicked();
+    void tangoClicked();
     void quitClicked();
     void killTimerElapsed();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);

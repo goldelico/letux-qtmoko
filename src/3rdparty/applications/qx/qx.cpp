@@ -11,10 +11,13 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bRun = new QPushButton(tr("Run"), this);
     connect(bRun, SIGNAL(clicked()), this, SLOT(runClicked()));
 
+    bTango = new QPushButton(tr("Tango GPS"), this);
+    connect(bTango, SIGNAL(clicked()), this, SLOT(tangoClicked()));
+
     bQuit = new QPushButton(tr("Quit"), this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    label = new QLabel(tr("5s touch to quit application"), this);
+    label = new QLabel(this);
     label->setVisible(false);
 
     lineEdit = new QLineEdit("xclock", this);
@@ -23,6 +26,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     layout->addWidget(label);
     layout->addWidget(lineEdit);
     layout->addWidget(bRun);
+    layout->addWidget(bTango);
     layout->addWidget(bQuit);
 
     killTimer = new QTimer(this);
@@ -38,18 +42,44 @@ QX::~QX()
 
 }
 
-void QX::runClicked()
+static void gpsPower(const char *powerStr)
+{
+#ifdef QT_QWS_FICGTA01
+    QFile f("/sys/class/i2c-adapter/i2c-0/0-0073/pcf50633-regltr.7/neo1973-pm-gps.0/power_on");
+    f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    f.write(powerStr);
+    f.close();
+#endif
+}
+
+void QX::runApp(QString filename)
 {
     enterFullScreen();
     bRun->setVisible(false);
+    bTango->setVisible(false);
     bQuit->setVisible(false);
     lineEdit->setVisible(false);
     label->setVisible(true);
+    label->setText(tr("Running") + " " + filename + "\n\n" + tr("5s touch will quit"));
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     process->setProcessChannelMode(QProcess::ForwardedChannels);
-    process->start(lineEdit->text(), NULL);
+    process->start(filename, NULL);
+}
+
+void QX::runClicked()
+{
+    runApp(lineEdit->text());
+}
+
+void QX::tangoClicked()
+{
+#ifdef QT_QWS_FICGTA01
+    gpsPower("1");
+#endif
+    system("gpsd /dev/ttySAC1");
+    runApp("tangogps");
 }
 
 void QX::quitClicked()
@@ -81,7 +111,7 @@ void QX::mousePressEvent(QMouseEvent *e)
         }
         else
         {
-            killTimer->start(5000);
+            killTimer->start(4000);
         }
     }
 }
@@ -104,6 +134,7 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     Q_UNUSED(exitStatus);
     exitFullScreen();
     bRun->setVisible(true);
+    bTango->setVisible(true);
     bQuit->setVisible(true);
     lineEdit->setVisible(true);
     label->setVisible(false);
