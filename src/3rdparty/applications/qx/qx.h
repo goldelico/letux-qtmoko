@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <QMouseEvent>
 #include <QLineEdit>
+#include <QMessageBox>
 #include <QTimer>
 #include <QDesktopWidget>
 #include <QFile>
@@ -26,6 +27,17 @@ public:
     ~QX();
 
 private:
+    enum Screen
+    {
+        ScreenMain,
+        ScreenPaused,
+        ScreenFullscreen,   // full screen modes go down here
+        ScreenStarting,
+        ScreenRunning,
+    };
+
+    Screen screen;
+
     QVBoxLayout* layout;
     QLineEdit *lineEdit;
     QLabel *label;
@@ -34,8 +46,8 @@ private:
     QPushButton *bQuit;
     QProcess *process;
     QTimer *killTimer;
-    bool is_fullscreen;
 
+    void showScreen(QX::Screen scr);
     void runApp(QString filename);
 
 protected:

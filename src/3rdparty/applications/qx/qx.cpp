@@ -31,7 +31,9 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     connect(killTimer, SIGNAL(timeout()), this, SLOT(killTimerElapsed()));
 
     process = NULL;
-    is_fullscreen = false;
+    screen = QX::ScreenMain;
+
+    showScreen(QX::ScreenMain);
 }
 
 QX::~QX()
@@ -49,20 +51,48 @@ static void gpsPower(const char *powerStr)
 }
 #endif
 
+void QX::showScreen(QX::Screen scr)
+{
+    if(scr < QX::ScreenFullscreen && this->screen >= QX::ScreenFullscreen)
+    {
+        exitFullScreen();
+    }
+
+    this->screen = scr;
+
+    bRun->setVisible(scr == QX::ScreenMain);
+    bTango->setVisible(scr == QX::ScreenMain);
+    bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
+    lineEdit->setVisible(scr == QX::ScreenMain);
+    label->setVisible(scr == QX::ScreenStarting || scr == QX::ScreenRunning);
+
+    if(scr >= QX::ScreenFullscreen)
+    {
+        enterFullScreen();
+    }
+}
+
 void QX::runApp(QString filename)
 {
-    enterFullScreen();
-    bRun->setVisible(false);
-    bTango->setVisible(false);
-    bQuit->setVisible(false);
-    lineEdit->setVisible(false);
-    label->setVisible(true);
-    label->setText(tr("Running") + " " + filename + "\n\n" + tr("5s touch will quit"));
+    label->setText(tr("Running") + " " + filename + "\n" + tr("5s press brings up menu"));
+    showScreen(QX::ScreenStarting);
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start(filename, NULL);
+
+    if(process->waitForStarted())
+    {
+        showScreen(QX::ScreenRunning);
+    }
+    else
+    {
+        delete(process);
+        process = NULL;
+        showScreen(QX::ScreenMain);
+        QMessageBox::critical(this, tr("QX"), tr("Unable to start") + " " + filename);
+    }
 }
 
 void QX::runClicked()
@@ -83,8 +113,7 @@ void QX::quitClicked()
 {
     if(process)
     {
-        process->close();
-        process = NULL;
+        process->kill();
     }
     else
     {
@@ -101,12 +130,12 @@ void QX::mousePressEvent(QMouseEvent *e)
     }
     if(process)
     {
-        if(bQuit->isVisible())
+        if(screen == QX::ScreenPaused)
         {
-            bQuit->setVisible(false);
+            showScreen(QX::ScreenRunning);
             system(QString("kill -CONT %1").arg(process->pid()).toAscii());
         }
-        else
+        else if(screen == QX::ScreenRunning)
         {
             killTimer->start(4000);
         }
@@ -122,34 +151,33 @@ void QX::mouseReleaseEvent(QMouseEvent *e)
 void QX::killTimerElapsed()
 {
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
-    bQuit->setVisible(true);
+    showScreen(QX::ScreenPaused);
 }
 
 void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
-    exitFullScreen();
-    bRun->setVisible(true);
-    bTango->setVisible(true);
-    bQuit->setVisible(true);
-    lineEdit->setVisible(true);
-    label->setVisible(false);
+    showScreen(QX::ScreenMain);
+    delete(process);
     process = NULL;
 }
 
 bool QX::event(QEvent *event)
 {
-    if(event->type() == QEvent::WindowDeactivate && is_fullscreen)
+    if(screen >= QX::ScreenFullscreen)
     {
-        lower();
-    }
-    else if(event->type() == QEvent::WindowActivate && is_fullscreen)
-    {
-        QString title = windowTitle();
-        setWindowTitle(QLatin1String("_allow_on_top_"));
-        raise();
-        setWindowTitle(title);
+        if(event->type() == QEvent::WindowDeactivate)
+        {
+            lower();
+        }
+        else if(event->type() == QEvent::WindowActivate)
+        {
+            QString title = windowTitle();
+            setWindowTitle(QLatin1String("_allow_on_top_"));
+            raise();
+            setWindowTitle(title);
+        }
     }
     return QWidget::event(event);
 }
@@ -161,15 +189,13 @@ void QX::enterFullScreen()
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     setWindowState(Qt::WindowFullScreen);
     raise();
-    is_fullscreen = true;
 #endif
 }
 
 void QX::exitFullScreen()
 {
 #ifdef QT_QWS_FICGTA01
-    is_fullscreen = false;
-    showMaximized();
+    QTimer::singleShot(0, this, SLOT(showMaximized()));
 #endif
 }
 
