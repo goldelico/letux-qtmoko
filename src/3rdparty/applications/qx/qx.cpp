@@ -3,11 +3,8 @@
 QX::QX(QWidget *parent, Qt::WFlags f)
         : QWidget(parent)
 {
-#ifdef QT_QWS_FICGTA01
-    this->setWindowState(Qt::WindowMaximized);
-#else
     Q_UNUSED(f);
-#endif
+
     bRun = new QPushButton(tr("Run"), this);
     connect(bRun, SIGNAL(clicked()), this, SLOT(runClicked()));
 
