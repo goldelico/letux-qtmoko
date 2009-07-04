@@ -27,7 +27,6 @@
 -add-module pkgmanagement
 -add-module telephony
 -add-module ui
--add-module ipcomms
 
 # Device config
 -add-displaysize 480x640
