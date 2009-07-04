@@ -39,15 +39,15 @@ QX::~QX()
 
 }
 
+#ifdef QT_QWS_FICGTA01
 static void gpsPower(const char *powerStr)
 {
-#ifdef QT_QWS_FICGTA01
     QFile f("/sys/class/i2c-adapter/i2c-0/0-0073/pcf50633-regltr.7/neo1973-pm-gps.0/power_on");
     f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
     f.write(powerStr);
     f.close();
-#endif
 }
+#endif
 
 void QX::runApp(QString filename)
 {
