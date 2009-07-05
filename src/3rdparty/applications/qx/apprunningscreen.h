@@ -2,6 +2,8 @@
 #define APPRUNNINGSCREEN_H
 
 #include <QWidget>
+#include <QPixmap>
+#include <QPainter>
 #include <QEvent>
 #include <QApplication>
 #include <QMouseEvent>
@@ -18,6 +20,7 @@ class AppRunningScreen : public QWidget
 public:
     AppRunningScreen();
     void showScreen();
+    QPixmap pixmap;
 
 signals:
     void longPress();
@@ -29,6 +32,7 @@ protected:
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     bool event(QEvent *);
+    void paintEvent(QPaintEvent *);
     void enterFullScreen();
 
 private slots:

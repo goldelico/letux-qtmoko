@@ -3,6 +3,7 @@
 
 #include "apprunningscreen.h"
 #include <QWidget>
+#include <QPixmap>
 #include <QEvent>
 #include <QVBoxLayout>
 #include <QPushButton>
@@ -46,24 +47,17 @@ private:
     QPushButton *bTango;
     QPushButton *bQuit;
     QProcess *process;
-    QTimer *killTimer;
+    QString appName;
 
     void runApp(QString filename);
     void showScreen(QX::Screen scr);
-
-protected:
-    void mousePressEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
-    bool event(QEvent *);
-    void enterFullScreen();
-    void exitFullScreen();
 
 private slots:
     void okClicked();
     void tangoClicked();
     void quitClicked();
     void pauseApp();
-    void killTimerElapsed();
+    void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 

@@ -29,6 +29,19 @@ bool AppRunningScreen::event(QEvent *event)
     return QWidget::event(event);
 }
 
+void AppRunningScreen::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    if(pixmap.width() > 0)
+    {
+        p.drawPixmap(0, 0, pixmap);
+    }
+    else
+    {
+        p.drawText(this->rect(), Qt::AlignCenter, tr("press screen for 5 secs. to leave"));
+    }
+}
+
 void AppRunningScreen::mousePressEvent(QMouseEvent *e)
 {
     Q_UNUSED(e);

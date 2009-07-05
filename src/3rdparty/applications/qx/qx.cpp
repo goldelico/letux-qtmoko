@@ -5,13 +5,13 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 {
     Q_UNUSED(f);
 
-    bOk = new QPushButton(tr("Run"), this);
+    bOk = new QPushButton(this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
 
-    bTango = new QPushButton(tr("Tango GPS"), this);
+    bTango = new QPushButton("Tango GPS", this);
     connect(bTango, SIGNAL(clicked()), this, SLOT(tangoClicked()));
 
-    bQuit = new QPushButton(tr("Quit"), this);
+    bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
     lineEdit = new QLineEdit("xclock", this);
@@ -21,10 +21,6 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     layout->addWidget(bOk);
     layout->addWidget(bTango);
     layout->addWidget(bQuit);
-
-    killTimer = new QTimer(this);
-    killTimer->setSingleShot(true);
-    connect(killTimer, SIGNAL(timeout()), this, SLOT(killTimerElapsed()));
 
     appRunScr = new AppRunningScreen();
     connect(appRunScr, SIGNAL(longPress()), this, SLOT(pauseApp()));
@@ -56,23 +52,35 @@ void QX::showScreen(QX::Screen scr)
     {
         appRunScr->hide();
     }
+    if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
+    {
+        appRunScr->showScreen();
+    }
 
     this->screen = scr;
 
     bOk->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
-    bTango->setVisible(scr == QX::ScreenMain);
     bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
+    bTango->setVisible(scr == QX::ScreenMain);
     lineEdit->setVisible(scr == QX::ScreenMain);
 
-    if(scr >= QX::ScreenFullscreen)
+    switch(scr)
     {
-        appRunScr->showScreen();
+    case QX::ScreenMain:
+        bOk->setText(tr("Run"));
+        bQuit->setText(tr("Quit"));
+        update();
+        break;
+    case QX::ScreenPaused:
+        bOk->setText(tr("Resume") + " " + appName);
+        bQuit->setText(tr("Kill") + " " + appName);
+        break;
     }
 }
 
 void QX::runApp(QString filename)
 {
-    QMessageBox::information(this, tr("QX"), tr("Starting") + " " + filename + "\n" + tr("5s screen press brings up menu"));
+    this->appName = filename;
     showScreen(QX::ScreenStarting);
 
     process = new QProcess(this);
@@ -95,13 +103,28 @@ void QX::runApp(QString filename)
 
 void QX::pauseApp()
 {
+    appRunScr->pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
     showScreen(QX::ScreenPaused);
 }
 
+void QX::resumeApp()
+{
+    system(QString("kill -CONT %1").arg(process->pid()).toAscii());
+    showScreen(QX::ScreenRunning);
+}
+
 void QX::okClicked()
 {
-    runApp(lineEdit->text());
+    switch(screen)
+    {
+    case QX::ScreenMain:
+        runApp(lineEdit->text());
+        break;
+    case QX::ScreenPaused:
+        resumeApp();
+        break;
+    }
 }
 
 void QX::tangoClicked()
@@ -125,38 +148,6 @@ void QX::quitClicked()
     }
 }
 
-void QX::mousePressEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e);
-    if(killTimer->isActive())
-    {
-        killTimer->stop();
-    }
-    if(process)
-    {
-        if(screen == QX::ScreenPaused)
-        {
-            showScreen(QX::ScreenRunning);
-            system(QString("kill -CONT %1").arg(process->pid()).toAscii());
-        }
-        else if(screen == QX::ScreenRunning)
-        {
-            killTimer->start(4000);
-        }
-    }
-}
-
-void QX::mouseReleaseEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e);
-    killTimer->stop();
-}
-
-void QX::killTimerElapsed()
-{
-    pauseApp();
-}
-
 void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
@@ -164,42 +155,7 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     showScreen(QX::ScreenMain);
     delete(process);
     process = NULL;
-}
-
-bool QX::event(QEvent *event)
-{
-    if(screen >= QX::ScreenFullscreen)
-    {
-        if(event->type() == QEvent::WindowDeactivate)
-        {
-            lower();
-        }
-        else if(event->type() == QEvent::WindowActivate)
-        {
-            QString title = windowTitle();
-            setWindowTitle(QLatin1String("_allow_on_top_"));
-            raise();
-            setWindowTitle(title);
-        }
-    }
-    return QWidget::event(event);
-}
-
-void QX::enterFullScreen()
-{
-#ifdef QT_QWS_FICGTA01
-    // Show editor view in full screen
-    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    setWindowState(Qt::WindowFullScreen);
-    raise();
-#endif
-}
-
-void QX::exitFullScreen()
-{
-#ifdef QT_QWS_FICGTA01
-    QTimer::singleShot(0, this, SLOT(showMaximized()));
-#endif
+    appRunScr->pixmap.fill(Qt::black);
 }
 
 
