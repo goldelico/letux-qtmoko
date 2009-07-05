@@ -11,6 +11,9 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bTango = new QPushButton("Tango GPS", this);
     connect(bTango, SIGNAL(clicked()), this, SLOT(tangoClicked()));
 
+    bScummvm = new QPushButton("ScummVM", this);
+    connect(bScummvm, SIGNAL(clicked()), this, SLOT(scummvmClicked()));
+
     bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
@@ -20,6 +23,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     layout->addWidget(lineEdit);
     layout->addWidget(bOk);
     layout->addWidget(bTango);
+    layout->addWidget(bScummvm);
     layout->addWidget(bQuit);
 
     appRunScr = new AppRunningScreen();
@@ -51,10 +55,18 @@ void QX::showScreen(QX::Screen scr)
     if(scr < QX::ScreenFullscreen && this->screen >= QX::ScreenFullscreen)
     {
         appRunScr->hide();
+        if(rotate)
+        {
+            system("xrandr -o 0");
+        }
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
     {
         appRunScr->showScreen();
+        if(rotate)
+        {
+            system("xrandr -o 1");
+        }
     }
 
     this->screen = scr;
@@ -62,6 +74,7 @@ void QX::showScreen(QX::Screen scr)
     bOk->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
     bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
     bTango->setVisible(scr == QX::ScreenMain);
+    bScummvm->setVisible(scr == QX::ScreenMain);
     lineEdit->setVisible(scr == QX::ScreenMain);
 
     switch(scr)
@@ -75,12 +88,15 @@ void QX::showScreen(QX::Screen scr)
         bOk->setText(tr("Resume") + " " + appName);
         bQuit->setText(tr("Kill") + " " + appName);
         break;
+     default:
+        break;
     }
 }
 
-void QX::runApp(QString filename)
+void QX::runApp(QString filename, bool rotate)
 {
     this->appName = filename;
+    this->rotate = rotate;
     showScreen(QX::ScreenStarting);
 
     process = new QProcess(this);
@@ -119,10 +135,12 @@ void QX::okClicked()
     switch(screen)
     {
     case QX::ScreenMain:
-        runApp(lineEdit->text());
+        runApp(lineEdit->text(), false);
         break;
     case QX::ScreenPaused:
         resumeApp();
+        break;
+    default:
         break;
     }
 }
@@ -133,8 +151,14 @@ void QX::tangoClicked()
     gpsPower("1");
 #endif
     system("gpsd /dev/ttySAC1");
-    runApp("tangogps");
+    runApp("tangogps", false);
 }
+
+void QX::scummvmClicked()
+{
+    runApp("/usr/games/scummvm", true);
+}
+
 
 void QX::quitClicked()
 {

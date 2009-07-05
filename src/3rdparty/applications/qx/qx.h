@@ -45,16 +45,19 @@ private:
     QLineEdit *lineEdit;
     QPushButton *bOk;
     QPushButton *bTango;
+    QPushButton *bScummvm;
     QPushButton *bQuit;
     QProcess *process;
     QString appName;
+    bool rotate;
 
-    void runApp(QString filename);
+    void runApp(QString filename, bool rotate);
     void showScreen(QX::Screen scr);
 
 private slots:
     void okClicked();
     void tangoClicked();
+    void scummvmClicked();
     void quitClicked();
     void pauseApp();
     void resumeApp();
