@@ -5,8 +5,8 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 {
     Q_UNUSED(f);
 
-    bRun = new QPushButton(tr("Run"), this);
-    connect(bRun, SIGNAL(clicked()), this, SLOT(runClicked()));
+    bOk = new QPushButton(tr("Run"), this);
+    connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
 
     bTango = new QPushButton(tr("Tango GPS"), this);
     connect(bTango, SIGNAL(clicked()), this, SLOT(tangoClicked()));
@@ -14,21 +14,20 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bQuit = new QPushButton(tr("Quit"), this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    label = new QLabel(this);
-    label->setVisible(false);
-
     lineEdit = new QLineEdit("xclock", this);
 
     layout = new QVBoxLayout(this);
-    layout->addWidget(label);
     layout->addWidget(lineEdit);
-    layout->addWidget(bRun);
+    layout->addWidget(bOk);
     layout->addWidget(bTango);
     layout->addWidget(bQuit);
 
     killTimer = new QTimer(this);
     killTimer->setSingleShot(true);
     connect(killTimer, SIGNAL(timeout()), this, SLOT(killTimerElapsed()));
+
+    appRunScr = new AppRunningScreen();
+    connect(appRunScr, SIGNAL(longPress()), this, SLOT(pauseApp()));
 
     process = NULL;
     screen = QX::ScreenMain;
@@ -55,26 +54,25 @@ void QX::showScreen(QX::Screen scr)
 {
     if(scr < QX::ScreenFullscreen && this->screen >= QX::ScreenFullscreen)
     {
-        exitFullScreen();
+        appRunScr->hide();
     }
 
     this->screen = scr;
 
-    bRun->setVisible(scr == QX::ScreenMain);
+    bOk->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
     bTango->setVisible(scr == QX::ScreenMain);
     bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
     lineEdit->setVisible(scr == QX::ScreenMain);
-    label->setVisible(scr == QX::ScreenStarting || scr == QX::ScreenRunning);
 
     if(scr >= QX::ScreenFullscreen)
     {
-        enterFullScreen();
+        appRunScr->showScreen();
     }
 }
 
 void QX::runApp(QString filename)
 {
-    label->setText(tr("Running") + " " + filename + "\n" + tr("5s press brings up menu"));
+    QMessageBox::information(this, tr("QX"), tr("Starting") + " " + filename + "\n" + tr("5s screen press brings up menu"));
     showScreen(QX::ScreenStarting);
 
     process = new QProcess(this);
@@ -95,7 +93,13 @@ void QX::runApp(QString filename)
     }
 }
 
-void QX::runClicked()
+void QX::pauseApp()
+{
+    system(QString("kill -STOP %1").arg(process->pid()).toAscii());
+    showScreen(QX::ScreenPaused);
+}
+
+void QX::okClicked()
 {
     runApp(lineEdit->text());
 }
@@ -150,8 +154,7 @@ void QX::mouseReleaseEvent(QMouseEvent *e)
 
 void QX::killTimerElapsed()
 {
-    system(QString("kill -STOP %1").arg(process->pid()).toAscii());
-    showScreen(QX::ScreenPaused);
+    pauseApp();
 }
 
 void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)

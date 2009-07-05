@@ -1,6 +1,7 @@
 #ifndef QX_H
 #define QX_H
 
+#include "apprunningscreen.h"
 #include <QWidget>
 #include <QEvent>
 #include <QVBoxLayout>
@@ -37,18 +38,18 @@ private:
     };
 
     Screen screen;
+    AppRunningScreen *appRunScr;
 
     QVBoxLayout* layout;
     QLineEdit *lineEdit;
-    QLabel *label;
-    QPushButton *bRun;
+    QPushButton *bOk;
     QPushButton *bTango;
     QPushButton *bQuit;
     QProcess *process;
     QTimer *killTimer;
 
-    void showScreen(QX::Screen scr);
     void runApp(QString filename);
+    void showScreen(QX::Screen scr);
 
 protected:
     void mousePressEvent(QMouseEvent *);
@@ -58,9 +59,10 @@ protected:
     void exitFullScreen();
 
 private slots:
-    void runClicked();
+    void okClicked();
     void tangoClicked();
     void quitClicked();
+    void pauseApp();
     void killTimerElapsed();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };

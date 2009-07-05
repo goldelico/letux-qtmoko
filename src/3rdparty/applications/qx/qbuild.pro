@@ -18,11 +18,13 @@ pkg [
 
 # Input files
 HEADERS=\
-    qx.h
+    qx.h \
+    apprunningscreen.h
 
 SOURCES=\
     main.cpp\
-    qx.cpp
+    qx.cpp \
+    apprunningscreen.cpp
 
 # Install rules
 target [
