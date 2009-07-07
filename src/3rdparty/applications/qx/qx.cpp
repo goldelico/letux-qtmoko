@@ -31,6 +31,9 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     process = NULL;
     screen = QX::ScreenMain;
+#if QT_QWS_FICGTA01
+    powerConstraint = QtopiaApplication::Enable;
+#endif
 
     showScreen(QX::ScreenMain);
 }
@@ -59,6 +62,12 @@ void QX::showScreen(QX::Screen scr)
         {
             system("xrandr -o 0");
         }
+#ifdef QT_QWS_FICGTA01
+        if(powerConstraint != QtopiaApplication::Enable)
+        {
+            QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+        }
+#endif
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
     {
@@ -67,6 +76,12 @@ void QX::showScreen(QX::Screen scr)
         {
             system("xrandr -o 1");
         }
+#ifdef QT_QWS_FICGTA01
+        if(powerConstraint != QtopiaApplication::Enable)
+        {
+            QtopiaApplication::setPowerConstraint(powerConstraint);
+        }
+#endif
     }
 
     this->screen = scr;
@@ -149,6 +164,7 @@ void QX::tangoClicked()
 {
 #ifdef QT_QWS_FICGTA01
     gpsPower("1");
+    powerConstraint = QtopiaApplication::DisableSuspend;
 #endif
     system("gpsd /dev/ttySAC1");
     runApp("tangogps", false);
@@ -180,6 +196,9 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     delete(process);
     process = NULL;
     appRunScr->pixmap.fill(Qt::black);
+#ifdef QT_QWS_FICGTA01
+    powerConstraint = QtopiaApplication::Enable;
+#endif
 }
 
 

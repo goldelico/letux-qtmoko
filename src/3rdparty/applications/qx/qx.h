@@ -50,6 +50,9 @@ private:
     QProcess *process;
     QString appName;
     bool rotate;
+#if QT_QWS_FICGTA01
+    QtopiaApplication::PowerConstraint powerConstraint;
+#endif
 
     void runApp(QString filename, bool rotate);
     void showScreen(QX::Screen scr);
