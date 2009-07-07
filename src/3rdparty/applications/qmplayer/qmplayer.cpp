@@ -543,6 +543,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             break;
         case QMplayer::ScreenScan:
         case QMplayer::ScreenDownload:
+            bBack->setText(tr("Cancel"));        
             break;
     }
 }
@@ -1093,6 +1094,7 @@ void QMplayer::play(QStringList const& args)
                              tr("Program MPlayer must be downloaded. Please make sure you have internet connection and press yes to confirm download"),
                              QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
        {
+           showScreen(QMplayer::ScreenDownload);
            if(installMplayer())
            {
                QMessageBox::information(this, tr("qmplayer"), tr("MPlayer installed sucessfully"));
