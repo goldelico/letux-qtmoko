@@ -18,6 +18,12 @@ MODULES*=qtopia::prep_db
 
 desktop.files+=desktop/bt-poweron.desktop
 desktop.files+=desktop/bt-poweroff.desktop
+desktop.files+=desktop/gps-poweroff.desktop
+desktop.files+=desktop/gps-poweron.desktop
+desktop.files+=desktop/usb-device.desktop
+desktop.files+=desktop/usb-host.desktop
+desktop.files+=desktop/suspendx.desktop
+desktop.files+=desktop/resumex.desktop
 desktop.files+=desktop/get-ssh-key.desktop
 desktop.files+=desktop/fast-charge.desktop
 

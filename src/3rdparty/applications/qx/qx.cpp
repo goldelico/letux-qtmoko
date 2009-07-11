@@ -67,6 +67,7 @@ void QX::showScreen(QX::Screen scr)
         {
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         }
+        system("suspendx.sh");
 #endif
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
@@ -110,6 +111,7 @@ void QX::showScreen(QX::Screen scr)
 
 void QX::runApp(QString filename, bool rotate)
 {
+    system("resumex.sh");
     this->appName = filename;
     this->rotate = rotate;
     showScreen(QX::ScreenStarting);
@@ -174,7 +176,6 @@ void QX::scummvmClicked()
 {
     runApp("/usr/games/scummvm", true);
 }
-
 
 void QX::quitClicked()
 {
