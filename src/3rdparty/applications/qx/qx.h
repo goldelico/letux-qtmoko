@@ -16,6 +16,7 @@
 #include <QTimer>
 #include <QDesktopWidget>
 #include <QFile>
+#include <QTcpSocket>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
@@ -48,6 +49,7 @@ private:
     QPushButton *bScummvm;
     QPushButton *bQuit;
     QProcess *process;
+    QProcess *xprocess;
     QString appName;
     bool rotate;
 #if QT_QWS_FICGTA01

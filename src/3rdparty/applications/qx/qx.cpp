@@ -30,9 +30,10 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     connect(appRunScr, SIGNAL(longPress()), this, SLOT(pauseApp()));
 
     process = NULL;
+    xprocess = NULL;
     screen = QX::ScreenMain;
 #if QT_QWS_FICGTA01
-    powerConstraint = QtopiaApplication::Enable;
+    powerConstraint = QtopiaApplication::Disable;
 #endif
 
     showScreen(QX::ScreenMain);
@@ -104,7 +105,7 @@ void QX::showScreen(QX::Screen scr)
         bOk->setText(tr("Resume") + " " + appName);
         bQuit->setText(tr("Kill") + " " + appName);
         break;
-     default:
+    default:
         break;
     }
 }
@@ -114,7 +115,57 @@ void QX::runApp(QString filename, bool rotate)
     system("resumex.sh");
     this->appName = filename;
     this->rotate = rotate;
+
+    char *display = getenv("DISPLAY");
+    if(display == 0)
+    {
+        QMessageBox::critical(this, tr("QX"), tr("Environment variable DISPLAY is not set"));
+        return;
+    }
+
     showScreen(QX::ScreenStarting);
+
+    if(!QFile::exists("/tmp/.X0-lock"))
+    {
+        if(xprocess != NULL)
+        {
+            delete(xprocess);
+        }
+        xprocess = new QProcess(this);
+        xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
+        xprocess->start("X", NULL);
+        if(!xprocess->waitForStarted())
+        {
+            showScreen(QX::ScreenMain);
+            QMessageBox::critical(this, tr("QX"), tr("Unable to X server"));
+            return;
+        }
+    }
+    QString host(display);
+    int port = 6000;
+    int hostEnd = host.indexOf(':');
+    if(hostEnd >= 0)
+    {
+        QString dpiNum = host.right(host.length() - hostEnd - 1);
+        int dotIndex = dpiNum.indexOf('.');
+        if(dotIndex > 0)
+        {
+            dpiNum.remove(dotIndex, dpiNum.length() - dotIndex);
+        }
+        port += dpiNum.toInt(NULL, 10);
+        host.remove(hostEnd, host.length() - hostEnd);
+    }
+    if(host.length() == 0)
+    {
+        host = "localhost";
+    }
+    QTcpSocket sock(this);
+    sock.connectToHost(host, port);
+    if(!sock.waitForConnected(5000))
+    {
+        QMessageBox::information(this, tr("qmplayer"), sock.errorString());
+    }
+    sock.close();
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
@@ -174,6 +225,9 @@ void QX::tangoClicked()
 
 void QX::scummvmClicked()
 {
+#ifdef QT_QWS_FICGTA01
+    powerConstraint = QtopiaApplication::Disable;
+#endif
     runApp("/usr/games/scummvm", true);
 }
 
