@@ -17,7 +17,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    lineEdit = new QLineEdit("xclock", this);
+    lineEdit = new QLineEdit("xterm", this);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lineEdit);
@@ -116,13 +116,6 @@ void QX::runApp(QString filename, bool rotate)
     this->appName = filename;
     this->rotate = rotate;
 
-    char *display = getenv("DISPLAY");
-    if(display == 0)
-    {
-        QMessageBox::critical(this, tr("QX"), tr("Environment variable DISPLAY is not set"));
-        return;
-    }
-
     showScreen(QX::ScreenStarting);
 
     if(!QFile::exists("/tmp/.X0-lock"))
@@ -133,39 +126,35 @@ void QX::runApp(QString filename, bool rotate)
         }
         xprocess = new QProcess(this);
         xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
-        xprocess->start("X", NULL);
+        QStringList args;
+        args.append("vt1");
+        args.append("-hide-cursor");
+        xprocess->start("X", args);
         if(!xprocess->waitForStarted())
         {
             showScreen(QX::ScreenMain);
-            QMessageBox::critical(this, tr("QX"), tr("Unable to X server"));
+            QMessageBox::critical(this, tr("QX"), tr("Unable to start X server"));
             return;
         }
     }
-    QString host(display);
-    int port = 6000;
-    int hostEnd = host.indexOf(':');
-    if(hostEnd >= 0)
+
+    Display *dpy;
+    for(int i = 0; i < 50; i++)
     {
-        QString dpiNum = host.right(host.length() - hostEnd - 1);
-        int dotIndex = dpiNum.indexOf('.');
-        if(dotIndex > 0)
+        dpy = XOpenDisplay(NULL);
+        if(dpy != NULL)
         {
-            dpiNum.remove(dotIndex, dpiNum.length() - dotIndex);
+            break;
         }
-        port += dpiNum.toInt(NULL, 10);
-        host.remove(hostEnd, host.length() - hostEnd);
+        Sleeper::msleep(200);
     }
-    if(host.length() == 0)
+    if(dpy == NULL)
     {
-        host = "localhost";
+        showScreen(QX::ScreenMain);
+        QMessageBox::critical(this, tr("QX"), tr("Unable to conntect to X server"));
+        return;
     }
-    QTcpSocket sock(this);
-    sock.connectToHost(host, port);
-    if(!sock.waitForConnected(5000))
-    {
-        QMessageBox::information(this, tr("qmplayer"), sock.errorString());
-    }
-    sock.close();
+    XCloseDisplay(dpy);
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));

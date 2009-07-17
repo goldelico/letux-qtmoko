@@ -17,9 +17,11 @@
 #include <QDesktopWidget>
 #include <QFile>
 #include <QTcpSocket>
+#include <QThread>
 #ifdef QT_QWS_FICGTA01
 #include <QtopiaApplication>
 #endif
+#include <X11/Xlib.h>
 
 class QX : public QWidget
 {
@@ -68,5 +70,15 @@ private slots:
     void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
+
+class Sleeper : public QThread
+{
+public:
+    static void msleep(unsigned long msecs)
+    {
+        QThread::msleep(msecs);
+    }
+};
+
 
 #endif // QX_H

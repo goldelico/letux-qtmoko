@@ -2,6 +2,7 @@ TEMPLATE=app
 TARGET=qx
 
 CONFIG+=qtopia
+LIBS+=-lX11
 
 # I18n info
 STRING_LANGUAGE=en_US
