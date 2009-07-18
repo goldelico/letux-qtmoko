@@ -17,7 +17,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    lineEdit = new QLineEdit("xterm", this);
+    lineEdit = new QLineEdit("matchbox-session", this);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lineEdit);
@@ -31,6 +31,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     process = NULL;
     xprocess = NULL;
+    vtNum = 1;
     screen = QX::ScreenMain;
 #if QT_QWS_FICGTA01
     powerConstraint = QtopiaApplication::Disable;
@@ -68,7 +69,6 @@ void QX::showScreen(QX::Screen scr)
         {
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         }
-        system("suspendx.sh");
 #endif
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
@@ -110,9 +110,27 @@ void QX::showScreen(QX::Screen scr)
     }
 }
 
+void QX::stopX()
+{
+    if(xprocess == NULL)
+    {
+        return;
+    }
+    if(xprocess->state() != QProcess::NotRunning)
+    {
+        xprocess->terminate();
+        if(!xprocess->waitForFinished(1000))
+        {
+            xprocess->kill();
+        }
+        xprocess->waitForFinished();
+    }
+    delete(xprocess);
+    xprocess = NULL;
+}
+
 void QX::runApp(QString filename, bool rotate)
 {
-    system("resumex.sh");
     this->appName = filename;
     this->rotate = rotate;
 
@@ -120,15 +138,11 @@ void QX::runApp(QString filename, bool rotate)
 
     if(!QFile::exists("/tmp/.X0-lock"))
     {
-        if(xprocess != NULL)
-        {
-            delete(xprocess);
-        }
         xprocess = new QProcess(this);
         xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
         QStringList args;
-        args.append("vt1");
         args.append("-hide-cursor");
+        args.append(QString("vt%1").arg(vtNum));
         xprocess->start("X", args);
         if(!xprocess->waitForStarted())
         {
@@ -139,17 +153,21 @@ void QX::runApp(QString filename, bool rotate)
     }
 
     Display *dpy;
-    for(int i = 0; i < 50; i++)
+    for(int i = 0; i < 3; i++)
     {
         dpy = XOpenDisplay(NULL);
         if(dpy != NULL)
         {
             break;
         }
-        Sleeper::msleep(200);
+        Sleeper::msleep(1000);
     }
     if(dpy == NULL)
     {
+        // workaround to start X on different vt
+        vtNum = (vtNum + 1) % 10;
+        system(QString("chvt %1").arg(vtNum).toAscii());
+        stopX();
         showScreen(QX::ScreenMain);
         QMessageBox::critical(this, tr("QX"), tr("Unable to conntect to X server"));
         return;
@@ -169,6 +187,7 @@ void QX::runApp(QString filename, bool rotate)
     {
         delete(process);
         process = NULL;
+        stopX();
         showScreen(QX::ScreenMain);
         QMessageBox::critical(this, tr("QX"), tr("Unable to start") + " " + filename);
     }
@@ -178,11 +197,19 @@ void QX::pauseApp()
 {
     appRunScr->pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
+    if(xprocess)
+    {
+        system(QString("kill -STOP %1").arg(xprocess->pid()).toAscii());
+    }
     showScreen(QX::ScreenPaused);
 }
 
 void QX::resumeApp()
 {
+    if(xprocess)
+    {
+        system(QString("kill -CONT %1").arg(xprocess->pid()).toAscii());
+    }
     system(QString("kill -CONT %1").arg(process->pid()).toAscii());
     showScreen(QX::ScreenRunning);
 }
@@ -224,7 +251,11 @@ void QX::quitClicked()
 {
     if(process)
     {
-        process->kill();
+        process->terminate();
+        if(!process->waitForFinished(1000))
+        {
+            process->kill();
+        }
     }
     else
     {
@@ -239,7 +270,8 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     showScreen(QX::ScreenMain);
     delete(process);
     process = NULL;
-    appRunScr->pixmap.fill(Qt::black);
+    stopX();
+    appRunScr->pixmap = QPixmap();
 #ifdef QT_QWS_FICGTA01
     powerConstraint = QtopiaApplication::Enable;
 #endif
