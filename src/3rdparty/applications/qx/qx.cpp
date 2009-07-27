@@ -31,7 +31,6 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     process = NULL;
     xprocess = NULL;
-    vtNum = 1;
     screen = QX::ScreenMain;
 #if QT_QWS_FICGTA01
     powerConstraint = QtopiaApplication::Disable;
@@ -119,7 +118,7 @@ void QX::stopX()
     if(xprocess->state() != QProcess::NotRunning)
     {
         xprocess->terminate();
-        if(!xprocess->waitForFinished(1000))
+        if(!xprocess->waitForFinished(3000))
         {
             xprocess->kill();
         }
@@ -142,7 +141,7 @@ void QX::runApp(QString filename, bool rotate)
         xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
         QStringList args;
         args.append("-hide-cursor");
-        args.append(QString("vt%1").arg(vtNum));
+        args.append("vt7");
         xprocess->start("X", args);
         if(!xprocess->waitForStarted())
         {
@@ -164,9 +163,6 @@ void QX::runApp(QString filename, bool rotate)
     }
     if(dpy == NULL)
     {
-        // workaround to start X on different vt
-        vtNum = (vtNum + 1) % 10;
-        system(QString("chvt %1").arg(vtNum).toAscii());
         stopX();
         showScreen(QX::ScreenMain);
         QMessageBox::critical(this, tr("QX"), tr("Unable to conntect to X server"));
@@ -252,7 +248,7 @@ void QX::quitClicked()
     if(process)
     {
         process->terminate();
-        if(!process->waitForFinished(1000))
+        if(!process->waitForFinished(3000))
         {
             process->kill();
         }

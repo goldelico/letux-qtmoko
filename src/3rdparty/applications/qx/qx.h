@@ -54,7 +54,6 @@ private:
     QProcess *xprocess;
     QString appName;
     bool rotate;
-    int vtNum;
 #if QT_QWS_FICGTA01
     QtopiaApplication::PowerConstraint powerConstraint;
 #endif
