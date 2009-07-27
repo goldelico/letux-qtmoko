@@ -615,6 +615,7 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
             || fileName.endsWith(".ogg", Qt::CaseInsensitive)
             || fileName.endsWith(".ogv", Qt::CaseInsensitive)
             || fileName.endsWith(".avi", Qt::CaseInsensitive)
+            || fileName.endsWith(".mp4", Qt::CaseInsensitive)
             || fileName.endsWith(".wav", Qt::CaseInsensitive))
         {
             if(fileName.contains(".qmplayer."))
@@ -958,7 +959,8 @@ void QMplayer::newConnection()
         {
             encPath = filename;
             // Encode just avi files for now
-            if(encPath.endsWith(".avi"))
+            if(encPath.endsWith(".avi") ||
+               encPath.endsWith(".mp4"))
             {
                 encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
             }
@@ -980,6 +982,10 @@ void QMplayer::newConnection()
                     if(reqPath.endsWith(".avi"))
                     {
                         mime ="video/avi";
+                    }
+                    else if(reqPath.endsWith(".mp4"))
+                    {
+                        mime = "video/mp4";
                     }
                     else if(reqPath.endsWith(".ogv"))
                     {
