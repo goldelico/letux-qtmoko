@@ -2,9 +2,6 @@
 
 AppRunningScreen::AppRunningScreen()
 {
-    killTimer = new QTimer(this);
-    killTimer->setSingleShot(true);
-    connect(killTimer, SIGNAL(timeout()), this, SLOT(killTimerElapsed()));
 }
 
 void AppRunningScreen::showScreen()
@@ -38,29 +35,8 @@ void AppRunningScreen::paintEvent(QPaintEvent *)
     }
     else
     {
-        p.drawText(this->rect(), Qt::AlignCenter, tr("press screen for 5 secs. to leave"));
+        p.drawText(this->rect(), Qt::AlignCenter, tr("press AUX to leave"));
     }
-}
-
-void AppRunningScreen::mousePressEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e);
-    if(killTimer->isActive())
-    {
-        killTimer->stop();
-    }
-    killTimer->start(4000);
-}
-
-void AppRunningScreen::mouseReleaseEvent(QMouseEvent *e)
-{
-    Q_UNUSED(e);
-    killTimer->stop();
-}
-
-void AppRunningScreen::killTimerElapsed()
-{
-    emit longPress();
 }
 
 void AppRunningScreen::enterFullScreen()

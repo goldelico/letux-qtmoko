@@ -27,7 +27,6 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     layout->addWidget(bQuit);
 
     appRunScr = new AppRunningScreen();
-    connect(appRunScr, SIGNAL(longPress()), this, SLOT(pauseApp()));
 
     process = NULL;
     xprocess = NULL;

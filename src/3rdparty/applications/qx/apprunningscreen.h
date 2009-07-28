@@ -22,21 +22,10 @@ public:
     void showScreen();
     QPixmap pixmap;
 
-signals:
-    void longPress();
-
-private:
-    QTimer *killTimer;
-
 protected:
-    void mousePressEvent(QMouseEvent *);
-    void mouseReleaseEvent(QMouseEvent *);
     bool event(QEvent *);
     void paintEvent(QPaintEvent *);
     void enterFullScreen();
-
-private slots:
-    void killTimerElapsed();
 };
 
 #endif // APPRUNNINGSCREEN_H
