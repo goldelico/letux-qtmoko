@@ -116,7 +116,7 @@ void QX::showScreen(QX::Screen scr)
         break;
     case QX::ScreenPaused:
         bOk->setText(tr("Resume") + " " + appName);
-        bQuit->setText(tr("Kill") + " " + appName);
+        bQuit->setText((terminating ? tr("Kill") : tr("Stop")) + " " + appName);
         break;
     default:
         break;
