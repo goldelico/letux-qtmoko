@@ -20,11 +20,13 @@ pkg [
 # Input files
 HEADERS=\
     qx.h \
+    qxservice.h \
     apprunningscreen.h
 
 SOURCES=\
     main.cpp\
     qx.cpp \
+    qxservice.cpp \
     apprunningscreen.cpp
 
 # Install rules
@@ -43,5 +45,17 @@ pics [
     hint=pics
     files=pics/*
     path=/pics/qx
+]
+
+service [
+    hint=image
+    files=services/QX/qx
+    path=/services/QX
+]
+
+servicedef [
+    hint=image
+    files=services/QX.service
+    path=/services
 ]
 

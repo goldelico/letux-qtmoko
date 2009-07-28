@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaServices
+Context=QX
+[Service]
+Actions = "appSwitch()"
+Icon = qx/qx
+Name[]=QX
+[appSwitch()]
+Icon=qx/qx
+Name[]="Switch X application"

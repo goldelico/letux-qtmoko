@@ -34,6 +34,9 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     screen = QX::ScreenMain;
 #if QT_QWS_FICGTA01
     powerConstraint = QtopiaApplication::Disable;
+
+    // Start the "QX" service that handles application switching.
+    new QxService(this);
 #endif
 
     showScreen(QX::ScreenMain);
@@ -68,6 +71,11 @@ void QX::showScreen(QX::Screen scr)
         {
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         }
+        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
+        if(mgr.buttons().count() > 0)
+        {
+            mgr.remapPressedAction(0, origSrq);
+        }
 #endif
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
@@ -81,6 +89,13 @@ void QX::showScreen(QX::Screen scr)
         if(powerConstraint != QtopiaApplication::Enable)
         {
             QtopiaApplication::setPowerConstraint(powerConstraint);
+        }
+        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
+        if(mgr.buttons().count() > 0)
+        {
+            origSrq = mgr.buttons().at(0)->pressedAction();
+            QtopiaServiceRequest req("QX", "appSwitch()");
+            mgr.remapPressedAction(0, req);
         }
 #endif
     }
@@ -175,18 +190,17 @@ void QX::runApp(QString filename, bool rotate)
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start(filename, NULL);
 
-    if(process->waitForStarted())
-    {
-        showScreen(QX::ScreenRunning);
-    }
-    else
+    if(!process->waitForStarted())
     {
         delete(process);
         process = NULL;
         stopX();
         showScreen(QX::ScreenMain);
         QMessageBox::critical(this, tr("QX"), tr("Unable to start") + " " + filename);
+        return;
     }
+
+    showScreen(QX::ScreenRunning);
 }
 
 void QX::pauseApp()

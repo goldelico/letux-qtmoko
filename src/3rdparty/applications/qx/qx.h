@@ -19,7 +19,9 @@
 #include <QTcpSocket>
 #include <QThread>
 #ifdef QT_QWS_FICGTA01
+#include "qxservice.h"
 #include <QtopiaApplication>
+#include <QDeviceButtonManager>
 #endif
 #include <X11/Xlib.h>
 
@@ -56,18 +58,21 @@ private:
     bool rotate;
 #if QT_QWS_FICGTA01
     QtopiaApplication::PowerConstraint powerConstraint;
+    QtopiaServiceRequest origSrq;
 #endif
 
     void stopX();
     void runApp(QString filename, bool rotate);
     void showScreen(QX::Screen scr);
 
+public slots:
+    void pauseApp();
+
 private slots:
     void okClicked();
     void tangoClicked();
     void scummvmClicked();
     void quitClicked();
-    void pauseApp();
     void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
