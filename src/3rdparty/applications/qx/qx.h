@@ -56,6 +56,7 @@ private:
     QProcess *xprocess;
     QString appName;
     bool rotate;
+    bool terminating;
 #if QT_QWS_FICGTA01
     QtopiaApplication::PowerConstraint powerConstraint;
     QtopiaServiceRequest origSrq;

@@ -17,7 +17,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    lineEdit = new QLineEdit("matchbox-session", this);
+    lineEdit = new QLineEdit("xterm", this);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lineEdit);
@@ -146,6 +146,7 @@ void QX::runApp(QString filename, bool rotate)
 {
     this->appName = filename;
     this->rotate = rotate;
+    terminating = false;
 
     showScreen(QX::ScreenStarting);
 
@@ -260,11 +261,15 @@ void QX::quitClicked()
 {
     if(process)
     {
+        // because SIGTERM does not work on stopped process and we also give
+        // program chance to terminate correctly (save data etc...)
+        resumeApp();
         process->terminate();
-        if(!process->waitForFinished(3000))
+        if(terminating && !process->waitForFinished(3000))
         {
             process->kill();
         }
+        terminating = true;
     }
     else
     {
