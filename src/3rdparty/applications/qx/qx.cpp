@@ -17,7 +17,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     bQuit = new QPushButton(this);
     connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
 
-    lineEdit = new QLineEdit("xterm", this);
+    lineEdit = new QLineEdit("terminal.sh", this);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(lineEdit);
