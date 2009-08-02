@@ -75,8 +75,6 @@ enable_qtopiamedia:contains(QTOPIAMEDIA_ENGINES,cruxus):!enable_singleexec {
     # MP3 support for cruxus
     # not in source packages
     PROJECTS*=\
-        3rdparty/libraries/libmad\
-        3rdparty/plugins/codecs/libmad \
         3rdparty/libraries/amr\
         3rdparty/plugins/codecs/libamr
 }
