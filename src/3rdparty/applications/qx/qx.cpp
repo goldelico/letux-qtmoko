@@ -302,7 +302,6 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
-    showScreen(QX::ScreenMain);
     delete(process);
     process = NULL;
     stopX();
@@ -310,5 +309,6 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 #ifdef QT_QWS_FICGTA01
     powerConstraint = QtopiaApplication::Enable;
 #endif
+    showScreen(QX::ScreenMain);
 }
 
