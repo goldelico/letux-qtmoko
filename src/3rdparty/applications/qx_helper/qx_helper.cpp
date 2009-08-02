@@ -11,26 +11,30 @@
 
 int main(int argc, char **argv)
 {
-	int  LinuxConsoleFd;
+	int fd;
+    const char termctl[] = "\033[9;15]\033[?33h\033[?25h\033[?0c";
 	
-	fprintf(stderr, "QX helper started\n");
+	//fprintf(stderr, "QX helper started\n");
 
-    if ((LinuxConsoleFd = open("/dev/tty7", O_RDWR|O_NDELAY, 0)) < 0)
+    if ((fd = open("/dev/tty7", O_RDWR|O_NDELAY, 0)) < 0)
     {
 		perror("QX helper: Cannot open /dev/tty7");
 		return 0;
     }
     
-    if (ioctl(LinuxConsoleFd, VT_ACTIVATE, 7) != 0)
+    if (ioctl(fd, VT_ACTIVATE, 7) != 0)
     {
 		fprintf(stderr, "QX helper: VT_ACTIVATE failed\n");
     }
-	fprintf(stderr, "QX helper: calling VT_WAITACTIVE for /dev/tty7\n");
-    if (ioctl(LinuxConsoleFd, VT_WAITACTIVE, 7) != 0)
+	//fprintf(stderr, "QX helper: calling VT_WAITACTIVE for /dev/tty7\n");
+    if (ioctl(fd, VT_WAITACTIVE, 7) != 0)
     {
 		fprintf(stderr, "QX helper: VT_WAITACTIVE failed\n");
     }
-    fprintf(stderr, "QX helper: VT_WAITACTIVE done\n");
-    close(LinuxConsoleFd);
-	sleep(180);
+    
+    write(fd, termctl, sizeof(termctl));
+    
+    //fprintf(stderr, "QX helper: VT_WAITACTIVE done\n");
+    close(fd);
+	sleep(180);		// wait until qtopia starts
 }

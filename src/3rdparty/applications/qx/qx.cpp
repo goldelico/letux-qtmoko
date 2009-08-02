@@ -54,6 +54,24 @@ static void gpsPower(const char *powerStr)
     f.write(powerStr);
     f.close();
 }
+
+static void switchToVt7()
+{
+    int fd;
+
+    if((fd = open("/dev/tty7", O_RDWR|O_NDELAY, 0)) < 0)
+    {
+        perror("QX: Cannot open /dev/tty7");
+        return;
+    }
+
+    if(ioctl(fd, VT_ACTIVATE, 7) != 0)
+    {
+        fprintf(stderr, "QX: VT_ACTIVATE failed\n");
+    }
+
+    close(fd);
+}
 #endif
 
 void QX::showScreen(QX::Screen scr)
@@ -140,6 +158,9 @@ void QX::stopX()
     }
     delete(xprocess);
     xprocess = NULL;
+#ifdef QT_QWS_FICGTA01
+    switchToVt7();  // switch to vt7 which has cursor disabled
+#endif
 }
 
 void QX::runApp(QString filename, bool rotate)
@@ -290,5 +311,4 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     powerConstraint = QtopiaApplication::Enable;
 #endif
 }
-
 

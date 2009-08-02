@@ -23,6 +23,10 @@
 #include <QtopiaApplication>
 #include <QDeviceButtonManager>
 #endif
+#include <unistd.h>
+#include <fcntl.h>
+#include <linux/vt.h>
+#include <sys/ioctl.h>
 #include <X11/Xlib.h>
 
 class QX : public QWidget
