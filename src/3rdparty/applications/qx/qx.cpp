@@ -228,6 +228,22 @@ void QX::runApp(QString filename, bool rotate)
 
 void QX::pauseApp()
 {
+    if(process == NULL)
+    {
+#ifdef QT_QWS_FICGTA01
+        // Fix key mapping in case that QX crashed
+        //QDeviceButtonManager::instance().factoryResetButtons();
+        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
+        if(mgr.buttons().count() > 0)
+        {
+            origSrq = mgr.buttons().at(0)->pressedAction();
+            QtopiaServiceRequest req("TaskManager", "multitask()");
+            mgr.remapPressedAction(0, req);
+        }
+#endif
+        return;
+    }
+
     appRunScr->pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
     if(xprocess)
