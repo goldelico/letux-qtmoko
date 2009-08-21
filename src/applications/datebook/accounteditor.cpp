@@ -58,7 +58,7 @@ public:
 
     AccountWidgetItem(QPimContext *context, QListWidget *parent = 0)
         : QListWidgetItem(context->icon(), context->title(), parent)
-        , mContext(context) {}
+        , mSource(), mContext(context) {}
 
     ~AccountWidgetItem() {}
 
