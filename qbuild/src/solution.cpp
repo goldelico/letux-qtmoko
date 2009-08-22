@@ -446,9 +446,10 @@ QString SolutionFile::fsPath() const
 SolutionFile SolutionFile::canonicalPath() const
 {
     SolutionFile ret = (*this);
-    QString dir = QFileInfo(m_path).canonicalPath();
+    QFileInfo file_info = QFileInfo(m_path);
+    QString dir = file_info.canonicalPath();
     if ( !dir.isEmpty() ) {
-        ret.m_path = dir+"/"+QFileInfo(m_path).fileName();
+        ret.m_path = dir+"/"+file_info.fileName();
         ret.m_request = solution()->fuzzyRealToSolution(ret.m_path).m_request;
     }
     return ret;
@@ -543,10 +544,10 @@ QString SolutionDir::mappedPath(const QString &req) const
        (req.startsWith(m_location) && req.length() > m_location.length() &&
         req.at(m_location.length()) == QChar('/'))) {
 
-        QString mappedPath = m_path + QChar('/') +
+        QString tmp_mappedPath = m_path + QChar('/') +
             (m_location.isEmpty()?req:req.mid(m_location.length()));
-        mappedPath = QDir::cleanPath(mappedPath);
-        return mappedPath;
+
+        return QDir::cleanPath(tmp_mappedPath);
     }
 
     return QString();
@@ -557,11 +558,10 @@ QString SolutionDir::mappedPath(const QString &req) const
 */
 bool SolutionDir::findFile(const QString &req, QString &rv) const
 {
-    QString mappedPath = this->mappedPath(req);
-    if (!mappedPath.isEmpty() &&
-            QFastDir::exists(mappedPath)
-            ) {
-        rv = mappedPath;
+    QString tmp_mappedPath = this->mappedPath(req);
+    if (!tmp_mappedPath.isEmpty() && QFastDir::exists(tmp_mappedPath))
+    {
+        rv = tmp_mappedPath;
         return true;
     } else {
         return false;
