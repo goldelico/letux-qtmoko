@@ -24,6 +24,7 @@
 
 #include <QPixmap>
 #include <QWidget>
+#include <QHttp>
 
 class QCheckBox;
 class QGridLayout;
@@ -47,8 +48,10 @@ protected:
 private slots:
     void newScreenshot();
     void saveScreenshot();
+    void uploadScreenshot();
     void shootScreen();
     void updateCheckBox();
+    void showUploadResult(bool err);
 
 private:
     void createOptionsGroupBox();
@@ -68,10 +71,15 @@ private:
     QCheckBox *hideThisWindowCheckBox;
     QPushButton *newScreenshotButton;
     QPushButton *saveScreenshotButton;
+    QPushButton *uploadScreenshotButton;
     QPushButton *quitScreenshotButton;
 
     QVBoxLayout *mainLayout;
     QGridLayout *optionsGroupBoxLayout;
+
+    QHttp *http;
+    QAction *uploadAction;
+
 #ifndef Q_WS_QWS
     QHBoxLayout *buttonsLayout;
 #endif    

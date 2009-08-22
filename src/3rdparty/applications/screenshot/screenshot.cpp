@@ -53,6 +53,10 @@ Screenshot::Screenshot( QWidget *parent, Qt::WFlags f)
 #ifndef Q_WS_QWS
     resize(300, 200);
 #endif
+
+    http = new QHttp();
+    connect(http,SIGNAL(done(bool)),this,SLOT(showUploadResult(bool)));
+
 QtopiaApplication::instance()->registerRunningTask("ReallyFuckingHideThisAndNotKillIt");
     
 }
@@ -131,6 +135,88 @@ void Screenshot::saveScreenshot()
             
 
 }
+
+void Screenshot::uploadScreenshot()
+{
+
+    QString host = "scap.linuxtogo.org";
+    QString path = "/tickle.php";
+
+    QString model = "GTA02";
+    QString desc = "";
+
+    QString format = "png";
+
+    int res =
+        QMessageBox::question(
+            this,
+            tr("Upload confirmation"),
+            tr("Do you want to upload this screenshot to http://%1 ?").arg(host),
+            tr("&No"), tr("&Yes"),
+            QString::null, 0, 1 );
+
+    if (!res) return;
+
+    QString bound;
+    QString data;
+    QString crlf;
+    QByteArray dataToSend;
+    bound = "-----------------------------2135846832443781641022605706";
+    crlf = 0x0d;
+    crlf += 0x0a;
+
+    data =         "--" + bound + crlf + "Content-Disposition: form-data; name=\"model\"" + crlf + crlf + model;
+    data += crlf + "--" + bound + crlf + "Content-Disposition: form-data; name=\"text\"" + crlf + crlf + desc;
+    data += crlf + "--" + bound + crlf + "Content-Disposition: form-data; name=\"key\"" + crlf + crlf + "secret";
+    data += crlf + "--" + bound + crlf + "Content-Disposition: form-data; name=\"submit\"" + crlf + crlf + "Upload";
+    data += crlf + "--" + bound + crlf + "Content-Disposition: form-data; name=\"file\"; filename=\"/tmp/screenshot.png\"";
+    data +=                       crlf + "Content-Type: image/" + format + crlf + crlf;
+    dataToSend.insert(0,data);
+
+    QByteArray ba;
+    QBuffer buffer( &ba );
+    buffer.open( QBuffer::ReadWrite );
+    originalPixmap.save( &buffer, format.toAscii() );
+    dataToSend.append(ba);
+
+    dataToSend.append(crlf + "--" + bound + "--");
+
+    //
+    QHttpRequestHeader header("POST",path);
+    header.setContentType(tr("multipart/form-data; boundary=") + bound);
+    header.addValue("Host",host);
+    header.addValue("Connection","Keep-Alive");
+
+#ifdef Q_WS_QWS
+    uploadAction->setEnabled(false);
+#else
+    uploadScreenshotButton->setEnabled(false);
+#endif
+
+    http->setHost(host,QHttp::ConnectionModeHttp);
+    http->request(header,dataToSend);
+
+}
+
+void Screenshot::showUploadResult(bool err)
+{
+    if (err)
+    {
+        QMessageBox::warning( this, "Screenshot", tr("Unable to upload screenshot") );
+    }
+    else
+    {
+        QMessageBox::information( this, "Screenshot", tr("Your screenshot is uploaded successfully") );
+    }
+
+#ifdef Q_WS_QWS
+    uploadAction->setEnabled(true);
+#else
+    uploadScreenshotButton->setEnabled(true);
+#endif
+
+}
+
 void Screenshot::updateCheckBox()
 {
     if (delaySpinBox->value() == 0)
@@ -166,6 +252,7 @@ void Screenshot::createButtonsLayout()
 
     contextMenu->addAction( tr("New"), this, SLOT( newScreenshot()));
     contextMenu->addAction( tr("Save"), this, SLOT( saveScreenshot()));
+    uploadAction = contextMenu->addAction( tr("Upload"), this, SLOT( uploadScreenshot()));
     contextMenu->addAction( tr("Quit"), this, SLOT( close()));
 #else
     newScreenshotButton = createButton(tr("New Screenshot"),
@@ -174,12 +261,16 @@ void Screenshot::createButtonsLayout()
     saveScreenshotButton = createButton(tr("Save Screenshot"),
                                         this, SLOT(saveScreenshot()));
 
+    uploadScreenshotButton = createButton(tr("Upload Screenshot"),
+                                        this, SLOT(uploadScreenshot()));
+
     quitScreenshotButton = createButton(tr("Quit"), this, SLOT(close()));
 
     buttonsLayout = new QHBoxLayout;
     buttonsLayout->addStretch();
     buttonsLayout->addWidget(newScreenshotButton);
     buttonsLayout->addWidget(saveScreenshotButton);
+    buttonsLayout->addWidget(uploadScreenshotButton);
     buttonsLayout->addWidget(quitScreenshotButton);
 #endif
                                                        
