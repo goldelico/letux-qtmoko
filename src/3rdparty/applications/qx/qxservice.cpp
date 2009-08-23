@@ -4,11 +4,10 @@
 #include <QFile>
 
 /*!
-    \service RadioService Radio
-    \brief Provides the Qtopia Radio service.
+    \service QX service
+    \brief Provides service for controlling running X applications.
 
-    The \i Radio service enables applications to control the radio
-    tuner program.
+    The \i QX service enables user to pause, resume or stop X application.
 */
 
 QxService::QxService( QObject *parent )
