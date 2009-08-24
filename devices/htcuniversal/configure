@@ -1,34 +1,54 @@
--edition phone 
 -xplatform linux-htcuniversal-g++ 
 -arch arm 
--no-qvfb
--displaysize 480x640 
+-displaysizes 480x640 
 -launch-method quicklaunch
--font dejavu_sans_condensed:10,11,13,15,16,17,18,19,28,36:50,75
--eval 'if ( &$helix_visref() ) { opt("qtopiamedia") = 1; opt("mediaengines") = "helix"; }'
--helix-system-id linux-2.2-libc6-xscale-cross-gcc32
--prefix /opt/Qtopia
--voip
--no-drm
+-add-font dejavu_sans_condensed:10,11,13,15,16,17,18,19,28,36:50,75
+-prefix /opt/qtmoko
+-add-module ipcomms
+-remove-module drm
+-remove-module qtuitest
+-add-module infrared
+-add-module bluetooth
+
 -no-sxe
--no-test
--infrared
--dbus
--dbuspath "/opt/toolchains/arm920t-eabi/arm-angstrom-linux-gnueabi" 
--bluetooth
--extra-qtopiacore-config "-qt-libjpeg"
--extra-qtopiacore-config "-qt-libmng"
--extra-qtopiacore-config "-qt-libpng"
--extra-qtopiacore-config "-qt-zlib"
--extra-qtopiacore-config "-qt-mouse-tslib" 
--extra-qtopiacore-config "-D QT_QWS_SCREEN_COORDINATES" 
--extra-qtopiacore-config "-depths 16,32"
--extra-qtopiacore-config "-D QT_QWS_DISABLE_FLUSHCLIPPING" 
--extra-qtopiacore-config "-plugin-gfx-transformed"
--extra-qtopiacore-config "-plugin-gfx-vnc"
--extra-qtopiacore-config "-qt-mouse-linuxtp"
+-extra-qt-embedded-config "-continue"
+-extra-qt-embedded-config "-qt-libjpeg"
+-extra-qt-embedded-config "-qt-libmng"
+-extra-qt-embedded-config "-qt-libpng"
+-extra-qt-embedded-config "-qt-zlib"
+-extra-qt-embedded-config "-qt-mouse-tslib" 
+-extra-qt-embedded-config "-D QT_QWS_SCREEN_COORDINATES" 
+-extra-qt-embedded-config "-depths 16,32"
+-extra-qt-embedded-config "-D QT_QWS_DISABLE_FLUSHCLIPPING" 
+-extra-qt-embedded-config "-plugin-gfx-transformed"
+-extra-qt-embedded-config "-plugin-gfx-vnc"
+-extra-qt-embedded-config "-qt-mouse-linuxtp"
 -extra-qt-config -no-glib 
--D SYSINFO_GEEK_MODE
 -release
--no-samples
+
+-sound-system alsa
+-languages en_US
+
+
+-ui-type mobile
+-dynamic-rotation
+-ssl
+-dbus
+-libamr
+-pictureflow
+
+-add-mediaengine cruxus
+-add-module bluetooth
+-add-module cell
+-add-module connectivity
+-add-module devtools
+-add-module essentials
+-add-module games
+-add-module inputmethods
+-add-module media
+-add-module messaging
+-add-module pim
+-add-module pkgmanagement
+-add-module telephony
+-add-module ui
 
