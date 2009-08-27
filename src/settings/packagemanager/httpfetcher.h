@@ -40,6 +40,7 @@ public:
 private slots:
     virtual void httpRequestFinished(int, bool);
     virtual void readResponseHeader(const QHttpResponseHeader &);
+    virtual void packageDataWritten( qint64 ); //
 protected slots:
     virtual void updateDataReadProgress(int, int);
 protected:
@@ -59,7 +60,7 @@ public:
 protected slots:
     virtual void updateDataReadProgress(int, int);
 private slots:
-    void packageDataWritten( qint64 );
+    virtual void packageDataWritten( qint64 ); //
     void packageComplete();
 private:
     PackageInformationReader *reader;
