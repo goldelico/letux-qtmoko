@@ -290,24 +290,15 @@ EndSection
 Step 7.6
 ========
 
-* Remove extra locales - not using it now
-
-chroot /media/card
-apt-get install localepurge
-localepurge
-apt-get remove localepurge locales ucf
-exit
-
 * Remove all doc - we dont have space for it
 
+rm -rf /media/card/usr/share/locale/*
 rm -rf /media/card/usr/share/doc/*
 rm -rf /media/card/usr/share/doc-base/*
 rm -rf /media/card/usr/share/info/*
 rm -rf /media/card/usr/share/man/*
 rm -rf /media/card/usr/share/sounds/alsa/*
 rm -rf /media/card/usr/share/ssh/blacklist*
-
-* Check locales in /media/card/usr/share/locale - they should be empty
 
 Step 8 - compile Qtopia
 =======================
@@ -333,6 +324,11 @@ Step 9
 * Compile kernel. I am now using andy-tracking and moredrivers config. The
   bluetooth stuff must be compiled as modules otherwise bt does not work for
   me.
+
+* After compiling, upload kernel with modules to neo, and add somewhere in
+  init scripts depmod command. It will update /lib/modules/xxx/modules.dep
+  otherwise modules wont load and neo will not work (no usb networking,
+  no alsa, etc...)
 
 * For recent openwrt kernels (not using now)
 
