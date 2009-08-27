@@ -58,6 +58,11 @@ private slots:
     void timerAction();
     void acc_timerAction();
     bool eventFilter(QObject *target, QEvent *event);
+    void ScreenTouchedPause();
+    void ScreenTouchedContinue();
+
+protected:
+    bool event(QEvent *);
 
 };
 

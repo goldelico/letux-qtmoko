@@ -503,11 +503,26 @@ void Form::timerAction()
     }
 }
 
+void Form::ScreenTouchedPause()
+{
+    SetMenuVis(true);
+    if (qt_game_config.fullscreen == FULLSCREEN_TOGGLE) setWindowState( windowState() & ~Qt::WindowFullScreen );
+    fullscreen = false;
+}
+
+void Form::ScreenTouchedContinue()
+{
+    SetMenuVis(false);
+    if (qt_game_config.fullscreen == FULLSCREEN_TOGGLE) setWindowState( windowState() | Qt::WindowFullScreen );
+    fullscreen = true;
+}
+
 bool Form::eventFilter(QObject *target, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease)
     {
         if (timer->isActive()) timer->stop();
+        return true;
     }
     else if (event->type() == QEvent::MouseButtonPress)
     {
@@ -520,13 +535,16 @@ bool Form::eventFilter(QObject *target, QEvent *event)
 
         if (fullscreen)
         {
-            SetMenuVis(true);
-            if (qt_game_config.fullscreen == FULLSCREEN_TOGGLE) setWindowState( windowState() & ~Qt::WindowFullScreen );
-            fullscreen = false;
+            ScreenTouchedPause();
         }
         else
         {
-            if (InRect(mx, my,
+            if ( (target == this->levelno_lbl) ||
+                 (target == this->info1_lbl) )
+            {
+                ScreenTouchedContinue();
+            }
+            else if (InRect(mx, my,
                        prev_lbl->pos().x(), prev_lbl->pos().y(),
                        prev_lbl->size().width(), prev_lbl->size().height() ))
             {
@@ -575,9 +593,7 @@ bool Form::eventFilter(QObject *target, QEvent *event)
             }
             else //no buttons pressed
             {
-                SetMenuVis(false);
-                if (qt_game_config.fullscreen == FULLSCREEN_TOGGLE) setWindowState( windowState() | Qt::WindowFullScreen );
-                fullscreen = true;
+                ScreenTouchedContinue();
             }
         }
 
@@ -589,30 +605,50 @@ bool Form::eventFilter(QObject *target, QEvent *event)
         accelerometer_stop();
         close_vibro();
         EnableScreenSaver();
+        return true;
     }
 
     return false;    //event must be processed by parent widget
 }
 
-//---------------------------------------------------------------------------------
-//---------------------------------------------------------------------------------
+bool Form::event(QEvent *event)
+{
+    if(event->type() == QEvent::WindowDeactivate)
+    {
+        lower();
+    }
+    else if(event->type() == QEvent::WindowActivate)
+    {
+        QString title = windowTitle();
+        setWindowTitle(QLatin1String("_allow_on_top_"));
+        raise();
+        setWindowTitle(title);
 
+        this->update();
+    }
+    return QWidget::event(event);
+}
+
+//---------------------------------------------------------------------------------
+//---------------------------------------------------------------------------------
 
 void Form::CheckLoadedPictures()
 {
-    if (prev_lbl->pixmap()->isNull()) prev_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/prev.png"));
-    if (next_lbl->pixmap()->isNull()) next_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/next.png"));
-    if (reset_lbl->pixmap()->isNull()) reset_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/reset.png"));
-    if (exit_lbl->pixmap()->isNull()) exit_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/close.png"));
+    QString picdir_installed = QCoreApplication::applicationDirPath() + "/../pics/qtmaze/";
 
-    if (ball_lbl->pixmap()->isNull()) ball_lbl->setPixmap(QPixmap("/opt/qtmoko/pics/qtmaze/ball.png"));
+    if (prev_lbl->pixmap()->isNull())   prev_lbl->setPixmap(QPixmap(picdir_installed + "prev.png"));
+    if (next_lbl->pixmap()->isNull())   next_lbl->setPixmap(QPixmap(picdir_installed + "next.png"));
+    if (reset_lbl->pixmap()->isNull()) reset_lbl->setPixmap(QPixmap(picdir_installed + "reset.png"));
+    if (exit_lbl->pixmap()->isNull())   exit_lbl->setPixmap(QPixmap(picdir_installed + "close.png"));
 
-    if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load("/opt/qtmoko/pics/qtmaze/hole.png");
-    if (renderArea->fin_pixmap.isNull()) renderArea->fin_pixmap.load("/opt/qtmoko/pics/qtmaze/fin.png");
+    if (ball_lbl->pixmap()->isNull())   ball_lbl->setPixmap(QPixmap(picdir_installed + "ball.png"));
+
+    if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load(picdir_installed + "hole.png");
+    if (renderArea->fin_pixmap.isNull())   renderArea->fin_pixmap.load(picdir_installed + "fin.png");
 }
 
 /*
- *  Constructs a Example which is a child of 'parent', with the
+ *  Constructs a Form which is a child of 'parent', with the
  *  name 'name' and widget flags set to 'f'
  */
 Form::Form(QWidget *parent, Qt::WFlags f)
@@ -660,6 +696,8 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     acc_timer->start(PROC_ACC_DATA_INTERVAL);
 
     installEventFilter(this);
+    this->levelno_lbl->installEventFilter(this);
+    this->info1_lbl->installEventFilter(this);
 
     if (qt_game_config.fullscreen != FULLSCREEN_NONE)
     {
