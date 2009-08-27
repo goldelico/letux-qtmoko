@@ -77,8 +77,8 @@ void HttpFetcher::run()
     {
         if ( packageData == 0 ) packageData = new QBuffer();
         hr = new HttpInfoReceiver;
-        connect( packageData, SIGNAL(bytesWritten(qint64)),
-                hr, SLOT(packageDataWritten(qint64)));
+        //connect( packageData, SIGNAL(bytesWritten(qint64)),
+        //        hr, SLOT(packageDataWritten(qint64)));
     }
     else                  // getting a file
     {
@@ -108,6 +108,9 @@ void HttpFetcher::run()
 
     // run threads event loop
     exec();
+
+    if ( file.isEmpty() )
+        hr->packageDataWritten(packageData->size()); //
 
     packageData->close();
 
@@ -200,6 +203,10 @@ void HttpFileReceiver::updateDataReadProgress(int bytesRead, int totalBytes)
     }
 
     emit fetcher->progressValue( fetcher->curProgValue );
+}
+
+void HttpFileReceiver::packageDataWritten( qint64 bytes )
+{
 }
 
 ////////////////////////////////////////////////////////////////////////
