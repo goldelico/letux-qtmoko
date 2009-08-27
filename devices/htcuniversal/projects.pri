@@ -1,18 +1,29 @@
+THEMES=finxi
+PROJECTS-=\
+	games/qasteroids \
+	games/parashoot \
+	applications/camera \
+	settings/serverwidgets
+
+
+SERVER_PROJECTS-=\
+	server/media/genericvolumeservice \
+	server/phone/samples/e1 \
+	server/phone/samples/e2 \
+	server/phone/samples/e3 \
+	server/phone/browserscreen\wheelbrowser
+
+
 PROJECTS*=\
-#	applications/screenshot\
-	libraries/qtopiamedia\
-	3rdparty/tools/atd\
-    	3rdparty/applications/target_sqlite\
-    	tools/startupflags\
-   	tools/phonebounce\
-    	../examples/scribble\
-        plugins/inputmethods/predictivekeyboard \
-        ../devices/htcuniversal/src/devtools
-
-conf.files=$$PWD/etc/default/Trolltech/PredictiveKeyboard.conf
-conf.files=$$PWD/etc/default/Trolltech/PredictiveKeyboard.conf.qvga
-conf.path=/etc/default/Trolltech
-INSTALLS+=conf
-
-
+	settings/startupflags \
+	tools/phonebounce \
+	../examples/scribble \
+	../examples/webviewer \
+	../examples/whereabouts/mappingdemo \
+	3rdparty/applications/qterminal \
+	3rdparty/applications/screenshot \
+	3rdparty/applications/qmplayer \
+	3rdparty/applications/qx \
+	3rdparty/applications/gqsync \
+	3rdparty/applications/simplefm
 

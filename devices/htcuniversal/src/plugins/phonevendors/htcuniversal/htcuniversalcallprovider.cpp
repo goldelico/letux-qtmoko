@@ -42,7 +42,10 @@ void HtcuniversalCallProvider::htcdisSlot(const QString &str)
 {
   QModemCall *call;
   if ((call = incomingCall()) != 0)
-    missedTimeout(call);
+  {
+    // TODO: Needs to be replaced
+    //missedTimeout(call);
+  }
   else
     hangupRemote(0);
 }

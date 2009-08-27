@@ -37,6 +37,9 @@
 #include "accelerometers.h"
 #include "types.h"
 
+#include <sys/utsname.h>
+#include <string.h>
+
 pthread_t thread;
 int finished=0;
 double acx=0,acy=0,acz=0;
@@ -206,49 +209,62 @@ static void accelerometer_freerunner_try_restore_threshold(AccelHandle *accel)
 
 AccelHandle *accelerometer_open()
 {
-	AccelHandle *accel;
+        AccelHandle *accel;
 
-	/* Initialise accelerometer data structure */
+        /* Initialise accelerometer data structure */
         accel = (AccelHandle*)malloc(sizeof(AccelHandle));
-	if ( accel == NULL ) return NULL;
-	accel->x = 0;
-	accel->y = 0;
-	accel->z = 0;
-	accel->lx = 0;
-	accel->ly = 0;
-	accel->lz = 0;
-	accel->state = 0;
-	accel->type = ACCEL_UNKNOWN;
+        if ( accel == NULL ) return NULL;
+        accel->x = 0;
+        accel->y = 0;
+        accel->z = 0;
+        accel->lx = 0;
+        accel->ly = 0;
+        accel->lz = 0;
+        accel->state = 0;
+        accel->type = ACCEL_UNKNOWN;
 
         int cant_open = 0;
         struct stat st;
 
-	#define FREERUNNER_FILE "/dev/input/event3"
-	if (stat(FREERUNNER_FILE, &st) == 0)
-	{
-		accel->fd = open(FREERUNNER_FILE, O_RDONLY, O_NONBLOCK); //, O_RDONLY, 0);
-		if ( accel->fd != -1 )
-		{
-			accel->type = ACCEL_FREERUNNER;
-			printf("Accelerometer: Neo Freerunner detected\n");
-			accelerometer_freerunner_try_threshold(accel);
-			return accel;
-		}
-		else
-		{
-			fprintf(stderr, "Accelerometer: Neo Freerunner accelerometer file detected, but can't be opened. " \
-				        "Check access permissions\n");
-			cant_open = 1;
-		}
-	}
-	else
-	{
-	    fprintf(stderr, "Accelerometer: Neo Freerunner accelerometer file not found\n");
-	    cant_open = 1;
-	}
+        char freerunner_file_default[] = "/dev/input/event3";
+        char freerunner_file_2630[]    = "/dev/input/event4";
+        char *freerunner_file = freerunner_file_default;
 
-	fprintf(stderr, "Accelerometer: no input device available\n");
-	return accel;
+        struct utsname uts;
+        if ( uname(&uts) < 0 )
+            printf("Accelerometer: unable to get host information\n");
+        else
+            if ( strstr(uts.release, "2.6.30") )
+            {
+                printf("Accelerometer: Linux kernel 2.6.30 detected\n");
+                freerunner_file = freerunner_file_2630;
+            }
+
+        if (stat(freerunner_file, &st) == 0)
+        {
+                accel->fd = open(freerunner_file, O_RDONLY, O_NONBLOCK); //, O_RDONLY, 0);
+                if ( accel->fd != -1 )
+                {
+                        accel->type = ACCEL_FREERUNNER;
+                        printf("Accelerometer: Neo Freerunner detected\n");
+                        accelerometer_freerunner_try_threshold(accel);
+                        return accel;
+                }
+                else
+                {
+                        fprintf(stderr, "Accelerometer: Neo Freerunner accelerometer file detected, but can't be opened. " \
+                                        "Check access permissions\n");
+                        cant_open = 1;
+                }
+        }
+        else
+        {
+            fprintf(stderr, "Accelerometer: Neo Freerunner accelerometer file not found\n");
+            cant_open = 1;
+        }
+
+        fprintf(stderr, "Accelerometer: no input device available\n");
+        return accel;
 }
 
 static void accelerometer_shutdown(AccelHandle *accel)
