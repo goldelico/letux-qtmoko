@@ -1,0 +1,392 @@
+Debian rootfs
+=============
+
+Use instructions from http://wiki.openmoko.org/wiki/Manual_Debian
+
+I am installing to NFS dir, so that i can make tarbal on my PC. Mount your NFS
+dir to /media/card for simplicity. To mount NFS you need this line in /etc/fstab:
+
+192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
+
+and you need
+
+apt-get install nfs-common
+modprobe nfs
+
+Always use ext3 on SD cards - ext2 often gets corrupted during reboots.
+
+If you install from debian you need cdebootstrap:
+
+apt-get install cdebootstrap
+
+
+Step 1
+======
+
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+
+Step 2
+======
+
+* Complete installation. Copy paste below in shell:
+
+mkdir /media/card/mnt/nfs
+mkdir /media/card/mnt/p1
+mkdir /media/card/mnt/p2
+mkdir /media/card/mnt/p3
+mkdir /media/card/media/card
+echo "neo" > /media/card/etc/hostname
+echo "127.0.0.1 neo" >> /media/card/etc/hosts
+cat > /media/card/etc/network/interfaces <<__END__
+auto lo
+iface lo inet loopback
+auto usb0
+iface usb0 inet static
+    address 192.168.0.202
+    netmask 255.255.255.0
+    network 192.168.0.0
+    gateway 192.168.0.200
+    up rm /etc/resolv.conf
+    up echo nameserver 208.67.222.222 >/etc/resolv.conf
+__END__
+cat > /media/card/etc/fstab << __END__
+rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
+/dev/mmcblk0p1 /media/card auto  defaults                           0 0
+/dev/mmcblk0p4 swap      swap    defaults                           0 0
+proc    /proc            proc    defaults                           0 0
+tmpfs   /etc/network/run tmpfs   defaults,noatime                   0 0
+tmpfs   /tmp             tmpfs   defaults,noatime                   0 0
+tmpfs   /var/lock        tmpfs   defaults,noatime                   0 0
+tmpfs   /var/run         tmpfs   defaults,noatime                   0 0
+tmpfs   /var/tmp         tmpfs   defaults,noatime                   0 0
+tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
+192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
+__END__
+cat > /media/card/etc/apt/apt.conf.d/99no-install-recommends << __END__
+APT::Install-Recommends "0";
+__END__
+sed -i 's/\(PermitEmptyPasswords\) no/\1 yes/' /media/card/etc/ssh/sshd_config
+chroot /media/card /bin/sh -e <<__END_CHROOT__
+echo root: | chpasswd
+apt-get --yes --purge remove cdebootstrap-helper-rc.d
+__END_CHROOT__
+
+Step 3 - add more package repositories
+========================================
+
+echo "deb http://ftp.de.debian.org/debian lenny contrib" >> /media/card/etc/apt/sources.list
+echo "deb http://ftp.de.debian.org/debian lenny non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://pkg-fso.alioth.debian.org/debian unstable main" >> /media/card/etc/apt/sources.list
+
+Step 4
+======
+
+* Device drivers modules
+
+echo g_ether > /media/card/etc/modules
+echo hidp >> /media/card/etc/modules
+echo ipv6 >> /media/card/etc/modules
+echo ohci-hcd >> /media/card/etc/modules
+echo ppp_generic >> /media/card/etc/modules
+echo rfcomm >> /media/card/etc/modules
+echo s3cmci >> /media/card/etc/modules
+echo snd-soc-neo1973-gta02-wm8753 >> /media/card/etc/modules
+echo snd_pcm_oss >> /media/card/etc/modules
+
+* Modem device nodes
+
+echo "# Samsung UARTS" > /media/card/etc/udev/rules.d/50-qtmoko.rules
+echo "KERNEL==\"s3c2410_serial[0-9]\",   NAME=\"ttySAC%n\"" >> /media/card/etc/udev/rules.d/50-qtmoko.rules
+
+* Unpack alsa scenarios to /usr/share/openmoko - you can find these files
+  in any openmoko distro.
+
+* Edit /media/card/etc/ppp/options and replace "auth" with "noauth"
+
+* Create /media/card/etc/fb.modes
+
+mode "vga"
+    geometry 480 640 480 640 16
+    timings 100000 8 104 2 16 8 2
+    accel false
+endmode
+
+  Calling "fbset vga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
+  is needed for mplayer in 320x240 with correct colors.
+
+Step 4.5 - not using this now
+=============================
+
+* Install alsa-utils from testing because it does not have python dependency. I
+  dont know how to tell apt to install one package from testing so we for a
+  moment put only testing repo in sources.list and then restore it back.
+
+chroot /media/card
+mv /etc/apt/sources.list /etc/apt/sources.list.orig
+echo "deb http://ftp.de.debian.org/debian squeeze main" > /etc/apt/sources.list
+apt-get update
+apt-get install alsa-utils
+rm /etc/apt/sources.list
+mv /etc/apt/sources.list.orig /etc/apt/sources.list
+apt-get update
+apt-get install pkg-fso-keyring
+exit
+
+Step 5
+======
+
+* Set locale to get rid of apt-get warnings
+
+echo "LANG=C" > /media/card/etc/default/locale
+echo "LC_ALL=C" >> /media/card/etc/default/locale
+
+* Fix incompatible libts version
+
+cd /media/card/usr/lib
+ln -s libts-0.0.so.0 libts-1.0.so.0
+
+* Remove .udev dir, that confuses udev. This dir is here after instalation and
+  causes some error/warnings during init. Not sure what's the exact problem.
+
+cd /media/card/dev
+rm -rf .udev
+
+* Remove /etc/network/run and do make dir /etc/network/run
+  Otherwise fstab mounting will fail for this directory
+
+rm /media/card/etc/network/run
+mkdir /media/card/etc/network/run
+
+* Create dir for atd jobs:
+
+mkdir /media/card/var/spool/at
+
+Step 5.5
+========
+
+* Compile qx_helper program and copy it to /media/card/bin The program is in
+  qtmoko git in qtmoko/src/3rdparty/applications/qx_helper and can be compiled
+  with simple "make" command.
+
+Step 6 - qpe bootscript
+=======================
+
+* Create qpe init script and link in runlevel 2
+
+cat > /media/card/etc/init.d/qpe <<__END__
+#!/bin/sh
+echo '1' > /proc/sys/kernel/printk
+rm -rf /var/run/ppp
+mkdir /var/run/ppp
+mkdir -p /var/cache/apt/archives/partial
+echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
+. /opt/qtmoko/qpe.env
+atd /var/spool/at
+qx_helper &
+qpe 2>&1 | logger -t 'Qtopia' &
+__END__
+
+chmod +x /media/card/etc/init.d/qpe
+cd /media/card/etc/rc2.d/
+ln -s ../init.d/qpe S09qpe
+
+Step 7 - logread utility
+========================
+
+* Used for displaying log in settings. It's not presented in debian. Instead we
+  provide simple bash script:
+
+nano /media/card/sbin/logread
+
+#!/bin/sh
+tail -n 100 /var/log/messages
+
+chmod +x /media/card/sbin/logread
+
+Step 7.3 - terminal.sh
+======================
+
+* This is shell script that starts xterm with matchbox keyboard
+
+nano /media/card/bin/terminal.sh
+
+#!/bin/sh
+matchbox-window-manager &
+sleep 5
+matchbox-keyboard &
+xterm
+
+
+chmod +x /media/card/bin/terminal.sh
+
+Step 7.4 - wpa_supplicant
+=========================
+
+* Qtopia by default expects wpa_supplicant in /usr/sbin while debian installs
+  it to /sbin. We fix this with symlink
+  
+cd /media/card/usr/sbin
+ln -s ../../sbin/wpa_supplicant wpa_supplicant
+
+Step 7.5
+========
+
+* Install xserver-xglamo - download it from alioth repo and install it manually
+
+cd /media/card
+wget http://pkg-fso.alioth.debian.org/debian/pool/main/x/xglamo/xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
+dpkg -i xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
+rm xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
+
+* Create xorg.conf and configure it for Xglamo
+
+nano /media/card/etc/X11/xorg.conf
+
+# xorg.conf (X.Org X Window System server configuration file)
+#
+# This file was generated by dexconf, the Debian X Configuration tool, using
+# values from the debconf database.
+#
+# Edit this file with caution, and see the xorg.conf manual page.
+# (Type "man xorg.conf" at the shell prompt.)
+#
+# This file is automatically updated on xserver-xorg package upgrades *only*
+# if it has not been modified since the last upgrade of the xserver-xorg
+# package.
+#
+# If you have edited this file but would like it to be automatically updated
+# again, run the following command:
+#   sudo dpkg-reconfigure -phigh xserver-xorg
+
+Section "InputDevice"
+        Identifier      "Generic Keyboard"
+        Driver          "kbd"
+        Option          "XkbRules"      "xorg"
+        Option          "XkbModel"      "pc104"
+        Option          "XkbLayout"     "us"
+EndSection
+
+Section "InputDevice"
+        Identifier      "Configured Mouse"
+        Driver          "mouse"
+EndSection
+
+Section "Device"
+        Identifier      "Configured Video Device"
+        Driver          "Xglamo"
+#       Driver          "fbdev"
+EndSection
+
+Section "Monitor"
+        Identifier      "Configured Monitor"
+EndSection
+
+Section "Screen"
+        Identifier      "Default Screen"
+        Monitor         "Configured Monitor"
+EndSection
+
+
+Step 7.6
+========
+
+* Remove all doc - we dont have space for it
+
+rm -rf /media/card/usr/share/locale/*
+rm -rf /media/card/usr/share/doc/*
+rm -rf /media/card/usr/share/doc-base/*
+rm -rf /media/card/usr/share/info/*
+rm -rf /media/card/usr/share/man/*
+rm -rf /media/card/usr/share/sounds/alsa/*
+rm -rf /media/card/usr/share/ssh/blacklist*
+
+Step 8 - compile Qtopia
+=======================
+
+* Build QtMoko
+
+mkdir build
+cd build
+../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0
+make
+make install
+
+* Tar build
+
+* Unpack QtMoko to target image
+
+cd /media/card
+tar xzvpf qtopia-update.tar.gz
+
+Step 9
+======
+
+* Compile kernel. I am now using andy-tracking and moredrivers config. The
+  bluetooth stuff must be compiled as modules otherwise bt does not work for
+  me.
+
+* After compiling, upload kernel with modules to neo, and add somewhere in
+  init scripts depmod command. It will update /lib/modules/xxx/modules.dep
+  otherwise modules wont load and neo will not work (no usb networking,
+  no alsa, etc...)
+
+* For recent openwrt kernels (not using now)
+
+1/ download and unpack linux-2.6.30.4.tar.bz from kernel.org
+2/ svn co svn://svn.openwrt.org/openwrt/trunk/target/linux/s3c24xx
+3/ copy files-2.6.30 on top of unpacked linux-2.6.30
+4/ apply all patches in patches-2.6.30
+5/ copy config-2.6.30 to .config
+5/ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi- ARCH=arm
+
+/opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
+mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "QtMoko" -d linux.bin uImage-GTA02.bin
+
+* Copy kernel to /media/card/boot
+
+cd /media/card/boot
+echo "console=tty0 loglevel=3 rootdelay=1" > append-GTA02
+scp /home/radek/linux-2.6/GTA02/uImage-GTA02.bin root@192.168.0.202:/media/card/boot/uImage-GTA02.bin
+
+Step 10
+=======
+
+* Unmount nfs on Neo
+
+sync
+umount /media/card
+
+* Pack it all on your desktop
+
+cd /media/card
+tar -czvf ../qtmoko-debian.tar.gz .
+
+Step 11
+=======
+
+* Make jffs image
+
+* Copy your rootfs dir to /tmp/qtmoko-debian
+
+* Delete contents of boot, because for NAND it's not needed:
+
+rm -rf /tmp/qtmoko-debian/boot/*
+
+* Make jffs2 image:
+
+mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/tmp/qtmoko-debian
+
+
+Boot speedup
+============
+
+- replacing /bin/sh with dash, speedup 15s
+
+Ideas & TODO
+============
+
+- support for dumb batteries as described in mail
+  "Document with answers to most popular battery-related questions is ready"
+  http://wiki.openmoko.org/wiki/Battery_Questions_and_Answers#So.2C_how_do_i_use_.22dumb.22_batteries_with_my_freerunner.3F
+  from Paul Ferster
+

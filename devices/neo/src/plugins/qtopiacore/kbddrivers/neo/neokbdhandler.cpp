@@ -100,8 +100,10 @@ bool FicLinuxInputEventHandler::internalOpen(unsigned request, int length, const
                     ioctl(m_fd, request, &deviceId) :
                     ioctl(m_fd, request, deviceData.data());
 
-        if (ret < 0)
+        if (ret < 0) {
+            close(m_fd);
             continue;
+        }
 
         // match the string we got with what we wanted
         if (cgidRequest && *matchId == deviceId) {
