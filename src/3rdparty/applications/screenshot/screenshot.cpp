@@ -147,15 +147,13 @@ void Screenshot::uploadScreenshot()
 
     QString format = "png";
 
-    int res =
-        QMessageBox::question(
+    if (QMessageBox::question(
             this,
             tr("Upload confirmation"),
             tr("Do you want to upload this screenshot to http://%1 ?").arg(host),
             tr("&No"), tr("&Yes"),
-            QString::null, 0, 1 );
-
-    if (!res) return;
+            QString::null, 1, 0 ) == 0)
+        return;
 
     QString bound;
     QString data;
@@ -183,7 +181,7 @@ void Screenshot::uploadScreenshot()
 
     //
     QHttpRequestHeader header("POST",path);
-    header.setContentType(tr("multipart/form-data; boundary=") + bound);
+    header.setContentType("multipart/form-data; boundary=" + bound);
     header.addValue("Host",host);
     header.addValue("Connection","Keep-Alive");
 
