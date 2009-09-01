@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,dhcp3-server,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
 
 Step 2
 ======
@@ -113,6 +113,26 @@ endmode
 
   Calling "fbset vga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
   is needed for mplayer in 320x240 with correct colors.
+
+Step 4.1 - DHCP server
+======================
+
+* DHCP server will arrange USB networking with PC out-of-the-box for
+  distributions using NetworkManager.
+
+cat > /media/card/etc/dhcp3/dhcpd.conf <<__END__
+subnet 192.168.0.0 netmask 255.255.255.0 {
+    option routers 192.168.0.202;
+    option domain-name-servers 208.67.222.222, 208.67.220.220;
+
+    pool {
+        max-lease-time 7200;
+        range 192.168.0.200 192.168.0.201;
+        allow unknown clients;
+    }
+}
+__END__
+
 
 Step 4.5 - not using this now
 =============================
