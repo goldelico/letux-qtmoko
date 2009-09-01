@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,dhcp3-server,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dhcp3-server,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
 
 Step 2
 ======
