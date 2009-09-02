@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dhcp3-server,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
 
 Step 2
 ======
@@ -114,11 +114,16 @@ endmode
   Calling "fbset vga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
   is needed for mplayer in 320x240 with correct colors.
 
-Step 4.1 - DHCP server
-======================
+Step 4.1 - DHCP server - not using now
+======================================
 
 * DHCP server will arrange USB networking with PC out-of-the-box for
   distributions using NetworkManager.
+
+* Not using now - the problem is that e.g. my notebook prefers usb0 over wifi
+  and internet does not work then.
+  
+* You need install package dhcp3-server in step1.
 
 cat > /media/card/etc/dhcp3/dhcpd.conf <<__END__
 subnet 192.168.0.0 netmask 255.255.255.0 {
