@@ -87,7 +87,7 @@ void KRFBLogin::gotServerVersion()
   con->read( serverVersion, ServerVersionLength );
   serverVersion[ ServerVersionLength ] = '\0';
 
-  QString rfbString( (int)serverVersion, ServerVersionLength + 1 );
+  QString rfbString(QByteArray(serverVersion, ServerVersionLength + 1));
   versionString = rfbString;
 
   QRegExp regexp( "RFB [0-9][0-9][0-9]\\.[0-9][0-9][0-9]\n" );
