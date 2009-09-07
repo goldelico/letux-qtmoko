@@ -76,11 +76,18 @@ static const char* mode_to_string[] = {
 
 static bool setAudioScenario(NeoAudioScenario audioScenario)
 {
-    QString confDir = "/usr/share/openmoko/scenarios/";
+    QString mode(mode_to_string[static_cast<int>(audioScenario)]);
 
-    const char* mode = mode_to_string[static_cast<int>(audioScenario)];
-    QString cmd = "/usr/sbin/alsactl -f " + confDir + mode + ".state restore";
-    int result = system(cmd.toLocal8Bit());
+    QStringList args;
+    args.append("-f");
+    args.append("/usr/share/openmoko/scenarios/" + mode + ".state");
+    args.append("restore");
+
+    QProcess p;
+    p.start("/usr/sbin/alsactl", args);
+    p.waitForFinished();
+
+    int result = p.exitCode();
 
     if (result == 0)
         qLog(AudioState) << "setAudioScenario(); using"<< QString( "/usr/share/openmoko/scenarios/%1.state").arg(mode);
@@ -88,7 +95,6 @@ static bool setAudioScenario(NeoAudioScenario audioScenario)
         qLog(AudioState)<< QString("Setting audio mode to: %1 failed").arg(mode);
 
     return result == 0;
-
 }
 
 #ifdef QTOPIA_BLUETOOTH
