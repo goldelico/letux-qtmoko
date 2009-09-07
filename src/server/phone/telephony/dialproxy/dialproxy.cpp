@@ -587,8 +587,13 @@ void DialProxy::acceptIncoming()
         } else {
             // Direct the incoming call audio to the speaker
             // if on-screen button is pressed
-            if (m_callAudio && m_callAudio->audioProfile().isEmpty())
-                m_callAudio->setAudioProfile( AbstractAudioHandler::profileForKey(Qtopia::Key_Speaker) );
+            // if (m_callAudio && m_callAudio->audioProfile().isEmpty())
+            //    m_callAudio->setAudioProfile( AbstractAudioHandler::profileForKey(Qtopia::Key_Speaker) );
+            //
+            // Dont set profile. Correct profile should be picked up by
+            // calling setDomain("Phone") in CallAudioHandler::activateAudio().
+            // So setting profile to Speaker both unnecessary and not working
+            // on Neo Freerunner causing no sound in incoming call.
 
             DialerControl::instance()->accept();
         }
