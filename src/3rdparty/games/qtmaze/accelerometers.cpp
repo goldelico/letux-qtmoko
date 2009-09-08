@@ -271,6 +271,7 @@ static void accelerometer_shutdown(AccelHandle *accel)
 {
 	if ( accel->type == ACCEL_FREERUNNER ) {
 		accelerometer_freerunner_try_restore_threshold(accel);
+		close(accel->fd);
 	}
 }
 
