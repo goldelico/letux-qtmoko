@@ -307,7 +307,18 @@ Section "Screen"
 EndSection
 
 
-Step 7.6
+Step 7.6 - Fonts
+================
+
+* We will use truetype fonts installed with X. They have several benefits:
+  bigger size, international characters, fixed size font (good for terminal).
+  
+  
+cd /media/card/opt/qtmoko/lib
+rm -rf fonts
+ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
+
+Step 7.7
 ========
 
 * Remove all doc - we dont have space for it
