@@ -387,7 +387,7 @@ static const uchar * const keyboard_standard_6[KEYBOARD_ROWS] = {
 
     (const uchar *const)"\002z\002x\002c\002v\002b\002n",
     
-    (const uchar *const)"\002i\002o\002p\002k\002l\002u",
+    (const uchar *const)"\002i\002o\002p\002k\002l\002\x83",
     
     (const uchar *const)"\002u\002j\002m\002,\002.\002'",
 
