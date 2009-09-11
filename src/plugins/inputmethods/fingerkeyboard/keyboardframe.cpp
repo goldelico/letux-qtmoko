@@ -202,8 +202,11 @@ KeyboardFrame::~KeyboardFrame()
 //	svreq.send();
 
     //free memory allocated for additional layout
-    for (int i=0; i<KEYBOARD_ROWS; i++)
-        free(keyboard_national_6[i]);
+    if (nationalLoaded)
+    {
+        for (int i=0; i<KEYBOARD_ROWS; i++)
+            free(keyboard_national_6[i]);
+    }
 }
 
 void KeyboardFrame::showEvent(QShowEvent *e)
