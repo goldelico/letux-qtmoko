@@ -204,11 +204,15 @@ echo '1' > /proc/sys/kernel/printk
 rm -rf /var/run/ppp
 mkdir /var/run/ppp
 mkdir -p /var/cache/apt/archives/partial
-echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
 . /opt/qtmoko/qpe.env
 atd /var/spool/at
+touch /tmp/restart-qtopia
+while [ -e /tmp/restart-qtopia ]; do
 qx_helper &
+echo 0 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
+echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
 qpe 2>&1 | logger -t 'Qtopia' &
+done
 __END__
 
 chmod +x /media/card/etc/init.d/qpe
