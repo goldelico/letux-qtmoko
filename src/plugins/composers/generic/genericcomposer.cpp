@@ -264,7 +264,6 @@ void GenericComposerInterface::init()
 
     //widget stack
     m_widgetStack = new QStackedWidget(this);
-    m_widgetStack->setFocusPolicy(Qt::NoFocus);
     layout->addWidget(m_widgetStack);
 
     //composer widget
@@ -314,7 +313,6 @@ void GenericComposerInterface::init()
 
     //main text field
     m_textEdit = new ComposerTextEdit(m_composerWidget);
-    m_composerWidget->setFocusProxy(m_textEdit);
     l->addWidget( m_textEdit );
 
     connect(m_textEdit, SIGNAL(aboutToChange(int)), this, SLOT(updateSmsLimitIndicator(int)));
@@ -466,10 +464,8 @@ void GenericComposerInterface::setBody( const QString& t, const QString &type )
     m_textEdit->setReadOnly( m_vCard );
     m_textEdit->setEditFocus( !m_vCard );
     if ( m_vCard ) {
-        setFocusProxy( 0 );
     } else {
         m_textEdit->moveCursor( QTextCursor::End );
-        setFocusProxy( m_textEdit );
     }
 }
 
@@ -723,7 +719,6 @@ void GenericComposerInterface::detailsPage()
         emit cancel();
     } else {
         m_widgetStack->setCurrentWidget(m_detailsWidget);
-        QWidget::setFocusProxy(m_detailsWidget);
         setContext(displayName(m_type) + " " + tr("details"));
     }
 }
@@ -731,7 +726,11 @@ void GenericComposerInterface::detailsPage()
 void GenericComposerInterface::composePage()
 {
     m_widgetStack->setCurrentWidget(m_composerWidget);
-    QWidget::setFocusProxy(m_textEdit);
+}
+
+void GenericComposerInterface::showEvent(QShowEvent * event)
+{
+    if (m_widgetStack->currentWidget() == m_composerWidget) m_textEdit->setFocus(Qt::MouseFocusReason);
 }
 
 #ifdef QTOPIA_HOMEUI
