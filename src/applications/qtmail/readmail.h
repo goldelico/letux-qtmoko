@@ -130,6 +130,8 @@ private:
 
 private slots:
     void contactModelReset();
+    void delayedDialNumber(); //
+    void delayedDialContact(); //
 
 private:
     QStackedWidget *views;
@@ -158,6 +160,9 @@ private:
     QContactModel *contactModel;
     bool modelUpdatePending;
     QString lastTitle;
+
+    QString numberToDial; //
+    QUniqueId uidToDial; //
 
     typedef QStack<QPair<QMailViewerInterface*, QString> > ViewerStack;
     ViewerStack currentView;
