@@ -19,7 +19,7 @@
 #include <QTcpSocket>
 #include <QTextCodec>
 #include <QLineEdit>
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
 #include <QtopiaApplication>
 #endif
 #ifdef Q_WS_WIN

@@ -18,7 +18,7 @@
 #include <QFile>
 #include <QTcpSocket>
 #include <QThread>
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
 #include "qxservice.h"
 #include <QtopiaApplication>
 #include <QDeviceButtonManager>
@@ -61,7 +61,7 @@ private:
     QString appName;
     bool rotate;
     bool terminating;
-#if QT_QWS_FICGTA01
+#if QTOPIA
     QtopiaApplication::PowerConstraint powerConstraint;
     QtopiaServiceRequest origSrq;
 #endif

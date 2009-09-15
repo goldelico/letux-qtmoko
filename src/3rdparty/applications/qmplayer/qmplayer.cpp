@@ -3,7 +3,7 @@
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
 #else
     Q_UNUSED(f);
@@ -255,7 +255,7 @@ void QMplayer::okClicked()
         if(processRunning(process))
         {
             process->write(" ");
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
             // Workaround unpause not working for alsa out in mplayer glamo.
             // We send left key to make mplayer start playing.
             process->write("\x1b""[D");
@@ -378,7 +378,7 @@ connect:
 
     showScreen(QMplayer::ScreenDownload);
     label->setText(tr("Downloading") + " " + filename);
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
      QtopiaApplication::setPowerConstraint(QtopiaApplication::DisableSuspend);
 #endif
 
@@ -423,7 +423,7 @@ connect:
     f.close();
     sock.close();
 
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
 #endif
 
@@ -518,12 +518,12 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Full screen"));
             bUp->setText(tr("Vol up"));
             bDown->setText(tr("Vol down"));
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
 #endif
             break;
         case QMplayer::ScreenFullscreen:
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
             setRes(320240);
 #endif
             break;
@@ -532,7 +532,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Back"));
             bUp->setText(tr(">>"));
             bDown->setText(tr("<<"));
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
 #endif
             break;
@@ -812,7 +812,7 @@ bool QMplayer::runClient()
 
 void QMplayer::settings()
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     if(!runClient())
     {
         runServer();
@@ -1123,7 +1123,7 @@ void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 
 void QMplayer::setRes(int xy)
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     if(xy == 320240 || xy == 640480)
     {
         QFile f("/sys/bus/spi/devices/spi2.0/state");
@@ -1152,7 +1152,7 @@ void QMplayer::setRes(int xy)
 
 bool QMplayer::installMplayer()
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     QDir("/home/root").mkdir(".mplayer");
     QFile f("/home/root/.mplayer/config");
     f.open(QFile::WriteOnly);

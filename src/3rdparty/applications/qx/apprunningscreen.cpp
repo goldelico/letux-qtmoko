@@ -41,7 +41,7 @@ void AppRunningScreen::paintEvent(QPaintEvent *)
 
 void AppRunningScreen::enterFullScreen()
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     // Show editor view in full screen
     setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
     setWindowState(Qt::WindowFullScreen);
