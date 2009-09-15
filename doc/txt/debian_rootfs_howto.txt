@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
 
 Step 2
 ======
@@ -54,11 +54,6 @@ rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
 /dev/mmcblk0p1 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
-tmpfs   /etc/network/run tmpfs   defaults,noatime                   0 0
-tmpfs   /tmp             tmpfs   defaults,noatime                   0 0
-tmpfs   /var/lock        tmpfs   defaults,noatime                   0 0
-tmpfs   /var/run         tmpfs   defaults,noatime                   0 0
-tmpfs   /var/tmp         tmpfs   defaults,noatime                   0 0
 tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
 192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
 __END__
@@ -186,34 +181,47 @@ mkdir /media/card/etc/network/run
 
 mkdir /media/card/var/spool/at
 
-Step 5.5
-========
-
-* Compile qx_helper program and copy it to /media/card/bin The program is in
-  qtmoko git in qtmoko/src/3rdparty/applications/qx_helper and can be compiled
-  with simple "make" command.
-
 Step 6 - qpe bootscript
 =======================
 
 * Create qpe init script and link in runlevel 2
 
-cat > /media/card/etc/init.d/qpe <<__END__
+nano /media/card/etc/init.d/qpe
+
 #!/bin/sh
-echo '1' > /proc/sys/kernel/printk
-rm -rf /var/run/ppp
-mkdir /var/run/ppp
-mkdir -p /var/cache/apt/archives/partial
+
 . /opt/qtmoko/qpe.env
-atd /var/spool/at
-touch /tmp/restart-qtopia
-while [ -e /tmp/restart-qtopia ]; do
-qx_helper &
-echo 0 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
-echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
-qpe 2>&1 | logger -t 'Qtopia' &
-done
-__END__
+
+case "$1" in
+  start)
+	echo '1' > /proc/sys/kernel/printk
+	rm -rf /var/run/ppp
+	mkdir /var/run/ppp
+	mkdir -p /var/cache/apt/archives/partial
+	atd /var/spool/at
+	/etc/init.d/qpe &
+	;;
+  stop)
+	rm -f /tmp/restart-qtopia
+	killall qpe
+	killall atd
+	;;
+  restart)
+	$SELF stop
+	$SELF start
+	;;
+  *)
+	touch /tmp/restart-qtopia
+	while [ -e /tmp/restart-qtopia ]; do
+	qx_helper &
+	echo 0 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
+	echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
+	qpe 2>&1 | logger -t 'Qtopia'
+	done
+	;;
+esac
+
+exit 0
 
 chmod +x /media/card/etc/init.d/qpe
 cd /media/card/etc/rc2.d/
@@ -257,7 +265,16 @@ Step 7.4 - wpa_supplicant
 cd /media/card/usr/sbin
 ln -s ../../sbin/wpa_supplicant wpa_supplicant
 
-Step 7.5
+Step 7.5 - dash
+===============
+
+* For faster boot (~15s) and more memory (+1MB) we use dash instead of bash.
+
+cd /media/card/bin/
+rm sh
+ln -s dash sh 
+
+Step 7.6
 ========
 
 * Install xserver-xglamo - download it from alioth repo and install it manually
@@ -316,17 +333,6 @@ Section "Screen"
 EndSection
 
 
-Step 7.6 - Fonts
-================
-
-* We will use truetype fonts installed with X. They have several benefits:
-  bigger size, international characters, fixed size font (good for terminal).
-  
-  
-cd /media/card/opt/qtmoko/lib
-rm -rf fonts
-ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
-
 Step 7.7
 ========
 
@@ -357,6 +363,17 @@ make install
 
 cd /media/card
 tar xzvpf qtopia-update.tar.gz
+
+Step 8.5 - Fonts
+================
+
+* We will use truetype fonts installed with X. They have several benefits:
+  bigger size, international characters, fixed size font (good for terminal).
+  
+  
+cd /media/card/opt/qtmoko/lib
+rm -rf fonts
+ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
 
 Step 9
 ======
