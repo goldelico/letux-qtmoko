@@ -135,8 +135,11 @@ private:
     void clearHighlight();
     int FindShifted(int k);
     void LoadNationalLayout();
-    QString FindInSandboxes();
+    QString FindLayoutInSandboxes();
     void LoadSet(QString s);
+    QString FindSkinInSandboxes();
+    void LoadSkinPics(QString skinPicsPath);
+    void LoadSkin();
 
     uint shift:1;
     uint lock:1;
@@ -171,6 +174,10 @@ private:
 
     bool nationalLoaded;
     QString layoutFileName;
+    QString skinFileName;
+    bool useSkin;
+    QPixmap *btn_left, *btn_right, *btn_mid;
+    QPixmap *btn_pressed_left, *btn_pressed_right, *btn_pressed_mid;
 };
 
 #endif
