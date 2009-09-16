@@ -278,10 +278,11 @@ Step 7.6
 
 * Install xserver-xglamo - download it from alioth repo and install it manually
 
-cd /media/card
+chroot /media/card
 wget http://pkg-fso.alioth.debian.org/debian/pool/main/x/xglamo/xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
 dpkg -i xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
 rm xserver-xglamo_1.3.0.0+git20080807-3_armel.deb
+exit
 
 * Create xorg.conf and configure it for Xglamo
 
