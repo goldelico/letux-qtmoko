@@ -186,7 +186,7 @@ Step 6 - qpe bootscript
 
 * Create qpe init script and link in runlevel 2
 
-nano /media/card/etc/init.d/qpe
+nano /media/card/etc/init.d/qpe.sh
 
 #!/bin/sh
 
@@ -199,16 +199,15 @@ case "$1" in
 	mkdir /var/run/ppp
 	mkdir -p /var/cache/apt/archives/partial
 	atd /var/spool/at
-	/etc/init.d/qpe &
+	/etc/init.d/qpe.sh &
 	;;
   stop)
 	rm -f /tmp/restart-qtopia
-	killall qpe
-	killall atd
+	killall -q qpe atd qx_helper
 	;;
   restart)
-	$SELF stop
-	$SELF start
+	/etc/init.d/qpe.sh stop
+	/etc/init.d/qpe.sh start
 	;;
   *)
 	touch /tmp/restart-qtopia
@@ -223,9 +222,9 @@ esac
 
 exit 0
 
-chmod +x /media/card/etc/init.d/qpe
+chmod +x /media/card/etc/init.d/qpe.sh
 cd /media/card/etc/rc2.d/
-ln -s ../init.d/qpe S09qpe
+ln -s ../init.d/qpe.sh S09qpe
 
 Step 7 - logread utility
 ========================
