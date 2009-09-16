@@ -173,9 +173,9 @@ private:
     QTimer *repeatTimer;
 
     bool nationalLoaded;
+    bool useSkin;
     QString layoutFileName;
     QString skinFileName;
-    bool useSkin;
     QPixmap *btn_left, *btn_right, *btn_mid;
     QPixmap *btn_pressed_left, *btn_pressed_right, *btn_pressed_mid;
 };

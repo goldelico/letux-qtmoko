@@ -656,7 +656,7 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                         int right_w = bright->width();
                         p.drawPixmap(x, y, *bleft);
                         p.drawPixmap(x+left_w, y,
-                                     kw-left_w-right_w, keyHeight,
+                                     kw-left_w-right_w, bmid->height(),
                                      *bmid);
                         p.drawPixmap(x+kw-right_w, y, *bright);
 
