@@ -214,6 +214,8 @@ case "$1" in
 	while [ -e /tmp/restart-qtopia ]; do
 	qx_helper &
 	echo 0 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
+	# sleep seems to be needed otherwise modem often does not start up
+	sleep 2
 	echo 1 > /sys/bus/platform/devices/neo1973-pm-gsm.0/power_on
 	qpe 2>&1 | logger -t 'Qtopia'
 	done
