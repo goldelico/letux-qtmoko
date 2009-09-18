@@ -64,3 +64,8 @@ servicedef [
     path=/services
 ]
 
+conf [
+    hint=image
+    files=conf/*
+    path=/etc/qx
+]
