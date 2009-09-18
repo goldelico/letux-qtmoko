@@ -131,8 +131,9 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QFrame(parent, f), shift(false), lock(false), ctrl(false),
     alt(false), useLargeKeys(USE_LARGE_KEYS), layoutNumber(0), pressedKey(-1),
     unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
-    positionTop(true), nationalLoaded(false),
-    layoutFileName("/etc/fingerkeyboard/extralayout.conf")
+    positionTop(true), nationalLoaded(false), useSkin(false),
+    layoutFileName("/etc/fingerkeyboard/extralayout.conf"),
+    skinFileName("/etc/fingerkeyboard/skin.conf")
 {
 
     QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
@@ -182,6 +183,8 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
         specialIndex++;
     }
 
+    LoadSkin(); //
+
     picks = new KeyboardPicks( this );
     picks->initialise();
 
@@ -206,6 +209,16 @@ KeyboardFrame::~KeyboardFrame()
     {
         for (int i=0; i<KEYBOARD_ROWS; i++)
             free(keyboard_national_6[i]);
+    }
+
+    if (useSkin)
+    {
+        delete btn_left;
+        delete btn_right;
+        delete btn_mid;
+        delete btn_pressed_left;
+        delete btn_pressed_right;
+        delete btn_pressed_mid;
     }
 }
 
@@ -624,31 +637,28 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
     #endif
                     }
 
-                    if (!blank) {
-                        if ( pressed )
-                            p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor_pressed );
+                    if (useSkin)
+                    {
+                        QPixmap *bleft, *bright, *bmid;
+                        if (pressed)
+                        {
+                            bleft = btn_pressed_left;
+                            bright = btn_pressed_right;
+                            bmid = btn_pressed_mid;
+                        }
                         else
-                            p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor );
-
-                        if ( threeD ) {
-                            p.setPen(pressed ? keycolor_lo : keycolor_hi);
-                            p.drawLine( x, y+1, x, y+keyHeight-2 );
-                            p.drawLine( x+1, y+1, x+1, y+keyHeight-3 );
-                            p.drawLine( x+1, y+1, x+1+kw-2, y+1 );
-                        } else if ( j == 0 ) {
-                            p.setPen(pressed ? keycolor_hi : keycolor_lo);
-                            p.drawLine( x, y, x+kw, y );
+                        {
+                            bleft = btn_left;
+                            bright = btn_right;
+                            bmid = btn_mid;
                         }
-
-                        // right
-                        p.setPen(pressed ? keycolor_hi : keycolor_lo);
-                        p.drawLine( x+kw-1, y, x+kw-1, y+keyHeight-2 );
-
-                        if ( threeD ) {
-                            p.setPen(keycolor_lo.light());
-                            p.drawLine( x+kw-2, y+keyHeight-2, x+kw-2, y+1 );
-                            p.drawLine( x+kw-2, y+keyHeight-2, x+1, y+keyHeight-2 );
-                        }
+                        int left_w = bleft->width();
+                        int right_w = bright->width();
+                        p.drawPixmap(x, y, *bleft);
+                        p.drawPixmap(x+left_w, y,
+                                     kw-left_w-right_w, bmid->height(),
+                                     *bmid);
+                        p.drawPixmap(x+kw-right_w, y, *bright);
 
                         if (pic && !pic->isNull()) {
                             p.drawPixmap( x + 1, y + 2, *pic );
@@ -656,13 +666,49 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                             p.setPen(textcolor);
                             p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s ); //
                         }
+                    }
+                    else
+                    {
+                        if (!blank) {
+                            if ( pressed )
+                                p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor_pressed );
+                            else
+                                p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor );
 
-                        if ( threeD ) {
-                            p.setPen(keycolor_hi);
-                            p.drawLine( x, y, x+kw-1, y );
+                            if ( threeD ) {
+                                p.setPen(pressed ? keycolor_lo : keycolor_hi);
+                                p.drawLine( x, y+1, x, y+keyHeight-2 );
+                                p.drawLine( x+1, y+1, x+1, y+keyHeight-3 );
+                                p.drawLine( x+1, y+1, x+1+kw-2, y+1 );
+                            } else if ( j == 0 ) {
+                                p.setPen(pressed ? keycolor_hi : keycolor_lo);
+                                p.drawLine( x, y, x+kw, y );
+                            }
+
+                            // right
+                            p.setPen(pressed ? keycolor_hi : keycolor_lo);
+                            p.drawLine( x+kw-1, y, x+kw-1, y+keyHeight-2 );
+
+                            if ( threeD ) {
+                                p.setPen(keycolor_lo.light());
+                                p.drawLine( x+kw-2, y+keyHeight-2, x+kw-2, y+1 );
+                                p.drawLine( x+kw-2, y+keyHeight-2, x+1, y+keyHeight-2 );
+                            }
+
+                            if (pic && !pic->isNull()) {
+                                p.drawPixmap( x + 1, y + 2, *pic );
+                            } else {
+                                p.setPen(textcolor);
+                                p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s ); //
+                            }
+
+                            if ( threeD ) {
+                                p.setPen(keycolor_hi);
+                                p.drawLine( x, y, x+kw-1, y );
+                            }
+                        } else {
+                            p.fillRect( x, y, kw, keyHeight, keycolor );
                         }
-                    } else {
-                        p.fillRect( x, y, kw, keyHeight, keycolor );
                     }
                 }
 
@@ -919,7 +965,8 @@ void KeyboardFrame::swapPosition()
 
 
 //====================================================================
-
+//== Extra layout
+//====================================================================
 
 void KeyboardFrame::LoadNationalLayout()
 {
@@ -930,7 +977,7 @@ void KeyboardFrame::LoadNationalLayout()
     }
     else
     {
-        layout = FindInSandboxes();
+        layout = FindLayoutInSandboxes();
     }
 
     if (!layout.isNull())
@@ -947,7 +994,7 @@ void KeyboardFrame::LoadNationalLayout()
     }
 }
 
-QString KeyboardFrame::FindInSandboxes()
+QString KeyboardFrame::FindLayoutInSandboxes()
 {
      QString homePath = QDir::homePath();
      QString packagesPath = homePath+"/packages";
@@ -1011,4 +1058,93 @@ void KeyboardFrame::LoadSet(QString s)
         keyboard_national_6[i][list_rows.count()*2+1] = 0;
     }
     settings.endGroup();
+}
+
+//====================================================================
+//== Skin
+//====================================================================
+
+void KeyboardFrame::LoadSkin()
+{
+    QString baseDir(NULL);
+    if (QFile::exists(Qtopia::qtopiaDir() + skinFileName))
+    {
+        baseDir = Qtopia::qtopiaDir();
+    }
+    else
+    {
+        baseDir = FindSkinInSandboxes();
+    }
+
+    if (!baseDir.isNull())
+    {       
+        qLog(Input) << "FingerKeyboard - loading skin settings";
+        qLog(Input) << baseDir + skinFileName;
+
+        QSettings settings(baseDir + skinFileName, QSettings::IniFormat);
+        settings.beginGroup("Skin");
+        QString skinName = settings.value("name").toString();
+        settings.endGroup();
+
+        LoadSkinPics(baseDir + "/pics/fingerkeyboard/skins/" + skinName + "/");
+    }
+}
+
+void KeyboardFrame::LoadSkinPics(QString skinPicsPath)
+{
+    qLog(Input) << "FingerKeyboard - loading skin pixmaps";
+    qLog(Input) << skinPicsPath;
+
+    btn_left = new QPixmap(skinPicsPath + "btn-left.png");
+    btn_right = new QPixmap(skinPicsPath + "btn-right.png");
+    btn_mid = new QPixmap(skinPicsPath + "btn-mid.png");
+
+    btn_pressed_left = new QPixmap(skinPicsPath + "btn-pressed-left.png");
+    btn_pressed_right = new QPixmap(skinPicsPath + "btn-pressed-right.png");
+    btn_pressed_mid = new QPixmap(skinPicsPath + "btn-pressed-mid.png");
+
+    int specialIndex=0;
+    while  (specialM[specialIndex].qcode != 0 )
+    {
+        QString picName(specialM[specialIndex].picName);
+        if (picName.isNull())
+        {
+            QString label(specialM[specialIndex].label);
+            if (label=="Tab") picName = "tab";
+            if (label=="Ret") picName = "enter";
+            if (label=="Shift") picName = "shift";
+            if (label=="Switch") picName = "switch";
+        }
+        if (!picName.isNull())
+        {
+            QString pName = skinPicsPath + picName + ".png";
+            if (QFile::exists(pName))
+            {
+                delete specialM[specialIndex].pic;
+                specialM[specialIndex].pic = new QPixmap(pName);
+            }
+        }
+        specialIndex++;
+    }
+
+    useSkin = true;
+}
+
+QString KeyboardFrame::FindSkinInSandboxes()
+{
+     QString homePath = QDir::homePath();
+     QString packagesPath = homePath+"/packages";
+     QDir pkgs = QDir(packagesPath);
+     QStringList dirs;
+     dirs = pkgs.entryList(QStringList("*"), QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+     for (int i=0; i<dirs.count(); i++)
+     {
+         QString fullPath = packagesPath+"/"+dirs[i];
+         QString fullName = fullPath+skinFileName;
+         if (QFile::exists(fullName))
+         {
+             return fullPath;
+         }
+     }
+     return QString(NULL);
 }
