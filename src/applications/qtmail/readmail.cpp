@@ -257,6 +257,19 @@ bool ReadMail::handleOutgoingMessages(const QMailMessageIdList &list) const
     return false;
 }
 
+//
+void ReadMail::delayedDialNumber()
+{
+    dialNumber(numberToDial);
+}
+
+void ReadMail::delayedDialContact()
+{
+    QtopiaServiceRequest req( "Dialer", "dial(QString,QUniqueId)" ); // No tr
+    req << numberToDial << uidToDial;
+    req.send();
+}
+
 /*  We need to be careful here. Don't allow clicking on any links
     to automatically install anything.  If we want that, we need to
     make sure that the mail doesn't contain mailicious link encoding
@@ -281,7 +294,30 @@ void ReadMail::linkClicked(const QUrl &lnk)
                     viewMms();
             }
         } else if (command == "dial") {
-            dialNumber(param);
+            QContactModel m;
+            QContact cnt = m.matchPhoneNumber(param);
+            numberToDial = param;
+            uidToDial = cnt.uid();
+            if (cnt.uid().isNull())
+            {
+                if (QMessageBox::warning(
+                        this,
+                        tr("Do you want to dial this number?"),
+                        tr("%1").arg(param),
+                        tr("&Yes"), tr("&No"),
+                        QString::null, 0, 1 ) == 0)
+                    QTimer::singleShot(500, this, SLOT(delayedDialNumber()));
+            }
+            else
+            {
+                if (QMessageBox::question(
+                        this,
+                        tr("Do you want to call this contact?"),
+                        tr("%1").arg(cnt.label()),
+                        tr("&Yes"), tr("&No"),
+                        QString::null, 0, 1 ) == 0)
+                    QTimer::singleShot(500, this, SLOT(delayedDialContact()));
+            }
         } else if (command == "message") {
             emit sendMessageTo(QMailAddress(param), QMailMessage::Sms);
         } else if (command == "store") {

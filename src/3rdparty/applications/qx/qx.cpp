@@ -31,7 +31,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     process = NULL;
     xprocess = NULL;
     screen = QX::ScreenMain;
-#if QT_QWS_FICGTA01
+#if QTOPIA
     powerConstraint = QtopiaApplication::Disable;
 
     // Start the "QX" service that handles application switching.
@@ -46,7 +46,7 @@ QX::~QX()
 
 }
 
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
 static void gpsPower(const char *powerStr)
 {
     QFile f("/sys/class/i2c-adapter/i2c-0/0-0073/pcf50633-regltr.7/neo1973-pm-gps.0/power_on");
@@ -83,7 +83,7 @@ void QX::showScreen(QX::Screen scr)
         {
             system("xrandr -o 0");
         }
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
         if(powerConstraint != QtopiaApplication::Enable)
         {
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
@@ -102,7 +102,7 @@ void QX::showScreen(QX::Screen scr)
         {
             system("xrandr -o 1");
         }
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
         if(powerConstraint != QtopiaApplication::Enable)
         {
             QtopiaApplication::setPowerConstraint(powerConstraint);
@@ -158,7 +158,7 @@ void QX::stopX()
     }
     delete(xprocess);
     xprocess = NULL;
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     switchToVt7();  // switch to vt7 which has cursor disabled
 #endif
 }
@@ -230,7 +230,7 @@ void QX::pauseApp()
 {
     if(process == NULL)
     {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
         // Fix key mapping in case that QX crashed
         //QDeviceButtonManager::instance().factoryResetButtons();
         QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
@@ -280,7 +280,7 @@ void QX::okClicked()
 
 void QX::tangoClicked()
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     gpsPower("1");
     powerConstraint = QtopiaApplication::DisableSuspend;
 #endif
@@ -290,7 +290,7 @@ void QX::tangoClicked()
 
 void QX::scummvmClicked()
 {
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     powerConstraint = QtopiaApplication::Disable;
 #endif
     runApp("/usr/games/scummvm", true);
@@ -324,7 +324,7 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     process = NULL;
     stopX();
     appRunScr->pixmap = QPixmap();
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
     powerConstraint = QtopiaApplication::Enable;
 #endif
     showScreen(QX::ScreenMain);

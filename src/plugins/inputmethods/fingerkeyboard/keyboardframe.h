@@ -32,6 +32,11 @@ enum currentPosition
     Bottom
 };
 
+//#define STANDARD_LAYOUT_NUMBER 0
+#define NATIONAL_LAYOUT_NUMBER 1
+#define OPTI_LAYOUT_NUMBER     2
+#define LAYOUTS_COUNT 3
+
 class KeyboardConfig : public DictFilterConfig
 {
 public:
@@ -86,7 +91,11 @@ public:
 
     void hideEvent ( QHideEvent * );
 
-    void setMode(int mode) { useOptiKeys = mode; }
+    void setMode(int mode)
+    {
+        //useOptiKeys = mode;
+        layoutNumber = mode;
+    }
 
     QSize sizeHint() const;
 
@@ -124,13 +133,18 @@ private:
     int keycode( int i2, int j, const uchar **keyboard, QRect *repaintrect );
     int getKey( int &w, int j = -1 );
     void clearHighlight();
+    int FindShifted(int k);
+    void LoadNationalLayout();
+    QString FindInSandboxes();
+    void LoadSet(QString s);
 
     uint shift:1;
     uint lock:1;
     uint ctrl:1;
     uint alt:1;
     uint useLargeKeys:1;
-    uint useOptiKeys:1;
+    //uint useOptiKeys:1;
+    uint layoutNumber;
 
     int pressedKey;
     QRect pressedKeyRect;
@@ -154,6 +168,9 @@ private:
     bool positionTop;
 
     QTimer *repeatTimer;
+
+    bool nationalLoaded;
+    QString layoutFileName;
 };
 
 #endif

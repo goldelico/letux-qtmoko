@@ -53,8 +53,8 @@ void ModePicker::updateModeList()
     setNumRows(list.count());
     QSize s = set->pixmapFor(list[0]).size();
     if (s.isValid()) {
-	setCellWidth(s.width()+4);
-	setCellHeight(s.height()+4);
+	setCellWidth(s.width()*8+4);
+	setCellHeight(s.height()*8+4);
     }
 }
 
@@ -83,7 +83,7 @@ void ModePicker::drawCell(QPainter *p, int row, int col, bool selected)
     if (pm.isNull()) {
 	p->fillRect(0, 0, cellWidth(), cellHeight(), palette().base());
     } else {
-	p->drawPixmap(2, 2, pm, 0, 0, cellWidth()-4, cellHeight()-4);
+	p->drawPixmap(2, 2, cellWidth()-4, cellHeight()-4, pm);
     }
 //    if (selected)
 //	p->setPen(QPen(palette().highlight()));

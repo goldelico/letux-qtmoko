@@ -1,7 +1,7 @@
 /****************************************************************************
 **
 ** Copyright (C) 2000-2008 TROLLTECH ASA. All rights reserved,
-** Leonardo Maccari. All rights expressed in the GPL license.
+** Leonardo Maccari, Anton Olkhovik. All rights expressed in the GPL license.
 **
 **
 ** This software is licensed under the terms of the GNU General Public
@@ -37,6 +37,15 @@
 
 #include <qtopialog.h>
 
+#include <QTextCodec>
+
+#include <QDir>
+#include <QSettings>
+#include <Qtopia>
+#include <QList>
+#include <QStringList>
+
+
 #define USE_SMALL_BACKSPACE
 #define USE_LARGE_KEYS 1 
 #define KEYBOARD_ROWS 6
@@ -60,6 +69,9 @@ typedef struct SpecialMap {
     QPixmap *pic;
 };
 
+static uchar *keyboard_national_6[KEYBOARD_ROWS]; //
+
+#define SPEC_SYMBOL_COUNT  33
 static SpecialMap specialM[] = {
     // LM: backspace pixmaps obviously doesn't scale
     {   Qt::Key_Backspace,      8,      "<",     "backspace", 0 },
@@ -99,16 +111,32 @@ static SpecialMap specialM[] = {
     {   Sqrt,                   0,      "^1/2",  NULL, 0 },
     {   Inverse,                0,      "1/x",   NULL, 0 },
 
-    {   Escape,                 27,     "ESC",   "escape", 0 },
-    {   0,                      0,      NULL,    NULL, 0}
+    {   Escape,                 27,     "ESC",   "escape", 0 }, // <<---[32]
+
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 }, { 0,0,NULL,NULL,0 },
+    { 0,0,NULL,NULL,0 }
 };
+
 
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QFrame(parent, f), shift(false), lock(false), ctrl(false),
-    alt(false), useLargeKeys(USE_LARGE_KEYS), useOptiKeys(0), pressedKey(-1),
+    alt(false), useLargeKeys(USE_LARGE_KEYS), layoutNumber(0), pressedKey(-1),
     unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
-    positionTop(true)
+    positionTop(true), nationalLoaded(false),
+    layoutFileName("/etc/fingerkeyboard/extralayout.conf")
 {
+
+    QTextCodec::setCodecForCStrings(QTextCodec::codecForName("UTF-8"));
+    LoadNationalLayout();
 
 /* begin of hack code for screen rotation
 
@@ -172,6 +200,13 @@ KeyboardFrame::~KeyboardFrame()
     }
 //	QtopiaServiceRequest svreq("RotationManager", "defaultRotation()");
 //	svreq.send();
+
+    //free memory allocated for additional layout
+    if (nationalLoaded)
+    {
+        for (int i=0; i<KEYBOARD_ROWS; i++)
+            free(keyboard_national_6[i]);
+    }
 }
 
 void KeyboardFrame::showEvent(QShowEvent *e)
@@ -188,7 +223,7 @@ void KeyboardFrame::showEvent(QShowEvent *e)
 
     keyHeight = (height()-ph)/KEYBOARD_ROWS;
     int nk;
-    if ( useOptiKeys ) {
+    if ( layoutNumber == OPTI_LAYOUT_NUMBER ) {
         nk = KEYBOARD_OPTI_PICS;
     } else if ( useLargeKeys ) {
         nk = KEYBOARD_PICS; // LM: unused ?
@@ -208,7 +243,7 @@ void KeyboardFrame::hideEvent( QHideEvent * )
     resetState();
     // Let keyboardimpl know that we're hidden now, and it should update the menu
     emit hiding();
-};
+}
 
 
 void KeyboardFrame::resizeEvent(QResizeEvent*)
@@ -217,7 +252,7 @@ void KeyboardFrame::resizeEvent(QResizeEvent*)
 //    picks->setGeometry( 0, 50, width(), ph );
     keyHeight = (height()-ph)/KEYBOARD_ROWS;
     int nk;
-    if ( useOptiKeys ) {
+    if ( layoutNumber == OPTI_LAYOUT_NUMBER ) {
         nk = KEYBOARD_OPTI_PICS;
     } else if ( useLargeKeys ) {
         nk = KEYBOARD_PICS; // unused ?
@@ -355,7 +390,7 @@ static const uchar * const keyboard_standard_6[KEYBOARD_ROWS] = {
 
     (const uchar *const)"\002z\002x\002c\002v\002b\002n",
     
-    (const uchar *const)"\002i\002o\002p\002k\002l\002u",
+    (const uchar *const)"\002i\002o\002p\002k\002l\002\x83",
     
     (const uchar *const)"\002u\002j\002m\002,\002.\002'",
 
@@ -386,12 +421,12 @@ static const uchar * const keyboard_standard[KEYBOARD_ROWS - 2] = {
 
 
 struct ShiftMap {
-    char normal;
-    char shifted;
+    int normal;
+    int shifted;
 };
 
-
-static const ShiftMap shiftMap[] = {
+#define SHIFT_SYMBOL_COUNT  12
+static ShiftMap shiftMap[] = {
     { '1', '<' },
     { '2', '>' },
     { '3', '"' },
@@ -403,7 +438,19 @@ static const ShiftMap shiftMap[] = {
     { '9', '~' },
     { '0', '^' },
     { '.', '-' },
-    { ',', '\'' }
+    { ',', '\'' }, // <<---[11]
+
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0},{0,0},{0,0},{0,0},{0,0},
+    {0,0}
 };
 
 
@@ -453,8 +500,10 @@ int KeyboardFrame::getKey( int &w, int j ) {
     static int half = 0;
 
     if ( j >= 0 && j < KEYBOARD_ROWS ) {
-        if (useOptiKeys)
+        if (layoutNumber == OPTI_LAYOUT_NUMBER)
             row = keyboard_opti_6[j];
+        else if (layoutNumber == NATIONAL_LAYOUT_NUMBER)
+            row = keyboard_national_6[j];
         else
             row = keyboard_standard_6[j];
         half=0;
@@ -486,6 +535,24 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
     picks->dc->draw( &painter );
 }
 
+int KeyboardFrame::FindShifted(int k)
+{
+    int shifted = k;
+    bool shiftFound = false;
+    for ( unsigned i = 0; shiftMap[i].normal != 0; i++ )
+        if ( shiftMap[i].normal == k )
+        {
+            shifted = shiftMap[i].shifted;
+            shiftFound = true;
+            break;
+        }
+
+    if ( (!shiftFound) && (k < 0x80) )
+        if ( isalpha( k ) ) {
+            shifted = toupper( k );
+        }
+    return shifted;
+}
 
 /*
   Draw the KeyboardFrame.
@@ -518,9 +585,17 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                     bool blank = (k == 0223);
                     QPixmap *pic = 0;
 
-                    if ( k >= 0x80 ) {
-                        s = specialM[k - 0x80].label;
+                    bool catched = false;
+                    int kcode = k;
 
+                    if (k >= 0x80 + SPEC_SYMBOL_COUNT)
+                    {
+                        kcode = specialM[k - 0x80].unicode;
+                    }
+                    else if ( k >= 0x80 )
+                    {
+                        catched = true;
+                        s = specialM[k - 0x80].label;
                         pic = specialM[k - 0x80].pic;
 
                         if ( k == ShiftCode ) {
@@ -532,7 +607,10 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                         } else if ( k == AltCode ) {
                             pressed = alt;
                         }
-                    } else {
+                    }
+
+                    if (!catched)
+                    {
     #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
     /*
                         s = QChar( shift^lock ? QWSServer::keyMap()[k].shift_unicode :
@@ -540,15 +618,9 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
     */
                         // ### Fixme, bad code, needs improving, whole thing needs to
                         // be re-coded to get rid of the way it did things with scancodes etc
-                        char shifted = k;
-                        if ( !isalpha( k ) ) {
-                            for ( unsigned i = 0; i < sizeof(shiftMap)/sizeof(ShiftMap); i++ )
-                                if ( shiftMap[i].normal == k )
-                                    shifted = shiftMap[i].shifted;
-                        } else {
-                            shifted = toupper( k );
-                        }
-                        s = QChar( shift^lock ? shifted : k );
+
+                        int shifted = FindShifted(kcode);
+                        s = QChar( shift^lock ? shifted : kcode );
     #endif
                     }
 
@@ -582,7 +654,7 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                             p.drawPixmap( x + 1, y + 2, *pic );
                         } else {
                             p.setPen(textcolor);
-                            p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
+                            p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s ); //
                         }
 
                         if ( threeD ) {
@@ -611,12 +683,31 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     int j = (e->y() - picks->height()) / keyHeight;
 
     QRect keyrect;
-    int k = keycode( i2, j, (const uchar **)((useOptiKeys) ?  keyboard_opti_6 : keyboard_standard_6), &keyrect );
+
+    const uchar **cur_keys;
+    if (layoutNumber == OPTI_LAYOUT_NUMBER) 
+        cur_keys = (const uchar **)keyboard_opti_6;
+    else if (layoutNumber == NATIONAL_LAYOUT_NUMBER)
+        cur_keys = (const uchar **)keyboard_national_6;
+    else
+        cur_keys = (const uchar **)keyboard_standard_6;
+    
+    int k = keycode( i2, j, cur_keys, &keyrect );
 
     bool key_down = false;
     unicode = -1;
     qkeycode = 0;
-    if ( k >= 0x80 ) {
+
+    bool catched = false;
+    int kcode = k;
+
+    if (k >= 0x80 + SPEC_SYMBOL_COUNT)
+    {
+        kcode = specialM[k - 0x80].unicode;
+    }
+    else if ( k >= 0x80 )
+    {
+        catched = true;        
         if ( k == ShiftCode ) {
             shift = !shift;
             keyrect = rect();
@@ -632,14 +723,24 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
             resizeEvent(0);
             repaint( ); // need it to clear first
         } else if ( k == 0225 /* Opti/Toggle */ ) {
-            useOptiKeys = !useOptiKeys;
+            //useOptiKeys = !useOptiKeys;
+            layoutNumber++;
+            if ((layoutNumber == NATIONAL_LAYOUT_NUMBER) && (!nationalLoaded)) layoutNumber++;
+            if (layoutNumber >= LAYOUTS_COUNT) layoutNumber=0;
             resizeEvent(0);
             repaint( ); // need it to clear first
         } else {
             qkeycode = specialM[ k - 0x80 ].qcode;
             unicode = specialM[ k - 0x80 ].unicode;
         }
-    } else {
+    }
+
+    if (!catched)
+    {
+        int shifted = FindShifted(kcode);
+        qkeycode = shifted;
+        unicode = shift^lock ? shifted : kcode;
+/*
         //due to the way the keyboard is defined, we know that
         //k is within the ASCII range, and can be directly mapped to
         //a qkeycode; except letters, which are all uppercase
@@ -658,6 +759,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
         } else {
             unicode = k;
         }
+*/
     }
     if  ( unicode != -1 ) {
         if ( ctrl && unicode >= 'a' && unicode <= 'z' )
@@ -766,7 +868,7 @@ QSize KeyboardFrame::sizeHint() const
     QFontMetrics fm=fontMetrics();
     int keyHeight = fm.lineSpacing()+2;
 
-    if (useOptiKeys)
+    if (layoutNumber == OPTI_LAYOUT_NUMBER)
         keyHeight += 1;
 
     return QSize( 320, keyHeight * KEYBOARD_ROWS + picks->sizeHint().height() + 1 );
@@ -813,4 +915,100 @@ void KeyboardFrame::swapPosition()
         move(mwr.topLeft());
         positionTop = true;
     }
+}
+
+
+//====================================================================
+
+
+void KeyboardFrame::LoadNationalLayout()
+{
+    QString layout(NULL);
+    if (QFile::exists(Qtopia::qtopiaDir() + layoutFileName))
+    {
+        layout = Qtopia::qtopiaDir() + layoutFileName;
+    }
+    else
+    {
+        layout = FindInSandboxes();
+    }
+
+    if (!layout.isNull())
+    {
+        qLog(Input) << "FingerKeyboard - loading additional layout";
+        qLog(Input) << layout;
+
+        //allocating memory for additional layout
+        for (int i=0; i<KEYBOARD_ROWS; i++)
+            keyboard_national_6[i] = (uchar*)malloc(12*2+2); //max 12 keys is the row
+
+        LoadSet(layout);
+        nationalLoaded = true;
+    }
+}
+
+QString KeyboardFrame::FindInSandboxes()
+{
+     QString homePath = QDir::homePath();
+     QString packagesPath = homePath+"/packages";
+     QDir pkgs = QDir(packagesPath);
+     QStringList dirs;
+     dirs = pkgs.entryList(QStringList("*"), QDir::Dirs | QDir::NoSymLinks | QDir::NoDotAndDotDot);
+     for (int i=0; i<dirs.count(); i++)
+     {
+         QString fullName = packagesPath+"/"+dirs[i]+layoutFileName;
+         if (QFile::exists(fullName))
+         {
+             return fullName;
+         }
+     }
+     return QString(NULL);
+}
+
+void KeyboardFrame::LoadSet(QString s)
+{
+    QSettings settings(s, QSettings::IniFormat);
+
+    settings.beginGroup("Letters");
+    QStringList list_lower, list_upper;
+    list_lower = settings.value("lower").toStringList();
+    list_upper = settings.value("upper").toStringList();
+    for (int i=0; i<list_lower.count(); i++)
+    {
+        QString sl = list_lower[i];
+        QString su = list_upper[i];
+        int code_sl = sl.toInt();
+        int code_su = su.toInt();
+        specialM[SPEC_SYMBOL_COUNT + i].qcode = code_sl;
+        specialM[SPEC_SYMBOL_COUNT + i].unicode = code_sl;
+        shiftMap[SHIFT_SYMBOL_COUNT + i].normal = code_sl;
+        shiftMap[SHIFT_SYMBOL_COUNT + i].shifted = code_su;
+    }
+    settings.endGroup();
+
+    settings.beginGroup("Board");
+    QStringList list_rows;
+    list_rows = settings.value("keyrows").toStringList();
+    for (int i=0; i<list_rows.count(); i++)
+    {
+        QString row = list_rows[i];
+        QStringList keys = row.split("|");
+        for (int j=0; j<keys.count(); j++)
+        {
+            QString key = keys[j];
+            QStringList fields = key.split(" ");
+            int key_width = fields[0].toInt();
+            QString key_chartype = fields[1];
+            QString key_char = fields[2];
+            int key_code = 0;
+            if (key_chartype=="ch") key_code=(int)(key_char.toAscii().data()[0]);
+            if (key_chartype=="id") key_code=key_char.toInt();
+            if (key_chartype=="ex") key_code=key_char.toInt() + 0x80 + SPEC_SYMBOL_COUNT;
+            keyboard_national_6[i][j*2+0] = (uchar)(key_width);
+            keyboard_national_6[i][j*2+1] = (uchar)(key_code);
+        }
+        keyboard_national_6[i][list_rows.count()*2+0] = 0;
+        keyboard_national_6[i][list_rows.count()*2+1] = 0;
+    }
+    settings.endGroup();
 }

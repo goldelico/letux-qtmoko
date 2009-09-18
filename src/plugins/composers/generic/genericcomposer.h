@@ -87,6 +87,7 @@ private:
     QString text() const;
     bool isVCard() const { return m_vCard; }
     void setContext(const QString& title);
+    void showEvent(QShowEvent * event);
 
 private:
     QStackedWidget* m_widgetStack;

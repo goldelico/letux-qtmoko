@@ -2,6 +2,7 @@ TEMPLATE=app
 TARGET=qmplayer
 
 CONFIG+=qtopia quicklaunch
+DEFINES+=QTOPIA
 
 # I18n info
 STRING_LANGUAGE=en_US

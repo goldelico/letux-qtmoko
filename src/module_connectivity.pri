@@ -3,8 +3,7 @@
 PROJECTS*=\
     settings/netsetup \
     plugins/network/lan \           #LAN/WLAN support
-    plugins/network/dialing \       #Dialup/GPRS support
-    3rdparty/applications/keypebble
+    plugins/network/dialing         #Dialup/GPRS support
 
 
 SERVER_PROJECTS*=\

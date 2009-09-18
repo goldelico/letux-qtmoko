@@ -1,4 +1,4 @@
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
 
 #include "qmplayer.h"
 #include <qtopiaapplication.h>

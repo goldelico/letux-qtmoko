@@ -1,4 +1,4 @@
-#ifdef QT_QWS_FICGTA01
+#ifdef QTOPIA
 
 #include "qx.h"
 #include <qtopiaapplication.h>

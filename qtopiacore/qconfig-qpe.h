@@ -93,6 +93,14 @@
 #  define QT_NO_COLORNAMES
 #endif
 
+// Fonts
+#ifndef QT_NO_QWS_QPF
+#  define QT_NO_QWS_QPF
+#endif
+#ifndef QT_NO_QWS_QPF2
+#  define QT_NO_QWS_QPF2
+#endif
+
 // Qtopia Core
 #ifndef QT_NO_QWS_ALPHA_CURSOR
 #  define QT_NO_QWS_ALPHA_CURSOR
