@@ -1,6 +1,16 @@
 #ifndef QX_H
 #define QX_H
 
+
+#include <QListWidget>
+#include <QListWidgetItem>
+#include <QMenu>
+#include <QSoftMenuBar>
+#include <QSettings>
+
+#include <QStringList>
+#include "DesktopScanner.h"
+
 #include "apprunningscreen.h"
 #include <QWidget>
 #include <QPixmap>
@@ -29,6 +39,7 @@
 #include <sys/ioctl.h>
 #include <X11/Xlib.h>
 
+
 class QX : public QWidget
 {
     Q_OBJECT
@@ -50,12 +61,18 @@ private:
     Screen screen;
     AppRunningScreen *appRunScr;
 
-    QVBoxLayout* layout;
+    QSettings *favConf;
+    QListWidget *lw;
+    QAction *favouritesAction;
+    QStringList favourites;
+    DesktopScanner *scanner;
+    QGridLayout* grid;
+    //QVBoxLayout* layout;
     QLineEdit *lineEdit;
     QPushButton *bOk;
-    QPushButton *bTango;
-    QPushButton *bScummvm;
-    QPushButton *bQuit;
+    //QPushButton *bTango;
+    //QPushButton *bScummvm;
+    //QPushButton *bQuit;
     QProcess *process;
     QProcess *xprocess;
     QString appName;
@@ -70,16 +87,34 @@ private:
     void runApp(QString filename, bool rotate);
     void showScreen(QX::Screen scr);
 
+    void FillApps(bool filter);
+    void LoadFavourites();
+    void BuildMenu();
+    int GetClickedId();
+
+    QPushButton *bResume;
+    QPushButton *bTerminate;
+
+    QMenu *menu;
+
 public slots:
     void pauseApp();
 
 private slots:
     void okClicked();
-    void tangoClicked();
-    void scummvmClicked();
+    //void tangoClicked();
+    //void scummvmClicked();
     void quitClicked();
     void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
+
+    void resumeClicked();
+    void terminateClicked();
+
+    void launch_clicked();
+    void settings_clicked();
+    void favourites_clicked();
+    void listClicked();
 };
 
 class Sleeper : public QThread

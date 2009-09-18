@@ -22,13 +22,17 @@ pkg [
 HEADERS=\
     qx.h \
     qxservice.h \
-    apprunningscreen.h
+    apprunningscreen.h \
+    DesktopScanner.h \
+    AppSettings.h
 
 SOURCES=\
     main.cpp\
     qx.cpp \
     qxservice.cpp \
-    apprunningscreen.cpp
+    apprunningscreen.cpp \
+    DesktopScanner.cpp \
+    AppSettings.cpp
 
 # Install rules
 target [
@@ -60,3 +64,8 @@ servicedef [
     path=/services
 ]
 
+conf [
+    hint=image
+    files=conf/*
+    path=/etc/qx
+]

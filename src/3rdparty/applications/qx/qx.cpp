@@ -1,30 +1,139 @@
 #include "qx.h"
+#include "AppSettings.h"
+#include <Qtopia>
+
+
+void QX::listClicked()
+{
+    if (!favouritesAction->isChecked())
+    {
+        favourites.clear();
+        for (int i=0; i<lw->count(); i++)
+            if (lw->item(i)->checkState() == Qt::Checked)
+                favourites << scanner->entries[i].file;
+        favConf->beginGroup("Apps");
+        favConf->setValue("list", favourites);
+        favConf->endGroup();
+    }
+}
+
+int QX::GetClickedId()
+{
+    int sel = -1;
+    for (int i=0; i<lw->count(); i++)
+        if (lw->item(i)->isSelected())
+        {
+            sel = lw->item(i)->data(Qt::UserRole).toInt();
+            break;
+        }
+    return sel;
+}
+
+void QX::settings_clicked()
+{
+    int sel = GetClickedId();
+    if (sel<0) return;
+
+    QString appname = scanner->entries[sel].file;
+    SettingsDialog *win= new SettingsDialog(appname, this);
+    win->show();
+}
+
+void QX::favourites_clicked()
+{
+    FillApps(favouritesAction->isChecked());
+}
+
+void QX::quitClicked()
+{
+    close();
+}
+
+void QX::BuildMenu()
+{
+    menu = QSoftMenuBar::menuFor(this);
+    menu->addAction(tr("Launch"),this,SLOT(launch_clicked()));
+    menu->addAction(tr("Settings"),this,SLOT(settings_clicked()));
+    menu->addSeparator();
+    favouritesAction = menu->addAction(tr("Favourites"),this,SLOT(favourites_clicked()));
+    favouritesAction->setCheckable(true);
+    menu->addSeparator();
+    menu->addAction(tr("Quit"),this,SLOT(quitClicked()));
+}
+
+void QX::LoadFavourites()
+{
+    favConf = new QSettings(Qtopia::qtopiaDir() + "/etc/qx/favourites.conf", QSettings::IniFormat);
+    favConf->beginGroup("Apps");
+    favourites = favConf->value("list").toStringList();
+    favConf->endGroup();
+}
+
+void QX::FillApps(bool filter)
+{
+    lw->clear();
+    for (int i=0; i<scanner->entries.count(); i++)
+    {
+        DesktopEntry entry = scanner->entries[i];
+        bool cont = favourites.contains(entry.file);
+
+        if ((!filter) || (cont))
+        {
+            QPixmap pm(entry.icon);
+            if (pm.isNull()) pm.load(":image/qx/qx");
+            pm = pm.scaled(64,64);
+            QListWidgetItem *element = new QListWidgetItem(pm, entry.name);
+            element->setData(Qt::UserRole, i);
+            lw->addItem(element);
+            if (!filter)
+            {
+                Qt::CheckState state = (cont) ? Qt::Checked : Qt::Unchecked;
+                element->setCheckState(state);
+            }
+        }
+    }
+}
+
 
 QX::QX(QWidget *parent, Qt::WFlags f)
         : QWidget(parent)
 {
     Q_UNUSED(f);
 
-    bOk = new QPushButton(this);
-    connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
-
-    bTango = new QPushButton("Tango GPS", this);
-    connect(bTango, SIGNAL(clicked()), this, SLOT(tangoClicked()));
-
-    bScummvm = new QPushButton("ScummVM", this);
-    connect(bScummvm, SIGNAL(clicked()), this, SLOT(scummvmClicked()));
-
-    bQuit = new QPushButton(this);
-    connect(bQuit, SIGNAL(clicked()), this, SLOT(quitClicked()));
+    BuildMenu();
+    favouritesAction->setChecked(true);
 
     lineEdit = new QLineEdit("terminal.sh", this);
 
-    layout = new QVBoxLayout(this);
-    layout->addWidget(lineEdit);
-    layout->addWidget(bOk);
-    layout->addWidget(bTango);
-    layout->addWidget(bScummvm);
-    layout->addWidget(bQuit);
+    bOk = new QPushButton(this);
+    bOk->setMinimumWidth(100);
+    bOk->setText("Run");
+    connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
+
+    lw = new QListWidget(this);
+    connect(lw, SIGNAL(clicked(QModelIndex)), this, SLOT(listClicked()));
+
+    bResume = new QPushButton(this);
+    bTerminate = new QPushButton(this);
+    bResume->setVisible(false);
+    bTerminate->setVisible(false);
+    connect(bResume, SIGNAL(clicked()), this, SLOT(resumeClicked()));
+    connect(bTerminate, SIGNAL(clicked()), this, SLOT(terminateClicked()));
+
+    //------------------------------------------
+
+    grid=new QGridLayout(this);
+    grid->addWidget(lineEdit,0,0);
+    grid->addWidget(bOk,0,1);
+    grid->addWidget(lw,1,0,1,2);
+    grid->addWidget(bResume,2,0,1,2);
+    grid->addWidget(bTerminate,3,0,1,2);
+
+    LoadFavourites();
+    scanner = new DesktopScanner();
+    FillApps(favouritesAction->isChecked());
+
+    //==========================================
 
     appRunScr = new AppRunningScreen();
 
@@ -119,22 +228,29 @@ void QX::showScreen(QX::Screen scr)
 
     this->screen = scr;
 
-    bOk->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
-    bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
-    bTango->setVisible(scr == QX::ScreenMain);
-    bScummvm->setVisible(scr == QX::ScreenMain);
+    bOk->setVisible(scr == QX::ScreenMain);
+    //bQuit->setVisible(scr == QX::ScreenMain || scr == QX::ScreenPaused);
+    //bTango->setVisible(scr == QX::ScreenMain);
+    //bScummvm->setVisible(scr == QX::ScreenMain);
     lineEdit->setVisible(scr == QX::ScreenMain);
+    lw->setVisible(scr == QX::ScreenMain);
+
+    bResume->setVisible(scr == QX::ScreenPaused);
+    bTerminate->setVisible(scr == QX::ScreenPaused);
+
+    for (int i=0; i<menu->actions().count(); i++)
+    {
+        menu->actions()[i]->setEnabled(scr == QX::ScreenMain);
+    }
 
     switch(scr)
     {
     case QX::ScreenMain:
-        bOk->setText(tr("Run"));
-        bQuit->setText(tr("Quit"));
         update();
         break;
     case QX::ScreenPaused:
-        bOk->setText(tr("Resume") + " " + appName);
-        bQuit->setText((terminating ? tr("Kill") : tr("Stop")) + " " + appName);
+        bResume->setText(tr("Resume") + " " + appName);
+        bTerminate->setText((terminating ? tr("Kill") : tr("Stop")) + " " + appName);
         break;
     default:
         break;
@@ -265,19 +381,17 @@ void QX::resumeApp()
 
 void QX::okClicked()
 {
-    switch(screen)
-    {
-    case QX::ScreenMain:
-        runApp(lineEdit->text(), false);
-        break;
-    case QX::ScreenPaused:
-        resumeApp();
-        break;
-    default:
-        break;
-    }
+    //if (screen == QX::ScreenMain)
+    runApp(lineEdit->text(), false);
 }
 
+void QX::resumeClicked()
+{
+    //if (screen == QX::ScreenPaused)
+    resumeApp();
+}
+
+/*
 void QX::tangoClicked()
 {
 #ifdef QTOPIA
@@ -295,8 +409,9 @@ void QX::scummvmClicked()
 #endif
     runApp("/usr/games/scummvm", true);
 }
+*/
 
-void QX::quitClicked()
+void QX::terminateClicked()
 {
     if(process)
     {
@@ -330,3 +445,36 @@ void QX::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     showScreen(QX::ScreenMain);
 }
 
+//-----------------------------------------------
+
+void QX::launch_clicked()
+{
+    int sel = GetClickedId();
+    if (sel<0) return;
+
+    DesktopEntry entry = scanner->entries[sel];
+    QString appname = entry.file;
+
+    ProfileManager *mngr = new ProfileManager();
+    AppProfile prof = mngr->GetAppProfile(appname);
+    delete mngr;
+
+#ifdef QTOPIA
+    if (prof.antiDim)
+    {
+        powerConstraint = QtopiaApplication::Disable;
+    }
+    else if (prof.antiSuspend)
+    {
+        powerConstraint = QtopiaApplication::DisableSuspend;
+    }
+
+    if (prof.gps)
+        gpsPower("1");
+#endif
+
+    if (prof.init != "")
+        system(prof.init.toUtf8().data());
+
+    runApp(entry.exec, prof.rotate);
+}
