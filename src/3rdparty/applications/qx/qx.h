@@ -84,7 +84,7 @@ private:
 #endif
 
     void stopX();
-    void runApp(QString filename, bool rotate);
+    void runApp(QString filename, QString applabel, bool rotate);
     void showScreen(QX::Screen scr);
 
     void FillApps(bool filter);
@@ -92,6 +92,7 @@ private:
     void BuildMenu();
     int GetClickedId();
 
+    QLabel *lAppname;
     QPushButton *bResume;
     QPushButton *bTerminate;
 
