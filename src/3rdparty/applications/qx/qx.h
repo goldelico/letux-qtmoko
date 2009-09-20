@@ -114,6 +114,7 @@ private slots:
 
     void launch_clicked();
     void settings_clicked();
+    void info_clicked();
     void favourites_clicked();
     void listClicked();
 };

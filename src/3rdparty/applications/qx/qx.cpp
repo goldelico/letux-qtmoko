@@ -1,5 +1,6 @@
 #include "qx.h"
 #include "AppSettings.h"
+#include "AppInfo.h"
 #include <Qtopia>
 
 
@@ -39,6 +40,15 @@ void QX::settings_clicked()
     win->show();
 }
 
+void QX::info_clicked()
+{
+    int sel = GetClickedId();
+    if (sel<0) return;
+
+    InfoDialog *info_dlg = new InfoDialog(scanner->entries[sel], this);
+    info_dlg->show();
+}
+
 void QX::favourites_clicked()
 {
     FillApps(favouritesAction->isChecked());
@@ -54,6 +64,7 @@ void QX::BuildMenu()
     menu = QSoftMenuBar::menuFor(this);
     menu->addAction(tr("Launch"),this,SLOT(launch_clicked()));
     menu->addAction(tr("Settings"),this,SLOT(settings_clicked()));
+    menu->addAction(tr("Info"),this,SLOT(info_clicked()));
     menu->addSeparator();
     favouritesAction = menu->addAction(tr("Favourites"),this,SLOT(favourites_clicked()));
     favouritesAction->setCheckable(true);

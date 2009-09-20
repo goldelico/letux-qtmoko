@@ -24,7 +24,8 @@ HEADERS=\
     qxservice.h \
     apprunningscreen.h \
     DesktopScanner.h \
-    AppSettings.h
+    AppSettings.h \
+    AppInfo.h
 
 SOURCES=\
     main.cpp\
@@ -32,7 +33,8 @@ SOURCES=\
     qxservice.cpp \
     apprunningscreen.cpp \
     DesktopScanner.cpp \
-    AppSettings.cpp
+    AppSettings.cpp \
+    AppInfo.cpp
 
 # Install rules
 target [
