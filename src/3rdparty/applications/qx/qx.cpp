@@ -476,5 +476,25 @@ void QX::launch_clicked()
     if (prof.init != "")
         system(prof.init.toUtf8().data());
 
-    runApp(entry.exec, prof.rotate);
+    //if (prof.qvga) { }
+
+    QString cmd = entry.exec;
+
+    if ((prof.wm) || (prof.kbd))
+    {
+        QString script = "/tmp/.QX_app_launcher.sh";
+        QFile f(script);
+        if (f.open(QIODevice::WriteOnly))
+        {
+            f.write("matchbox-window-manager &\n");
+            f.write("sleep 5\n");
+            if (prof.kbd)
+                f.write("matchbox-keyboard &\n");
+            f.write(entry.exec.toUtf8());
+            f.close();
+        }
+        cmd = "sh " + script;
+    }
+
+    runApp(cmd, prof.rotate);
 }
