@@ -15,8 +15,11 @@ struct AppProfile
     QString init;
     bool antiSuspend;
     bool antiDim;
-    bool gps;
+    bool wm;
+    bool kbd;
+    bool qvga;
     bool rotate;
+    bool gps;
 };
 
 class ProfileManager
@@ -37,8 +40,11 @@ class SettingsDialog : public QDialog
         QLineEdit *edt_init;
         QCheckBox *chb_antisuspend;
         QCheckBox *chb_antidim;
-        QCheckBox *chb_gps;
+        QCheckBox *chb_wm;
+        QCheckBox *chb_kbd;
+        QCheckBox *chb_qvga;
         QCheckBox *chb_rotate;
+        QCheckBox *chb_gps;
         QPushButton *btn_save;
         ProfileManager *mngr;
         QString app;

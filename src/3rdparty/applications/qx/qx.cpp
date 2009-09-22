@@ -1,5 +1,6 @@
 #include "qx.h"
 #include "AppSettings.h"
+#include "AppInfo.h"
 #include <Qtopia>
 
 
@@ -39,6 +40,15 @@ void QX::settings_clicked()
     win->show();
 }
 
+void QX::info_clicked()
+{
+    int sel = GetClickedId();
+    if (sel<0) return;
+
+    InfoDialog *info_dlg = new InfoDialog(scanner->entries[sel], this);
+    info_dlg->show();
+}
+
 void QX::favourites_clicked()
 {
     FillApps(favouritesAction->isChecked());
@@ -54,6 +64,7 @@ void QX::BuildMenu()
     menu = QSoftMenuBar::menuFor(this);
     menu->addAction(tr("Launch"),this,SLOT(launch_clicked()));
     menu->addAction(tr("Settings"),this,SLOT(settings_clicked()));
+    menu->addAction(tr("Info"),this,SLOT(info_clicked()));
     menu->addSeparator();
     favouritesAction = menu->addAction(tr("Favourites"),this,SLOT(favourites_clicked()));
     favouritesAction->setCheckable(true);
@@ -113,8 +124,11 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     lw = new QListWidget(this);
     connect(lw, SIGNAL(clicked(QModelIndex)), this, SLOT(listClicked()));
 
+    lAppname = new QLabel(this);
     bResume = new QPushButton(this);
     bTerminate = new QPushButton(this);
+    lAppname->setVisible(false);
+    lAppname->setAlignment(Qt::AlignCenter);
     bResume->setVisible(false);
     bTerminate->setVisible(false);
     connect(bResume, SIGNAL(clicked()), this, SLOT(resumeClicked()));
@@ -126,8 +140,9 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     grid->addWidget(lineEdit,0,0);
     grid->addWidget(bOk,0,1);
     grid->addWidget(lw,1,0,1,2);
-    grid->addWidget(bResume,2,0,1,2);
-    grid->addWidget(bTerminate,3,0,1,2);
+    grid->addWidget(lAppname,2,0,1,2);
+    grid->addWidget(bResume,3,0,1,2);
+    grid->addWidget(bTerminate,4,0,1,2);
 
     LoadFavourites();
     scanner = new DesktopScanner();
@@ -235,6 +250,7 @@ void QX::showScreen(QX::Screen scr)
     lineEdit->setVisible(scr == QX::ScreenMain);
     lw->setVisible(scr == QX::ScreenMain);
 
+    lAppname->setVisible(scr == QX::ScreenPaused);
     bResume->setVisible(scr == QX::ScreenPaused);
     bTerminate->setVisible(scr == QX::ScreenPaused);
 
@@ -249,8 +265,9 @@ void QX::showScreen(QX::Screen scr)
         update();
         break;
     case QX::ScreenPaused:
-        bResume->setText(tr("Resume") + " " + appName);
-        bTerminate->setText((terminating ? tr("Kill") : tr("Stop")) + " " + appName);
+        lAppname->setText(appName);
+        bResume->setText(tr("Resume"));
+        bTerminate->setText(terminating ? tr("Kill") : tr("Stop"));
         break;
     default:
         break;
@@ -279,9 +296,10 @@ void QX::stopX()
 #endif
 }
 
-void QX::runApp(QString filename, bool rotate)
+void QX::runApp(QString filename, QString applabel, bool rotate)
 {
-    this->appName = filename;
+    //this->appName = filename;
+    this->appName = applabel;
     this->rotate = rotate;
     terminating = false;
 
@@ -382,7 +400,7 @@ void QX::resumeApp()
 void QX::okClicked()
 {
     //if (screen == QX::ScreenMain)
-    runApp(lineEdit->text(), false);
+    runApp(lineEdit->text(), lineEdit->text(), false);
 }
 
 void QX::resumeClicked()
@@ -476,5 +494,26 @@ void QX::launch_clicked()
     if (prof.init != "")
         system(prof.init.toUtf8().data());
 
-    runApp(entry.exec, prof.rotate);
+    //if (prof.qvga) { }
+
+    QString cmd = entry.exec;
+
+    if ((prof.wm) || (prof.kbd))
+    {
+        QString script = "/tmp/.QX_app_launcher.sh";
+        QFile f(script);
+        if (f.open(QIODevice::WriteOnly))
+        {
+            f.write("matchbox-window-manager &\n");
+            f.write("sleep 5\n");
+            if (prof.kbd)
+                f.write("matchbox-keyboard &\n");
+            f.write(entry.exec.toUtf8());
+            f.close();
+        }
+        cmd = "sh " + script;
+    }
+
+    QString applabel = "<b>"+entry.name+"</b><br/>"+entry.exec;
+    runApp(cmd, applabel, prof.rotate);
 }
