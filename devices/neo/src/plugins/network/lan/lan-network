@@ -70,7 +70,7 @@ try_ip()
                return
             fi
        sleep 1
-       let COUNT=COUNT+1
+       COUNT=$(( $COUNT + 1 ))
        done
 stop $1
 }
