@@ -337,7 +337,7 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
     {
         stopX();
         showScreen(QX::ScreenMain);
-        QMessageBox::critical(this, tr("QX"), tr("Unable to conntect to X server"));
+        QMessageBox::critical(this, tr("QX"), tr("Unable to connect to X server"));
         return;
     }
     XCloseDisplay(dpy);
