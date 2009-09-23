@@ -355,7 +355,7 @@ Step 8 - compile Qtopia
 
 mkdir build
 cd build
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0
+../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -confirm-license
 make
 make install
 
