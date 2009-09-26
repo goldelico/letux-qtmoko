@@ -14,6 +14,7 @@ public:
 OggPlugin::OggPlugin():
     d(new OggPluginPrivate)
 {
+    d->mimeTypes << "audio/ogg";
     d->mimeTypes << "audio/ogg+vorbis";
     d->fileExtensions << "ogg";
 }
