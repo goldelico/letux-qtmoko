@@ -1,0 +1,3 @@
+[submodule "qtmoko-apps"]
+	path = qtmoko-apps
+	url = git://github.com/radekp/qtmoko-apps.git
