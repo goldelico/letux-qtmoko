@@ -384,6 +384,10 @@ Step 9
   bluetooth stuff must be compiled as modules otherwise bt does not work for
   me.
 
+* To reduce size of modules, you have to remove debugging information.
+
+find  . -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi-strip -R .not -R .comment --strip-unneeded {} \;
+
 * After compiling, upload kernel with modules to neo, and add somewhere in
   init scripts depmod command. It will update /lib/modules/xxx/modules.dep
   otherwise modules wont load and neo will not work (no usb networking,
