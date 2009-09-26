@@ -274,12 +274,14 @@ int NeoBattery::getCapacity()
     capacityState.close();
     qLog(PowerManagement) << capacity;
 
+// JM: Removed this test as it will permanently switch to dumb battery which will always return 100%
 // might be gta02 with dumb battery
-    if (capacity == 0) {
-        isSmartBattery = false;
-        updateDumbStatus();
-    }
-    return capacity;
+//     if (capacity == 0) {
+//         isSmartBattery = false;
+//         updateDumbStatus();
+//     }
+
+	return capacity;
 }
 
 /*!
