@@ -110,13 +110,10 @@ void NeoBattery::updateSysStatus()
 
     int capacity = getCapacity();
 
+	//JM: now is charging returns the correct result, we just need to do this
     battery->setCharging(charging);
     battery->setCharge(capacity);
     battery->setTimeRemaining(getTimeRemaining());
-    // stop the charging animation when fully charged and plugged in
-    // otherwise it looks like it never gets full
-   if (capacity > 98 && charging)
-       battery->setCharging(false);
 
 }
 
@@ -222,7 +219,8 @@ bool NeoBattery::isCharging()
 // Charging  Discharging  Not charging
 // ac        battery      ac/full
     chargeState.close();
-    if (charge != ("Discharging")) {
+	// JM: Fixed this as it can return Not charging too
+    if (charge == ("Charging")) {
         return true;
     }
 
