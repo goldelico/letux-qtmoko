@@ -79,6 +79,7 @@ bool NeoSuspend::suspend()
 
 bool NeoSuspend::wake()
 {
+    qLog(PowerManagement)<< __PRETTY_FUNCTION__;
 #ifdef Q_WS_QWS
     QWSServer::instance()->refresh();
 #endif
