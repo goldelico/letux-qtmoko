@@ -38,7 +38,8 @@ static struct {
       { QObject::tr("Default Qt Extended"), 0, 0, 0 }, 
       { QObject::tr("Wheel browser"), 0, 0, "Wheel" },
       { QObject::tr("E1 example"), "E1", 0, 0 },
-      { QObject::tr("E2 example"), "E2", 0, 0 } 
+      { QObject::tr("E2 example"), "E2", 0, 0 },
+      { QObject::tr("E3 example"), "E3", 0, 0 } 
     };
 
 ServerWidgetSettings::ServerWidgetSettings( QWidget* parent, Qt::WFlags fl )
