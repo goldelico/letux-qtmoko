@@ -81,6 +81,8 @@ install()
                     shift;
                 done
                 mv $TMP_FILE /var/run/resolv.conf
+            elif [ -f "/etc/ppp/resolv.conf" ]; then
+                cp -f /etc/ppp/resolv.conf /var/run/resolv.conf
             fi
             rm -f $RESOLVCONF
             ln -s /var/run/resolv.conf $RESOLVCONF
