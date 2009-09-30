@@ -110,6 +110,15 @@ void NeoBattery::updateSysStatus()
 
     int capacity = getCapacity();
 
+	// JM: Occasionally we get a glitch and capacity returns 0, which
+	// is an unlikely value, so we ignore it, otherwise we get a
+	// critical battery dialog
+	if(capacity == 0){
+		qLog(PowerManagement) << __PRETTY_FUNCTION__ << "ignoring 0 capacity";
+		return;
+	}
+		
+		
 	//JM: now is charging returns the correct result, we just need to do this
     battery->setCharging(charging);
     battery->setCharge(capacity);
