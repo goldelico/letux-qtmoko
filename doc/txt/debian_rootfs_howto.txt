@@ -411,6 +411,13 @@ cd /media/card/boot
 echo "console=tty0 loglevel=3 rootdelay=1" > append-GTA02
 scp /home/radek/linux-2.6/GTA02/uImage-GTA02.bin root@192.168.0.202:/media/card/boot/uImage-GTA02.bin
 
+Step 9.5 - remove bash history
+==============================
+
+* Remove .bash_history created during install
+
+rm -f /media/card/root/.bash_history
+
 Step 10
 =======
 
