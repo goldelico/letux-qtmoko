@@ -203,7 +203,7 @@ case "$1" in
 	;;
   stop)
 	rm -f /tmp/restart-qtopia
-	killall -q qpe atd qx_helper
+	killall -q qpe atd qx_helper quicklauncher mediaserver mediaplayer sipagent
 	;;
   restart)
 	/etc/init.d/qpe.sh stop
