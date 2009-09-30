@@ -380,9 +380,14 @@ ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
 Step 9
 ======
 
-* Compile kernel. I am now using andy-tracking and moredrivers config. The
-  bluetooth stuff must be compiled as modules otherwise bt does not work for
-  me.
+* Compile kernel. I am now using andy-tracking and packaging config.
+
+* The bluetooth stuff must be compiled as modules otherwise bt does not work
+  for me. 
+
+* Remove all CONFIG_ANDROID options. They are not needed and
+  CONFIG_ANDROID_LOW_MEMORY_KILLER prevents kernel from using swap and
+  causes that applications are getting killed.
 
 * To reduce size of modules, you have to remove debugging information.
 
