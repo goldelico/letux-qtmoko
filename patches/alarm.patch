@@ -1,0 +1,13 @@
+diff --git a/qtopiacore/qt/configure b/qtopiacore/qt/configure
+index 539d1b6..2432f26 100755
+--- a/qtopiacore/qt/configure
++++ b/qtopiacore/qt/configure
+@@ -541,7 +541,7 @@ CFG_DOUBLEFORMAT=auto
+ CFG_ARMFPA=auto
+ CFG_IWMMXT=no
+ CFG_CLOCK_GETTIME=auto
+-CFG_CLOCK_MONOTONIC=auto
++CFG_CLOCK_MONOTONIC=no
+ CFG_MREMAP=auto
+ CFG_GETADDRINFO=auto
+ CFG_IPV6IFNAME=auto
