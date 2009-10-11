@@ -105,12 +105,18 @@ echo "KERNEL==\"s3c2410_serial[0-9]\",   NAME=\"ttySAC%n\"" >> /media/card/etc/u
 * Create /media/card/etc/fb.modes
 
 mode "vga"
-    geometry 480 640 480 640 16
-    timings 100000 8 104 2 16 8 2
-    accel false
+    geometry 480 640 480 1280 16
+    timings 40816 8 16 2 16 8 2
+    rgba 5/11,6/5,5/0,0/0
 endmode
 
-  Calling "fbset vga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
+mode "qvga"
+    geometry 480 640 480 1280 16
+    timings 100000 8 16 2 16 8 2
+    rgba 5/11,6/5,5/0,0/0
+endmode
+
+  Calling "fbset qvga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
   is needed for mplayer in 320x240 with correct colors.
 
 Step 4.1 - DHCP server - not using now

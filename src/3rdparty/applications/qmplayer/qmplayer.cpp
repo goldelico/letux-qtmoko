@@ -48,7 +48,6 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addLayout(buttonLayout);
 
     maxScanLevel = 0;
-    fbset = false;
     delTmpFiles = -1;
     process = NULL;
     tcpServer = NULL;
@@ -1130,17 +1129,16 @@ void QMplayer::setRes(int xy)
         f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         if(xy == 320240)
         {
-            if(!fbset)
-            {
-                fbset = true;
-                QProcess p(this);
-                p.start("fbset", QStringList("vga"));
-                p.waitForFinished(5000);
-            }
+            QProcess p(this);
+            p.start("fbset", QStringList("qvga"));
+            p.waitForFinished(5000);
             f.write("qvga-normal");
         }
         else if(xy == 640480)
         {
+            QProcess p(this);
+            p.start("fbset", QStringList("vga"));
+            p.waitForFinished(5000);	  
             f.write("normal");
         }
         f.close();

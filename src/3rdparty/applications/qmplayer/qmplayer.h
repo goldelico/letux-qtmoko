@@ -48,7 +48,6 @@ private:
 
     Screen screen;
     int maxScanLevel;
-    bool fbset;
     int delTmpFiles;
     bool abort;
     QVBoxLayout* layout;
