@@ -376,6 +376,21 @@ make install
 cd /media/card
 tar xzvpf qtopia-update.tar.gz
 
+* Translations - you need to checkout QtMoko translation git branch
+
+git checkout translations
+
+  and tell configure (in build dir) which languages you want
+
+../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -confirm-license -languages cs_CZ,en_US,it_IT
+
+  and rebuild all
+
+make clean
+make
+make install
+
+
 Step 8.5 - Fonts
 ================
 
