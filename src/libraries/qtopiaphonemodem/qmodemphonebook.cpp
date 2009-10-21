@@ -41,6 +41,8 @@
     \ingroup telephony::modem
 */
 
+#define DEFAULT_CODEC "UCS2"
+
 // Fetch 10 entries at a time every half a second when in slow update mode.
 #define SLOW_UPDATE_TIMEOUT     500
 
@@ -161,8 +163,11 @@ QModemPhoneBook::QModemPhoneBook( QModemService *service )
                       this, SLOT(slowTimeout()) );
 
     // Default to the "GSM" codec, and then query the actual codec.
-    d->stringCodec = QAtUtils::codec( "GSM" );
-    requestCharset();
+    //d->stringCodec = QAtUtils::codec( "GSM" );
+    //requestCharset();
+
+    d->stringCodec = QAtUtils::codec( DEFAULT_CODEC );
+    setCharset();
 }
 
 /*!
@@ -690,11 +695,22 @@ void QModemPhoneBook::cscsDone( bool ok, const QAtResult& result )
     }
 }
 
+void QModemPhoneBook::cscsSetDone( bool ok, const QAtResult& result )
+{
+    if ( ok ) {
+        QTimer::singleShot( 8000, this, SLOT(requestStorages()) );
+    } else if ( d->charsetRetry-- > 0 ) {
+        QTimer::singleShot( 3000, this, SLOT(setCharset()) );
+    } else {
+        QTimer::singleShot( 8000, this, SLOT(requestStorages()) );
+    }
+}
+
 void QModemPhoneBook::cpbsDone( bool ok, const QAtResult& result )
 {
     if ( ok ) {
-        QAtResultParser cmd( result ); 
-        if ( cmd.next( "+CPBS:" ) ) 
+        QAtResultParser cmd( result );
+        if ( cmd.next( "+CPBS:" ) )
         {
             QList<QAtResultParser::Node> nodes = cmd.readList();
             QStringList storages;
@@ -952,6 +968,12 @@ void QModemPhoneBook::requestCharset()
 {
     d->service->secondaryAtChat()->chat
         ( "AT+CSCS?", this, SLOT(cscsDone(bool,QAtResult)) );
+}
+
+void QModemPhoneBook::setCharset()
+{
+    d->service->secondaryAtChat()->chat
+        ( "AT+CSCS=\"" DEFAULT_CODEC "\"", this, SLOT(cscsSetDone(bool,QAtResult)) );
 }
 
 void QModemPhoneBook::requestStorages()

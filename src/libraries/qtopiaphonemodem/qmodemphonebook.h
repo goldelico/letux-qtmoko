@@ -72,6 +72,7 @@ private:
 
 private slots:
     void cscsDone( bool ok, const QAtResult& result );
+    void cscsSetDone( bool ok, const QAtResult& result );
     void readDone( bool ok, const QAtResult& result );
     void readFinished( QModemPhoneBookCache *cache );
     void queryDone( bool ok, const QAtResult& result );
@@ -80,6 +81,7 @@ private slots:
     void fdModifyDone( bool ok, const QAtResult& result );
     void selectDone( bool ok, const QAtResult& result );
     void requestCharset();
+    void setCharset();
     void cpbsDone( bool ok, const QAtResult& result );
     void requestStorages();
 
