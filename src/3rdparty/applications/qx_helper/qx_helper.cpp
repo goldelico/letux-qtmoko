@@ -16,18 +16,18 @@ int main(int argc, char **argv)
 	
 	//fprintf(stderr, "QX helper started\n");
 
-    if ((fd = open("/dev/tty7", O_RDWR|O_NDELAY, 0)) < 0)
+    if ((fd = open("/dev/tty4", O_RDWR|O_NDELAY, 0)) < 0)
     {
-		perror("QX helper: Cannot open /dev/tty7");
+		perror("QX helper: Cannot open /dev/tty4");
 		return 0;
     }
     
-    if (ioctl(fd, VT_ACTIVATE, 7) != 0)
+    if (ioctl(fd, VT_ACTIVATE, 4) != 0)
     {
 		fprintf(stderr, "QX helper: VT_ACTIVATE failed\n");
     }
-	//fprintf(stderr, "QX helper: calling VT_WAITACTIVE for /dev/tty7\n");
-    if (ioctl(fd, VT_WAITACTIVE, 7) != 0)
+	//fprintf(stderr, "QX helper: calling VT_WAITACTIVE for /dev/tty4\n");
+    if (ioctl(fd, VT_WAITACTIVE, 4) != 0)
     {
 		fprintf(stderr, "QX helper: VT_WAITACTIVE failed\n");
     }
