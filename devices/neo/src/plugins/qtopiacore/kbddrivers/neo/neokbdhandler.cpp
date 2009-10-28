@@ -145,14 +145,14 @@ NeoKbdHandler::NeoKbdHandler()
     setObjectName( "Neo Keypad Handler" );
 
     auxHandler = new FicLinuxInputEventHandler(this);
-    ok = auxHandler->openByName("GTA02 Buttons") ||
+    ok = auxHandler->openByName("gpio-keys") ||
          auxHandler->openByPhysicalBus("neo1973kbd/input0");
 
     if(ok) {
         connect(auxHandler, SIGNAL(inputEvent(struct input_event&)),
                 SLOT(inputEvent(struct input_event&)));
     } else {
-        qWarning("Cannot open a device for AUX button");
+        qWarning("Cannot open device for AUX button");
         delete auxHandler;
         auxHandler = 0;
     }
@@ -165,9 +165,21 @@ NeoKbdHandler::NeoKbdHandler()
         connect(powerHandler, SIGNAL(inputEvent(struct input_event&)),
                 SLOT(inputEvent(struct input_event&)));
     } else {
-        qWarning("Cannot open a device for POWER button");
+        qWarning("Cannot open device for POWER button");
         delete powerHandler;
         powerHandler = 0;
+    }
+
+    jackHandler = new FicLinuxInputEventHandler(this);
+    ok = jackHandler->openByName("neo1973-gta02 Headset Jack");
+
+    if (ok) {
+        connect(jackHandler, SIGNAL(inputEvent(struct input_event&)),
+                SLOT(inputEvent(struct input_event&)));
+    } else {
+        qWarning("Cannot open input device for Headset Jack");
+        delete jackHandler;
+        jackHandler = 0;
     }
 
     shift = false;

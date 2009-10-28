@@ -84,6 +84,7 @@ private:
      
     FicLinuxInputEventHandler *auxHandler;
     FicLinuxInputEventHandler *powerHandler;
+    FicLinuxInputEventHandler *jackHandler;
      
     private slots:
     void inputEvent(struct input_event&);
