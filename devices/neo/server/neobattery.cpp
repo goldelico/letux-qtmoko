@@ -47,8 +47,7 @@ NeoBattery::NeoBattery(QObject *parent)
   percentCharge(0)
 {
     bool apm = APMEnabled();
-    if(!apm) return;
-    qWarning()<<"NeoBattery::NeoBattery";
+    qLog(PowerManagement)<<"NeoBattery::NeoBattery";
 
     QtopiaServerApplication::taskValueSpaceSetAttribute("NeoBattery",
                                                         "APMAvailable", apm);
