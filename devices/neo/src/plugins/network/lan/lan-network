@@ -273,8 +273,8 @@ print_debug "$*"
                                         echo "WIRELESS_GROUP=TKIP" >> $TMP_FILE;
                                         ;;
                                     AES)
-                                        echo "WIRELESS_PAIRWISE=CCMP TKIP" >> $TMP_FILE;
-                                        echo "WIRELESS_GROUP=CCMP TKIP" >> $TMP_FILE;
+                                        echo "WIRELESS_PAIRWISE=\"CCMP TKIP\"" >> $TMP_FILE;
+                                        echo "WIRELESS_GROUP=\"CCMP TKIP\"" >> $TMP_FILE;
                                         ;;
                                 esac
                                 ;;
