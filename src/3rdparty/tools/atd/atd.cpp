@@ -82,6 +82,9 @@ void waitfor(time_t t) {
 #ifndef NO_LINUX_RTC
   rtcfd = open ("/dev/rtc", O_RDONLY);
   if (rtcfd ==  -1) {
+    rtcfd = open ("/dev/rtc0", O_RDONLY);
+  }
+  if (rtcfd ==  -1) {
 #ifdef DAEMON
     syslog(LOG_ERR, "/dev/rtc: %m\n");
     closelog();
