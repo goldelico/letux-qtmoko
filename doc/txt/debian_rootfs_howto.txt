@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,tangogps,gpsd,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,xterm stable /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -144,23 +144,30 @@ subnet 192.168.0.0 netmask 255.255.255.0 {
 __END__
 
 
-Step 4.5 - not using this now
-=============================
+Step 4.5 - alsa utils without python dependency
+===============================================
 
-* Install alsa-utils from testing because it does not have python dependency. I
-  dont know how to tell apt to install one package from testing so we for a
-  moment put only testing repo in sources.list and then restore it back.
+* To avoid python and save precious space, we will intall customized alsa-utils
+  package which does not have python as dependency.
 
 chroot /media/card
-mv /etc/apt/sources.list /etc/apt/sources.list.orig
-echo "deb http://ftp.de.debian.org/debian squeeze main" > /etc/apt/sources.list
-apt-get update
-apt-get install alsa-utils
-rm /etc/apt/sources.list
-mv /etc/apt/sources.list.orig /etc/apt/sources.list
-apt-get update
-apt-get install pkg-fso-keyring
+wget http://activationrecord.net/radekp/pub/alsa-utils_1.0.16-2_armel.deb
+dpkg -i alsa-utils_1.0.16-2_armel.deb
+rm alsa-utils_1.0.16-2_armel.deb
 exit
+
+* If you wonder how to build customized alsa-utils then just edit the source
+  package and remove python dependency from the control files.
+
+Step 4.6 - pkg-fso-keyring
+==========================
+
+chroot /media/card
+wget http://pkg-fso.alioth.debian.org/debian/pool/main/p/pkg-fso-keyring/pkg-fso-keyring_2008.09.27_all.deb
+dpkg -i pkg-fso-keyring_2008.09.27_all.deb
+rm pkg-fso-keyring_2008.09.27_all.deb
+exit
+
 
 Step 5
 ======
