@@ -28,6 +28,7 @@ desktop.files+=desktop/suspendx.desktop
 desktop.files+=desktop/resumex.desktop
 desktop.files+=desktop/get-ssh-key.desktop
 desktop.files+=desktop/fast-charge.desktop
+desktop.files+=desktop/share-gprs.desktop
 
 desktop.path=/apps/Devtools
 desktop.depends+=install_docapi_f_dir
