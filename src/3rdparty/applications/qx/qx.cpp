@@ -1,8 +1,6 @@
 #include "qx.h"
 #include "AppSettings.h"
 #include "AppInfo.h"
-#include <Qtopia>
-
 
 void QX::listClicked()
 {
@@ -61,7 +59,11 @@ void QX::quitClicked()
 
 void QX::BuildMenu()
 {
+#ifdef QTOPIA
     menu = QSoftMenuBar::menuFor(this);
+#else
+    menu = new QMenu(this);
+#endif
     menu->addAction(tr("Launch"),this,SLOT(launch_clicked()));
     menu->addAction(tr("Settings"),this,SLOT(settings_clicked()));
     menu->addAction(tr("Info"),this,SLOT(info_clicked()));
@@ -74,7 +76,12 @@ void QX::BuildMenu()
 
 void QX::LoadFavourites()
 {
-    favConf = new QSettings(Qtopia::qtopiaDir() + "/etc/qx/favourites.conf", QSettings::IniFormat);
+#ifdef QTOPIA
+    QString dir = Qtopia::qtopiaDir();
+#else
+    QString dir;
+#endif
+    favConf = new QSettings(dir + "/etc/qx/favourites.conf", QSettings::IniFormat);
     favConf->beginGroup("Apps");
     favourites = favConf->value("list").toStringList();
     favConf->endGroup();

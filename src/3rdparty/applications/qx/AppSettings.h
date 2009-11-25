@@ -10,6 +10,10 @@
 #include <QGridLayout>
 #include <QLabel>
 
+#ifdef QTOPIA
+#include <Qtopia>
+#endif
+
 struct AppProfile
 {
     QString init;

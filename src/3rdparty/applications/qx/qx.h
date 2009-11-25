@@ -5,7 +5,6 @@
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
-#include <QSoftMenuBar>
 #include <QSettings>
 
 #include <QStringList>
@@ -30,7 +29,9 @@
 #include <QThread>
 #ifdef QTOPIA
 #include "qxservice.h"
+#include <Qtopia>
 #include <QtopiaApplication>
+#include <QSoftMenuBar>
 #include <QDeviceButtonManager>
 #endif
 #include <unistd.h>

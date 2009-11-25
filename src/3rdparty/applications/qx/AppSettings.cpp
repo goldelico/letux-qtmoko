@@ -1,11 +1,15 @@
 #include "AppSettings.h"
-#include <Qtopia>
 #include <QDebug>
 
 
 ProfileManager::ProfileManager()
 {
-    profConf = new QSettings(Qtopia::qtopiaDir() + "/etc/qx/profiles.conf", QSettings::IniFormat);
+#ifdef QTOPIA
+    QString dir = Qtopia::qtopiaDir();
+#else
+    QString dir;
+#endif
+    profConf = new QSettings(dir + "/etc/qx/profiles.conf", QSettings::IniFormat);
 }
 
 ProfileManager::~ProfileManager()

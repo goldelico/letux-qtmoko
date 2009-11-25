@@ -8,6 +8,12 @@ QT += core \
     network
 SOURCES += main.cpp \
     qx.cpp \
-    apprunningscreen.cpp
+    apprunningscreen.cpp \
+    AppInfo.cpp \
+    AppSettings.cpp \
+    DesktopScanner.cpp
 HEADERS += qx.h \
-    apprunningscreen.h
+    apprunningscreen.h \
+    AppInfo.h \
+    AppSettings.h \
+    DesktopScanner.h
