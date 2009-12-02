@@ -1,3 +1,6 @@
 [submodule "qtmoko-apps"]
 	path = qtmoko-apps
 	url = git://github.com/radekp/qtmoko-apps.git
+[submodule "qtopiacore/qt"]
+	path = qtopiacore/qt
+	url = git://github.com/radekp/qt.git
