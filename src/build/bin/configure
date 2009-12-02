@@ -4177,12 +4177,12 @@ sub getQtVersion
         die "ERROR: Could not read version from ".fixpath("$qt_depot_path/src/corelib/global/qglobal.h")."\n";
     }
 
-    if ( $qtMajorVersion != 4 || ( $qtMinorVersion != 4 && $qtMinorVersion != 5 ) ) {
-        die <<END;
-ERROR: Qt Extended $qtopiaVersionStr is designed to work with Qt 4.4 and Qt 4.5.
-       Found Qt $qtMajorVersion.$qtMinorVersion.$qtRevVersion.
-END
-    }
+#    if ( $qtMajorVersion != 4 || ( $qtMinorVersion != 4 && $qtMinorVersion != 5 ) ) {
+#        die <<END;
+#ERROR: Qt Extended $qtopiaVersionStr is designed to work with Qt 4.4 and Qt 4.5.
+#       Found Qt $qtMajorVersion.$qtMinorVersion.$qtRevVersion.
+#END
+#    }
 }
 
 sub clean_qt_sources
