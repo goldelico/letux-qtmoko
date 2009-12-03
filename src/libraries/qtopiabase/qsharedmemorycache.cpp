@@ -971,12 +971,12 @@ void QSharedMemoryManager::derefSharedMemoryPixmap(qint64 s)
 
 
 // Nasty - use a friend class not in E to access QPixmap private data
-class QX11PaintEngine {
-public:
-    static QPixmapData *getPixmapData(const QPixmap &pm) {
-        return pm.data;
-    }
-};
+// class QX11PaintEngine {
+// public:
+//     static QPixmapData *getPixmapData(const QPixmap &pm) {
+//         return pm.pixmapData();
+//     }
+// };
 
 bool QSharedMemoryManager::findPixmap(const QString &k, QPixmap &pm, bool ref) const
 {
@@ -987,7 +987,7 @@ bool QSharedMemoryManager::findPixmap(const QString &k, QPixmap &pm, bool ref) c
         PixmapShmItem *item = (PixmapShmItem*)(char*)cache->findItem(k.toLatin1().data(), ref, QSMCacheItem::Pixmap);
 
         if ( item ) {
-            QPixmapData *data = pm.data_ptr();
+            QPixmapData *data = pm.pixmapData();
             QImage newimage((uchar*)item + sizeof(PixmapShmItem),
                                 item->w, item->h, item->format);
             localSerialMap.insert(newimage.serialNumber(), (char*)item);
@@ -1010,7 +1010,7 @@ bool QSharedMemoryManager::insertPixmap(const QString& k, const QPixmap &pm)
 {
 
     if (isGlobalPixmap(k)) {
-        QPixmapData *data = const_cast<QPixmap&>(pm).data_ptr();
+        QPixmapData *data = const_cast<QPixmap&>(pm).pixmapData();
         const QImage &img = data->toImage();
 
         int size = img.numBytes() + sizeof(PixmapShmItem);
