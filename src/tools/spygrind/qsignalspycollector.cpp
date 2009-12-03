@@ -29,6 +29,7 @@
 #define DUMP_PATH_ENV "SPYGRIND_OUT_PATH"
 
 #include <QtCore>
+#include <unistd.h>
 
 typedef QPair<QMetaObject const*,int> MethodKey;
 typedef QPair<Method*,Stamp>          MethodCall;
