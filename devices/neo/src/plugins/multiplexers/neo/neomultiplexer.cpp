@@ -117,11 +117,11 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     QSerialIODeviceMultiplexer::chat(device, "ATE0");
     device->readAll();
 
-    if (isFreerunner) {
-        // Issue the AT+CMUX command to determine if this device
-        // uses GSM 07.10-style multiplexing.
-        return QGsm0710Multiplexer::cmuxChat( device, NEO_FRAME_SIZE, true );
-    }
+//     if (isFreerunner) {
+//         // Issue the AT+CMUX command to determine if this device
+//         // uses GSM 07.10-style multiplexing.
+//         return QGsm0710Multiplexer::cmuxChat( device, NEO_FRAME_SIZE, true );
+//     }
     return true;
 }
 
@@ -129,7 +129,7 @@ QSerialIODeviceMultiplexer *NeoMultiplexerPlugin::create( QSerialIODevice *devic
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
 
-    if (isFreerunner)
-        return new QGsm0710Multiplexer( device, NEO_FRAME_SIZE, true );
+//     if (isFreerunner)
+//         return new QGsm0710Multiplexer( device, NEO_FRAME_SIZE, true );
     return new QNullSerialIODeviceMultiplexer( device );
 }
