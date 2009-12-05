@@ -59,6 +59,18 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
 
+    // Power on modem via sysfs
+    if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        f.write("0");
+        f.close();
+    }
+    if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        f.write("1");
+        f.close();
+    } else {
+        qWarning() << "Modem power on failed "<< f.errorString();
+    }
+    
     // The FIC needs a special line discipline set on the device.
     QSerialPort *port = qobject_cast<QSerialPort *>( device );
     if (port) {
