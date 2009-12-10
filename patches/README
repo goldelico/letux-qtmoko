@@ -1,9 +1,7 @@
 * alarm.patch - need to be applied on top of Qt. Makes alarm working on time.
 
-* qt45_passwd.patch - this patch is applied on top of QT to enable virtual
-  keyboard in password input fields. This patch (or modified version) should go
-  to upstream QT and then we can delete it. Now we have to apply it always when
-  updating QT.
+* qguistatemachine_compile.patch - applied on top of QT to compile with
+  qtopia constrained profile. Should be upstream for QT 4.6.1
 
-* no_voip.patch - disables voip stuff. This patch is applied for qtmoko-debian
-  releases to get rid of no sound in incomming calls.
+* qvariant.diff - fixes problems with QVariant which causes oprator name not
+  displayed on main stream. Should be upstream for QT 4.6.1
