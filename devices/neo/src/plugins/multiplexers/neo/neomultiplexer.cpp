@@ -60,6 +60,7 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     qLog(Hardware) << __PRETTY_FUNCTION__;
 
     // Power on modem via sysfs
+    QFile f("/sys/bus/platform/devices/neo1973-pm-gsm.0/power_on");
     if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         f.write("0");
         f.close();
