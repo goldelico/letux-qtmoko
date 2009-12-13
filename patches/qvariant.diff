@@ -1,13 +1,24 @@
 diff --git a/src/corelib/kernel/qvariant.h b/src/corelib/kernel/qvariant.h
-index eb4fb56..29a4c19 100644
+index eb4fb56..78d10ee 100644
 --- a/src/corelib/kernel/qvariant.h
 +++ b/src/corelib/kernel/qvariant.h
-@@ -458,7 +458,7 @@ inline void qVariantSetValue(QVariant &v, const T &t)
-     //if possible we reuse the current QVariant private
-     const int type = qMetaTypeId<T>(reinterpret_cast<T *>(0));
-     QVariant::Private &d = v.data_ptr();
+@@ -455,18 +455,7 @@ inline QVariant qVariantFromValue(const QVariant &t) { return t; }
+ template <typename T>
+ inline void qVariantSetValue(QVariant &v, const T &t)
+ {
+-    //if possible we reuse the current QVariant private
+-    const int type = qMetaTypeId<T>(reinterpret_cast<T *>(0));
+-    QVariant::Private &d = v.data_ptr();
 -    if (v.isDetached() && (type <= int(QVariant::Char) || type == d.type)) {
-+    if (v.isDetached() && (type == d.type || (type <= uint(QVariant::Char) && d.type <= uint(QVariant::Char)))) {
-         d.type = type;
-         T *old = reinterpret_cast<T*>(d.is_shared ? d.data.shared->ptr : &d.data.ptr);
-         if (QTypeInfo<T>::isComplex)
+-        d.type = type;
+-        T *old = reinterpret_cast<T*>(d.is_shared ? d.data.shared->ptr : &d.data.ptr);
+-        if (QTypeInfo<T>::isComplex)
+-            old->~T();
+-        new (old) T(t); //call the copy constructor
+-    } else {
+-        v = QVariant(type, &t, QTypeInfo<T>::isPointer);
+-    }
++    v = QVariant(qMetaTypeId<T>(reinterpret_cast<T *>(0)), &t);
+ }
+ 
+ inline QVariant::QVariant() {}
