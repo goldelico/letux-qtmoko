@@ -1,0 +1,88 @@
+#!/bin/sh
+
+if [ -r /opt/Qtopia/SDK/scripts/functions ]; then
+    . /opt/Qtopia/SDK/scripts/functions
+    QPEVER=$(version)
+fi
+
+die()
+{
+    echo -n "updatedevice failed while doing: "
+    echo $@
+    exit 1
+}
+
+prepare_device()
+{
+
+    ssh root@$PHONEIP '/etc/init.d/qpe stop'
+}
+
+upload_image()
+{
+    scp $QTOPIA_IMAGE root@$PHONEIP:/ || die upload_image
+}
+
+install_image()
+{
+    ssh root@$PHONEIP "gzip -dc /${QTOPIA_IMAGE} | tar -C / -xvpf -"
+    RESULT=$?
+    ssh root@$PHONEIP "rm /${QTOPIA_IMAGE}" || die install_image updateqtopiahelper
+
+    if [ $RESULT -ne 0 ]; then
+        sleep 60
+    fi
+    ssh root@$PHONEIP "\"/etc/init.d/qpe start &\"" || die install_image reboot
+}
+
+# Pack image
+QTOPIA_IMAGE="qtmoko-update.tar.gz"
+rm -rf opt/*
+mkdir -p opt/qtmoko
+cp -r image/* opt/qtmoko
+
+# remove patented stuff - can be installed via package later
+rm -f opt/qtmoko/plugins/codecs/libmadplugin.so
+rm -f opt/qtmoko/lib/libmad.so.0
+
+# symlink to ttfont installed together with X
+cd opt/qtmoko/lib
+rm -rf fonts
+ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
+cd ../../..
+
+# make package
+tar -czvf $QTOPIA_IMAGE opt
+
+# Check if network is up
+if which sdk >/dev/null 2>&1; then
+    # SDK 
+    if ! sdk -net; then
+        echo "Could not establish a network connection with Neo.  Check connection."
+        exit 1
+    fi
+else
+    # not SDK
+    if [ -z $PHONEIP ]; then
+        PHONEIP=192.168.0.202
+    fi
+
+    if ! ssh root@$PHONEIP /bin/true >/dev/null 2>&1; then
+        echo "Could not establish a network connection with Neo at $PHONEIP.  Check connection."
+        exit 1
+    fi
+fi
+
+# Flash Process
+echo "Starting Flash process, please wait..."
+# prepare_device
+echo "device prep stage complete."
+upload_image
+echo "uploading image stage complete."
+echo
+echo "Flashing begins..........please wait....."
+install_image
+echo "Image installed, phone will automatically restart Qtopia"
+echo
+echo
+
