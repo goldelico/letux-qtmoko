@@ -212,6 +212,8 @@ nano /media/card/etc/init.d/qpe.sh
 case "$1" in
   start)
 	echo '1' > /proc/sys/kernel/printk
+	echo 5000000 > /sys/module/glamo_mci/parameters/sd_max_clk
+	echo 3 > /sys/module/glamo_mci/parameters/sd_drive
 	rm -rf /var/run/ppp
 	mkdir /var/run/ppp
 	mkdir -p /var/cache/apt/archives/partial
