@@ -34,7 +34,7 @@ public:
     QSerialIODeviceMultiplexer *create( QSerialIODevice *device );
 
 private:
-    bool isFreerunner;
+    bool muxEnabled;
 };
 
 #endif

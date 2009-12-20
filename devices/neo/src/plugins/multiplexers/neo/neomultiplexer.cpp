@@ -21,6 +21,7 @@
 #include <QFile>
 #include <QTextStream>
 #include <QDebug>
+#include <QSettings>
 #include <qtopialog.h>
 #include <QValueSpaceItem>
 
@@ -89,11 +90,17 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     QValueSpaceItem deviceString("/Hardware/Neo/Device");
     if ( deviceString.value().toString() == "GTA02") {
         qLog(Hardware) << __PRETTY_FUNCTION__ << "is gta02";
-        isFreerunner = true;
+        muxEnabled = true;
     } else {
         qLog(Hardware) << __PRETTY_FUNCTION__ << "is gta01";
-        isFreerunner = false;
+        muxEnabled = false;
     }
+
+    QSettings cfg("Trolltech", "Modem");
+    QString multiplexing = cfg.value("Multiplexing/Active", "yes").toString();
+    muxEnabled &= (multiplexing != "no");
+    qLog(Mux) << "Neo multiplexing " << (muxEnabled ? "enabled" : "disabled")
+              << multiplexing;
 
     // Make the modem talk to us. It can be a bit rough to get
     // it initialized... So we will empty the current buffer
@@ -118,11 +125,11 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     QSerialIODeviceMultiplexer::chat(device, "ATE0");
     device->readAll();
 
-//     if (isFreerunner) {
-//         // Issue the AT+CMUX command to determine if this device
-//         // uses GSM 07.10-style multiplexing.
-//         return QGsm0710Multiplexer::cmuxChat( device, NEO_FRAME_SIZE, true );
-//     }
+    if (muxEnabled) {
+        // Issue the AT+CMUX command to determine if this device
+        // uses GSM 07.10-style multiplexing.
+        return QGsm0710Multiplexer::cmuxChat( device, NEO_FRAME_SIZE, true );
+    }
     return true;
 }
 
@@ -130,7 +137,7 @@ QSerialIODeviceMultiplexer *NeoMultiplexerPlugin::create( QSerialIODevice *devic
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
 
-//     if (isFreerunner)
-//         return new QGsm0710Multiplexer( device, NEO_FRAME_SIZE, true );
+    if (muxEnabled)
+        return new QGsm0710Multiplexer( device, NEO_FRAME_SIZE, true );
     return new QNullSerialIODeviceMultiplexer( device );
 }
