@@ -163,9 +163,9 @@ Step 4.6 - pkg-fso-keyring
 ==========================
 
 chroot /media/card
-wget http://pkg-fso.alioth.debian.org/debian/pool/main/p/pkg-fso-keyring/pkg-fso-keyring_2008.09.27_all.deb
-dpkg -i pkg-fso-keyring_2008.09.27_all.deb
-rm pkg-fso-keyring_2008.09.27_all.deb
+wget http://pkg-fso.alioth.debian.org/debian/pool/main/p/pkg-fso-keyring/pkg-fso-keyring_2009.09.12_all.deb
+dpkg -i pkg-fso-keyring_2009.09.12_all.deb
+rm pkg-fso-keyring_2009.09.12_all.deb
 exit
 
 
@@ -213,7 +213,6 @@ case "$1" in
   start)
 	echo '1' > /proc/sys/kernel/printk
 	echo 5000000 > /sys/module/glamo_mci/parameters/sd_max_clk
-	echo 3 > /sys/module/glamo_mci/parameters/sd_drive
 	rm -rf /var/run/ppp
 	mkdir /var/run/ppp
 	mkdir -p /var/cache/apt/archives/partial
@@ -410,14 +409,11 @@ ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
 Step 9
 ======
 
-* Compile kernel. I am now using andy-tracking and packaging config.
+* Compile kernel. I am now using andy-tracking and packaging config with
+  CONFIG_INPUT_JOYDEV=m
 
 * The bluetooth stuff must be compiled as modules otherwise bt does not work
-  for me. 
-
-* Remove all CONFIG_ANDROID options. They are not needed and
-  CONFIG_ANDROID_LOW_MEMORY_KILLER prevents kernel from using swap and
-  causes that applications are getting killed.
+  for me.
 
 * To reduce size of modules, you have to remove debugging information.
 
@@ -494,4 +490,90 @@ Ideas & TODO
   "Document with answers to most popular battery-related questions is ready"
   http://wiki.openmoko.org/wiki/Battery_Questions_and_Answers#So.2C_how_do_i_use_.22dumb.22_batteries_with_my_freerunner.3F
   from Paul Ferster
+
+Creating debian cross compiling toolchain
+=========================================
+
+    * Install packages needed for toolchain. Use your phone and existing
+      qtmoko-debian rootfs (ideally from chroot over NFS in /root/toolchain on
+      your PC). (Havent found xcalibrate pkg, where is it? Is it needed?)
+
+apt-get install libasound2-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev \
+    libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libavcodec-dev \
+    libswscale-dev libxsettings-client-dev libssl-dev libts-dev \
+    libxcomposite-dev libxcursor-dev libxdamage-dev libxfont-dev \
+    libxfontcache-dev libxft-dev libxinerama-dev libxi-dev \
+    libxmu-dev libxmuu-dev libxp-dev libxrandr-dev libxts-dev libxtst-dev \
+    libxxf86dga-dev libxxf86misc-dev libxxf86vm-dev zlib1g-dev \
+    build-essential libc6-dev
+
+    * Make directory for your toolchain and copy files from toolchain rootfs:
+
+mkdir -p /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/lib
+mkdir -p /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/include
+
+cp -r /root/toolchain/lib /opt/toolchains/arm920t-eabi/arm-linux-gnueabi
+cp -r /root/toolchain/usr/lib /opt/toolchains/arm920t-eabi/arm-linux-gnueabi
+cp -r /root/toolchain/usr/include /opt/toolchains/arm920t-eabi/arm-linux-gnueabi
+
+    * We will use cross compiler from emdebian project. On PC add emdebian
+      repository to your /etc/apt/sources.list
+
+deb http://www.emdebian.org/debian/ lenny main
+
+    * Download needed packages
+
+apt-get update
+apt-get -d install libc6-armel-cross libc6-dev-armel-cross binutils-arm-linux-gnueabi gcc-4.3-arm-linux-gnueabi g++-4.3-arm-linux-gnueabi    
+
+    * Unpack toolchain packages
+
+ln -s /opt/toolchains/arm920t-eabi /opt/toolchains/arm920t-eabi/usr
+rm -rf /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/include/c++/4.3*
+
+dpkg -x /var/cache/apt/archives/binutils-arm-linux-gnueabi_2.18.1~cvs20080103-7_i386.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/cpp-4.3-arm-linux-gnueabi_4.3.2-1.1_i386.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/gcc-4.3-arm-linux-gnueabi-base_4.3.2-1.1_i386.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/gcc-4.3-arm-linux-gnueabi_4.3.2-1.1_i386.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/g++-4.3-arm-linux-gnueabi_4.3.2-1.1_i386.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/libc6-armel-cross_2.7-18_all.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/libc6-dev-armel-cross_2.7-18_all.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/libgcc1-armel-cross_1%3a4.3.2-1.1_all.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/libstdc++6-armel-cross_4.3.2-1.1_all.deb /opt/toolchains/arm920t-eabi/
+dpkg -x /var/cache/apt/archives/libstdc++6-4.3-dev-armel-cross_4.3.2-1.1_all.deb /opt/toolchains/arm920t-eabi/
+
+    * Symlinks
+
+cd /opt/toolchains/arm920t-eabi/lib/gcc/arm-linux-gnueabi/4.3.2
+rm libgcc_s.so
+ln -s ../../../../arm-linux-gnueabi/lib/libgcc_s.so.1 libgcc_s.so
+
+    * Fix problems with #include_next in stddef and others
+
+cd /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/include/c++/4.3.2
+find . -type f -print0 | xargs -0 sed -i 's/#include_next/#include/g'
+
+    * Fix path to toolchain in package config files:
+
+cd /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/lib/pkgconfig
+sed -i 's/\/usr/\/opt\/toolchains\/arm920t-eabi\/arm-linux-gnueabi/g' *.pc
+
+    * Make paths relative in libc.so and others:
+
+cd /opt/toolchains/arm920t-eabi/arm-linux-gnueabi/lib
+sed -i 's/\/usr\/arm-linux-gnueabi\/lib\///g' *.so
+
+    * Make the toolchain compatible with our old toolchain
+
+cd /opt/toolchains/arm920t-eabi/
+ln -s arm-linux-gnueabi arm-angstrom-linux-gnueabi
+cd /opt/toolchains/arm920t-eabi/bin/
+ln -s arm-linux-gnueabi-gcc-4.3 arm-linux-gcc
+ln -s arm-linux-gnueabi-g++-4.3 arm-linux-g++
+ln -s arm-linux-gnueabi-ar arm-linux-ar
+ln -s arm-linux-gnueabi-strip arm-linux-strip
+ln -s arm-linux-gnueabi-ld arm-linux-ld
+ln -s arm-linux-gnueabi-nm arm-linux-nm
+ln -s arm-linux-gnueabi-objcopy arm-linux-objcopy
+ln -s arm-linux-gnueabi-objdump arm-linux-objdump
 
