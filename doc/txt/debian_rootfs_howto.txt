@@ -417,7 +417,7 @@ Step 9
 
 * To reduce size of modules, you have to remove debugging information.
 
-find  . -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi-strip -R .not -R .comment --strip-unneeded {} \;
+find  . -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
 
 * After compiling, upload kernel with modules to neo, and add somewhere in
   init scripts depmod command. It will update /lib/modules/xxx/modules.dep
