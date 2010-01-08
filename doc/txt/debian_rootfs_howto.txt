@@ -431,9 +431,9 @@ find  . -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .no
 3/ copy files-2.6.30 on top of unpacked linux-2.6.30
 4/ apply all patches in patches-2.6.30
 5/ copy config-2.6.30 to .config
-5/ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi- ARCH=arm
+5/ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
 
-/opt/toolchains/arm920t-eabi/bin/arm-angstrom-linux-gnueabi-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
+/opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
 mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "QtMoko" -d linux.bin uImage-GTA02.bin
 
 * Copy kernel to /media/card/boot
