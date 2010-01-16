@@ -397,7 +397,7 @@ QString Browser::renderAttachment(const QMailMessagePart& part)
     QString partId = Qt::escape(part.displayName());
 
     QString attachmentTemplate = 
-"<hr><b>ATTACHMENT_TEXT</b>: <a href=\"attachment;view;ATTACHMENT_NUMBER\">NAME_TEXT</a><br>";
+"<hr><b>ATTACHMENT_TEXT</b>: <font size=\"-1\"><a href=\"attachment;view;ATTACHMENT_NUMBER\">NAME_TEXT</a></font><br>";
 
     attachmentTemplate = replaceLast(attachmentTemplate, "ATTACHMENT_TEXT", tr("Attachment"));
     attachmentTemplate = replaceLast(attachmentTemplate, "ATTACHMENT_NUMBER", QString::number(part.partNumber()));
@@ -440,7 +440,7 @@ void Browser::displayHtml(const QMailMessage* mail)
     "<b>WAITING_TEXT</b><br>"
     "SIZE_TEXT<br>"
     "<br>"
-    "<a href=\"download\">DOWNLOAD_TEXT</a>";
+    "<font size=\"-1\"><a href=\"download\">DOWNLOAD_TEXT</a></font>";
 
             bodyText = replaceLast(bodyText, "WAITING_TEXT", tr("Awaiting download"));
             bodyText = replaceLast(bodyText, "SIZE_TEXT", tr("Size of message") + ": " + describeMailSize(mail->size()));
@@ -460,7 +460,7 @@ void Browser::displayHtml(const QMailMessage* mail)
 
         if (isSmil) {
             const QString smilTemplate = 
-"<a href=\"attachment;play\"></b>PLAY_TEXT</b></a><hr><br>";
+"<font size=\"-1\"><a href=\"attachment;play\"></b>PLAY_TEXT</b></a></font><hr><br>";
             
             bodyText = replaceLast(smilTemplate, "PLAY_TEXT", tr("Play MMS"));
 
@@ -473,7 +473,7 @@ void Browser::displayHtml(const QMailMessage* mail)
                         QString headerTemplate = 
 "<hr><br><b>ATTACHMENT_TEXT: </b><br>";
                         QString attachmentTemplate = 
-"<a href=\"attachment;view\">NAME_TEXT</a>";
+"<font size=\"-1\"><a href=\"attachment;view\">NAME_TEXT</a></font>";
 
                         if (showAtt++ == 0)
                             bodyText.append(replaceLast(headerTemplate, "ATTACHMENT_TEXT", tr("Attachments")));
@@ -1002,7 +1002,7 @@ QString Browser::encodeUrlAndMail(const QString& txt) const
 
         QString url = str.mid(pos, endPos - pos + 1);
         if ( url.indexOf('.') > -1 ) {  //Scan for . after // to verify that it is an url (weak, I know)
-            QString s = "<a href=\"" + urlPrefix + url + "\">" + url + "</a>";
+            QString s = "<font size=\"-1\"><a href=\"" + urlPrefix + url + "\">" + url + "</a></font>";
             str.replace(pos, endPos - pos + 1, s);
 
             pos += s.length();
@@ -1104,14 +1104,14 @@ QString Browser::refMailTo(const QMailAddress& address) const
         return name;
 
     if (address.isPhoneNumber() || address.isEmailAddress())
-        return "<a href=\"mailto:" + Qt::escape(address.address()) + "\">" + name + "</a>";
+        return "<font size=\"-1\"><a href=\"mailto:" + Qt::escape(address.address()) + "\">" + name + "</a></font>";
 
     return name;
 }
 
 QString Browser::refNumber(const QString& number) const
 {
-    return "<a href=\"dial;" + Qt::escape(number) + "\">" + number + "</a>";
+    return "<font size=\"-1\"><a href=\"dial;" + Qt::escape(number) + "\">" + number + "</a></font>";
 }
 
 void Browser::keyPressEvent(QKeyEvent* event)

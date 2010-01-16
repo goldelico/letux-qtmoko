@@ -107,6 +107,9 @@ QString HelpPreProcessor::parse(const QString& filename)
 
     QString line;
 
+    QRegExp tagA( "<a " );
+    QRegExp tagEndA( "</a>" );
+
     QRegExp tagAny( "<!--#" );
     QRegExp tagIf( "<!--#if\\s+expr=\"\\$([^\"]*)\"\\s*-->" );
     QRegExp tagElif( "<!--#elif\\s+expr=\"\\$([^\"]*)\"\\s*-->" ); // not supported
@@ -124,8 +127,18 @@ QString HelpPreProcessor::parse(const QString& filename)
     do {
         line = ts.readLine();
         lnum++;
+
+        int offset;
+        offset = 0;
+        if ( (offset = tagA.indexIn( line )) != -1 ) {
+            line.replace( offset, tagA.matchedLength(), QString("<font size=\"-1\"><a ") );
+        }
+        offset = 0;
+        if ( (offset = tagEndA.indexIn( line )) != -1 ) {
+            line.replace( offset, tagEndA.matchedLength(), QString("</a></font>") );
+        }
+
         if ( tagAny.indexIn(line) != -1 ) {
-            int offset;
             int matchLen;
 
             offset = 0;
@@ -276,7 +289,7 @@ QString HelpPreProcessor::exec(const QString& cmd)
                             break;
                     }
                     if (title.indexIn(head) >= 0)
-                        r += "<li><a href=\""+file+"\">"+title.cap(1)+"</a>\n";
+                        r += "<li><font size=\"-1\"><a href=\""+file+"\">"+title.cap(1)+"</font></a>\n";
                 }
             }
         }
@@ -317,7 +330,7 @@ QString HelpPreProcessor::listContent( const QString& name )
             // SVG/PIC images are forced to load at a particular size (see above)
             // Force all app icons to be this size (to prevent them from being
             // different sizes, not all app icons are SVG/PIC).
-            s += QString("<br><a href=%1%2><img src=%3 width=%4 height=%5> %6</a>\n")
+            s += QString("<br><font size=\"-1\"><a href=%1%2><img src=%3 width=%4 height=%5> %6</a></font>\n")
                 .arg( prefix[pref] )
                 .arg( helpFile )
                 .arg( icon )
