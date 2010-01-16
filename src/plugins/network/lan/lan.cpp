@@ -158,10 +158,16 @@ void LanImpl::cleanup()
     params << "cleanup"; //no tr
     thread.addScriptToRun( lanScript, params );
 
-    //remove network device assigned to this config
+    //Wait for lanScript to finish before removing network device
+    while ( thread.remainingTasks() > 0 ) {
+        qWarning("Network: lanScript still running");
+    }
+
+    qWarning("Network: Removing network device");
     QString key = devToConfig->key( configIface->configFile() );
     if ( !key.isEmpty() )
         devToConfig->remove( key );
+    qWarning("Network: Network device removed");
 }
 
 /*
