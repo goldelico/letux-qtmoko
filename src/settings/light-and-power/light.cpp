@@ -340,7 +340,9 @@ QString LightSettings::status()
 {
     // capture current status
     QString result;
-    result = QString::number( (b->interval_dim->value() != b->interval_dim->maximum()) ) + ",";
+    result = QString::number( (b->interval_suspend->value() != b->interval_suspend->maximum()) ) + ",";
+    result += QString::number( b->interval_suspend->value() ) + ",";
+    result += QString::number( (b->interval_dim->value() != b->interval_dim->maximum()) ) + ",";
     result += QString::number( b->interval_dim->value() ) + ",";
     result += QString::number( (b->interval_lightoff->value() != b->interval_lightoff->maximum()) ) + ",";
     result += QString::number( b->interval_lightoff->value() ) + ",";
@@ -352,11 +354,13 @@ void LightSettings::setStatus( const QString& details )
 {
     QStringList sl = details.split( ',' );
     currentMode = &batteryMode;
-    currentMode->dim = sl.at( 0 ).toInt();
-    currentMode->intervalDim = sl.at( 1 ).toInt();
-    currentMode->lightoff = sl.at( 2 ).toInt();
-    currentMode->intervalLightOff = sl.at( 3 ).toInt();
-    currentMode->brightness = sl.at( 4 ).toInt();
+    currentMode->suspend = sl.at( 0 ).toInt();
+    currentMode->intervalSuspend = sl.at( 1 ).toInt();
+    currentMode->dim = sl.at( 2 ).toInt();
+    currentMode->intervalDim = sl.at( 3 ).toInt();
+    currentMode->lightoff = sl.at( 4 ).toInt();
+    currentMode->intervalLightOff = sl.at( 5 ).toInt();
+    currentMode->brightness = sl.at( 6 ).toInt();
     applyMode();
 }
 
