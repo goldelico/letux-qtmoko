@@ -138,46 +138,51 @@ void FicLinuxInputEventHandler::readData()
 NeoKbdHandler::NeoKbdHandler()
 
 {
+    bool ok;
     isFreerunner = true;
 
     qLog(Input) << "Loaded Neo keypad plugin";
     setObjectName( "Neo Keypad Handler" );
 
     auxHandler = new FicLinuxInputEventHandler(this);
-    if (auxHandler->openByPhysicalBus("neo1973kbd/input0")) {
+    ok = auxHandler->openByName("gpio-keys") ||
+         auxHandler->openByPhysicalBus("neo1973kbd/input0");
+
+    if(ok) {
         connect(auxHandler, SIGNAL(inputEvent(struct input_event&)),
                 SLOT(inputEvent(struct input_event&)));
     } else {
-        qWarning("Cannot open a device for the neo1973kbd");
+        qWarning("Cannot open device for AUX button");
         delete auxHandler;
         auxHandler = 0;
     }
 
-    bool ok;
-
     powerHandler = new FicLinuxInputEventHandler(this);
-    if (QFileInfo("/dev/input/event4").exists()){
-        ok =  powerHandler->openByName("PCF50633 PMU events");
-        if(!ok) {
-            ok =  powerHandler->openByName("GTA02 PMU events");
-        }
-        isFreerunner = true;
-    } else {
-        ok =  powerHandler->openByName("FIC Neo1973 PMU events");
-        isFreerunner = false;
-    }
+    ok = powerHandler->openByName("PCF50633 PMU events") ||
+         powerHandler->openByName("FIC Neo1973 PMU events");
+
     if (ok) {
         connect(powerHandler, SIGNAL(inputEvent(struct input_event&)),
                 SLOT(inputEvent(struct input_event&)));
     } else {
-        qWarning("Cannot open a device for the neo1973kbd 4");
+        qWarning("Cannot open device for POWER button");
         delete powerHandler;
         powerHandler = 0;
     }
 
+    jackHandler = new FicLinuxInputEventHandler(this);
+    ok = jackHandler->openByName("neo1973-gta02 Headset Jack");
+
+    if (ok) {
+        connect(jackHandler, SIGNAL(inputEvent(struct input_event&)),
+                SLOT(inputEvent(struct input_event&)));
+    } else {
+        qWarning("Cannot open input device for Headset Jack");
+        delete jackHandler;
+        jackHandler = 0;
+    }
 
     shift = false;
-
 }
 
 NeoKbdHandler::~NeoKbdHandler()

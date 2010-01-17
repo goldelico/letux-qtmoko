@@ -207,14 +207,13 @@ void NeoHardware::shutdownRequested()
     QFile powerFile;
     QFile btPower;
 
-    if ( QFileInfo("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on").exists()) {
-//neo
+	if (QFileInfo("/sys/bus/platform/devices/gta02-pm-gsm.0/power_on").exists()) {
+        powerFile.setFileName("/sys/bus/platform/devices/gta02-pm-gsm.0/power_on");
+        btPower.setFileName("/sys/bus/platform/devices/gta02-pm-bt.0/power_on");
+    }
+    else if( QFileInfo("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on").exists()) {
         powerFile.setFileName("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on");
         btPower.setFileName("/sys/bus/platform/devices/gta01-pm-bt.0/power_on");
-    } else {
-//ficgta02
-        powerFile.setFileName("/sys/bus/platform/devices/neo1973-pm-gsm.0/power_on");
-        btPower.setFileName("/sys/bus/platform/devices/neo1973-pm-bt.0/power_on");
     }
 
     if( !powerFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
@@ -243,15 +242,11 @@ bool NeoHardware::getCableStatus()
     // Seems better than the origin method
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QString chargeFile;
-    if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
-         //freerunner
+    if (QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+        chargeFile = "/sys/class/power_supply/battery/status";
+    } else if (QFileInfo("/sys/devices/platform/bq27000-battery.0/power_supply/bat/status").exists()) {
         chargeFile = "/sys/devices/platform/bq27000-battery.0/power_supply/bat/status";
     }
-    else if (QFileInfo("/sys/class/power_supply/battery/status").exists()) {
-         //freerunner kernel > 2.6.28
-        chargeFile = "/sys/class/power_supply/battery/status";
-    }
-
 
     QString charge;
 
