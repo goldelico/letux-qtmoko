@@ -4,7 +4,7 @@ Compling from sources
   * Download and install toolchain
 
 cd /
-sudo wget http://qtextended.org/downloads/toolchains/arm920t-eabi.tgz
+sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
 sudo tar xzvpf arm920t-eabi.tgz
 
   * Clone current git tree:

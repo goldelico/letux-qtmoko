@@ -365,6 +365,11 @@ rm -rf /media/card/usr/share/ssh/blacklist*
 Step 8 - compile Qtopia
 =======================
 
+* Download and unpack toolchain
+cd /
+sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
+sudo tar xzvpf arm920t-eabi.tgz
+
 * Build QtMoko
 
 mkdir build
