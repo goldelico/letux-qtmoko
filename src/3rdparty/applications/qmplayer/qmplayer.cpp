@@ -1125,21 +1125,21 @@ void QMplayer::setRes(int xy)
 #ifdef QTOPIA
     if(xy == 320240 || xy == 640480)
     {
-        QFile f("/sys/bus/spi/devices/spi2.0/state");
+        QFile f("/sys/bus/spi/devices/spi2.0/resolution");
         f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         if(xy == 320240)
         {
             QProcess p(this);
             p.start("fbset", QStringList("qvga"));
             p.waitForFinished(5000);
-            f.write("qvga-normal");
+            f.write("qvga");
         }
         else if(xy == 640480)
         {
             QProcess p(this);
             p.start("fbset", QStringList("vga"));
             p.waitForFinished(5000);	  
-            f.write("normal");
+            f.write("vga");
         }
         f.close();
     }
@@ -1154,7 +1154,7 @@ bool QMplayer::installMplayer()
     QDir("/home/root").mkdir(".mplayer");
     QFile f("/home/root/.mplayer/config");
     f.open(QFile::WriteOnly);
-    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+    f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
     f.close();
 
     return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",

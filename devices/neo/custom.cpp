@@ -36,28 +36,17 @@
 
 QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
 {
-    QFile maxBrightness;
-    QString strvalue;
-    if (QFileInfo("/sys/class/backlight/gta01-bl/max_brightness").exists() ) {
-        //ficgta01
-        maxBrightness.setFileName("/sys/class/backlight/gta01-bl/max_brightness");
-    } else if (QFileInfo("/sys/class/backlight/gta02-bl/max_brightness").exists() ) {
-        //ficgta02, recent kernel (> 2.6.28 )
-        maxBrightness.setFileName("/sys/class/backlight/gta02-bl/max_brightness");
-    } else {
-        //ficgta02, 'older' kernel (< 2.6.28 )
-        maxBrightness.setFileName("/sys/class/backlight/pcf50633-bl/max_brightness");
+    QFile f("/sys/class/backlight/pcf50633-backlight/max_brightness");
+    if(!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qWarning() << "qpe_sysBrightnessSteps: " + f.errorString();
+        return 0;
     }
-    if(!maxBrightness.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning()<<"File not opened";
-    } else {
-        QTextStream in(&maxBrightness);
-        in >> strvalue;
-        maxBrightness.close();
-    }
-     return  strvalue.toInt();
+    QTextStream in(&f);
+    QString str;
+    in >> str;
+    f.close();
+    return str.toInt();
 }
-
 
 QTOPIABASE_EXPORT void qpe_setBrightness(int b)
 {
@@ -73,24 +62,13 @@ QTOPIABASE_EXPORT void qpe_setBrightness(int b)
         b = brightessSteps;
     }
 
-    QFile brightness;
-    if (QFileInfo("/sys/class/backlight/gta01-bl/brightness").exists() ) {
-        brightness.setFileName("/sys/class/backlight/gta01-bl/brightness");
-        //ficgta01
-    } else if (QFileInfo("/sys/class/backlight/gta02-bl/brightness").exists() ) {
-        //ficgta02, recent kernel (> 2.6.28 )
-        brightness.setFileName("/sys/class/backlight/gta02-bl/brightness");
-    } else {
-        brightness.setFileName("/sys/class/backlight/pcf50633-bl/brightness");
-        //ficgta02
+    QFile f("/sys/class/backlight/pcf50633-backlight/brightness");
+    if(!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning() << "qpe_setBrightness: " + f.errorString();
+	return;
     }
-
-    if(!brightness.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "qpe_setBrightness: File not opened";
-    } else {
-        QTextStream out(&brightness);
-        out << QString::number(b);
-        brightness.close();
-    }
+    QTextStream out(&f);
+    out << QString::number(b);
+    f.close();
 }
 
