@@ -24,5 +24,5 @@ PROJECTS*=\
     3rdparty/applications/qx_helper \
     3rdparty/applications/simplefm \
     3rdparty/applications/nerongps \
-    3rdparty/applications/arora \
+    3rdparty/applications/arora/src \
     3rdparty/tools/atd
