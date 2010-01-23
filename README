@@ -7,6 +7,13 @@ cd /
 sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
 sudo tar xzvpf arm920t-eabi.tgz
 
+  * If you are on x86_64 you will need to download following 32bit libraries:
+
+libmpfr1ldbl_XXX_i386.deb
+libgmp3c2_XXX_i386.deb
+
+     and extract the libraries from these package to /usr/lib32
+
   * Clone current git tree:
 
 git clone git://github.com/radekp/qtmoko.git

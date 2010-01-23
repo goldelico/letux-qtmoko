@@ -23,7 +23,6 @@
 #include <QLineEdit>
 #include <QMessageBox>
 #include <QTimer>
-#include <QDesktopWidget>
 #include <QFile>
 #include <QTcpSocket>
 #include <QThread>
@@ -32,7 +31,6 @@
 #include <Qtopia>
 #include <QtopiaApplication>
 #include <QSoftMenuBar>
-#include <QDeviceButtonManager>
 #endif
 #include <unistd.h>
 #include <fcntl.h>
@@ -81,7 +79,6 @@ private:
     bool terminating;
 #if QTOPIA
     QtopiaApplication::PowerConstraint powerConstraint;
-    QtopiaServiceRequest origSrq;
 #endif
 
     void stopX();

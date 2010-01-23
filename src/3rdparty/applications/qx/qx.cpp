@@ -158,6 +158,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     //==========================================
 
     appRunScr = new AppRunningScreen();
+    connect(appRunScr, SIGNAL(deactivated()), this, SLOT(pauseApp()));
 
     process = NULL;
     xprocess = NULL;
@@ -219,11 +220,6 @@ void QX::showScreen(QX::Screen scr)
         {
             QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         }
-        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
-        if(mgr.buttons().count() > 0)
-        {
-            mgr.remapPressedAction(0, origSrq);
-        }
 #endif
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
@@ -237,13 +233,6 @@ void QX::showScreen(QX::Screen scr)
         if(powerConstraint != QtopiaApplication::Enable)
         {
             QtopiaApplication::setPowerConstraint(powerConstraint);
-        }
-        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
-        if(mgr.buttons().count() > 0)
-        {
-            origSrq = mgr.buttons().at(0)->pressedAction();
-            QtopiaServiceRequest req("QX", "appSwitch()");
-            mgr.remapPressedAction(0, req);
         }
 #endif
     }
@@ -371,21 +360,9 @@ void QX::pauseApp()
 {
     if(process == NULL)
     {
-#ifdef QTOPIA
-        // Fix key mapping in case that QX crashed
-        //QDeviceButtonManager::instance().factoryResetButtons();
-        QDeviceButtonManager &mgr = QDeviceButtonManager::instance();
-        if(mgr.buttons().count() > 0)
-        {
-            origSrq = mgr.buttons().at(0)->pressedAction();
-            QtopiaServiceRequest req("TaskManager", "multitask()");
-            mgr.remapPressedAction(0, req);
-        }
-#endif
         return;
     }
 
-    appRunScr->pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
     if(xprocess)
     {

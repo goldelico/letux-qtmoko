@@ -14,7 +14,9 @@ bool AppRunningScreen::event(QEvent *event)
 {
     if(event->type() == QEvent::WindowDeactivate)
     {
+        pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
         lower();
+        emit deactivated();
     }
     else if(event->type() == QEvent::WindowActivate)
     {
