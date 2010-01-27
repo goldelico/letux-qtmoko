@@ -2123,7 +2123,7 @@ bool QtScriptFunctions::runScript(Project *project,
     e->mapping.addLines(codeLines.count(), ctxt.fileName, ctxt.lineNumber);
     unlock();
 
-    QScriptValue val = e->evaluate("function() {" + code + "}",
+    QScriptValue val = e->evaluate("(function() {" + code + "})",
                                    QString(), startLine);
     if (e->hasUncaughtException())
         unhandledException(project);
