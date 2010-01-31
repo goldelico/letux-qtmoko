@@ -1,0 +1,147 @@
+diff --git a/etc/themes/finxi/home.xml b/etc/themes/finxi/home.xml
+index 37b1930..a291c43 100644
+--- a/etc/themes/finxi/home.xml
++++ b/etc/themes/finxi/home.xml
+@@ -4,9 +4,9 @@
+     <plugin name="background-plugin"/>
+     <plugin name="homescreen-image-plugin"/>
+   </group>
+-  <rect rect="0,13%,0x12pt">
+-    <text name="location" size="5" bold="yes" rect="0,0,50%x12pt" align="left,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/UI/HomeScreen/ShowLocation">
+-      expr:" " . @/Telephony/Status/CellLocation
++  <rect rect="0,13%,0x12pt" interactive="yes" name="debugsms">
++    <text name="debugsms" size="5" bold="yes" rect="0,0,50%x12pt" align="left,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/QtMoko/DebugSms &amp;&amp; !@/Communications/Messages/NewMessages">
++      <tr><trtext>%1 debug sms</trtext><trarg>@/QtMoko/DebugSms</trarg></tr>
+     </text>
+     <text name="profile" size="5" bold="yes" rect="50%,0,48%x12pt" align="right,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/UI/HomeScreen/ShowProfile &amp;&amp; !@/UI/Profile/Default">
+       expr:@/UI/Profile/Name . " "
+diff --git a/src/applications/qtmail/emailclient.cpp b/src/applications/qtmail/emailclient.cpp
+index 1bd5ce1..82156d8 100644
+--- a/src/applications/qtmail/emailclient.cpp
++++ b/src/applications/qtmail/emailclient.cpp
+@@ -4070,6 +4070,7 @@ void EmailClient::promptNewMessageView(bool respondingToRaise)
+         }
+ 
+         // Ask if the user wants to view the incoming message(s)
++	QFile::remove("/tmp/newMessageArrived.txt");
+ #ifdef QTOPIA_HOMEUI
+         QString text;
+         if (totalNewMessageCount == 1)
+diff --git a/src/libraries/qtopiaphonemodem/qmodemsmsreader.cpp b/src/libraries/qtopiaphonemodem/qmodemsmsreader.cpp
+index 1c55ca9..4053a14 100644
+--- a/src/libraries/qtopiaphonemodem/qmodemsmsreader.cpp
++++ b/src/libraries/qtopiaphonemodem/qmodemsmsreader.cpp
+@@ -25,6 +25,9 @@
+ #include <qatutils.h>
+ #include <qretryatchat.h>
+ #include <qsimenvelope.h>
++#include <QValueSpaceItem>
++#include <QFile>
++#include <QDebug>
+ 
+ /*!
+     \class QModemSMSReader
+@@ -450,6 +453,17 @@ void QModemSMSReader::nmiStatusReceived( bool, const QAtResult& result )
+ 
+ void QModemSMSReader::newMessageArrived()
+ {
++    QFile f("/tmp/newMessageArrived.txt");
++    if(f.open(QIODevice::WriteOnly))
++    {
++      f.write(QDateTime::currentDateTime().toString().toAscii());
++      f.close();
++    }
++    else
++    {
++      qWarning() << "failed to open /tmp/newMessageArrived.txt" + f.errorString();
++    }
++  
+     d->fragmentsOnly = false;
+     if ( d->fetching ) {
+         d->needRefetch = true;
+diff --git a/src/server/phone/themecontrol/serverthemeview.cpp b/src/server/phone/themecontrol/serverthemeview.cpp
+index d7d1328..73d3410 100644
+--- a/src/server/phone/themecontrol/serverthemeview.cpp
++++ b/src/server/phone/themecontrol/serverthemeview.cpp
+@@ -24,6 +24,7 @@
+ #include <qvaluespace.h>
+ #include <qtopiaipcenvelope.h>
+ #include <QContent>
++#include <QValueSpaceItem>
+ 
+ QSet<PhoneThemedView *> PhoneThemedView::m_themedViews;
+ 
+@@ -114,6 +115,7 @@ PhoneThemedView::PhoneThemedView(QWidget *parent, Qt::WFlags f)
+                      this, SLOT(myItemClicked(ThemeItem*)));
+     m_themedViews.insert(this);
+     phoneThemedViewMonitor()->add(this);
++    QTimer::singleShot(1000, this, SLOT(checkDebugSms()));
+ }
+ 
+ PhoneThemedView::~PhoneThemedView()
+@@ -135,12 +137,44 @@ QWidget *PhoneThemedView::newWidget(ThemeWidgetItem *input, const QString &name)
+     return 0;
+ }
+ 
++#include <QDebug>
++
++void PhoneThemedView::checkDebugSms()
++{
++    static QValueSpaceObject phoneValueSpace("/QtMoko");
++    int debugSmsVal = (QFile::exists("/tmp/newMessageArrived.txt"));
++    phoneValueSpace.setAttribute("DebugSms", debugSmsVal);
++    phoneValueSpace.sync();
++    QTimer::singleShot(1000, this, SLOT(checkDebugSms()));
++}
++
+ void PhoneThemedView::myItemClicked(ThemeItem *item)
+ {
+     if( !item->isInteractive() )
+         return;
+     QString in = item->itemName();
+-    if( in == "messages" ) {
++    
++    if( in == "messages" || in == "debugsms") {
++      if(in == "debugsms")
++      {
++	QByteArray info;
++	QFile f("/tmp/newMessageArrived.txt");
++	if(f.open(QIODevice::ReadOnly))
++	{
++	  info = f.readAll();
++	  f.close();
++	}
++	info += ": If you havent received any SMS after, it will arrive after restart";
++	//QMessageBox::critical(this, tr("SMS"), info);
++	 QMessageBox msgBox;
++	  msgBox.setText(info);
++	  msgBox.setWindowModality(Qt::WindowModal);
++	  msgBox.exec();
++      }
++      QFile::remove("/tmp/newMessageArrived.txt");
++    }
++    
++    if( in == "messages") {
+         QtopiaServiceRequest e( "Messages", "viewNewMessages(bool)" );
+         e << true;
+         e.send();
+diff --git a/src/server/phone/themecontrol/serverthemeview.h b/src/server/phone/themecontrol/serverthemeview.h
+index 0132c01..2b00ebf 100644
+--- a/src/server/phone/themecontrol/serverthemeview.h
++++ b/src/server/phone/themecontrol/serverthemeview.h
+@@ -23,6 +23,7 @@
+ #include <themedview.h>
+ #include <QWidget>
+ #include <QSet>
++#include <QTimer>
+ 
+ class PhoneThemedView : public ThemedView {
+ Q_OBJECT
+@@ -35,6 +36,7 @@ public:
+ 
+ private slots:
+     void myItemClicked(ThemeItem *item);
++    void checkDebugSms();
+ 
+ private:
+     static QSet<PhoneThemedView *> m_themedViews;
