@@ -11,7 +11,7 @@ index 37b1930..a291c43 100644
 -      expr:" " . @/Telephony/Status/CellLocation
 +  <rect rect="0,13%,0x12pt" interactive="yes" name="debugsms">
 +    <text name="debugsms" size="5" bold="yes" rect="0,0,50%x12pt" align="left,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/QtMoko/DebugSms &amp;&amp; !@/Communications/Messages/NewMessages">
-+      <tr><trtext>%1 debug sms</trtext><trarg>@/QtMoko/DebugSms</trarg></tr>
++      <tr><trtext>%1 missed sms</trtext><trarg>@/QtMoko/DebugSms</trarg></tr>
      </text>
      <text name="profile" size="5" bold="yes" rect="50%,0,48%x12pt" align="right,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/UI/HomeScreen/ShowProfile &amp;&amp; !@/UI/Profile/Default">
        expr:@/UI/Profile/Name . " "
@@ -55,7 +55,7 @@ index 1c55ca9..4053a14 100644
 +    {
 +      qWarning() << "failed to open /tmp/newMessageArrived.txt" + f.errorString();
 +    }
-+  
++
      d->fragmentsOnly = false;
      if ( d->fetching ) {
          d->needRefetch = true;
@@ -100,7 +100,7 @@ index d7d1328..73d3410 100644
          return;
      QString in = item->itemName();
 -    if( in == "messages" ) {
-+    
++
 +    if( in == "messages" || in == "debugsms") {
 +      if(in == "debugsms")
 +      {
@@ -120,7 +120,7 @@ index d7d1328..73d3410 100644
 +      }
 +      QFile::remove("/tmp/newMessageArrived.txt");
 +    }
-+    
++
 +    if( in == "messages") {
          QtopiaServiceRequest e( "Messages", "viewNewMessages(bool)" );
          e << true;
