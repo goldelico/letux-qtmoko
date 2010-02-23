@@ -207,8 +207,8 @@ void NeoHardware::shutdownRequested()
     QFile powerFile;
     QFile btPower;
 
-	if (QFileInfo("/sys/bus/platform/devices/gta02-pm-gsm.0/power_on").exists()) {
-        powerFile.setFileName("/sys/bus/platform/devices/gta02-pm-gsm.0/power_on");
+	if (QFileInfo("/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on").exists()) {
+        powerFile.setFileName("/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on");
         btPower.setFileName("/sys/bus/platform/devices/gta02-pm-bt.0/power_on");
     }
     else if( QFileInfo("/sys/bus/platform/devices/gta01-pm-gsm.0/power_on").exists()) {
