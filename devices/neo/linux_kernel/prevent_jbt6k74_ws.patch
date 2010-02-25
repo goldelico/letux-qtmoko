@@ -1,0 +1,12 @@
+diff --git a/drivers/video/backlight/jbt6k74.c b/drivers/video/backlight/jbt6k74.c
+index 8450904..81c565e 100644
+--- a/drivers/video/backlight/jbt6k74.c
++++ b/drivers/video/backlight/jbt6k74.c
+@@ -267,6 +267,7 @@ static int jbt_standby_to_sleep(struct jbt_info *jbt)
+ 
+ 	gpio_set_value_cansleep(pdata->gpio_reset, 1);
+ 	ret = regulator_bulk_enable(ARRAY_SIZE(jbt->supplies), jbt->supplies);
++	mdelay(100);
+ 
+ 	/* three times command zero */
+ 	ret |= jbt_reg_write_nodata(jbt, 0x00);
