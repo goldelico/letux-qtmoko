@@ -224,6 +224,10 @@ void QMplayer::okClicked()
             }
             QString filename = nameList[i];
             QString destPath = QDir::homePath() + "/" + filename;
+            if(QDir("/media/card").exists())
+            {
+                destPath = "/media/card/" + filename;
+            }
             bool justCheck = list.contains(url);
             if(!download(url, destPath, filename, justCheck))
             {
