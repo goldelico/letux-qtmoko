@@ -213,6 +213,7 @@ nano /media/card/etc/init.d/qpe.sh
 
 case "$1" in
   start)
+	rm -f /dev/input/mice
 	echo '1' > /proc/sys/kernel/printk
 	echo 5000000 > /sys/module/glamo_mci/parameters/sd_max_clk
 	echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
