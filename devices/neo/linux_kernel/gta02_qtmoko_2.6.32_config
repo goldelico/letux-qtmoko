@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32
-# Mon Mar  1 06:47:20 2010
+# Mon Mar  8 20:48:21 2010
 #
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
@@ -54,8 +54,7 @@ CONFIG_RCU_FANOUT=32
 CONFIG_LOG_BUF_SHIFT=18
 # CONFIG_GROUP_SCHED is not set
 # CONFIG_CGROUPS is not set
-CONFIG_SYSFS_DEPRECATED=y
-CONFIG_SYSFS_DEPRECATED_V2=y
+# CONFIG_SYSFS_DEPRECATED_V2 is not set
 # CONFIG_RELAY is not set
 CONFIG_NAMESPACES=y
 # CONFIG_UTS_NS is not set
