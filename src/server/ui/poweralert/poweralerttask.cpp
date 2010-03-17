@@ -90,22 +90,15 @@ void PowerAlertDialogTask::powerChanged()
     if ( !powerstatus )
         return;
 
-    if(powerstatus->batteryCharging()) {
-        QFile f("/sys/class/leds/gta02-power:orange/brightness");
-        if(f.open(QFile::WriteOnly)) {
-            f.write("1", 1);
-            f.close();
-        }
+    // Set Orange Diode on battery chargeing
+    QFile f("/sys/class/leds/gta02-power:orange/brightness");
+    if(f.open(QFile::WriteOnly)) {
+        f.write(powerstatus->batteryCharging() ? "1" : "0", 1);
+        f.close();
     }
 
     QString str;
     if(!powerstatus->batteryCharging()) {
-        QFile f("/sys/class/leds/gta02-power:orange/brightness");
-        if(f.open(QFile::WriteOnly)) {
-            f.write("0", 1);
-            f.close();
-        }
-
         QSettings cfg("Trolltech", "HardwareAccessories");
         switch(powerstatus->batteryStatus()) {
             case QPowerStatus::VeryLow:
