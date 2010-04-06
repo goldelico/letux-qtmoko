@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.29-rc3
-# Tue Apr  6 09:26:51 2010
+# Tue Apr  6 10:11:58 2010
 #
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
@@ -1130,7 +1130,7 @@ CONFIG_SPI_MASTER=y
 # SPI Master Controller Drivers
 #
 CONFIG_SPI_BITBANG=y
-# CONFIG_SPI_GPIO is not set
+CONFIG_SPI_GPIO=y
 # CONFIG_SPI_S3C24XX is not set
 CONFIG_SPI_S3C24XX_GPIO=y
 
@@ -1636,7 +1636,7 @@ CONFIG_USB_ETH_RNDIS=y
 # OTG and related infrastructure
 #
 # CONFIG_USB_GPIO_VBUS is not set
-CONFIG_AR6000_WLAN=m
+CONFIG_AR6000_WLAN=y
 # CONFIG_AR6000_WLAN_DEBUG is not set
 # CONFIG_AR6000_WLAN_RESET is not set
 CONFIG_MMC=y
