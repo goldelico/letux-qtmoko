@@ -572,6 +572,9 @@ EmailHandler::ConnectionDetails* EmailHandler::connectionForClient(Client* clien
 
 void EmailHandler::setClientAccount(Client* client, const QMailAccountId &accountId)
 {
+    if (!accountId.isValid()) {
+        return;
+    }
     if (ConnectionDetails* details = connectionForClient(client)) {
         details->second = accountId;
     } else {

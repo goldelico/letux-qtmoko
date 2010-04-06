@@ -80,19 +80,17 @@ echo "deb http://pkg-fso.alioth.debian.org/debian unstable main" >> /media/card/
 Step 4
 ======
 
-* Device drivers modules
+* Device drivers modules - not needed now - we have all drives in kernel
 
-
-
-
-
-rfcomm
-
-echo btusb > /media/card/etc/modules
-echo bluetooth >> /media/card/etc/modules
-echo l2cap >> /media/card/etc/modules
-echo sco >> /media/card/etc/modules
-echo rfcomm >> /media/card/etc/modules
+# echo g_ether > /media/card/etc/modules
+# echo hidp >> /media/card/etc/modules
+# echo ipv6 >> /media/card/etc/modules
+# echo ohci-hcd >> /media/card/etc/modules
+# echo ppp_generic >> /media/card/etc/modules
+# echo rfcomm >> /media/card/etc/modules
+# echo s3cmci >> /media/card/etc/modules
+# echo snd-soc-neo1973-gta02-wm8753 >> /media/card/etc/modules
+# echo snd_pcm_oss >> /media/card/etc/modules
 
 * Modem device nodes
 

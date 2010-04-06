@@ -2,6 +2,8 @@
 #include "AppSettings.h"
 #include "AppInfo.h"
 
+QxMainWindow *mainWin;
+
 void QX::listClicked()
 {
     if (!favouritesAction->isChecked())
@@ -54,7 +56,7 @@ void QX::favourites_clicked()
 
 void QX::quitClicked()
 {
-    close();
+    mainWin->close();
 }
 
 void QX::BuildMenu()
@@ -62,7 +64,7 @@ void QX::BuildMenu()
 #ifdef QTOPIA
     menu = QSoftMenuBar::menuFor(this);
 #else
-    menu = new QMenu(this);
+    menu = mainWin->menuBar()->addMenu("&File");
 #endif
     menu->addAction(tr("Launch"),this,SLOT(launch_clicked()));
     menu->addAction(tr("Settings"),this,SLOT(settings_clicked()));
@@ -162,6 +164,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     process = NULL;
     xprocess = NULL;
+    rotHelper = new RotateHelper(this, 0);
     screen = QX::ScreenMain;
 #if QTOPIA
     powerConstraint = QtopiaApplication::Disable;
@@ -174,6 +177,25 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 }
 
 QX::~QX()
+{
+
+}
+
+QxMainWindow::QxMainWindow(QWidget *parent, Qt::WFlags f)
+        : QMainWindow(parent, f)
+{
+#ifdef QTOPIA
+    this->setWindowState(Qt::WindowMaximized);
+#else
+    resize(640, 480);
+#endif
+    Q_UNUSED(f);
+
+    mainWin = this;
+    setCentralWidget(new QX(this));
+}
+
+QxMainWindow::~QxMainWindow()
 {
 
 }
@@ -213,7 +235,7 @@ void QX::showScreen(QX::Screen scr)
         appRunScr->hide();
         if(rotate)
         {
-            system("xrandr -o 0");
+            rotHelper->stop();
         }
 #ifdef QTOPIA
         if(powerConstraint != QtopiaApplication::Enable)
@@ -227,7 +249,8 @@ void QX::showScreen(QX::Screen scr)
         appRunScr->showScreen();
         if(rotate)
         {
-            system("xrandr -o 1");
+            //system("xrandr -o 1");
+            rotHelper->start(2000);
         }
 #ifdef QTOPIA
         if(powerConstraint != QtopiaApplication::Enable)
@@ -361,6 +384,10 @@ void QX::pauseApp()
     if(process == NULL)
     {
         return;
+    }
+    if(rotate)
+    {
+        system("xrandr -o 0");
     }
 
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());

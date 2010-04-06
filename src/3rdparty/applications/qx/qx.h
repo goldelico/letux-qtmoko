@@ -1,10 +1,11 @@
 #ifndef QX_H
 #define QX_H
 
-
+#include <QMainWindow>
 #include <QListWidget>
 #include <QListWidgetItem>
 #include <QMenu>
+#include <QMenuBar>
 #include <QSettings>
 
 #include <QStringList>
@@ -32,6 +33,7 @@
 #include <QtopiaApplication>
 #include <QSoftMenuBar>
 #endif
+#include "rotate.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <linux/vt.h>
@@ -74,6 +76,7 @@ private:
     //QPushButton *bQuit;
     QProcess *process;
     QProcess *xprocess;
+    RotateHelper *rotHelper;
     QString appName;
     bool rotate;
     bool terminating;
@@ -126,5 +129,11 @@ public:
     }
 };
 
+class QxMainWindow : public QMainWindow
+{
+public:
+    QxMainWindow(QWidget *parent = 0, Qt::WFlags f = 0);
+    ~QxMainWindow();
+};
 
 #endif // QX_H

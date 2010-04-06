@@ -85,6 +85,9 @@ SmsClient::~SmsClient()
 
 void SmsClient::setAccount(const QMailAccountId &id)
 {
+    if(!id.isValid()) {
+        qDebug() << "SmsClient::setAccount called with invalid id";
+    }
     accountId = id;
     _config = AccountConfiguration(accountId);
 }

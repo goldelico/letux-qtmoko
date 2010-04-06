@@ -2,7 +2,7 @@
 
 #include "qx.h"
 #include <qtopiaapplication.h>
-QTOPIA_ADD_APPLICATION(QTOPIA_TARGET,QX)
+QTOPIA_ADD_APPLICATION(QTOPIA_TARGET,QxMainWindow)
 QTOPIA_MAIN
 
 #else
@@ -13,7 +13,7 @@ QTOPIA_MAIN
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QX w;
+    QxMainWindow w;
     w.show();
     return a.exec();
 }

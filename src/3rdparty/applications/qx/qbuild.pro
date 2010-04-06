@@ -25,7 +25,8 @@ HEADERS=\
     apprunningscreen.h \
     DesktopScanner.h \
     AppSettings.h \
-    AppInfo.h
+    AppInfo.h \
+    rotate.h
 
 SOURCES=\
     main.cpp\
@@ -34,7 +35,8 @@ SOURCES=\
     apprunningscreen.cpp \
     DesktopScanner.cpp \
     AppSettings.cpp \
-    AppInfo.cpp
+    AppInfo.cpp \
+    rotate.cpp
 
 # Install rules
 target [
