@@ -11,9 +11,11 @@ SOURCES += main.cpp \
     apprunningscreen.cpp \
     AppInfo.cpp \
     AppSettings.cpp \
-    DesktopScanner.cpp
+    DesktopScanner.cpp \
+    rotate.cpp
 HEADERS += qx.h \
     apprunningscreen.h \
     AppInfo.h \
     AppSettings.h \
-    DesktopScanner.h
+    DesktopScanner.h \
+    rotate.h
