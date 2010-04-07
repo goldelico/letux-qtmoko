@@ -378,6 +378,8 @@ cd build
 make
 make install
 
+* In case of errors you might try -force-build-qt argument.
+
 * Tar build
 
 * Unpack QtMoko to target image

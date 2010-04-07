@@ -35,6 +35,8 @@ cd ../build
 make
 make install
 
+  * In case of errors you might try -force-build-qt argument.
+
   * Upload the result to your device (you must have phone and usb network up)
 
 ../qtmoko/devices/neo/scripts/update_qtmoko
