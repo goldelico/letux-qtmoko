@@ -5,7 +5,7 @@ Compling from sources
 
 cd /
 sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
-sudo tar xzvpf arm920t-eabi.tgz
+sudo tar xzvpf qtmoko-debian-toolchain-armv4t-eabi.tar.gz
 
   * If you are on x86_64 you will need to download following 32bit libraries:
 
@@ -34,6 +34,8 @@ cd ../build
 ../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license
 make
 make install
+
+  * In case of errors you might try -force-build-qt argument.
 
   * Upload the result to your device (you must have phone and usb network up)
 
