@@ -76,13 +76,14 @@ LightSettings::LightSettings( QWidget* parent,  Qt::WFlags fl )
 
     QSettings hwConfig("Trolltech", "Hardware");
     hwConfig.beginGroup("PowerManagement");
+    lockMode.canSuspend = hwConfig.value("CanSuspendLock", false).toBool();    
     batteryMode.canSuspend = hwConfig.value("CanSuspend", false).toBool();
     externalMode.canSuspend = hwConfig.value("CanSuspendAC", false).toBool();
     hwConfig.endGroup();
 
     b->notnetworkedsuspend->hide();
 
-    if (batteryMode.canSuspend || externalMode.canSuspend) {
+    if (batteryMode.canSuspend || externalMode.canSuspend || lockMode.canSuspend) {
         b->interval_suspend->setEnabled(true);
     } else {
         b->interval_suspend->hide();
@@ -90,6 +91,19 @@ LightSettings::LightSettings( QWidget* parent,  Qt::WFlags fl )
     }
 
     QSettings config("Trolltech","qpe");
+    
+    config.beginGroup("LockPower");
+    lockMode.intervalDim = config.value( "Interval_Dim", 20 ).toInt();
+    lockMode.intervalLightOff = config.value("Interval_LightOff", 30).toInt();
+    lockMode.intervalSuspend = config.value("Interval", 60).toInt();
+    lockMode.brightness = config.value("Brightness", 255).toInt();
+    lockMode.brightness = qMax(1,lockMode.brightness * qpe_sysBrightnessSteps() / 255);
+    lockMode.initBrightness = lockMode.brightness;
+    lockMode.dim = config.value("Dim", true).toBool();
+    lockMode.lightoff = config.value("LightOff", false).toBool();
+    lockMode.suspend = config.value("Suspend", true).toBool();
+    lockMode.networkedsuspend = config.value("NetworkedSuspend", true).toBool();
+    config.endGroup();
 
     config.beginGroup("BatteryPower");
     batteryMode.intervalDim = config.value( "Interval_Dim", 20 ).toInt();
@@ -125,7 +139,7 @@ LightSettings::LightSettings( QWidget* parent,  Qt::WFlags fl )
     b->brightness->setSingleStep( qMax(1,maxbright/16) );
     b->brightness->setPageStep( qMax(1,maxbright/16) );
 
-    currentMode = &batteryMode;
+    currentMode = &lockMode;
     applyMode();
 
     connect(b->powerSource, SIGNAL(currentIndexChanged(int)),
@@ -164,6 +178,9 @@ void LightSettings::reject()
 
     // Restore brightness settings
     QSettings config("Trolltech", "qpe");
+    config.beginGroup("LockPower");
+    config.setValue("Brightness", (batteryMode.initBrightness * 255 + qpe_sysBrightnessSteps()/2) / qpe_sysBrightnessSteps());
+    config.endGroup();
     config.beginGroup("BatteryPower");
     config.setValue("Brightness", (batteryMode.initBrightness * 255 + qpe_sysBrightnessSteps()/2) / qpe_sysBrightnessSteps());
     config.endGroup();
@@ -211,7 +228,15 @@ void LightSettings::saveConfig()
     else
         currentMode = &batteryMode;
 
+    if(lockMode.suspend > 0)
+    {
+        currentMode = &lockMode;
+    }
+    
     QSettings cfg("Trolltech","qpe");
+    cfg.beginGroup("LockPower");
+    writeMode(cfg, &lockMode);
+    cfg.endGroup();
     cfg.beginGroup("BatteryPower");
     writeMode(cfg, &batteryMode);
     cfg.endGroup();
@@ -270,7 +295,9 @@ void LightSettings::applyBrightness()
     set_fl(currentMode->brightness);
 
     QSettings config("Trolltech", "qpe");
-    if (currentMode == &batteryMode)
+    if (currentMode == &lockMode)
+        config.beginGroup("LockPower");
+    else if (currentMode == &batteryMode)
         config.beginGroup("BatteryPower");
     else
         config.beginGroup("ExternalPower");
@@ -280,9 +307,11 @@ void LightSettings::applyBrightness()
 
 void LightSettings::powerTypeChanged(int index)
 {
-    PowerMode *newMode = &batteryMode;
+    PowerMode *newMode = &lockMode;
 
-    if ( index == 1 )
+    if(index == 1)
+        newMode = &batteryMode;
+    if(index == 2)
         newMode = &externalMode;
 
     /*  store everytime (so we can store from accept)   */

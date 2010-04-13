@@ -40,7 +40,7 @@ static int currentBacklight = -1;
 QValueSpaceObject *QtopiaPowerManager::m_vso = 0;
 
 /*  Apply light/power settings for current power source */
-static void applyLightSettings(QPowerStatus *p)
+static void applyLightSettings(QPowerStatus *p, QValueSpaceItem *lockVsi)
 {
     int intervalDim;
     int intervalLightOff;
@@ -55,7 +55,18 @@ static void applyLightSettings(QPowerStatus *p)
 
     QSettings hwConfig("Trolltech", "Hardware");
     hwConfig.beginGroup("PowerManagement");
-    if (p->wallStatus() == QPowerStatus::Available) {
+
+    int locked = lockVsi->value(QByteArray(), 0).toInt();
+    bool useLock = false;
+
+    if (locked) {
+        config.beginGroup("LockPower");
+        useLock = config.value(QLatin1String("Suspend"), false).toBool();
+    }
+
+    if (useLock) {
+        canSuspend = hwConfig.value("CanSuspendLock", false).toBool();
+    } else if (p->wallStatus() == QPowerStatus::Available) {
         config.beginGroup("ExternalPower");
         canSuspend = hwConfig.value("CanSuspendAC", false).toBool();
     } else {
@@ -113,10 +124,18 @@ static QtopiaPowerManager *g_qtopiaPowerManager = 0;
 /*!
   Constructs a QtopiaPowerManager instance.
   */
-QtopiaPowerManager::QtopiaPowerManager() : m_powerConstraint(QtopiaApplication::Enable), m_dimLightEnabled(true), m_lightOffEnabled(true) {
+QtopiaPowerManager::QtopiaPowerManager() :
+    m_powerConstraint(QtopiaApplication::Enable),
+    m_dimLightEnabled(true),
+    m_lightOffEnabled(true),
+    lockVsi("/UI/ScreenLocked")
+{
     g_qtopiaPowerManager = this;
     if (!m_vso)
         m_vso = new QValueSpaceObject("/Hardware");
+
+    connect(&lockVsi, SIGNAL(contentsChanged()), this, SLOT(screenLockChanged()));
+    
     setBacklight(-3); //forced on
 
     // Create the screen saver and the associated service.
@@ -141,8 +160,14 @@ QtopiaPowerManager::QtopiaPowerManager() : m_powerConstraint(QtopiaApplication::
   */
 void QtopiaPowerManager::powerStatusChanged()
 {
-    applyLightSettings(&powerstatus);
+    applyLightSettings(&powerstatus, &lockVsi);
 }
+
+void QtopiaPowerManager::screenLockChanged()
+{
+    applyLightSettings(&powerstatus, &lockVsi);
+}
+
 /*!
     This function sets the internal timeouts for the power manager.
     It expects an array \a v containing the timeout values and \a size
@@ -158,15 +183,30 @@ void QtopiaPowerManager::setIntervals(int *v, int size)
     Q_UNUSED( v );
 
     QSettings cfg( QLatin1String("Trolltech"), QLatin1String("qpe"));
-    if (powerstatus.wallStatus() == QPowerStatus::Available) {
+
+    int locked = lockVsi.value(QByteArray(), 0).toInt();
+    bool useLock = false;
+
+    if (locked) {
+        cfg.beginGroup("LockPower");
+        useLock = cfg.value(QLatin1String("Suspend"), false).toBool();
+    }
+    
+    if (useLock) {
+        // Screen is locked and Suspend for locked screen is enabled
+    } else if (powerstatus.wallStatus() == QPowerStatus::Available) {
         cfg.beginGroup("ExternalPower");
     } else {
         cfg.beginGroup("BatteryPower");
     }
 
-    m_vso->setAttribute("ScreenSaver/State/DimEnabled", cfg.value(QLatin1String("Dim"),true ).toBool() );
-    m_vso->setAttribute("ScreenSaver/State/LightOffEnabled", cfg.value(QLatin1String("LightOff"), false ).toBool() );
-    m_vso->setAttribute("ScreenSaver/State/SuspendEnabled", cfg.value(QLatin1String("Suspend"),true ).toBool() );
+    bool dimEnabled = cfg.value(QLatin1String("Dim"),true ).toBool();
+    bool lightOffEnabled = cfg.value(QLatin1String("LightOff"), false ).toBool();
+    bool suspendEnabled = cfg.value(QLatin1String("Suspend"),true ).toBool();
+
+    m_vso->setAttribute("ScreenSaver/State/DimEnabled", dimEnabled);
+    m_vso->setAttribute("ScreenSaver/State/LightOffEnabled", lightOffEnabled);
+    m_vso->setAttribute("ScreenSaver/State/SuspendEnabled", suspendEnabled);
     switch( size )
     {
         default:
