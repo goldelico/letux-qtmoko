@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.32
-# Wed Apr  7 23:27:29 2010
+# Wed Apr 14 15:30:53 2010
 #
 CONFIG_ARM=y
 CONFIG_HAVE_PWM=y
@@ -50,7 +50,8 @@ CONFIG_TREE_RCU=y
 CONFIG_RCU_FANOUT=32
 # CONFIG_RCU_FANOUT_EXACT is not set
 # CONFIG_TREE_RCU_TRACE is not set
-# CONFIG_IKCONFIG is not set
+CONFIG_IKCONFIG=m
+CONFIG_IKCONFIG_PROC=y
 CONFIG_LOG_BUF_SHIFT=18
 # CONFIG_GROUP_SCHED is not set
 # CONFIG_CGROUPS is not set
