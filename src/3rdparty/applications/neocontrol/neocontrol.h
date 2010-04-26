@@ -19,6 +19,7 @@
 #include <QTcpSocket>
 #include <QTextCodec>
 #include <QLineEdit>
+#include <QTimer>
 #ifdef QTOPIA
 #include <QtopiaApplication>
 #endif
@@ -38,6 +39,7 @@ private:
     enum Screen
     {
         ScreenInit,
+        ScreenSysfs,
         ScreenDisplay,
     };
 
@@ -48,12 +50,15 @@ private:
     QLineEdit *lineEdit;
     QPushButton* bQvga;
     QPushButton* bBack;
+    QPushButton* bNext;
 
     void showScreen(NeoControl::Screen scr);
 
 private slots:
     void qvgaClicked();
     void backClicked();
+    void nextClicked();
+    void updateSysfs();
 };
 
 #endif // NEOCONTROL_H
