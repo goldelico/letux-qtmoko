@@ -22,7 +22,6 @@
 
 #include <qserialiodevicemultiplexerplugin.h>
 #include <qserialiodevicemultiplexer.h>
-#include <QThread>
 
 class NeoMultiplexerPlugin : public QSerialIODeviceMultiplexerPlugin
 {
@@ -36,15 +35,6 @@ public:
 
 private:
     bool muxEnabled;
-};
-
-class Sleeper : public QThread
-{
-public:
-    static void msleep(unsigned long msecs)
-    {
-        QThread::msleep(msecs);
-    }
 };
 
 #endif
