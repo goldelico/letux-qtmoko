@@ -56,7 +56,9 @@
   Constructs a new PhonePowerManager instance.
 */
 PhonePowerManager::PhonePowerManager() : 
-    QtopiaPowerManager(), m_suspendEnabled(true)
+    QtopiaPowerManager(),
+    m_suspendEnabled(true),
+    lockVsi("/UI/ScreenLocked")
 {
     setDefaultIntervals();
 }
@@ -151,8 +153,21 @@ void PhonePowerManager::setIntervals(int* ivals, int size )
 
     QSettings config("Trolltech","qpe");
 
-    QString powerGroup = (powerstatus.wallStatus() == QPowerStatus::Available) ? "ExternalPower" : "BatteryPower";
-    config.beginGroup( powerGroup );
+    int locked = lockVsi.value(QByteArray(), 0).toInt();
+    bool useLock = false;
+
+    if (locked) {
+        config.beginGroup("LockPower");
+        useLock = config.value(QLatin1String("Suspend"), false).toBool();
+    }
+    
+    if(useLock) {
+        // beginGroup() already called - never call it twice!
+    } else if(powerstatus.wallStatus() == QPowerStatus::Available) {
+        config.beginGroup("ExternalPower");
+    } else {
+        config.beginGroup("BatteryPower");
+    }
 
     int *v = new int[size+1];
     for(int j=size; j>=0; j--)

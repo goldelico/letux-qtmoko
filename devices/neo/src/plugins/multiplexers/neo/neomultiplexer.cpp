@@ -69,6 +69,7 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         f.write("1");
         f.close();
+        Sleeper::msleep(1000);
     } else {
         qWarning() << "Modem power on failed "<< f.errorString();
     }

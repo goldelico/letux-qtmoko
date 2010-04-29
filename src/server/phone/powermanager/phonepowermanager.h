@@ -43,6 +43,7 @@ private:
     void forceSuspend();
     bool m_suspendEnabled;
     QPowerStatus powerstatus;
+    QValueSpaceItem lockVsi;
 };
 
 #endif

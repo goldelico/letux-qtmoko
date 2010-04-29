@@ -120,6 +120,7 @@ BasicHomeScreen::BasicHomeScreen(QWidget *parent, Qt::WFlags flags)
     , newMessages(0)
     , smsMemoryFull(false)
     , screenLocked(false)
+    , uiVso("/UI")
     , newMsgVsi(0)
     , smsMemFull(0)
     , touchLockScreen(0)
@@ -760,6 +761,7 @@ void BasicHomeScreen::lockScreen()
         qLog(Component) << "BasicHomeScreen: TouchScreenLockDlg not available";
     }
 
+    uiVso.setAttribute("ScreenLocked", 1);
 }
 
 /*!
@@ -768,6 +770,7 @@ void BasicHomeScreen::lockScreen()
 void BasicHomeScreen::screenUnlocked()
 {
     screenLocked = false;
+    uiVso.setAttribute("ScreenLocked", 0);
     if (touchLockScreen) {
         touchLockScreen->deleteLater();
         touchLockScreen = 0;

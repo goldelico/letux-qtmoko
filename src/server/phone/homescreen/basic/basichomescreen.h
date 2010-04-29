@@ -101,6 +101,7 @@ protected:
     int             newMessages;
     bool            smsMemoryFull;
     bool            screenLocked;
+    QValueSpaceObject uiVso;
     QValueSpaceItem* newMsgVsi;
     QValueSpaceItem* smsMemFull;
     QPointer<QDialog> touchLockScreen;

@@ -1,7 +1,7 @@
 TEMPLATE=app
 TARGET=qmplayer
 
-CONFIG+=qtopia quicklaunch
+CONFIG+=qtopia
 DEFINES+=QTOPIA
 
 # I18n info

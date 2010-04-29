@@ -99,6 +99,7 @@ private:
     void writeMode(QSettings &config, PowerMode *mode);
 
 private:
+    PowerMode lockMode;
     PowerMode batteryMode;
     PowerMode externalMode;
     PowerMode *currentMode;

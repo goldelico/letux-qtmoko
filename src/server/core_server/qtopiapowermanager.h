@@ -61,12 +61,14 @@ protected:
     QtopiaApplication::PowerConstraint m_powerConstraint;
     bool m_dimLightEnabled;
     bool m_lightOffEnabled;
+    QValueSpaceItem lockVsi;
     QMap<int,int> m_levelToAction;
     static QValueSpaceObject *m_vso;
     virtual void forceSuspend();
 
 private slots:
     virtual void powerStatusChanged();
+    virtual void screenLockChanged();
     void _forceSuspend();
 
 private:
