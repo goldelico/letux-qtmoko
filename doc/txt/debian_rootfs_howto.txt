@@ -80,13 +80,16 @@ echo "deb http://pkg-fso.alioth.debian.org/debian unstable main" >> /media/card/
 Step 4
 ======
 
-* Device drivers modules - not needed now - we have all drives in kernel
+* Device drivers modules, we have most of them in kernel now.
 
-# echo g_ether > /media/card/etc/modules
+echo ppp_generic > /media/card/etc/modules
+
+* Old modules were:
+
+# echo g_ether >> /media/card/etc/modules
 # echo hidp >> /media/card/etc/modules
 # echo ipv6 >> /media/card/etc/modules
 # echo ohci-hcd >> /media/card/etc/modules
-# echo ppp_generic >> /media/card/etc/modules
 # echo rfcomm >> /media/card/etc/modules
 # echo s3cmci >> /media/card/etc/modules
 # echo snd-soc-neo1973-gta02-wm8753 >> /media/card/etc/modules
@@ -238,8 +241,8 @@ case "$1" in
 		rm -rf /tmp/restart-qtopia-qvga
 		export QWS_SIZE="240x320+0+0"
 		export POINTERCAL_FILE=/etc/pointercal_qvga
-		fbset qvga 
-		echo "qvga-normal" > /sys/bus/spi/devices/spi2.0/state
+		fbset qvga
+		echo qvga > /sys/bus/spi/devices/spi2.0/resolution
 		#qcop service send Launcher "execute(QString)" "calibrate"
 	fi
 	done
