@@ -138,10 +138,10 @@ void NeoControl::updateSysfs()
 
     QString text;
     appendValue(tr("Battery status"), "/sys/class/power_supply/battery/status", &text);
-    appendValue(tr("Current"), "/sys/devices/platform/s3c24xx_pwm.0/hdq.0/bq27000-battery.0/power_supply/battery/current_now", &text);
-    appendValue(tr("Modem power"), "/sys/bus/platform/devices/neo1973-pm-gsm.0/power_on", &text);
-    appendValue(tr("GPS power"), "/sys/bus/platform/devices/neo1973-pm-gps.0/power_on", &text);
-    appendValue(tr("Bluetooth power"), "/sys/bus/platform/devices/neo1973-pm-bt.0/power_on", &text);
+    appendValue(tr("Current"), "/sys/class/power_supply/battery/current_now", &text);
+    appendValue(tr("Modem power"), "/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on", &text);
+    appendValue(tr("GPS power"), "/sys/devices/platform/gta02-pm-gps.0/power_on", &text);
+    appendValue(tr("Bluetooth power"), "/sys/devices/platform/gta02-pm-bt.0/power_on", &text);
     label->setText(text);
 
     QTimer::singleShot(1000, this, SLOT(updateSysfs()));
