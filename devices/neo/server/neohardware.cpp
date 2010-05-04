@@ -132,19 +132,19 @@ char *value;
   if (bytesAvail < readCount)
       readCount = bytesAvail;
   ueventSocket->read(&buffer[0],readCount);
-  if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/pcf50633-mbc/power_supply/usb")==0)
+  if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc/power_supply/usb")==0)
   {
     qLog(PowerManagement)<<"usb change event";
     cableConnected(getCableStatus());
-  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/pcf50633-mbc/power_supply/ac")==0)
+  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc/power_supply/ac")==0)
   {
     qLog(PowerManagement)<<"ac change event";
     cableConnected(getCableStatus());
-  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-adapter/i2c-0/0-0073/pcf50633-mbc/power_supply/adapter")==0)
+  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc/power_supply/adapter")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
     qLog(PowerManagement)<<"power_supply change event; online="<<value;
-  }else if(strcmp(buffer,"change@/devices/platform/s3c24xx_pwm.0/hdq.0/bq27000-battery.0/power_supply/battery")==0)
+  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/hdq.0/bq27000-battery.0/power_supply/battery")==0)
   {
     value=findAttribute(buffer,readCount,"POWER_SUPPLY_CAPACITY=");
     qLog(PowerManagement)<<"battery change event charge%="<<value<<"%";
