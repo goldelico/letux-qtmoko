@@ -176,6 +176,7 @@ QString AbstractPackageController::packageDetails( int pkgId ) const
     Q_UNUSED( dummyStr );
     QString str = tr( "Name:" ) + QLatin1String(" ") + pkg.name + "<br>" +
                   tr( "Description:" ) + QLatin1String(" ")+ pkg.description + "<br>" +
+                  tr( "Version:" ) + QLatin1String(" ")+ pkg.version + "<br>" +
                   tr( "MD5Sum:" ) + QLatin1String(" ")+ pkg.md5Sum + "<br>";
 #ifndef QT_NO_SXE
     if ( DomainInfo::hasSensitiveDomains(pkg.domain) )
