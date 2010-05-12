@@ -401,7 +401,7 @@ git checkout translations
 
   and tell configure (in build dir) which languages you want
 
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES
+../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
 
   and rebuild all
 
