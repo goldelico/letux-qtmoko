@@ -17,6 +17,12 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     bNext = new QPushButton(tr("Next"), this);
     connect(bNext, SIGNAL(clicked()), this, SLOT(nextClicked()));
 
+    chkDeepSleep = new QCheckBox(tr("Deep sleep"), this);
+    connect(chkDeepSleep, SIGNAL(stateChanged(int)), this, SLOT(deepSleepStateChanged(int)));
+
+    chkMux = new QCheckBox(tr("Multiplexing"), this);
+    connect(chkMux, SIGNAL(stateChanged(int)), this, SLOT(muxStateChanged(int)));
+
     label = new QLabel(this);
     lineEdit = new QLineEdit(this);
 
@@ -29,6 +35,8 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     layout->addWidget(bQvga);
     layout->addWidget(label);
     layout->addWidget(lineEdit);
+    layout->addWidget(chkDeepSleep);
+    layout->addWidget(chkMux);
     layout->addLayout(buttonLayout);
 
     showScreen(NeoControl::ScreenInit);
@@ -46,8 +54,11 @@ void NeoControl::backClicked()
     case ScreenInit:
         close();
         break;
-    case ScreenSysfs:
+    case ScreenModem:
         showScreen(ScreenInit);
+        break;
+    case ScreenSysfs:
+        showScreen(ScreenModem);
         break;
     case ScreenDisplay:
         showScreen(ScreenSysfs);
@@ -60,6 +71,9 @@ void NeoControl::nextClicked()
     switch(screen)
     {
     case ScreenInit:
+        showScreen(ScreenModem);
+        break;
+    case ScreenModem:
         showScreen(ScreenSysfs);
         break;
     case ScreenSysfs:
@@ -92,14 +106,19 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     this->screen = scr;
 
     bQvga->setVisible(scr == ScreenDisplay);
-    label->setVisible(scr == ScreenInit || scr == ScreenSysfs);
+    label->setVisible(scr == ScreenInit || scr == ScreenModem || scr == ScreenSysfs);
     bBack->setText(scr == ScreenInit ? tr("Quit") : tr("Back"));
     lineEdit->setVisible(false);
+    chkDeepSleep->setVisible(scr == ScreenModem);
+    chkMux->setVisible(scr == ScreenModem);
 
     switch(scr)
     {
     case ScreenInit:
         label->setText(tr("Neo hardware tool"));
+        break;
+    case ScreenModem:
+        updateModem();
         break;
     case ScreenDisplay:
         break;
@@ -110,6 +129,59 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     default:
         break;
     }
+}
+
+void NeoControl::deepSleepStateChanged(int state)
+{
+    if(updatingModem)
+    {
+        return;
+    }
+    QString val = (state == Qt::Checked ? "always" : "never");
+    QSettings cfg("Trolltech", "Modem");
+    cfg.setValue("DeepSleep/Active", val);
+    cfg.sync();
+
+    QMessageBox::information(this, tr("Neo control"), tr("Restart is needed to make it working"));
+}
+
+void NeoControl::muxStateChanged(int state)
+{
+    if(updatingModem)
+    {
+        return;
+    }
+    QString val = (state == Qt::Checked ? "yes" : "no");
+    QSettings cfg("Trolltech", "Modem");
+    cfg.setValue("Multiplexing/Active", val);
+    cfg.sync();
+
+    QMessageBox::information(this, tr("Neo control"), tr("Restart is needed to make it working"));
+}
+
+void NeoControl::updateModem()
+{
+    if(screen != ScreenModem)
+    {
+        return;
+    }
+    updatingModem = true;
+
+    QString text(tr("Modem settings\n\n"));
+    QSettings cfg("Trolltech", "Modem");
+
+    QString deepSleep = cfg.value("DeepSleep/Active").toString();
+    text += tr("Deep sleep") + ": " + deepSleep + "\n";
+    chkDeepSleep->setChecked(deepSleep != "never");
+
+    QString multiplexing = cfg.value("Multiplexing/Active", "yes").toString();
+    text += tr("Multiplexing") + ": " + multiplexing;
+    chkMux->setChecked(multiplexing != "no");
+
+    label->setText(text);
+
+    updatingModem = false;
+    QTimer::singleShot(1000, this, SLOT(updateModem()));
 }
 
 static void appendValue(QString desc, QString file, QString *text)

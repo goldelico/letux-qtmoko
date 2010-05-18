@@ -20,6 +20,8 @@
 #include <QTextCodec>
 #include <QLineEdit>
 #include <QTimer>
+#include <QSettings>
+#include <QCheckBox>
 #ifdef QTOPIA
 #include <QtopiaApplication>
 #endif
@@ -39,18 +41,22 @@ private:
     enum Screen
     {
         ScreenInit,
+        ScreenModem,
         ScreenSysfs,
         ScreenDisplay,
     };
 
     Screen screen;
-    QVBoxLayout* layout;
-    QHBoxLayout* buttonLayout;
+    bool updatingModem;
+    QVBoxLayout *layout;
+    QHBoxLayout *buttonLayout;
     QLabel *label;
     QLineEdit *lineEdit;
-    QPushButton* bQvga;
-    QPushButton* bBack;
-    QPushButton* bNext;
+    QPushButton *bQvga;
+    QPushButton *bBack;
+    QPushButton *bNext;
+    QCheckBox *chkDeepSleep;
+    QCheckBox *chkMux;
 
     void showScreen(NeoControl::Screen scr);
 
@@ -58,7 +64,10 @@ private slots:
     void qvgaClicked();
     void backClicked();
     void nextClicked();
+    void updateModem();
     void updateSysfs();
+    void deepSleepStateChanged(int);
+    void muxStateChanged(int);
 };
 
 #endif // NEOCONTROL_H
