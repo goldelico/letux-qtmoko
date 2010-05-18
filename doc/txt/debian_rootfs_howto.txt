@@ -168,6 +168,18 @@ dpkg -i pkg-fso-keyring_2009.09.12_all.deb
 rm pkg-fso-keyring_2009.09.12_all.deb
 exit
 
+Step 4.7 - disable logging by defaults
+======================================
+
+* We will have syslogd and klogd disabled by default. If phone works it's not
+  needed and it saves flash memory from wearing off. It can be always enabled
+  in settings->logging or via devtools menu or with logging_enable.sh script.
+
+chroot /media/card
+update-rc.d -f klogd remove
+update-rc.d -f sysklogd remove
+exit
+
 
 Step 5
 ======
