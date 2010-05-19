@@ -34,6 +34,8 @@ MixerSlider::MixerSlider(QWidget *parent)
 
     connect(this, SIGNAL(sliderReleased()),
             this, SLOT(sliderReleased()));
+
+    setPageStep(1);
 }
 
 MixerSlider::~MixerSlider()
@@ -65,8 +67,8 @@ void MixerSlider::setMixerElem(snd_mixer_elem_t *snd_mix, bool playback)
         snd_mixer_selem_get_capture_volume_range(snd_mix, &min, &max);
     }
 
-    setMinimum(0);
-    setMaximum(100);
+    setMinimum(min);
+    setMaximum(max);
 
     if(playback)
     {
@@ -78,11 +80,8 @@ void MixerSlider::setMixerElem(snd_mixer_elem_t *snd_mix, bool playback)
         snd_mixer_selem_get_capture_volume
                 (snd_mix, SND_MIXER_SCHN_FRONT_LEFT, &volume);
     }
-    if (volume < 0 || volume > 255)
-        setSliderPosition(0);
-    else
-        setSliderPosition((volume * 100) / max);
 
+    setSliderPosition(volume);
     updatingValue = false;
 }
 
@@ -93,21 +92,19 @@ void MixerSlider::setSndCurrentValue(int value)
         return;
     }
 
-    int realValue = (value * max) / 100;
-
     if(playback)
     {
         snd_mixer_selem_set_playback_volume
-                (snd_mix, SND_MIXER_SCHN_FRONT_LEFT, realValue);
+                (snd_mix, SND_MIXER_SCHN_FRONT_LEFT, value);
         snd_mixer_selem_set_playback_volume
-                (snd_mix, SND_MIXER_SCHN_FRONT_RIGHT, realValue);
+                (snd_mix, SND_MIXER_SCHN_FRONT_RIGHT, value);
     }
     else
     {
         snd_mixer_selem_set_capture_volume
-                (snd_mix, SND_MIXER_SCHN_FRONT_LEFT, realValue);
+                (snd_mix, SND_MIXER_SCHN_FRONT_LEFT, value);
         snd_mixer_selem_set_capture_volume
-                (snd_mix, SND_MIXER_SCHN_FRONT_RIGHT, realValue);
+                (snd_mix, SND_MIXER_SCHN_FRONT_RIGHT, value);
     }
 }
 
