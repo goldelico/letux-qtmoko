@@ -94,8 +94,14 @@ Step 4
 
 * Modem device nodes
 
-echo "# Samsung UARTS" > /media/card/etc/udev/rules.d/50-qtmoko.rules
-echo "KERNEL==\"s3c2410_serial[0-9]\",   NAME=\"ttySAC%n\"" >> /media/card/etc/udev/rules.d/50-qtmoko.rules
+cat > /media/card/etc/udev/rules.d/50-qtmoko.rules << __END__
+# Samsung UARTS
+KERNEL=="s3c2410_serial[0-9]",   NAME="ttySAC%n"
+
+# Fix bluetooth after resume
+KERNEL=="hci0", SUBSYSTEM=="bluetooth", ACTION=="add", \\
+        RUN+="/opt/qtmoko/bin/btfix.sh"
+__END__
 
 * Unpack alsa scenarios to /usr/share/openmoko - you can find these files
   in any openmoko distro.
