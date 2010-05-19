@@ -3,6 +3,7 @@ TARGET=neocontrol
 
 CONFIG+=qtopia
 DEFINES+=QTOPIA
+LIBS += -lasound
 
 # I18n info
 STRING_LANGUAGE=en_US
@@ -19,11 +20,13 @@ pkg [
 
 # Input files
 HEADERS=\
-    neocontrol.h
+    neocontrol.h\
+    mixerslider.h
 
 SOURCES=\
     main.cpp\
-    neocontrol.cpp
+    neocontrol.cpp\
+    mixerslider.cpp
 
 # Install rules
 target [

@@ -28,6 +28,8 @@
 #ifdef Q_WS_WIN
 #include <Windows.h>
 #endif
+#include <alsa/asoundlib.h>
+#include "mixerslider.h"
 
 class NeoControl : public QWidget
 {
@@ -41,6 +43,7 @@ private:
     enum Screen
     {
         ScreenInit,
+        ScreenMixer,
         ScreenModem,
         ScreenSysfs,
         ScreenDisplay,
@@ -48,6 +51,7 @@ private:
 
     Screen screen;
     bool updatingModem;
+    snd_mixer_t *mixerFd;
     QVBoxLayout *layout;
     QHBoxLayout *buttonLayout;
     QLabel *label;
@@ -55,15 +59,26 @@ private:
     QPushButton *bQvga;
     QPushButton *bBack;
     QPushButton *bNext;
+    QPushButton *bSave;
     QCheckBox *chkDeepSleep;
     QCheckBox *chkMux;
+    QLabel *label5;
+    QLabel *label12;
+    QLabel *label48;
+    MixerSlider *slider5;
+    MixerSlider *slider12;
+    MixerSlider *slider48;
 
     void showScreen(NeoControl::Screen scr);
+    int openAlsaMixer();
+    void closeAlsaMixer();
 
 private slots:
     void qvgaClicked();
     void backClicked();
     void nextClicked();
+    void saveClicked();
+    void updateMixer();
     void updateModem();
     void updateSysfs();
     void deepSleepStateChanged(int);
