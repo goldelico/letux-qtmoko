@@ -338,6 +338,8 @@ start()
     print_debug "starting $*";
     ifdown usb0
 
+    om wifi maxperf "$1" 1 > /dev/null 2>&1
+
     . $HOME/Settings/Network/$1
 
     if [ -r $HOME/Settings/Network/wireless/$1 ]; then
@@ -477,6 +479,9 @@ stop()
         rm /home/root/Documents/$1.txt
         rescan_docs
     fi
+
+    om wifi maxperf "$1" 0 > /dev/null 2>&1
+
     ifup usb0
 }
 
