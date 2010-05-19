@@ -142,7 +142,7 @@ void NeoControl::deepSleepStateChanged(int state)
     cfg.setValue("DeepSleep/Active", val);
     cfg.sync();
 
-    QMessageBox::information(this, tr("Neo control"), tr("Restart is needed to make it working"));
+    QMessageBox::information(this, tr("Deep sleep"), tr("Settings will be activated after restarting QtExtended with POWER button"));
 }
 
 void NeoControl::muxStateChanged(int state)
@@ -156,7 +156,7 @@ void NeoControl::muxStateChanged(int state)
     cfg.setValue("Multiplexing/Active", val);
     cfg.sync();
 
-    QMessageBox::information(this, tr("Neo control"), tr("Restart is needed to make it working"));
+    QMessageBox::information(this, tr("Multiplexing"), tr("Settings will be activated after restarting QtExtended with POWER button"));
 }
 
 void NeoControl::updateModem()
