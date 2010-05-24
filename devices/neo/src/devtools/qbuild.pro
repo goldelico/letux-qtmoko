@@ -29,6 +29,15 @@ desktop.files+=desktop/resumex.desktop
 desktop.files+=desktop/get-ssh-key.desktop
 desktop.files+=desktop/fast-charge.desktop
 desktop.files+=desktop/share-gprs.desktop
+desktop.files+=desktop/btfix.desktop
+desktop.files+=desktop/logging_stop.desktop
+desktop.files+=desktop/logging_start.desktop
+desktop.files+=desktop/logging_enable.desktop
+desktop.files+=desktop/logging_disable.desktop
+desktop.files+=desktop/wifi-maxperf-on.desktop
+desktop.files+=desktop/wifi-maxperf-off.desktop
+desktop.files+=desktop/usb-mass-storage-on.desktop
+desktop.files+=desktop/usb-mass-storage-off.desktop
 
 desktop.path=/apps/Devtools
 desktop.depends+=install_docapi_f_dir
