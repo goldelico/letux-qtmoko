@@ -82,7 +82,8 @@ Step 4
 
 * Device drivers modules. Most of device drivers are built in kernel, but
   following drivers are exception. g_ether is module so that we can switch
-  between mass storage and with ppp_generic built in GPRS does not work?
+  between mass storage and with ppp_generic saves space so that we fit under
+  2MB u-boot limit.
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
