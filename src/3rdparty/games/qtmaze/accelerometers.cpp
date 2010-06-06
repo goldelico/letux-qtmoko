@@ -2,7 +2,7 @@
  *
  *  Accelerometer stuff
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  Based on original accelerometers.c from OpenMooCow - accelerometer moobox simulator.
  *  (c) 2008 Thomas White <taw27@srcf.ucam.org>
@@ -227,9 +227,10 @@ AccelHandle *accelerometer_open()
         struct stat st;
 
         char freerunner_file_default[] = "/dev/input/event3";
-        char freerunner_file_2630[]    = "/dev/input/event4";
+        //char freerunner_file_2630[]    = "/dev/input/event4";
         char *freerunner_file = freerunner_file_default;
 
+        /*
         struct utsname uts;
         if ( uname(&uts) < 0 )
             printf("Accelerometer: unable to get host information\n");
@@ -239,6 +240,7 @@ AccelHandle *accelerometer_open()
                 printf("Accelerometer: Linux kernel 2.6.30 detected\n");
                 freerunner_file = freerunner_file_2630;
             }
+        */
 
         if (stat(freerunner_file, &st) == 0)
         {
