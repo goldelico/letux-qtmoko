@@ -2,7 +2,7 @@
  *
  *  Main game routines
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  This file is part of QtMaze (port of Mokomaze) - labyrinth game.
  *
