@@ -2,7 +2,7 @@
  *
  *  Main game routines
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  This file is part of QtMaze (port of Mokomaze) - labyrinth game.
  *
@@ -22,8 +22,6 @@
 
 #include <qtimer.h>
 #include <QMouseEvent>
-#include <qsoftmenubar.h>
-#include <QtopiaApplication>
 #include <stdio.h>
 #include <math.h>
 #include "accelerometers.h"
@@ -31,6 +29,11 @@
 #include "vibro.h"
 #include "types.h"
 #include "form.h"
+
+#ifdef QTOPIA
+#include <QtopiaApplication>
+#include <qsoftmenubar.h>
+#endif
 
 //============================================================================
 
@@ -49,6 +52,8 @@ double pr_px, pr_py;
 double pr_vx, pr_vy;
 
 double prev_px, prev_py;
+
+int fall_hole_x, fall_hole_y;
 
 bool fullscreen = true;
 
@@ -73,18 +78,22 @@ int fastchange_step = 0;
 
 void Form::DisableScreenSaver()
 {
+#ifdef QTOPIA
     QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+#endif
 }
 
 void Form::EnableScreenSaver()
 {
+#ifdef QTOPIA
     QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+#endif
 }
 
 void Form::SetLevelNo()
 {
     char txt[256];
-    sprintf(txt, "<font color=\"#e0bc70\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
+    sprintf(txt, "<font color=\"#e0bc70\" size=\"8\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
     levelno_lbl->setText(txt);
     //levelno_lbl->setText(QApplication::translate("FormBase", txt, 0, QApplication::UnicodeUTF8));
 }
@@ -301,15 +310,17 @@ int Form::edgebump(int tx,int ty,   double x,double y,   double mm_vx,double mm_
     return 0;
 }
 
-#define HOLE_SCALE 1.00
 int Form::testbump(double x,double y,   double mm_vx,double mm_vy)
 {
 
     Point final_hole = qt_game_levels[cur_level].fins[0];
     double dist = calcdist(x,y, final_hole.x,final_hole.y);
-    if (dist <= qt_game_config.hole_r * HOLE_SCALE)
+    if (dist <= qt_game_config.hole_r)
     {
+        fall_hole_x = final_hole.x;
+        fall_hole_y = final_hole.y;
         new_game_state = GAME_STATE_WIN;
+        post_temp_phys_res(x, y, mm_vx, mm_vy);
         return 1;
     }
 
@@ -317,16 +328,19 @@ int Form::testbump(double x,double y,   double mm_vx,double mm_vy)
     {
         Point hole = qt_game_levels[cur_level].holes[i];
         Box boundbox;
-        boundbox.x1 = hole.x - qt_game_config.hole_r*HOLE_SCALE -1;
-        boundbox.y1 = hole.y - qt_game_config.hole_r*HOLE_SCALE -1;
-        boundbox.x2 = hole.x + qt_game_config.hole_r*HOLE_SCALE +1;
-        boundbox.y2 = hole.y + qt_game_config.hole_r*HOLE_SCALE +1;
+        boundbox.x1 = hole.x - qt_game_config.hole_r - 1;
+        boundbox.y1 = hole.y - qt_game_config.hole_r - 1;
+        boundbox.x2 = hole.x + qt_game_config.hole_r + 1;
+        boundbox.y2 = hole.y + qt_game_config.hole_r + 1;
         if (inbox(x,y, boundbox))
         {
             double dist = calcdist(x,y, hole.x,hole.y);
-            if (dist <= qt_game_config.hole_r * HOLE_SCALE)
+            if (dist <= qt_game_config.hole_r)
             {
+                fall_hole_x = hole.x;
+                fall_hole_y = hole.y;
                 new_game_state = GAME_STATE_FAILED;
+                post_temp_phys_res(x, y, mm_vx, mm_vy);
                 return 1;
             }
         }
@@ -338,37 +352,37 @@ int Form::testbump(double x,double y,   double mm_vx,double mm_vy)
     {
         Box box = qt_game_levels[cur_level].boxes[i];
         Box boundbox;
-        boundbox.x1 = box.x1 - qt_game_config.hole_r*HOLE_SCALE -1;
-        boundbox.y1 = box.y1 - qt_game_config.hole_r*HOLE_SCALE -1;
-        boundbox.x2 = box.x2 + qt_game_config.hole_r*HOLE_SCALE +1;
-        boundbox.y2 = box.y2 + qt_game_config.hole_r*HOLE_SCALE +1;
+        boundbox.x1 = box.x1 - qt_game_config.ball_r - 1; //
+        boundbox.y1 = box.y1 - qt_game_config.ball_r - 1;
+        boundbox.x2 = box.x2 + qt_game_config.ball_r + 1;
+        boundbox.y2 = box.y2 + qt_game_config.ball_r + 1;
         if (inbox(x,y, boundbox))
         {
             if (inbox(x,y-qt_game_config.ball_r, box))
             {
                 BumpVibrate(mm_vy);
-                y = box.y2+qt_game_config.ball_r+0.2;
+                y = box.y2+qt_game_config.ball_r + 0.2;
                 mm_vy = -mm_vy * BUMP_COEF;
                 retval = 1;
             }
             if (inbox(x,y+qt_game_config.ball_r-0, box))
             {
                 BumpVibrate(mm_vy);
-                y = box.y1-qt_game_config.ball_r -1.00;
+                y = box.y1-qt_game_config.ball_r - 1.00;
                 mm_vy = -mm_vy * BUMP_COEF;
                 retval = 1;
             }
             if (inbox(x-qt_game_config.ball_r,y, box))
             {
                 BumpVibrate(mm_vx);
-                x = box.x2+qt_game_config.ball_r+0.2;
+                x = box.x2+qt_game_config.ball_r + 0.2;
                 mm_vx = -mm_vx * BUMP_COEF;
                 retval = 1;
             }
             if (inbox(x+qt_game_config.ball_r-0,y, box))
             {
                 BumpVibrate(mm_vx);
-                x = box.x1-qt_game_config.ball_r -1.00;
+                x = box.x1-qt_game_config.ball_r - 1.00;
                 mm_vx = -mm_vx * BUMP_COEF;
                 retval = 1;
             }
@@ -481,7 +495,11 @@ void Form::InitState()
 
 void Form::MoveBall(double x, double y)
 {
-    ball_lbl->move((int)x-qt_game_config.ball_r, (int)y-qt_game_config.ball_r);
+    int lpx = (int)x-qt_game_config.ball_r;
+    int lpy = (int)y-qt_game_config.ball_r;
+    int shadow_shift = qt_game_config.ball_r / 5;
+    ball_lbl->move(lpx, lpy);
+    ballshadow_lbl->move(lpx+shadow_shift, lpy+shadow_shift); //improve shadow shifting
 }
 
 void Form::acc_timerAction()
@@ -500,6 +518,8 @@ void Form::timerAction()
         InitState();
         game_state = GAME_STATE_NORMAL;
         SetLevelNo();
+
+        setButtonsPics();
     }
 }
 
@@ -517,11 +537,34 @@ void Form::ScreenTouchedContinue()
     fullscreen = true;
 }
 
+void Form::setButtonsPics()
+{
+    if (cur_level >= qt_game_levels_count-1)
+    {
+        prev_lbl->setPixmap(prev_pixmap);
+        next_lbl->setPixmap(next_i_pixmap);
+        reset_lbl->setPixmap(reset_pixmap);
+    }
+    else if (cur_level <= 0)
+    {
+        prev_lbl->setPixmap(prev_i_pixmap);
+        next_lbl->setPixmap(next_pixmap);
+        reset_lbl->setPixmap(reset_i_pixmap);
+    }
+    else if (!timer->isActive())
+    {
+        prev_lbl->setPixmap(prev_pixmap);
+        next_lbl->setPixmap(next_pixmap);
+        reset_lbl->setPixmap(reset_pixmap);
+    }
+}
+
 bool Form::eventFilter(QObject *target, QEvent *event)
 {
     if (event->type() == QEvent::MouseButtonRelease)
     {
         if (timer->isActive()) timer->stop();
+        setButtonsPics();
         return true;
     }
     else if (event->type() == QEvent::MouseButtonPress)
@@ -550,6 +593,9 @@ bool Form::eventFilter(QObject *target, QEvent *event)
             {
                 if (cur_level > 0)
                 {
+                    prev_lbl->setPixmap(prev_p_pixmap);
+                    prev_lbl->repaint();
+
                     cur_level--;
                     InitState();
                     game_state = GAME_STATE_NORMAL;
@@ -558,6 +604,8 @@ bool Form::eventFilter(QObject *target, QEvent *event)
                     fastchange_step = -10;
                     if (timer->isActive()) timer->stop();
                     timer->start(FASTCHANGE_INTERVAL);
+
+                    setButtonsPics();
                 }
             }
             else if (InRect(mx, my,
@@ -566,6 +614,9 @@ bool Form::eventFilter(QObject *target, QEvent *event)
             {
                 if (cur_level < qt_game_levels_count-1)
                 {
+                    next_lbl->setPixmap(next_p_pixmap);
+                    next_lbl->repaint();
+
                     cur_level++;
                     InitState();
                     game_state = GAME_STATE_NORMAL;
@@ -574,16 +625,26 @@ bool Form::eventFilter(QObject *target, QEvent *event)
                     fastchange_step = +10;
                     if (timer->isActive()) timer->stop();
                     timer->start(FASTCHANGE_INTERVAL);
+
+                    setButtonsPics();
                 }
             }
             else if (InRect(mx, my,
                        reset_lbl->pos().x(), reset_lbl->pos().y(),
                        reset_lbl->size().width(), reset_lbl->size().height() ))
             {
-                cur_level=0;
-                InitState();
-                game_state = GAME_STATE_NORMAL;
-                SetLevelNo();
+                if (cur_level > 0)
+                {
+                    reset_lbl->setPixmap(reset_p_pixmap);
+                    reset_lbl->repaint();
+
+                    cur_level=0;
+                    InitState();
+                    game_state = GAME_STATE_NORMAL;
+                    SetLevelNo();
+
+                    setButtonsPics();
+                }
             }
             else if (InRect(mx, my,
                        exit_lbl->pos().x(), exit_lbl->pos().y(),
@@ -636,15 +697,25 @@ void Form::CheckLoadedPictures()
 {
     QString picdir_installed = QCoreApplication::applicationDirPath() + "/../pics/qtmaze/";
 
-    if (prev_lbl->pixmap()->isNull())   prev_lbl->setPixmap(QPixmap(picdir_installed + "prev.png"));
-    if (next_lbl->pixmap()->isNull())   next_lbl->setPixmap(QPixmap(picdir_installed + "next.png"));
-    if (reset_lbl->pixmap()->isNull()) reset_lbl->setPixmap(QPixmap(picdir_installed + "reset.png"));
-    if (exit_lbl->pixmap()->isNull())   exit_lbl->setPixmap(QPixmap(picdir_installed + "close.png"));
-
     if (ball_lbl->pixmap()->isNull())   ball_lbl->setPixmap(QPixmap(picdir_installed + "ball.png"));
+    if (ballshadow_lbl->pixmap()->isNull())   ballshadow_lbl->setPixmap(QPixmap(picdir_installed + "ball-shadow.png"));
 
     if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load(picdir_installed + "hole.png");
     if (renderArea->fin_pixmap.isNull())   renderArea->fin_pixmap.load(picdir_installed + "fin.png");
+
+    if (prev_pixmap.isNull())     prev_pixmap.load(picdir_installed + "prev.png");
+    if (prev_p_pixmap.isNull()) prev_p_pixmap.load(picdir_installed + "prev-p.png");
+    if (prev_i_pixmap.isNull()) prev_i_pixmap.load(picdir_installed + "prev-i.png");
+
+    if (next_pixmap.isNull())     next_pixmap.load(picdir_installed + "next.png");
+    if (next_p_pixmap.isNull()) next_p_pixmap.load(picdir_installed + "next-p.png");
+    if (next_i_pixmap.isNull()) next_i_pixmap.load(picdir_installed + "next-i.png");
+
+    if (reset_pixmap.isNull())     reset_pixmap.load(picdir_installed + "reset.png");
+    if (reset_p_pixmap.isNull()) reset_p_pixmap.load(picdir_installed + "reset-p.png");
+    if (reset_i_pixmap.isNull()) reset_i_pixmap.load(picdir_installed + "reset-i.png");
+
+    if (close_pixmap.isNull()) close_pixmap.load(picdir_installed + "close.png");
 }
 
 /*
@@ -666,12 +737,14 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     game_state = GAME_STATE_NORMAL;
     if (GetVibroEnabled()) init_vibro();
 
-    renderArea = new RenderArea(this);
+    renderArea = new RenderArea(this, 480,640);
     renderArea->move(0,0);
-    renderArea->resize(480,640);  //vboxLayout->addWidget(renderArea);
+    //renderArea->resize(480,640);  //vboxLayout->addWidget(renderArea);
     renderArea->setLevel(cur_level);
 
     setupUi(this); // reads the .ui file to determine widgets and layout
+
+#ifdef QTOPIA
     // Construct context menu, available to the user via Qtopia's soft menu bar.
     QMenu *menu = QSoftMenuBar::menuFor(this);
     Q_UNUSED(menu); // Normally, we would use "menu" to add more actions.
@@ -679,11 +752,34 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     // Tell Qtopia to provide the "Help" option, which will enable the user to
     // read the Help documentation for this application.
     QSoftMenuBar::setHelpEnabled(this,true);
+#else
+    //QMenu *menu = menuBar()->addMenu("&File");
+    resize(480, 640);
+#endif
+
+    prev_pixmap.load("pics/qtmaze/prev.png");
+    prev_p_pixmap.load("pics/qtmaze/prev-p.png");
+    prev_i_pixmap.load("pics/qtmaze/prev-i.png");
+
+    next_pixmap.load("pics/qtmaze/next.png");
+    next_p_pixmap.load("pics/qtmaze/next-p.png");
+    next_i_pixmap.load("pics/qtmaze/next-i.png");
+
+    reset_pixmap.load("pics/qtmaze/reset.png");
+    reset_p_pixmap.load("pics/qtmaze/reset-p.png");
+    reset_i_pixmap.load("pics/qtmaze/reset-i.png");
+
+    close_pixmap.load("pics/qtmaze/close.png");
 
     CheckLoadedPictures();
 
+    prev_lbl->setPixmap(prev_pixmap);
+    next_lbl->setPixmap(next_pixmap);
+    reset_lbl->setPixmap(reset_pixmap);
+    exit_lbl->setPixmap(close_pixmap);
+
     SetMenuVis(false);
-    info1_lbl->setText( "<font color=\"#e0bc70\">Touch the screen to continue</font>" );
+    info1_lbl->setText( "<font color=\"#e0bc70\" size=\"8\">Touch the screen to continue</font>" );
 
     InitState();
     accelerometer_start();
@@ -699,6 +795,10 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     this->levelno_lbl->installEventFilter(this);
     this->info1_lbl->installEventFilter(this);
 
+//#ifndef QTOPIA
+//    qt_game_config.fullscreen = FULLSCREEN_NONE;
+//#endif    
+    
     if (qt_game_config.fullscreen != FULLSCREEN_NONE)
     {
         setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);

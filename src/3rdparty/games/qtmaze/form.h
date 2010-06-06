@@ -32,6 +32,10 @@ class Form : public QWidget, public Ui_FormBase
 private:
     QTimer *timer;
     RenderArea *renderArea;
+    QPixmap prev_pixmap, prev_p_pixmap, prev_i_pixmap;
+    QPixmap next_pixmap, next_p_pixmap, next_i_pixmap;
+    QPixmap reset_pixmap, reset_p_pixmap, reset_i_pixmap;
+    QPixmap close_pixmap;
     void CheckLoadedPictures();
     void DisableScreenSaver();
     void EnableScreenSaver();
@@ -49,6 +53,7 @@ private:
     void post_temp_phys_res(double x, double y, double mm_vx, double mm_vy);
     void post_phys_res(double x, double y, double mm_vx, double mm_vy);
     void BumpVibrate(double speed);
+    void setButtonsPics();
 
 public:
     Form( QWidget *parent = 0, Qt::WFlags f = 0 );

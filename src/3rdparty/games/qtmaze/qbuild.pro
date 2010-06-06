@@ -6,6 +6,7 @@ TARGET=qtmaze
 
 # This app uses Qtopia
 CONFIG+=qtopia
+DEFINES+=QTOPIA
 
 # Build this app as a quicklauncher plugin
 # You need to be using the QTOPIA_ADD_APPLICATION/QTOPIA_MAIN macros or this will not work!
