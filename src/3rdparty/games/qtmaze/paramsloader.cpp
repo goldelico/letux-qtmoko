@@ -31,10 +31,7 @@
 
 #include <QFile>
 #include <QTextStream>
-
-#ifdef QTOPIA
-#include <QtopiaApplication>
-#endif
+#include <QCoreApplication>
 
 Config game_config;
 Level* game_levels;
@@ -44,14 +41,9 @@ int game_levels_count;
 int vibro_enabled;
 char *exec_init, *exec_final;
 
-#define DATADIR_LOCAL "etc/qtmaze/"
-//#define DATADIR_INSTALLED ":/data/"
-
-#ifdef QTOPIA
+#define DATADIR_LOCAL QCoreApplication::applicationDirPath() + "/etc/qtmaze/"
 #define DATADIR_INSTALLED QCoreApplication::applicationDirPath() + "/../etc/qtmaze/"
-#else
-#define DATADIR_INSTALLED "/etc/qtmaze/"
-#endif
+//#define DATADIR_INSTALLED ":/data/"
 
 #define SAVE_DIR ".mokomaze"
 #define SAVE_FILE "user.json"
@@ -111,18 +103,20 @@ int load_params()
     char* cfg;
     char* lvl;
     char* usr = NULL;
-    if (load_file_to_mem(DATADIR_LOCAL "config.json", &cfg) < 0)
+    QString config_fname = DATADIR_LOCAL + "config.json";
+    if (load_file_to_mem(config_fname.toAscii().data(), &cfg) < 0)
     {
-        QString config_fname = DATADIR_INSTALLED "config.json";
+        config_fname = DATADIR_INSTALLED + "config.json";
         if (load_file_to_mem(config_fname.toAscii().data(), &cfg) < 0)
         {
             printf("File_loader: error loading config file\n");
             return -1;
         }
     }
-    if (load_file_to_mem(DATADIR_LOCAL "main.levelpack.json", &lvl) < 0)
+    QString levelpack_fname = DATADIR_LOCAL + "main.levelpack.json";
+    if (load_file_to_mem(levelpack_fname.toAscii().data(), &lvl) < 0)
     {
-        QString levelpack_fname = DATADIR_INSTALLED "main.levelpack.json";
+        levelpack_fname = DATADIR_INSTALLED + "main.levelpack.json";
         if (load_file_to_mem(levelpack_fname.toAscii().data(), &lvl) < 0)
         {
             printf("File_loader: error loading levelpack file\n");

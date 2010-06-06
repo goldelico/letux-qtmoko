@@ -43,7 +43,7 @@ private:
     void SetLevelNo();
     void MoveBall(double x, double y);
     //--------------------------------
-    void InitState();
+    void InitState(bool redraw = true);
     int line(double x0, double y0, double x1, double y1,    double vx0,double vy0, double vx1,double vy1);
     void ProcessGameState();
     int testbump(double x,double y,   double mm_vx,double mm_vy);

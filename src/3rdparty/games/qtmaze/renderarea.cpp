@@ -41,10 +41,10 @@ int re_cur_level;
     resize(w,h);
     lvl_pixmap = new QPixmap(QSize(w,h));
 
-    hole_pixmap.load("pics/qtmaze/hole.png");
-    fin_pixmap.load("pics/qtmaze/fin.png");
-    desk_pixmap.load("pics/qtmaze/desk.png");
-    wall_pixmap.load("pics/qtmaze/wall.png");
+    hole_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/hole.png");
+    fin_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/fin.png");
+    desk_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/desk.png");
+    wall_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/wall.png");
 
     setBackgroundRole(QPalette::Base);
     setAutoFillBackground(true);

@@ -37,11 +37,11 @@
 
 //============================================================================
 
-#define GRAV_CONST 9.8*1.0
-#define FRICT_COEF 0.12 //0.20
-#define TIME_QUANT 1.8
-#define SPEED_TO_PIXELS 0.05
-#define FORCE_TREASURE 0.040 //0.055
+#define GRAV_CONST 9.8*1.5
+#define FRICT_COEF 0.10
+#define TIME_QUANT 1.9
+#define SPEED_TO_PIXELS 0.05*1.5
+#define FORCE_TREASURE 0.030
 #define BUMP_COEF 0.3
 
 #define PROC_ACC_DATA_INTERVAL 20
@@ -93,7 +93,7 @@ void Form::EnableScreenSaver()
 void Form::SetLevelNo()
 {
     char txt[256];
-    sprintf(txt, "<font color=\"#e0bc70\" size=\"8\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
+    sprintf(txt, "<font color=\"#e0bc70\" size=\"3\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
     levelno_lbl->setText(txt);
     //levelno_lbl->setText(QApplication::translate("FormBase", txt, 0, QApplication::UnicodeUTF8));
 }
@@ -407,7 +407,7 @@ void Form::ProcessGameState()
 {
     if (game_state == GAME_STATE_FAILED)
     {
-        InitState();
+        InitState(false);
         game_state = GAME_STATE_NORMAL;
     }
 
@@ -475,10 +475,13 @@ int Form::line(double x0, double y0, double x1, double y1,    double vx0,double 
 
 }
 
-void Form::InitState()
+void Form::InitState(bool redraw)
 {
-    renderArea->setLevel(cur_level);
-    renderArea->update();
+    if (redraw)
+    {
+        renderArea->setLevel(cur_level);
+        renderArea->update();
+    }
 
     px=qt_game_levels[cur_level].init.x; py=qt_game_levels[cur_level].init.y;
     vx=0; vy=0;
@@ -702,6 +705,8 @@ void Form::CheckLoadedPictures()
 
     if (renderArea->hole_pixmap.isNull()) renderArea->hole_pixmap.load(picdir_installed + "hole.png");
     if (renderArea->fin_pixmap.isNull())   renderArea->fin_pixmap.load(picdir_installed + "fin.png");
+    if (renderArea->desk_pixmap.isNull()) renderArea->desk_pixmap.load(picdir_installed + "desk.png");
+    if (renderArea->wall_pixmap.isNull()) renderArea->wall_pixmap.load(picdir_installed + "wall.png");
 
     if (prev_pixmap.isNull())     prev_pixmap.load(picdir_installed + "prev.png");
     if (prev_p_pixmap.isNull()) prev_p_pixmap.load(picdir_installed + "prev-p.png");
@@ -757,19 +762,22 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     resize(480, 640);
 #endif
 
-    prev_pixmap.load("pics/qtmaze/prev.png");
-    prev_p_pixmap.load("pics/qtmaze/prev-p.png");
-    prev_i_pixmap.load("pics/qtmaze/prev-i.png");
+    ball_lbl->setPixmap(QPixmap(QCoreApplication::applicationDirPath() + "/pics/qtmaze/ball.png"));
+    ballshadow_lbl->setPixmap(QPixmap(QCoreApplication::applicationDirPath() + "/pics/qtmaze/ball-shadow.png"));
 
-    next_pixmap.load("pics/qtmaze/next.png");
-    next_p_pixmap.load("pics/qtmaze/next-p.png");
-    next_i_pixmap.load("pics/qtmaze/next-i.png");
+    prev_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/prev.png");
+    prev_p_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/prev-p.png");
+    prev_i_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/prev-i.png");
 
-    reset_pixmap.load("pics/qtmaze/reset.png");
-    reset_p_pixmap.load("pics/qtmaze/reset-p.png");
-    reset_i_pixmap.load("pics/qtmaze/reset-i.png");
+    next_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/next.png");
+    next_p_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/next-p.png");
+    next_i_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/next-i.png");
 
-    close_pixmap.load("pics/qtmaze/close.png");
+    reset_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/reset.png");
+    reset_p_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/reset-p.png");
+    reset_i_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/reset-i.png");
+
+    close_pixmap.load(QCoreApplication::applicationDirPath() + "/pics/qtmaze/close.png");
 
     CheckLoadedPictures();
 
@@ -779,7 +787,7 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     exit_lbl->setPixmap(close_pixmap);
 
     SetMenuVis(false);
-    info1_lbl->setText( "<font color=\"#e0bc70\" size=\"8\">Touch the screen to continue</font>" );
+    info1_lbl->setText( "<font color=\"#e0bc70\" size=\"3\">Touch the screen to continue</font>" );
 
     InitState();
     accelerometer_start();

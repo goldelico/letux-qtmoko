@@ -13,6 +13,44 @@
   <property name="windowTitle">
    <string>QtMaze</string>
   </property>
+  <widget class="QLabel" name="ballshadow_lbl">
+   <property name="geometry">
+    <rect>
+     <x>420</x>
+     <y>580</y>
+     <width>46</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="ball_lbl">
+   <property name="geometry">
+    <rect>
+     <x>400</x>
+     <y>560</y>
+     <width>46</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
   <widget class="QLabel" name="reset_lbl">
    <property name="geometry">
     <rect>
@@ -123,50 +161,6 @@
    </property>
    <property name="text">
     <string/>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="ballshadow_lbl">
-   <property name="geometry">
-    <rect>
-     <x>420</x>
-     <y>580</y>
-     <width>46</width>
-     <height>46</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap>pics/qtmaze/ball-shadow.png</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-   <property name="alignment">
-    <set>Qt::AlignCenter</set>
-   </property>
-  </widget>
-  <widget class="QLabel" name="ball_lbl">
-   <property name="geometry">
-    <rect>
-     <x>400</x>
-     <y>560</y>
-     <width>46</width>
-     <height>46</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap>pics/qtmaze/ball.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
