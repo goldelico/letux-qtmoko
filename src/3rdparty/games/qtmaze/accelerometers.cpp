@@ -45,12 +45,12 @@ double acx=0,acy=0,acz=0;
 
 #define JS_DEVICE_NEO "/dev/input/js1"
 #define JS_DEVICE_PC  "/dev/input/js0"
-#define MAX_AXIS_NEO  1000.0
+#define MAX_AXIS_NEO  1024.0 //1000.0
 #define MAX_AXIS_PC  64000.0 //32767.0
 double max_axis = MAX_AXIS_NEO;
 int pc_mode=0;
 
-#define GET_DATA_INTERVAL 1000
+#define GET_DATA_INTERVAL 2000
 
 /* The accelerometer work thread */
 void* accel_work(void *data)
@@ -96,7 +96,6 @@ void* accel_work(void *data)
 
                 if ( FD_ISSET(fd, &fds) )
                 {
-
                         rval = read(fd, &js, sizeof(js));
                         if ( rval != sizeof(js) )
                         {
@@ -118,6 +117,13 @@ void* accel_work(void *data)
                         acy = axis[1] / max_axis;
                         acz = axis[2] / max_axis;
 
+                        if (acx<-1) acx=-1;
+                        if (acy<-1) acy=-1;
+                        if (acz<-1) acz=-1;
+
+                        if (acx>1) acx=1;
+                        if (acy>1) acy=1;
+                        if (acz>1) acz=1;
                 }
                 else
                 {
