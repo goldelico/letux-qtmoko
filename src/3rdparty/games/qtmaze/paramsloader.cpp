@@ -42,8 +42,12 @@ int vibro_enabled;
 char *exec_init, *exec_final;
 
 #define DATADIR_LOCAL QCoreApplication::applicationDirPath() + "/etc/qtmaze/"
-#define DATADIR_INSTALLED QCoreApplication::applicationDirPath() + "/../etc/qtmaze/"
 //#define DATADIR_INSTALLED ":/data/"
+#ifdef QTOPIA
+#define DATADIR_INSTALLED QCoreApplication::applicationDirPath() + "/../etc/qtmaze/"
+#else
+#define DATADIR_INSTALLED QString("/usr/share/qtmaze/")
+#endif
 
 #define SAVE_DIR ".mokomaze"
 #define SAVE_FILE "user.json"

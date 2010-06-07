@@ -35,6 +35,12 @@
 #include <qsoftmenubar.h>
 #endif
 
+#ifdef QTOPIA
+#define FONT_SIZE "3"
+#else
+#define FONT_SIZE "8"
+#endif
+
 //============================================================================
 
 #define GRAV_CONST 9.8*1.5
@@ -93,7 +99,7 @@ void Form::EnableScreenSaver()
 void Form::SetLevelNo()
 {
     char txt[256];
-    sprintf(txt, "<font color=\"#e0bc70\" size=\"3\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
+    sprintf(txt, "<font color=\"#e0bc70\" size=\"" FONT_SIZE "\">Level %d/%d</font>", cur_level+1, qt_game_levels_count);
     levelno_lbl->setText(txt);
     //levelno_lbl->setText(QApplication::translate("FormBase", txt, 0, QApplication::UnicodeUTF8));
 }
@@ -698,7 +704,12 @@ bool Form::event(QEvent *event)
 
 void Form::CheckLoadedPictures()
 {
-    QString picdir_installed = QCoreApplication::applicationDirPath() + "/../pics/qtmaze/";
+    QString picdir_installed = 
+#ifdef QTOPIA
+        QCoreApplication::applicationDirPath() + "/../pics/qtmaze/";
+#else
+        QString("/usr/share/pixmaps/qtmaze/");
+#endif
 
     if (ball_lbl->pixmap()->isNull())   ball_lbl->setPixmap(QPixmap(picdir_installed + "ball.png"));
     if (ballshadow_lbl->pixmap()->isNull())   ballshadow_lbl->setPixmap(QPixmap(picdir_installed + "ball-shadow.png"));
@@ -787,7 +798,7 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     exit_lbl->setPixmap(close_pixmap);
 
     SetMenuVis(false);
-    info1_lbl->setText( "<font color=\"#e0bc70\" size=\"3\">Touch the screen to continue</font>" );
+    info1_lbl->setText( "<font color=\"#e0bc70\" size=\"" FONT_SIZE "\">Touch the screen to continue</font>" );
 
     InitState();
     accelerometer_start();
@@ -803,10 +814,6 @@ Form::Form(QWidget *parent, Qt::WFlags f)
     this->levelno_lbl->installEventFilter(this);
     this->info1_lbl->installEventFilter(this);
 
-//#ifndef QTOPIA
-//    qt_game_config.fullscreen = FULLSCREEN_NONE;
-//#endif    
-    
     if (qt_game_config.fullscreen != FULLSCREEN_NONE)
     {
         setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint);

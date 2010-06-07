@@ -43,8 +43,13 @@ pthread_t thread;
 int finished=0;
 double acx=0,acy=0,acz=0;
 
-#define JS_DEVICE "/dev/input/js1"
-#define MAX_AXIS_VALUE 1000.0 //32767.0
+#define JS_DEVICE_NEO "/dev/input/js1"
+#define JS_DEVICE_PC  "/dev/input/js0"
+#define MAX_AXIS_NEO  1000.0
+#define MAX_AXIS_PC  64000.0 //32767.0
+double max_axis = MAX_AXIS_NEO;
+int pc_mode=0;
+
 #define GET_DATA_INTERVAL 1000
 
 /* The accelerometer work thread */
@@ -53,10 +58,16 @@ void* accel_work(void *data)
         int *finished = (int*)data;
 
         int fd;
-        if ((fd = open(JS_DEVICE, O_RDONLY)) < 0)
+        if ((fd = open(JS_DEVICE_NEO, O_RDONLY)) < 0)
         {
-                fprintf(stderr, "Accelerometer: error opening file " JS_DEVICE "\n");
-                return NULL;
+                fprintf(stderr, "Accelerometer: error opening file " JS_DEVICE_NEO "\n");
+                pc_mode = 1;
+                max_axis = MAX_AXIS_PC;
+                if ((fd = open(JS_DEVICE_PC, O_RDONLY)) < 0)
+                {
+                        fprintf(stderr, "Accelerometer: error opening file " JS_DEVICE_PC "\n");
+                        return NULL;
+                }
         }
 
         unsigned char axes = 2;
@@ -103,9 +114,9 @@ void* accel_work(void *data)
                                 break;
                         }
 
-                        acx = axis[0] / MAX_AXIS_VALUE;
-                        acy = axis[1] / MAX_AXIS_VALUE;
-                        acz = axis[2] / MAX_AXIS_VALUE;
+                        acx = axis[0] / max_axis;
+                        acy = axis[1] / max_axis;
+                        acz = axis[2] / max_axis;
 
                 }
                 else
@@ -139,7 +150,7 @@ double getacx()
 }
 double getacy()
 {
-        return acy;
+        return pc_mode?-acy:acy;
 }
 double getacz()
 {
