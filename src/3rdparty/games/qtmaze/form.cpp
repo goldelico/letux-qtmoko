@@ -38,7 +38,7 @@
 #ifdef QTOPIA
 #define FONT_SIZE "3"
 #else
-#define FONT_SIZE "8"
+#define FONT_SIZE "6"
 #endif
 
 //============================================================================
@@ -50,7 +50,7 @@
 #define FORCE_TREASURE 0.030
 #define BUMP_COEF 0.3
 
-#define PROC_ACC_DATA_INTERVAL 20
+#define PROC_ACC_DATA_INTERVAL 16
 
 double px,py;
 double vx,vy;
@@ -60,8 +60,11 @@ double pr_vx, pr_vy;
 double prev_px, prev_py;
 
 int fall_hole_x, fall_hole_y;
+int anim_stage=0, anim_timer=0;
 
 bool fullscreen = true;
+
+#define ANIM_MAX 9
 
 #define FULLSCREEN_NONE   0
 #define FULLSCREEN_TOGGLE 1
@@ -196,7 +199,6 @@ void Form::tout()
 {
     //printf("[acc] %.4f %.4f %.4f\n", getacx(), getacy(), getacz());
 
-    if ( (game_state != GAME_STATE_NORMAL) || (!fullscreen) ) return;
     new_game_state = GAME_STATE_NORMAL;
 
     double ax = getacx();
@@ -409,6 +411,12 @@ int Form::testbump(double x,double y,   double mm_vx,double mm_vy)
     return retval;
 }
 
+void Form::ZeroAnim()
+{
+    anim_stage = 0;
+    anim_timer = 0;
+}
+
 void Form::ProcessGameState()
 {
     if (game_state == GAME_STATE_FAILED)
@@ -419,9 +427,9 @@ void Form::ProcessGameState()
 
     if (game_state == GAME_STATE_WIN)
     {
-        if (cur_level == qt_game_levels_count-1)
+        if (cur_level == qt_game_levels_count - 1)
         {
-            cur_level=0;
+            cur_level = 0;
         }
         else
         {
@@ -471,7 +479,7 @@ int Form::line(double x0, double y0, double x1, double y1,    double vx0,double 
             }
             apply_temp_phys_res();
             game_state = new_game_state;
-            ProcessGameState();
+            //ProcessGameState();
             return 1;
         }
         if (muststop) break;
@@ -483,6 +491,8 @@ int Form::line(double x0, double y0, double x1, double y1,    double vx0,double 
 
 void Form::InitState(bool redraw)
 {
+    ZeroAnim();
+
     if (redraw)
     {
         renderArea->setLevel(cur_level);
@@ -504,16 +514,59 @@ void Form::InitState(bool redraw)
 
 void Form::MoveBall(double x, double y)
 {
-    int lpx = (int)x-qt_game_config.ball_r;
-    int lpy = (int)y-qt_game_config.ball_r;
-    int shadow_shift = qt_game_config.ball_r / 5;
+    int ballr = qt_game_config.ball_r;
+    int br = ballr;
+    if (game_state != GAME_STATE_NORMAL)
+    {
+        double k = 1 - 0.40 * anim_timer / ANIM_MAX;
+        br = (int)(ballr * k);
+        ball_lbl->setFixedSize(br*2,br*2);
+        int s = (int)(ballshadow_lbl->pixmap()->size().width() * k);
+        ballshadow_lbl->setFixedSize(s,s);
+    }
+    else
+    {
+        ball_lbl->adjustSize();
+        ballshadow_lbl->adjustSize();
+    }
+
+    int lpx = (int)x-br;
+    int lpy = (int)y-br;
+    int shadow_shift = br / 5;
     ball_lbl->move(lpx, lpy);
-    ballshadow_lbl->move(lpx+shadow_shift, lpy+shadow_shift); //improve shadow shifting
+    ballshadow_lbl->move(lpx+shadow_shift, lpy+shadow_shift);
 }
 
 void Form::acc_timerAction()
 {
-    tout();
+    if (!fullscreen) return;
+
+    if (game_state == GAME_STATE_NORMAL)
+    {
+        tout();
+        if (game_state != GAME_STATE_NORMAL)
+        {
+            int bshift = (qt_game_config.hole_r - qt_game_config.ball_r) / 3;
+            px = fall_hole_x + bshift;
+            py = fall_hole_y + bshift;
+        }
+    }
+
+    if (game_state != GAME_STATE_NORMAL)
+    {
+        if (anim_stage >= 1)
+            ProcessGameState();
+        else
+        {
+            anim_timer += 1;
+            if (anim_timer == ANIM_MAX)
+                anim_stage = 1;
+        }
+    }
+
+    MoveBall(px, py);
+    prev_px = px;
+    prev_py = py;
 }
 
 void Form::timerAction()
