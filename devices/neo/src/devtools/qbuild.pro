@@ -22,6 +22,7 @@ desktop.files+=desktop/gps-poweroff.desktop
 desktop.files+=desktop/gps-poweron.desktop
 desktop.files+=desktop/wifi-bind.desktop
 desktop.files+=desktop/wifi-unbind.desktop
+desktop.files+=desktop/wifi-suspend-resume.desktop
 desktop.files+=desktop/usb-device.desktop
 desktop.files+=desktop/usb-host.desktop
 desktop.files+=desktop/suspendx.desktop
