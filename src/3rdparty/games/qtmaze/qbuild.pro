@@ -6,6 +6,7 @@ TARGET=qtmaze
 
 # This app uses Qtopia
 CONFIG+=qtopia
+DEFINES+=QTOPIA
 
 # Build this app as a quicklauncher plugin
 # You need to be using the QTOPIA_ADD_APPLICATION/QTOPIA_MAIN macros or this will not work!
@@ -23,7 +24,7 @@ pkg [
     name=qtmaze
     desc="Ball-in-the-labyrinth game"
     license=GPLv3
-    version=0.1.1
+    version=0.1.5
     maintainer="Anton Olkhovik <ant007h@gmail.com>"
 ]
 

@@ -2,7 +2,7 @@
  *
  *  Config and levelpack loader
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  This file is part of QtMaze (port of Mokomaze) - labyrinth game.
  *
@@ -31,7 +31,7 @@
 
 #include <QFile>
 #include <QTextStream>
-#include <QtopiaApplication>
+#include <QCoreApplication>
 
 Config game_config;
 Level* game_levels;
@@ -41,9 +41,14 @@ int game_levels_count;
 int vibro_enabled;
 char *exec_init, *exec_final;
 
-#define DATADIR_LOCAL "etc/qtmaze/"
-#define DATADIR_INSTALLED QCoreApplication::applicationDirPath() + "/../etc/qtmaze/"
+#define DATADIR_LOCAL QCoreApplication::applicationDirPath() + "/etc/qtmaze/"
 //#define DATADIR_INSTALLED ":/data/"
+#ifdef QTOPIA
+#define DATADIR_INSTALLED QCoreApplication::applicationDirPath() + "/../etc/qtmaze/"
+#else
+#define DATADIR_INSTALLED QString("/usr/share/qtmaze/")
+#endif
+
 #define SAVE_DIR ".mokomaze"
 #define SAVE_FILE "user.json"
 char *save_dir_full;
@@ -102,18 +107,20 @@ int load_params()
     char* cfg;
     char* lvl;
     char* usr = NULL;
-    if (load_file_to_mem(DATADIR_LOCAL "config.json", &cfg) < 0)
+    QString config_fname = DATADIR_LOCAL + "config.json";
+    if (load_file_to_mem(config_fname.toAscii().data(), &cfg) < 0)
     {
-        QString config_fname = DATADIR_INSTALLED + "config.json";
+        config_fname = DATADIR_INSTALLED + "config.json";
         if (load_file_to_mem(config_fname.toAscii().data(), &cfg) < 0)
         {
             printf("File_loader: error loading config file\n");
             return -1;
         }
     }
-    if (load_file_to_mem(DATADIR_LOCAL "main.levelpack.json", &lvl) < 0)
+    QString levelpack_fname = DATADIR_LOCAL + "main.levelpack.json";
+    if (load_file_to_mem(levelpack_fname.toAscii().data(), &lvl) < 0)
     {
-        QString levelpack_fname = DATADIR_INSTALLED + "main.levelpack.json";
+        levelpack_fname = DATADIR_INSTALLED + "main.levelpack.json";
         if (load_file_to_mem(levelpack_fname.toAscii().data(), &lvl) < 0)
         {
             printf("File_loader: error loading levelpack file\n");
