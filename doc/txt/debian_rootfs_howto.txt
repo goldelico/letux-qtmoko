@@ -538,7 +538,7 @@ apt-get install libasound2-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev \
     libxfontcache-dev libxft-dev libxinerama-dev libxi-dev \
     libxmu-dev libxmuu-dev libxp-dev libxrandr-dev libxts-dev libxtst-dev \
     libxxf86dga-dev libxxf86misc-dev libxxf86vm-dev zlib1g-dev \
-    build-essential libc6-dev
+    build-essential libc6-dev libjpeg-dev libfreetype6-dev libdjvulibre-dev
 
     * Make directory for your toolchain and copy files from toolchain rootfs:
 
