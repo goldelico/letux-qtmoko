@@ -24,7 +24,7 @@ pkg [
     name=qtmaze
     desc="Ball-in-the-labyrinth game"
     license=GPLv3
-    version=0.1.1
+    version=0.1.5
     maintainer="Anton Olkhovik <ant007h@gmail.com>"
 ]
 
