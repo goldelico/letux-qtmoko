@@ -449,6 +449,24 @@ var mkspec = {
         */
         AR: {
             source: "QMAKE_AR"
+        },
+        /*!
+          \qbuild_variable MKSPEC.INCDIR
+          \ingroup mkspec_extension
+          This variable contains the toolchain include library path.
+          This comes from the QMAKE_INCDIR variable in qmake.conf.
+        */
+        INCDIR: {
+            source: "QMAKE_INCDIR"
+        },
+        /*!
+          \qbuild_variable MKSPEC.LIBDIR
+          \ingroup mkspec_extension
+          This variable contains the toolchain lib path.
+          This comes from the QMAKE_LIBDIR variable in qmake.conf.
+        */
+        LIBDIR: {
+            source: "QMAKE_LIBDIR"
         }
     }
 }
