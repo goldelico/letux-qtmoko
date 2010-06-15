@@ -1,4 +1,5 @@
 #include "qmplayer.h"
+#include <QDebug>
 
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
@@ -52,12 +53,55 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     process = NULL;
     tcpServer = NULL;
 
-    showScreen(QMplayer::ScreenInit);
+    QStringList cl_args = QCoreApplication::arguments();
+    int ac = cl_args.count();
+    if (ac>1)
+    {
+        int tki=1;
+        while(true)
+        {
+            QString a = cl_args[tki];
+            if (a=="--mpargs")
+            {
+                if (ac>tki+1)
+                {
+                    mpargs << QString(cl_args[tki+1]).split(" ");
+                }
+                else
+                {
+                    console("Not enough parameters for '--mpargs' argument");
+                }
+                tki+=2;
+            }
+            else
+            {
+                mplist << a;
+                tki+=1;
+            }
+
+            if (tki>=ac) break;
+        }
+    }
+
+    mpgui = (mplist.count()==0);
+    if (mpgui)
+        showScreen(QMplayer::ScreenInit);
+    else
+    {
+        this->screen = QMplayer::ScreenInit;
+        okClicked();
+    }
 }
 
 QMplayer::~QMplayer()
 {
 
+}
+
+void QMplayer::console(QString s)
+{
+    //qLog
+    qDebug((s+"\n").toAscii());
 }
 
 static bool isDirectory(QString path)
@@ -143,22 +187,6 @@ void QMplayer::okClicked()
 {
     if(screen == QMplayer::ScreenInit)
     {
-        QListWidgetItem *sel = lw->currentItem();
-
-        if(sel == NULL)
-        {
-            return;
-        }
-        if(sel == scanItem)
-        {
-            scan();
-            return;
-        }
-        if(sel == settingsItem)
-        {
-            settings();
-            return;
-        }
         QString dir = "";
         bool hit = false;
         QStringList list;
@@ -166,81 +194,105 @@ void QMplayer::okClicked()
         QStringList nameList;
         QMessageBox::StandardButton answer = QMessageBox::NoButton;
         QMessageBox::StandardButton moreAnswer = QMessageBox::NoButton;
-        for(int i = 2; i < lw->count(); i++)
-        {
-            QListWidgetItem *item = lw->item(i);
-            QString path = item->text();
-            bool isDir = isDirectory(path);
-            if(isDir)
-            {
-                if(hit)
-                {
-                    break;
-                }
-                dir = path;
-            }
-            hit |= (item == sel);
-            if(!hit || isDir)
-            {
-                continue;
-            }
-            if(!dir.startsWith("http://"))
-            {
-                list.append(dir + "/" + path);      // add local files to playlist
-                continue;
-            }
-            if(moreAnswer == QMessageBox::NoButton)
-            {
-                answer = QMessageBox::question(this, "qmplayer", path, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
-            }
-            if(answer == QMessageBox::Cancel)
-            {
-                break;
-            }
-            if(answer == QMessageBox::Open)
-            {
-                list.append(dir + pathToUrl(path));      // append to playlist if we just play (no download)
-            }
-            downList.append(dir + pathToUrl(path));
-            nameList.append(path);
-            if(moreAnswer != QMessageBox::YesToAll)
-            {
-                moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
-                                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
 
-                if(moreAnswer == QMessageBox::No)
-                {
-                    break;
-                }
-            }
-        }
-        for(int i = 0; i < downList.count(); i++)
+        list << mpargs;
+        list << mplist;
+
+        if (mpgui)
         {
-            QString url = downList[i];
-            int slashIndex = url.lastIndexOf('/');
-            if(slashIndex < 0)
-            {
-                continue;
-            }
-            QString filename = nameList[i];
-            QString destPath = QDir::homePath() + "/" + filename;
-            if(QDir("/media/card").exists())
-            {
-                destPath = "/media/card/" + filename;
-            }
-            bool justCheck = list.contains(url);
-            if(!download(url, destPath, filename, justCheck))
+            QListWidgetItem *sel = lw->currentItem();
+            if(sel == NULL)
             {
                 return;
             }
-            if(justCheck)
+            if(sel == scanItem)
             {
-                continue;
+                scan();
+                return;
             }
-            // Add downloaded file to list
-            list.append(destPath);
+            if(sel == settingsItem)
+            {
+                settings();
+                return;
+            }
+
+            for(int i = 2; i < lw->count(); i++)
+            {
+                QListWidgetItem *item = lw->item(i);
+                QString path = item->text();
+                bool isDir = isDirectory(path);
+                if(isDir)
+                {
+                    if(hit)
+                    {
+                        break;
+                    }
+                    dir = path;
+                }
+                hit |= (item == sel);
+                if(!hit || isDir)
+                {
+                    continue;
+                }
+                if(!dir.startsWith("http://"))
+                {
+                    list.append(dir + "/" + path);      // add local files to playlist
+                    continue;
+                }
+                if(moreAnswer == QMessageBox::NoButton)
+                {
+                    answer = QMessageBox::question(this, "qmplayer", path, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+                }
+                if(answer == QMessageBox::Cancel)
+                {
+                    break;
+                }
+                if(answer == QMessageBox::Open)
+                {
+                    list.append(dir + pathToUrl(path));      // append to playlist if we just play (no download)
+                }
+                downList.append(dir + pathToUrl(path));
+                nameList.append(path);
+                if(moreAnswer != QMessageBox::YesToAll)
+                {
+                    moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
+                                                       QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
+
+                    if(moreAnswer == QMessageBox::No)
+                    {
+                        break;
+                    }
+                }
+            }
+            for(int i = 0; i < downList.count(); i++)
+            {
+                QString url = downList[i];
+                int slashIndex = url.lastIndexOf('/');
+                if(slashIndex < 0)
+                {
+                    continue;
+                }
+                QString filename = nameList[i];
+                QString destPath = QDir::homePath() + "/" + filename;
+                if(QDir("/media/card").exists())
+                {
+                    destPath = "/media/card/" + filename;
+                }
+                bool justCheck = list.contains(url);
+                if(!download(url, destPath, filename, justCheck))
+                {
+                    return;
+                }
+                if(justCheck)
+                {
+                    continue;
+                }
+                // Add downloaded file to list
+                list.append(destPath);
+            }
         }
-        if(list.count() > 0)
+
+        if(list.count() > mpargs.count())
         {
             play(list);
         }
@@ -1121,7 +1173,10 @@ void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
-    showScreen(QMplayer::ScreenInit);
+    if (mpgui)
+        showScreen(QMplayer::ScreenInit);
+    else
+        close();
 }
 
 void QMplayer::setRes(int xy)

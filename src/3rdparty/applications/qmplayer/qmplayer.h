@@ -19,8 +19,11 @@
 #include <QTcpSocket>
 #include <QTextCodec>
 #include <QLineEdit>
+#include <QStringList>
 #ifdef QTOPIA
 #include <QtopiaApplication>
+#else
+#include <QCoreApplication>
 #endif
 #ifdef Q_WS_WIN
 #include <Windows.h>
@@ -64,6 +67,9 @@ private:
     QProcess* process;
     QProgressBar *progress;
     QTcpServer *tcpServer;
+    QStringList mpargs;
+    QStringList mplist;
+    bool mpgui;
 
     void showScreen(QMplayer::Screen scr);
     void scan();
@@ -75,6 +81,7 @@ private:
     bool runServer();
     bool runClient();
     bool download(QString url, QString destPath, QString filename, bool justCheck);
+    void console(QString s);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
