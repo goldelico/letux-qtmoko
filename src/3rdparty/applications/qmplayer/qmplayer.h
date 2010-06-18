@@ -20,7 +20,10 @@
 #include <QTextCodec>
 #include <QLineEdit>
 #include <QStringList>
+#include <QTimer>
+#include <QMenuBar>
 #ifdef QTOPIA
+#include <QSoftMenuBar>
 #include <QtopiaApplication>
 #else
 #include <QCoreApplication>
@@ -47,6 +50,8 @@ private:
         ScreenStopped,
         ScreenDownload,
         ScreenConnect,
+        ScreenTube,
+        ScreenCmd
     };
 
     Screen screen;
@@ -69,7 +74,17 @@ private:
     QTcpServer *tcpServer;
     QStringList mpargs;
     QStringList mplist;
+#ifdef QTOPIA
+    QMenu* softm;
+    QAction *rmMpAction, *rmDlAction, *rmFlvAction;
+#endif
     bool mpgui;
+    bool tube;
+    QString ubasedir;
+    QString ufname;
+    double uload;
+    QProcess *upr;
+    bool ufinished;
 
     void showScreen(QMplayer::Screen scr);
     void scan();
@@ -78,13 +93,19 @@ private:
     void play(QStringList const& args);
     void setRes(int xy);
     bool installMplayer();
+    bool installYoutubeDl();
     bool runServer();
     bool runClient();
     bool download(QString url, QString destPath, QString filename, bool justCheck);
     void console(QString s);
+    bool youtubeDl();
+    bool runCmd(QString cmd, int maxp=0);
+    void playerStopped();
+    void setDlText();
 
 protected:
     void mousePressEvent(QMouseEvent * event);
+    void closeEvent(QCloseEvent *event);
 
 private slots:
     void okClicked();
@@ -93,6 +114,12 @@ private slots:
     void downClicked();
     void newConnection();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void removeMplayer();
+    void removeYoutubeDl();
+    void removeFlv();
+    void sTimerEvent();
+    void uReadyRead();
+    void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
 #endif // QMPLAYER_H
