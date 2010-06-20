@@ -62,7 +62,7 @@ private:
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
     QListWidgetItem *scanItem;
-    QListWidgetItem *settingsItem;
+    QListWidgetItem *sharingItem;
     QLabel* label;
     QLineEdit *lineEdit;
     QPushButton* bOk;
@@ -89,7 +89,7 @@ private:
     void showScreen(QMplayer::Screen scr);
     void scan();
     int scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks);
-    void settings();
+    void sharing();
     void play(QStringList const& args);
     void setRes(int xy);
     bool installMplayer();

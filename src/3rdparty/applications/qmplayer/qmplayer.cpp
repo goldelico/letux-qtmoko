@@ -20,7 +20,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
 
-    settingsItem = new QListWidgetItem(tr("Sharing"), lw);
+    sharingItem = new QListWidgetItem(tr("Sharing"), lw);
 
     bOk = new QPushButton(this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
@@ -276,9 +276,9 @@ void QMplayer::okClicked()
                 scan();
                 return;
             }
-            if(sel == settingsItem)
+            if(sel == sharingItem)
             {
-                settings();
+                sharing();
                 return;
             }
 
@@ -848,7 +848,7 @@ bool QMplayer::runServer()
     QMessageBox::information(this, tr("qmplayer"),
                              tr("Web server is running on port 7654"));
 
-    settingsItem->setText(tr("Web server running on port 7654"));
+    sharingItem->setText(tr("Web server running on port 7654"));
     return true;
 }
 
@@ -960,7 +960,7 @@ bool QMplayer::runClient()
     return true;
 }
 
-void QMplayer::settings()
+void QMplayer::sharing()
 {
 #ifdef QTOPIA
     if(!runClient())
