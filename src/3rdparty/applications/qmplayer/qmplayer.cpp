@@ -22,6 +22,8 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     sharingItem = new QListWidgetItem(tr("Sharing"), lw);
 
+    encodingItem = new QListWidgetItem(lw);
+
     bOk = new QPushButton(this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
 
@@ -223,12 +225,12 @@ static bool processRunning(QProcess *p)
               p->waitForStarted(1000)));
 }
 
-// Removes items from listview except top 2 items.
+// Removes items from listview except top menu items.
 static void delItems(QListWidget *lw)
 {
-    while(lw->count() > 2)
+    while(lw->count() > NUM_MENU_ITEMS)
     {
-        delete(lw->takeItem(2));
+        delete(lw->takeItem(NUM_MENU_ITEMS));
     }
 }
 
@@ -251,7 +253,7 @@ void QMplayer::mousePressEvent(QMouseEvent *event)
 
 void QMplayer::okClicked()
 {
-    if(screen == QMplayer::ScreenInit)
+    if(screen == QMplayer::ScreenInit || screen == QMplayer::ScreenEncoding)
     {
         QString dir = "";
         bool hit = false;
@@ -281,8 +283,25 @@ void QMplayer::okClicked()
                 sharing();
                 return;
             }
+            if(sel == encodingItem)
+            {
+                if(screen != ScreenEncoding)
+                {
+                    showScreen(ScreenEncoding);
+                    if(lw->count() > NUM_MENU_ITEMS)
+                    {
+                        QListWidgetItem *item = lw->item(NUM_MENU_ITEMS);
+                        item->setSelected(true);
+                    }
+                }
+                else
+                {
+                    showScreen(ScreenInit);
+                }
+                return;
+            }
 
-            for(int i = 2; i < lw->count(); i++)
+            for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
             {
                 QListWidgetItem *item = lw->item(i);
                 QString path = item->text();
@@ -360,7 +379,14 @@ void QMplayer::okClicked()
 
         if(list.count() > mpargs.count())
         {
-            play(list);
+            if(screen == ScreenEncoding)
+            {
+                encode(list.at(0));
+            }
+            else
+            {
+                play(list);
+            }
         }
     }
     else if(screen == QMplayer::ScreenPlay)
@@ -582,6 +608,10 @@ void QMplayer::backClicked()
     {
         close();
     }
+    else if(screen == ScreenEncodingInProgress)
+    {
+        process->terminate();
+    }
     else
     {
         abort = true;
@@ -626,16 +656,29 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         setRes(640480);
     }
 
+#ifdef QTOPIA
+    if(screen == ScreenEncodingInProgress ||
+       screen == ScreenPlay)
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+    }
+    if(scr == ScreenStopped ||
+       (scr == ScreenEncoding && screen == ScreenEncodingInProgress))
+    {
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+    }
+#endif
+
     this->screen = scr;
 
-    lw->setVisible(scr == QMplayer::ScreenInit);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd);
+    lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenEncoding);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd);
+    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     lineEdit->setVisible(scr == QMplayer::ScreenConnect);
-    progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd);
+    progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
 
     bOk->setEnabled(true);
 
@@ -650,15 +693,13 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         case QMplayer::ScreenInit:
             bOk->setText(">");
             bBack->setText(tr("Quit"));
+            encodingItem->setText(tr("Encode"));
             break;
         case QMplayer::ScreenPlay:
             bOk->setText(tr("Pause"));
             bBack->setText(tr("Full screen"));
             bUp->setText(tr("Vol up"));
             bDown->setText(tr("Vol down"));
-#ifdef QTOPIA
-            QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-#endif
             break;
         case QMplayer::ScreenFullscreen:
 #ifdef QTOPIA
@@ -670,9 +711,6 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Back"));
             bUp->setText(tr(">>"));
             bDown->setText(tr("<<"));
-#ifdef QTOPIA
-            QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
-#endif
             break;
         case QMplayer::ScreenConnect:
             label->setText(tr("Enter host and port to connect to"));
@@ -693,6 +731,14 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             break;
         case QMplayer::ScreenCmd:
             bBack->setText(tr("Cancel"));
+            break;
+        case QMplayer::ScreenEncoding:
+            encodingItem->setText(tr("Select file to encode"));
+            break;
+        case QMplayer::ScreenEncodingInProgress:
+            bBack->setText(tr("Cancel"));
+            progress->setMaximum(100);
+            progress->setValue(0);
             break;
     }
 }
@@ -730,7 +776,7 @@ scan_files:
     maxScanLevel++;
     scanItem->setText(tr("Scan more"));
 
-    if(lw->count() <= 2 && !abort &&
+    if(lw->count() <= NUM_MENU_ITEMS && !abort &&
        QMessageBox::question(this, "qmplayer", tr("No media files found, scan more?"),
                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
     {
@@ -818,6 +864,78 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
         found += scanDir(fi.filePath(), level + 1, maxLevel, value, value + unit, true);
     }
     return found;
+}
+
+QString QMplayer::getEncFilename(QString srcFile, QString dstIdentifier)
+{
+    QString res(srcFile);
+    if(srcFile.endsWith(".avi") ||
+       srcFile.endsWith(".mp4") ||
+       srcFile.endsWith(".flv"))
+    {
+        res.insert(srcFile.lastIndexOf('.'), dstIdentifier);
+    }
+    return res;
+}
+
+bool QMplayer::startMencoder(QString srcFile, QString dstFile)
+{
+    QStringList args;
+    args.append(srcFile);
+    args.append("-ovc");
+    args.append("lavc");
+    args.append("-lavcopts");
+    args.append("vcodec=mpeg4:vhq:vbitrate=300");
+    args.append("-vf");
+    args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
+    args.append("-oac");
+    args.append("mp3lame");
+    args.append("-ofps");
+    args.append("15");
+    args.append("-lameopts");
+    args.append("br=64:cbr");
+    args.append("-o");
+    args.append(dstFile);
+
+    process = new QProcess(this);
+    connect(process, SIGNAL(readyRead()), this, SLOT(mencoderReadyRead()));
+    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
+
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start("mencoder", args);
+
+#ifdef Q_WS_WIN
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *) process->pid();
+    SetPriorityClass(pi->hProcess, IDLE_PRIORITY_CLASS);
+#endif
+
+    if(process->waitForStarted(10000))
+    {
+        return true;
+    }
+    delete(process);
+    process = NULL;
+    return false;
+}
+
+void QMplayer::mencoderReadyRead()
+{
+    QString txt = process->readAll().trimmed();
+    label->setText(txt);
+
+    // Search for percents - e.g. (34%)
+    int index = txt.indexOf("%)");
+    if(index < 5)
+    {
+        return;
+    }
+    int startIndex = txt.indexOf('(', index - 5) + 1;
+    if(startIndex <= 0)
+    {
+        return;
+    }
+    QString numStr = txt.mid(startIndex, index - startIndex);
+    progress->setValue(numStr.toInt());
 }
 
 bool QMplayer::runServer()
@@ -1049,7 +1167,7 @@ void QMplayer::newConnection()
     else if(reqPath == "/")
     {
         QString dir = "";
-        for(int i = 2; i < lw->count(); i++)
+        for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
@@ -1078,7 +1196,7 @@ void QMplayer::newConnection()
         res.append("</br>");
         QString dir = "";
         QString testDir;
-        for(int i = 2; i < lw->count(); i++)
+        for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
@@ -1107,13 +1225,7 @@ void QMplayer::newConnection()
         }
         else
         {
-            encPath = filename;
-            // Encode just avi files for now
-            if(encPath.endsWith(".avi") ||
-               encPath.endsWith(".mp4"))
-            {
-                encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
-            }
+            encPath = getEncFilename(filename, ".qmplayer");
             QFileInfo fi(encPath);
             if(fi.exists())
             {
@@ -1167,41 +1279,15 @@ void QMplayer::newConnection()
             }
             else
             {
-                QStringList args;
-                args.append(filename);
-                args.append("-ovc");
-                args.append("lavc");
-                args.append("-lavcopts");
-                args.append("vcodec=mpeg4:vhq:vbitrate=300");
-                args.append("-vf");
-                args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
-                args.append("-oac");
-                args.append("mp3lame");
-                args.append("-ofps");
-                args.append("15");
-                args.append("-lameopts");
-                args.append("br=64:cbr");
-                args.append("-o");
-                args.append(encPath);
-
-                process = new QProcess(this);
-                process->setProcessChannelMode(QProcess::ForwardedChannels);
-                process->start("mencoder", args);
-#ifdef Q_WS_WIN
-                PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *) process->pid();
-                SetPriorityClass(pi->hProcess, IDLE_PRIORITY_CLASS);
-#endif
-                // FIXME: whatever we send to back, browser wont show anything
-                if(process->waitForStarted(10000))
+                if(startMencoder(filename, encPath))
                 {
+                    // FIXME: whatever we send to back, browser wont show anything
                     res.append("Encoding started</br>Reload page to check status or download");
                 }
                 else
                 {
                     res.append("Failed to start mencoder:</br>");
                     res.append(process->errorString());
-                    delete(process);
-                    process = NULL;
                 }
             }
         }
@@ -1264,10 +1350,36 @@ void QMplayer::play(QStringList const& args)
     }
 }
 
+void QMplayer::encode(QString filename)
+{
+    QString dstFile = getEncFilename(filename, ".encoded");
+    if(startMencoder(filename, dstFile))
+    {
+#ifdef QTOPIA
+     QtopiaApplication::setPowerConstraint(QtopiaApplication::DisableSuspend);
+#endif
+        showScreen(QMplayer::ScreenEncodingInProgress);
+        QListWidgetItem *item = new QListWidgetItem(dstFile, lw);
+        item->setSelected(true);
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("qmplayer"), tr("Failed to start mencoder"));
+    }
+}
+
 void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
+
+    if(screen == ScreenEncodingInProgress)
+    {
+        delete(process);
+        process = NULL;
+        showScreen(ScreenInit);
+        return;
+    }
     playerStopped();
 }
 
@@ -1552,6 +1664,9 @@ void QMplayer::uReadyRead()
 
 void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+
     ufinished = true;
     delete upr;
     if (ufname == "")

@@ -32,6 +32,8 @@
 #include <Windows.h>
 #endif
 
+#define NUM_MENU_ITEMS 3
+
 class QMplayer : public QWidget
 {
     Q_OBJECT
@@ -51,7 +53,9 @@ private:
         ScreenDownload,
         ScreenConnect,
         ScreenTube,
-        ScreenCmd
+        ScreenCmd,
+        ScreenEncoding,
+        ScreenEncodingInProgress,
     };
 
     Screen screen;
@@ -63,6 +67,7 @@ private:
     QListWidget* lw;
     QListWidgetItem *scanItem;
     QListWidgetItem *sharingItem;
+    QListWidgetItem *encodingItem;
     QLabel* label;
     QLineEdit *lineEdit;
     QPushButton* bOk;
@@ -91,17 +96,20 @@ private:
     int scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks);
     void sharing();
     void play(QStringList const& args);
+    void encode(QString filename);
     void setRes(int xy);
     bool installMplayer();
     bool installYoutubeDl();
     bool runServer();
     bool runClient();
     bool download(QString url, QString destPath, QString filename, bool justCheck);
+    bool startMencoder(QString srcFile, QString dstFile);
     void console(QString s);
     bool youtubeDl();
     bool runCmd(QString cmd, int maxp=0);
     void playerStopped();
     void setDlText();
+    QString getEncFilename(QString srcFile, QString dstIdentifier);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
@@ -119,6 +127,7 @@ private slots:
     void removeFlv();
     void sTimerEvent();
     void uReadyRead();
+    void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
 
