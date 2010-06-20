@@ -400,7 +400,7 @@ sudo tar xzvpf arm920t-eabi.tgz
 
 mkdir build
 cd build
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license
+../qtmoko/configure -device neo
 make
 make install
 
@@ -419,7 +419,7 @@ git checkout translations
 
   and tell configure (in build dir) which languages you want
 
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
+../qtmoko/configure -device neo -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
 
   and rebuild all
 

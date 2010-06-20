@@ -31,7 +31,7 @@ cd ../build
 
   * Build it:
 
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license
+../qtmoko/configure -device neo
 make
 make install
 
