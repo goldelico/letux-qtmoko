@@ -648,6 +648,22 @@ void QMplayer::downClicked()
     }
 }
 
+static void enableDisableSuspend(QMplayer::Screen scr, QMplayer::Screen newScr, QMplayer::Screen oldScr)
+{
+    if(scr == newScr)
+    {
+#ifdef QTOPIA
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+#endif
+    }
+    else if(scr == oldScr)
+    {
+#ifdef QTOPIA
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+#endif
+    }
+}
+
 void QMplayer::showScreen(QMplayer::Screen scr)
 {
     // Full screen -> normal
@@ -656,18 +672,9 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         setRes(640480);
     }
 
-#ifdef QTOPIA
-    if(screen == ScreenEncodingInProgress ||
-       screen == ScreenPlay)
-    {
-        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-    }
-    if(scr == ScreenStopped ||
-       (scr == ScreenEncoding && screen == ScreenEncodingInProgress))
-    {
-        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
-    }
-#endif
+    // Disable suspend if enter these screens and enable if leave
+    enableDisableSuspend(ScreenEncodingInProgress, scr, screen);
+    enableDisableSuspend(ScreenPlay, scr, screen);
 
     this->screen = scr;
 
