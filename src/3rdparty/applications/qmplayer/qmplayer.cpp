@@ -1588,8 +1588,14 @@ bool QMplayer::runCmd(QString cmd, int maxp)
 
 bool QMplayer::youtubeDl()
 {
+    ufname = "";
+    uload = 0;
+    ufinished = false;
+
+    QString cmd = "youtube-dl -t -c " + mplist[0];
     upr = new QProcess(this);
-    QString cmd = "youtube-dl -t -c " + mplist[0]; // -m
+    connect(upr, SIGNAL(readyRead()), this, SLOT(uReadyRead()));
+    connect(upr, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(uFinished(int, QProcess::ExitStatus)));
     upr->setWorkingDirectory(ubasedir);
     upr->start(cmd);
     if(!upr->waitForStarted())
@@ -1597,13 +1603,6 @@ bool QMplayer::youtubeDl()
         //QMessageBox::critical(this, tr("qmplayer"), tr("Unable to start") + " youtube-dl");
         return false;
     }
-
-    ufname = "";
-    uload = 0;
-    ufinished = false;
-    connect(upr, SIGNAL(readyRead()), this, SLOT(uReadyRead()));
-    connect(upr, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(uFinished(int, QProcess::ExitStatus)));
-
     return true;
 }
 
