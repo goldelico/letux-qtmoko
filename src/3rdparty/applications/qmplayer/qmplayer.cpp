@@ -68,6 +68,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     if (dirch.exists(basedir2))
         ubasedir = basedir2;
 
+    tube = false;
     QStringList cl_args = QCoreApplication::arguments();
     int ac = cl_args.count();
     if (ac>1)
@@ -385,6 +386,8 @@ void QMplayer::okClicked()
             }
             else
             {
+                if (isPlaylist(list[mpargs.count()]))
+                    list.insert(mpargs.count(),"-playlist");
                 play(list);
             }
         }
@@ -786,6 +789,12 @@ scan_files:
     showScreen(QMplayer::ScreenInit);
 }
 
+bool QMplayer::isPlaylist(QString fileName)
+{
+    return (fileName.endsWith(".m3u", Qt::CaseInsensitive)
+            || fileName.endsWith(".pls", Qt::CaseInsensitive));
+}
+
 int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks)
 {
     if(abort)
@@ -812,7 +821,8 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
             || fileName.endsWith(".avi", Qt::CaseInsensitive)
             || fileName.endsWith(".mp4", Qt::CaseInsensitive)
             || fileName.endsWith(".wav", Qt::CaseInsensitive)
-            || fileName.endsWith(".flv", Qt::CaseInsensitive))
+            || fileName.endsWith(".flv", Qt::CaseInsensitive)
+            || isPlaylist(fileName))
         {
             if(fileName.contains(".qmplayer."))
             {

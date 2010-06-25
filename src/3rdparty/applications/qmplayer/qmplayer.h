@@ -110,6 +110,7 @@ private:
     void playerStopped();
     void setDlText();
     QString getEncFilename(QString srcFile, QString dstIdentifier);
+    bool isPlaylist(QString fileName);
 
 protected:
     void mousePressEvent(QMouseEvent * event);
