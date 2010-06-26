@@ -2,7 +2,7 @@
  *
  *  Game field renderer
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  Based on original renderarea.h from Qt Basic Drawing Example
  *  Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies).
@@ -39,7 +39,10 @@
  public:
      QPixmap hole_pixmap;
      QPixmap fin_pixmap;
-     RenderArea(QWidget *parent = 0);
+     QPixmap desk_pixmap;
+     QPixmap wall_pixmap;
+     RenderArea(QWidget *parent, int w, int h);
+     ~RenderArea();
      QSize minimumSizeHint() const;
      QSize sizeHint() const;
 
@@ -51,9 +54,9 @@
      void paintEvent(QPaintEvent *event);
 
  private:
+     void RenderWallShadow(QPainter *painter, int bx1, int by1, int bx2, int by2);
      bool antialiased;
-     QPen pen;
-     QBrush brush;
+     QPixmap *lvl_pixmap;
  };
 
  #endif

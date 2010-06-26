@@ -38,6 +38,7 @@ LoggingView::LoggingView( QWidget* parent, Qt::WFlags /*fl*/ )
 
     menu->addAction( QIcon(":icon/categories"), tr("Categories..."), this, SLOT(settings()) );
     menu->addAction( QIcon(":icon/trash"), tr("Clear"), this, SLOT(clear()) );
+    menu->addAction( QIcon(":icon/trash"), tr("Disable logging"), this, SLOT(loggingDisable()) );
 
     QSoftMenuBar::setLabel(this, Qt::Key_Select, QSoftMenuBar::NoLabel);
     QSoftMenuBar::setLabel(this, Qt::Key_Back, QSoftMenuBar::Back);
@@ -144,6 +145,14 @@ void LoggingView::closeLogFollow()
     }
 }
 
+void LoggingView::runProcess(QString caption, QString program)
+{
+    QProcess p;
+    p.start(program);
+    p.waitForFinished(10000);
+    setHtml("<h3>" + caption + "</h3><pre>" + p.readAll() + "</pre>");
+}
+
 void LoggingView::init()
 {
     clear();
@@ -163,13 +172,53 @@ void LoggingView::init()
             "<p>This tool requires the <tt>logread</tt> program and the corresponding <tt>syslogd</tt>. "
             "<p>You may still adjust logging categories from Options <img src=:icon/options>.")
         );
-    } else {
+        return;
+    }
+    
+    if (QFile("/var/run/syslogd.pid").exists() || QMessageBox::question
+        (this, tr("Log"), tr("Syslogd seems to be stopped, enable it?"),
+         QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+    {
         // don't wrap this output, it looks weird
         setWordWrapMode(QTextOption::ManualWrap);
         insertPlainText(loginitread.readAllStandardOutput());
         // Scroll to the bottom
         QScrollBar *vscroll = verticalScrollBar();
         vscroll->setValue( vscroll->maximum() );
+        return;
+    }
+      
+    closeLogFollow();
+    if(QMessageBox::question
+        (this, tr("Enable syslogd"),
+          tr("Temporarily (YES) or forever (NO)?"),
+          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        runProcess(tr("Start logging"), "logging_start.sh");
+    }
+    else
+    {
+        runProcess(tr("Enable logging"), "logging_enable.sh");
     }
 }
 
+void LoggingView::loggingDisable()
+{
+    if(QMessageBox::question(this, tr("Log"), tr("Disable logging?"),
+          QMessageBox::Yes | QMessageBox::No) == QMessageBox::No)
+    {
+        return;
+    }
+  
+    if(QMessageBox::question
+        (this, tr("Disable logging"),
+          tr("Temporarily (YES) or forever (NO)?"),
+          QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+    {
+        runProcess(tr("Stop logging"), "logging_stop.sh");
+    }
+    else
+    {
+        runProcess(tr("Disable logging"), "logging_disable.sh");
+    }
+}

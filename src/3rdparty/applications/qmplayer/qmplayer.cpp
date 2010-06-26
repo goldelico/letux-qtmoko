@@ -1,10 +1,15 @@
 #include "qmplayer.h"
+#include <QDebug>
 
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
+    softm = QSoftMenuBar::menuFor(this);
+    rmMpAction = softm->addAction(tr("Remove mplayer"), this, SLOT(removeMplayer()));
+    rmDlAction = softm->addAction(tr("Remove youtube-dl"), this, SLOT(removeYoutubeDl()));
+    rmFlvAction = softm->addAction(tr("Remove FLV videos"), this, SLOT(removeFlv()));
 #else
     Q_UNUSED(f);
 #endif
@@ -15,7 +20,9 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     scanItem = new QListWidgetItem(tr("Scan"), lw);
     scanItem->setSelected(true);
 
-    settingsItem = new QListWidgetItem(tr("Sharing"), lw);
+    sharingItem = new QListWidgetItem(tr("Sharing"), lw);
+
+    encodingItem = new QListWidgetItem(lw);
 
     bOk = new QPushButton(this);
     connect(bOk, SIGNAL(clicked()), this, SLOT(okClicked()));
@@ -52,12 +59,117 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     process = NULL;
     tcpServer = NULL;
 
-    showScreen(QMplayer::ScreenInit);
+    ubasedir = QDir::homePath();
+    QString basedir1 = QDir::homePath()+"/Documents";
+    QString basedir2 = "/media/card/Documents";
+    QDir dirch;
+    if (dirch.exists(basedir1))
+        ubasedir = basedir1;
+    if (dirch.exists(basedir2))
+        ubasedir = basedir2;
+
+    QStringList cl_args = QCoreApplication::arguments();
+    int ac = cl_args.count();
+    if (ac>1)
+    {
+        int tki=1;
+        while(true)
+        {
+            QString a = cl_args[tki];
+            if (a=="--mpargs")
+            {
+                if (ac>tki+1)
+                {
+                    mpargs << QString(cl_args[tki+1]).split(" ");
+                }
+                else
+                {
+                    console("Not enough parameters for '--mpargs' argument");
+                }
+                tki+=2;
+            }
+            else if (a=="--basedir")
+            {
+                if (ac>tki+1)
+                {
+                    ubasedir = cl_args[tki+1];
+                }
+                else
+                {
+                    console("Not enough parameters for '--basedir' argument");
+                }
+                tki+=2;
+            }
+            else if (a=="--youtube-dl")
+            {
+                tube=true;
+                tki+=1;
+            }
+            else
+            {
+                mplist << a;
+                tki+=1;
+            }
+
+            if (tki>=ac) break;
+        }
+    }
+
+    mpgui = (mplist.count()==0);
+    if (mpgui)
+        showScreen(QMplayer::ScreenInit);
+    else
+    {
+        if (tube)
+        {
+            while (mplist.count() > 1)
+                mplist.removeLast();
+            QTimer::singleShot(0, this, SLOT(sTimerEvent()));
+        }
+        else
+        {
+            this->screen = QMplayer::ScreenInit;
+            okClicked();
+        }
+    }
 }
 
 QMplayer::~QMplayer()
 {
 
+}
+
+void QMplayer::sTimerEvent()
+{
+    showScreen(QMplayer::ScreenTube);
+    bool uok = youtubeDl();
+    if (!uok)
+    {
+        if(QMessageBox::question(this, tr("qmplayer"),
+                tr("Program youtube-dl is necessary for downloading videos from Youtube. Do you want to install it now?"),
+                QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+        {
+            if (installYoutubeDl())
+            {
+                showScreen(QMplayer::ScreenTube);
+                uok = youtubeDl();
+            }
+            else
+                QMessageBox::critical(this, tr("qmplayer"), tr("Installation of youtube-dl has failed"));
+        }
+    }
+    if (!uok) close();
+}
+
+void QMplayer::closeEvent(QCloseEvent *event)
+{
+    QWidget::closeEvent(event);
+}
+
+void QMplayer::console(QString s)
+{
+    //qLog
+    qDebug("%s", (s+"\n").toAscii().data());
 }
 
 static bool isDirectory(QString path)
@@ -113,12 +225,12 @@ static bool processRunning(QProcess *p)
               p->waitForStarted(1000)));
 }
 
-// Removes items from listview except top 2 items.
+// Removes items from listview except top menu items.
 static void delItems(QListWidget *lw)
 {
-    while(lw->count() > 2)
+    while(lw->count() > NUM_MENU_ITEMS)
     {
-        delete(lw->takeItem(2));
+        delete(lw->takeItem(NUM_MENU_ITEMS));
     }
 }
 
@@ -141,24 +253,8 @@ void QMplayer::mousePressEvent(QMouseEvent *event)
 
 void QMplayer::okClicked()
 {
-    if(screen == QMplayer::ScreenInit)
+    if(screen == QMplayer::ScreenInit || screen == QMplayer::ScreenEncoding)
     {
-        QListWidgetItem *sel = lw->currentItem();
-
-        if(sel == NULL)
-        {
-            return;
-        }
-        if(sel == scanItem)
-        {
-            scan();
-            return;
-        }
-        if(sel == settingsItem)
-        {
-            settings();
-            return;
-        }
         QString dir = "";
         bool hit = false;
         QStringList list;
@@ -166,83 +262,131 @@ void QMplayer::okClicked()
         QStringList nameList;
         QMessageBox::StandardButton answer = QMessageBox::NoButton;
         QMessageBox::StandardButton moreAnswer = QMessageBox::NoButton;
-        for(int i = 2; i < lw->count(); i++)
-        {
-            QListWidgetItem *item = lw->item(i);
-            QString path = item->text();
-            bool isDir = isDirectory(path);
-            if(isDir)
-            {
-                if(hit)
-                {
-                    break;
-                }
-                dir = path;
-            }
-            hit |= (item == sel);
-            if(!hit || isDir)
-            {
-                continue;
-            }
-            if(!dir.startsWith("http://"))
-            {
-                list.append(dir + "/" + path);      // add local files to playlist
-                continue;
-            }
-            if(moreAnswer == QMessageBox::NoButton)
-            {
-                answer = QMessageBox::question(this, "qmplayer", path, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
-            }
-            if(answer == QMessageBox::Cancel)
-            {
-                break;
-            }
-            if(answer == QMessageBox::Open)
-            {
-                list.append(dir + pathToUrl(path));      // append to playlist if we just play (no download)
-            }
-            downList.append(dir + pathToUrl(path));
-            nameList.append(path);
-            if(moreAnswer != QMessageBox::YesToAll)
-            {
-                moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
-                                                   QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
 
-                if(moreAnswer == QMessageBox::No)
-                {
-                    break;
-                }
-            }
-        }
-        for(int i = 0; i < downList.count(); i++)
+        list << mpargs;
+        list << mplist;
+
+        if (mpgui)
         {
-            QString url = downList[i];
-            int slashIndex = url.lastIndexOf('/');
-            if(slashIndex < 0)
-            {
-                continue;
-            }
-            QString filename = nameList[i];
-            QString destPath = QDir::homePath() + "/" + filename;
-            if(QDir("/media/card").exists())
-            {
-                destPath = "/media/card/" + filename;
-            }
-            bool justCheck = list.contains(url);
-            if(!download(url, destPath, filename, justCheck))
+            QListWidgetItem *sel = lw->currentItem();
+            if(sel == NULL)
             {
                 return;
             }
-            if(justCheck)
+            if(sel == scanItem)
             {
-                continue;
+                scan();
+                return;
             }
-            // Add downloaded file to list
-            list.append(destPath);
+            if(sel == sharingItem)
+            {
+                sharing();
+                return;
+            }
+            if(sel == encodingItem)
+            {
+                if(screen != ScreenEncoding)
+                {
+                    showScreen(ScreenEncoding);
+                    if(lw->count() > NUM_MENU_ITEMS)
+                    {
+                        QListWidgetItem *item = lw->item(NUM_MENU_ITEMS);
+                        item->setSelected(true);
+                    }
+                }
+                else
+                {
+                    showScreen(ScreenInit);
+                }
+                return;
+            }
+
+            for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
+            {
+                QListWidgetItem *item = lw->item(i);
+                QString path = item->text();
+                bool isDir = isDirectory(path);
+                if(isDir)
+                {
+                    if(hit)
+                    {
+                        break;
+                    }
+                    dir = path;
+                }
+                hit |= (item == sel);
+                if(!hit || isDir)
+                {
+                    continue;
+                }
+                if(!dir.startsWith("http://"))
+                {
+                    list.append(dir + "/" + path);      // add local files to playlist
+                    continue;
+                }
+                if(moreAnswer == QMessageBox::NoButton)
+                {
+                    answer = QMessageBox::question(this, "qmplayer", path, QMessageBox::Save | QMessageBox::Open | QMessageBox::Cancel);
+                }
+                if(answer == QMessageBox::Cancel)
+                {
+                    break;
+                }
+                if(answer == QMessageBox::Open)
+                {
+                    list.append(dir + pathToUrl(path));      // append to playlist if we just play (no download)
+                }
+                downList.append(dir + pathToUrl(path));
+                nameList.append(path);
+                if(moreAnswer != QMessageBox::YesToAll)
+                {
+                    moreAnswer = QMessageBox::question(this, "qmplayer", tr("Next file?"),
+                                                       QMessageBox::Yes | QMessageBox::No | QMessageBox::YesToAll);
+
+                    if(moreAnswer == QMessageBox::No)
+                    {
+                        break;
+                    }
+                }
+            }
+            for(int i = 0; i < downList.count(); i++)
+            {
+                QString url = downList[i];
+                int slashIndex = url.lastIndexOf('/');
+                if(slashIndex < 0)
+                {
+                    continue;
+                }
+                QString filename = nameList[i];
+                QString destPath = QDir::homePath() + "/" + filename;
+                if(QDir("/media/card").exists())
+                {
+                    destPath = "/media/card/" + filename;
+                }
+                bool justCheck = list.contains(url);
+                if(!download(url, destPath, filename, justCheck))
+                {
+                    return;
+                }
+                if(justCheck)
+                {
+                    continue;
+                }
+                // Add downloaded file to list
+                list.append(destPath);
+            }
         }
-        if(list.count() > 0)
+
+        if(list.count() > mpargs.count())
         {
-            play(list);
+            if(screen == ScreenEncoding)
+            {
+                encode(list.at(0));
+            }
+            else
+            {
+                play(list);
+            }
         }
     }
     else if(screen == QMplayer::ScreenPlay)
@@ -269,6 +413,11 @@ void QMplayer::okClicked()
     else if(screen == QMplayer::ScreenConnect)
     {
         runClient();
+    }
+    else if(screen == QMplayer::ScreenTube)
+    {
+        this->screen = QMplayer::ScreenInit;
+        okClicked();
     }
 }
 
@@ -449,11 +598,19 @@ void QMplayer::backClicked()
         process->waitForFinished(4000);
         delete(process);
         process = NULL;
-        showScreen(QMplayer::ScreenInit);
+        playerStopped();
     }
     else if(screen == QMplayer::ScreenConnect)
     {
         showScreen(QMplayer::ScreenInit);
+    }
+    else if(screen == QMplayer::ScreenTube)
+    {
+        close();
+    }
+    else if(screen == ScreenEncodingInProgress)
+    {
+        process->terminate();
     }
     else
     {
@@ -491,6 +648,22 @@ void QMplayer::downClicked()
     }
 }
 
+static void enableDisableSuspend(QMplayer::Screen scr, QMplayer::Screen newScr, QMplayer::Screen oldScr)
+{
+    if(scr == newScr)
+    {
+#ifdef QTOPIA
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
+#endif
+    }
+    else if(scr == oldScr)
+    {
+#ifdef QTOPIA
+        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
+#endif
+    }
+}
+
 void QMplayer::showScreen(QMplayer::Screen scr)
 {
     // Full screen -> normal
@@ -499,31 +672,41 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         setRes(640480);
     }
 
+    // Disable suspend if enter these screens and enable if leave
+    enableDisableSuspend(ScreenEncodingInProgress, scr, screen);
+    enableDisableSuspend(ScreenPlay, scr, screen);
+
     this->screen = scr;
 
-    lw->setVisible(scr == QMplayer::ScreenInit);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || QMplayer::ScreenScan || scr == QMplayer::ScreenConnect);
+    lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenEncoding);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
     bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect);
+    label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     lineEdit->setVisible(scr == QMplayer::ScreenConnect);
-    progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload);
+    progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
+
+    bOk->setEnabled(true);
+
+#ifdef QTOPIA
+    rmMpAction->setEnabled(scr == QMplayer::ScreenInit);
+    rmDlAction->setEnabled(scr == QMplayer::ScreenInit);
+    rmFlvAction->setEnabled(scr == QMplayer::ScreenInit);
+#endif
 
     switch(scr)
     {
         case QMplayer::ScreenInit:
             bOk->setText(">");
             bBack->setText(tr("Quit"));
+            encodingItem->setText(tr("Encode"));
             break;
         case QMplayer::ScreenPlay:
             bOk->setText(tr("Pause"));
             bBack->setText(tr("Full screen"));
             bUp->setText(tr("Vol up"));
             bDown->setText(tr("Vol down"));
-#ifdef QTOPIA
-            QtopiaApplication::setPowerConstraint(QtopiaApplication::Disable);
-#endif
             break;
         case QMplayer::ScreenFullscreen:
 #ifdef QTOPIA
@@ -535,9 +718,6 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Back"));
             bUp->setText(tr(">>"));
             bDown->setText(tr("<<"));
-#ifdef QTOPIA
-            QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
-#endif
             break;
         case QMplayer::ScreenConnect:
             label->setText(tr("Enter host and port to connect to"));
@@ -547,6 +727,25 @@ void QMplayer::showScreen(QMplayer::Screen scr)
         case QMplayer::ScreenScan:
         case QMplayer::ScreenDownload:
             bBack->setText(tr("Cancel"));        
+            break;
+        case QMplayer::ScreenTube:
+            setDlText();
+            progress->setMaximum(100);
+            progress->setValue((int)uload);
+            bOk->setText("Watch Now!");
+            bOk->setEnabled(!ufname.isEmpty());
+            bBack->setText(tr("Cancel"));
+            break;
+        case QMplayer::ScreenCmd:
+            bBack->setText(tr("Cancel"));
+            break;
+        case QMplayer::ScreenEncoding:
+            encodingItem->setText(tr("Select file to encode"));
+            break;
+        case QMplayer::ScreenEncodingInProgress:
+            bBack->setText(tr("Cancel"));
+            progress->setMaximum(100);
+            progress->setValue(0);
             break;
     }
 }
@@ -584,7 +783,7 @@ scan_files:
     maxScanLevel++;
     scanItem->setText(tr("Scan more"));
 
-    if(lw->count() <= 2 && !abort &&
+    if(lw->count() <= NUM_MENU_ITEMS && !abort &&
        QMessageBox::question(this, "qmplayer", tr("No media files found, scan more?"),
                              QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
     {
@@ -619,7 +818,8 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
             || fileName.endsWith(".ogv", Qt::CaseInsensitive)
             || fileName.endsWith(".avi", Qt::CaseInsensitive)
             || fileName.endsWith(".mp4", Qt::CaseInsensitive)
-            || fileName.endsWith(".wav", Qt::CaseInsensitive))
+            || fileName.endsWith(".wav", Qt::CaseInsensitive)
+            || fileName.endsWith(".flv", Qt::CaseInsensitive))
         {
             if(fileName.contains(".qmplayer."))
             {
@@ -673,6 +873,78 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
     return found;
 }
 
+QString QMplayer::getEncFilename(QString srcFile, QString dstIdentifier)
+{
+    QString res(srcFile);
+    if(srcFile.endsWith(".avi") ||
+       srcFile.endsWith(".mp4") ||
+       srcFile.endsWith(".flv"))
+    {
+        res.insert(srcFile.lastIndexOf('.'), dstIdentifier);
+    }
+    return res;
+}
+
+bool QMplayer::startMencoder(QString srcFile, QString dstFile)
+{
+    QStringList args;
+    args.append(srcFile);
+    args.append("-ovc");
+    args.append("lavc");
+    args.append("-lavcopts");
+    args.append("vcodec=mpeg4:vhq:vbitrate=300");
+    args.append("-vf");
+    args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
+    args.append("-oac");
+    args.append("mp3lame");
+    args.append("-ofps");
+    args.append("15");
+    args.append("-lameopts");
+    args.append("br=64:cbr");
+    args.append("-o");
+    args.append(dstFile);
+
+    process = new QProcess(this);
+    connect(process, SIGNAL(readyRead()), this, SLOT(mencoderReadyRead()));
+    connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
+
+    process->setProcessChannelMode(QProcess::MergedChannels);
+    process->start("mencoder", args);
+
+#ifdef Q_WS_WIN
+    PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *) process->pid();
+    SetPriorityClass(pi->hProcess, IDLE_PRIORITY_CLASS);
+#endif
+
+    if(process->waitForStarted(10000))
+    {
+        return true;
+    }
+    delete(process);
+    process = NULL;
+    return false;
+}
+
+void QMplayer::mencoderReadyRead()
+{
+    QString txt = process->readAll().trimmed();
+    label->setText(txt);
+
+    // Search for percents - e.g. (34%)
+    int index = txt.indexOf("%)");
+    if(index < 5)
+    {
+        return;
+    }
+    int startIndex = txt.indexOf('(', index - 5) + 1;
+    if(startIndex <= 0)
+    {
+        return;
+    }
+    QString numStr = txt.mid(startIndex, index - startIndex);
+    progress->setValue(numStr.toInt());
+}
+
 bool QMplayer::runServer()
 {
     if(tcpServer != NULL)
@@ -701,7 +973,7 @@ bool QMplayer::runServer()
     QMessageBox::information(this, tr("qmplayer"),
                              tr("Web server is running on port 7654"));
 
-    settingsItem->setText(tr("Web server running on port 7654"));
+    sharingItem->setText(tr("Web server running on port 7654"));
     return true;
 }
 
@@ -813,7 +1085,7 @@ bool QMplayer::runClient()
     return true;
 }
 
-void QMplayer::settings()
+void QMplayer::sharing()
 {
 #ifdef QTOPIA
     if(!runClient())
@@ -902,7 +1174,7 @@ void QMplayer::newConnection()
     else if(reqPath == "/")
     {
         QString dir = "";
-        for(int i = 2; i < lw->count(); i++)
+        for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
@@ -931,7 +1203,7 @@ void QMplayer::newConnection()
         res.append("</br>");
         QString dir = "";
         QString testDir;
-        for(int i = 2; i < lw->count(); i++)
+        for(int i = NUM_MENU_ITEMS; i < lw->count(); i++)
         {
             QListWidgetItem *item = lw->item(i);
             QString path = item->text();
@@ -960,13 +1232,7 @@ void QMplayer::newConnection()
         }
         else
         {
-            encPath = filename;
-            // Encode just avi files for now
-            if(encPath.endsWith(".avi") ||
-               encPath.endsWith(".mp4"))
-            {
-                encPath.insert(encPath.lastIndexOf('.'), ".qmplayer");
-            }
+            encPath = getEncFilename(filename, ".qmplayer");
             QFileInfo fi(encPath);
             if(fi.exists())
             {
@@ -1020,41 +1286,15 @@ void QMplayer::newConnection()
             }
             else
             {
-                QStringList args;
-                args.append(filename);
-                args.append("-ovc");
-                args.append("lavc");
-                args.append("-lavcopts");
-                args.append("vcodec=mpeg4:vhq:vbitrate=300");
-                args.append("-vf");
-                args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
-                args.append("-oac");
-                args.append("mp3lame");
-                args.append("-ofps");
-                args.append("15");
-                args.append("-lameopts");
-                args.append("br=64:cbr");
-                args.append("-o");
-                args.append(encPath);
-
-                process = new QProcess(this);
-                process->setProcessChannelMode(QProcess::ForwardedChannels);
-                process->start("mencoder", args);
-#ifdef Q_WS_WIN
-                PROCESS_INFORMATION *pi = (PROCESS_INFORMATION *) process->pid();
-                SetPriorityClass(pi->hProcess, IDLE_PRIORITY_CLASS);
-#endif
-                // FIXME: whatever we send to back, browser wont show anything
-                if(process->waitForStarted(10000))
+                if(startMencoder(filename, encPath))
                 {
+                    // FIXME: whatever we send to back, browser wont show anything
                     res.append("Encoding started</br>Reload page to check status or download");
                 }
                 else
                 {
                     res.append("Failed to start mencoder:</br>");
                     res.append(process->errorString());
-                    delete(process);
-                    process = NULL;
                 }
             }
         }
@@ -1117,11 +1357,47 @@ void QMplayer::play(QStringList const& args)
     }
 }
 
+void QMplayer::encode(QString filename)
+{
+    QString dstFile = getEncFilename(filename, ".encoded");
+    if(startMencoder(filename, dstFile))
+    {
+#ifdef QTOPIA
+     QtopiaApplication::setPowerConstraint(QtopiaApplication::DisableSuspend);
+#endif
+        showScreen(QMplayer::ScreenEncodingInProgress);
+        QListWidgetItem *item = new QListWidgetItem(dstFile, lw);
+        item->setSelected(true);
+    }
+    else
+    {
+        QMessageBox::warning(this, tr("qmplayer"), tr("Failed to start mencoder"));
+    }
+}
+
 void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
 {
     Q_UNUSED(exitCode);
     Q_UNUSED(exitStatus);
-    showScreen(QMplayer::ScreenInit);
+
+    if(screen == ScreenEncodingInProgress)
+    {
+        delete(process);
+        process = NULL;
+        showScreen(ScreenInit);
+        return;
+    }
+    playerStopped();
+}
+
+void QMplayer::playerStopped()
+{
+    if (mpgui)
+        showScreen(QMplayer::ScreenInit);
+    else if (tube && !ufinished)
+        showScreen(QMplayer::ScreenTube);
+    else
+        close();
 }
 
 void QMplayer::setRes(int xy)
@@ -1172,4 +1448,250 @@ bool QMplayer::installMplayer()
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
     return false;
 #endif
+}
+
+bool QMplayer::installYoutubeDl()
+{
+#ifdef QTOPIA
+    return runCmd("apt-get update", 300) &&
+        runCmd("apt-get -y install python", 200) &&
+        runCmd("wget -O /usr/bin/youtube-dl http://dl.linuxphone.ru/openmoko/qtmoko/packages/youtube-dl", 100) &&
+        QFile::setPermissions("/usr/bin/youtube-dl", QFile::ReadOwner |
+                          QFile::WriteOwner | QFile::ExeOwner |
+                          QFile::ReadUser | QFile::ExeUser |
+                          QFile::ReadGroup | QFile::ExeGroup |
+                          QFile::ReadOther | QFile::ExeOther);
+#else
+    QMessageBox::critical(this, tr("qmplayer"), tr("You must install youtube-dl"));
+    return false;
+#endif
+}
+
+void QMplayer::removeMplayer()
+{
+#ifdef QTOPIA
+    if(QMessageBox::question(this, tr("qmplayer"),
+            tr("You are about to remove mplayer. Are you sure?"),
+            QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        bool res = runCmd("rm /usr/bin/mplayer", 10) && runCmd("rm /home/root/.mplayer/config", 10);
+        showScreen(QMplayer::ScreenInit);
+        if (res)
+            QMessageBox::information(this, tr("qmplayer"), tr("mplayer has been removed"));
+        else
+            QMessageBox::critical(this, tr("qmplayer"), tr("Can't remove mplayer"));
+    }
+#endif
+}
+
+void QMplayer::removeYoutubeDl()
+{
+#ifdef QTOPIA
+    if(QMessageBox::question(this, tr("qmplayer"),
+            tr("You are about to remove youtube-dl. Are you sure?"),
+            QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        bool res = runCmd("rm /usr/bin/youtube-dl", 10);
+        showScreen(QMplayer::ScreenInit);
+        if (res)
+            QMessageBox::information(this, tr("qmplayer"), tr("youtube-dl has been removed"));
+        else
+            QMessageBox::critical(this, tr("qmplayer"), tr("Can't remove youtube-dl"));
+    }
+#endif
+}
+
+void QMplayer::removeFlv()
+{
+#ifdef QTOPIA
+    if(QMessageBox::question(this, tr("qmplayer"),
+            tr("You are about to remove all FLV videos from directory %1. Are you sure?").arg(ubasedir),
+            QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        abort = false;
+        showScreen(QMplayer::ScreenCmd);
+        QString rtitle = tr("Removing FLV files from %1").arg(ubasedir);
+        label->setText(rtitle);
+        progress->setMaximum(100);
+        progress->setValue(0);
+
+        QDir dir(ubasedir);
+        QFileInfoList list = dir.entryInfoList(QDir::AllEntries, QDir::Name);
+        progress->setMaximum(list.count());
+        for(int i = 0; i < list.count(); i++)
+        {
+            progress->setValue(i+1);
+            if (abort) break;
+
+            QFileInfo fi = list.at(i);
+            if(!fi.isFile())
+            {
+                continue;
+            }
+            QString fileName = fi.fileName();
+            if(fileName.endsWith(".flv", Qt::CaseInsensitive))
+            {
+                QString fullfname = ubasedir + "/" + fileName;
+                label->setText(rtitle + "\n" + fileName);
+                QFile::remove(fullfname);
+            }
+        }
+        showScreen(QMplayer::ScreenInit);
+
+        if (!abort)
+            QMessageBox::information(this, tr("qmplayer"), tr("FLV videos has been removed"));
+        else
+            QMessageBox::critical(this, tr("qmplayer"), tr("Operation aborted"));
+    }
+#endif
+}
+
+bool QMplayer::runCmd(QString cmd, int maxp)
+{
+    abort = false;
+    bool inter = (maxp>0);
+    if (inter)
+    {
+        showScreen(QMplayer::ScreenCmd);
+        label->setText(tr("Executing") + " '" + cmd + "'");
+        progress->setMaximum(maxp);
+        progress->setValue(0);
+    }
+
+    QProcess p;
+    p.start(cmd);
+    if(!p.waitForStarted())
+    {
+        QMessageBox::critical(this, tr("qmplayer"), tr("Unable to start") + " '" + cmd + "'");
+        return false;
+    }
+
+    while ((p.state() == QProcess::Running) && (!abort))
+    {
+        if (inter)
+            progress->setValue((progress->value() + 1) % maxp);
+        QApplication::processEvents();
+        p.waitForFinished(100);
+    }
+
+    if (abort)
+    {
+        p.kill();
+        return false;
+    }
+
+    return true;
+}
+
+bool QMplayer::youtubeDl()
+{
+    upr = new QProcess(this);
+    QString cmd = "youtube-dl -t -c " + mplist[0]; // -m
+    upr->setWorkingDirectory(ubasedir);
+    upr->start(cmd);
+    if(!upr->waitForStarted())
+    {
+        //QMessageBox::critical(this, tr("qmplayer"), tr("Unable to start") + " youtube-dl");
+        return false;
+    }
+
+    ufname = "";
+    uload = 0;
+    ufinished = false;
+    connect(upr, SIGNAL(readyRead()), this, SLOT(uReadyRead()));
+    connect(upr, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(uFinished(int, QProcess::ExitStatus)));
+
+    return true;
+}
+
+void QMplayer::uReadyRead()
+{
+    QString txt = upr->readAll().trimmed();
+    if (txt != "")
+    {
+        if (ufname == "")
+        {
+            int ext_i;
+            QString ext_str;
+            QString ext1_str = ".flv";
+            QString ext2_str = ".mp4";
+            ext_str = ext1_str;
+            ext_i = txt.indexOf(ext_str);
+            if (ext_i<0)
+            {
+                ext_str = ext2_str;
+                ext_i = txt.indexOf(ext_str);
+            }
+            if (ext_i>=0)
+            {
+                int from_i;
+                QString beg_str;
+                QString beg1_str = "[download] Destination: ";
+                QString beg2_str = " ";
+                beg_str = beg1_str;
+                from_i = txt.indexOf(beg_str);
+                if (from_i<0)
+                {
+                    beg_str = beg2_str;
+                    from_i = txt.indexOf(beg_str);
+                }
+                if (from_i>=0)
+                {
+                    from_i += beg_str.length();
+                    int to_i = ext_i + ext_str.length();
+                    ufname = txt.mid(from_i, to_i - from_i);
+                    //if (txt.indexOf("has already been downloaded") >= 0) already=true;
+                    mplist[0] = ubasedir + "/" + ufname;
+                    if(screen == QMplayer::ScreenTube)
+                    {
+                        setDlText();
+                        bOk->setEnabled(true);
+                    }
+                }
+            }
+        }
+        else
+        {
+            QString per_str = "% of ";
+            int to_i = txt.indexOf(per_str);
+            if (to_i>=0)
+            {
+                int from_i = txt.indexOf(" ");
+                if (from_i < to_i)
+                {
+                    QString load_str = txt.mid(from_i, to_i - from_i);
+                    uload = load_str.toDouble();
+                    if(screen == QMplayer::ScreenTube)
+                        progress->setValue((int)uload);
+                }
+            }
+        } //if
+    } //if (txt != "")
+}
+
+void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
+{
+    Q_UNUSED(exitCode);
+    Q_UNUSED(exitStatus);
+
+    ufinished = true;
+    delete upr;
+    if (ufname == "")
+    {
+        QMessageBox::critical(this, tr("qmplayer"), tr("youtube-dl has not returned name of downloaded file"));
+        close();
+    }
+    else
+    {
+        if (screen == QMplayer::ScreenTube)
+        {
+            screen = QMplayer::ScreenInit;
+            okClicked();
+        }
+    }
+}
+
+void QMplayer::setDlText()
+{
+    label->setText(tr("Downloading video from Youtube") + "\n" + ufname);
 }

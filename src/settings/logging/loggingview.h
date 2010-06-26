@@ -35,11 +35,13 @@ public:
     void resizeEvent(QResizeEvent*);
     void showEvent(QShowEvent*);
     bool isAvailable() const;
+    void runProcess(QString, QString);
 
 private slots:
     void settings();
     void readLogFollow();
     void init();
+    void loggingDisable();
 
 private:
     void closeLogFollow();

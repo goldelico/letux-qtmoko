@@ -2,7 +2,7 @@
  *
  *  Main game routines
  *
- *  (c) 2009 Anton Olkhovik <ant007h@gmail.com>
+ *  (c) 2009-2010 Anton Olkhovik <ant007h@gmail.com>
  *
  *  This file is part of QtMaze (port of Mokomaze) - labyrinth game.
  *
@@ -32,6 +32,10 @@ class Form : public QWidget, public Ui_FormBase
 private:
     QTimer *timer;
     RenderArea *renderArea;
+    QPixmap prev_pixmap, prev_p_pixmap, prev_i_pixmap;
+    QPixmap next_pixmap, next_p_pixmap, next_i_pixmap;
+    QPixmap reset_pixmap, reset_p_pixmap, reset_i_pixmap;
+    QPixmap close_pixmap;
     void CheckLoadedPictures();
     void DisableScreenSaver();
     void EnableScreenSaver();
@@ -39,8 +43,9 @@ private:
     void SetLevelNo();
     void MoveBall(double x, double y);
     //--------------------------------
-    void InitState();
+    void InitState(bool redraw = true);
     int line(double x0, double y0, double x1, double y1,    double vx0,double vy0, double vx1,double vy1);
+    void ZeroAnim();
     void ProcessGameState();
     int testbump(double x,double y,   double mm_vx,double mm_vy);
     int edgebump(int tx,int ty,   double x,double y,   double mm_vx,double mm_vy);
@@ -49,6 +54,7 @@ private:
     void post_temp_phys_res(double x, double y, double mm_vx, double mm_vy);
     void post_phys_res(double x, double y, double mm_vx, double mm_vy);
     void BumpVibrate(double speed);
+    void setButtonsPics();
 
 public:
     Form( QWidget *parent = 0, Qt::WFlags f = 0 );

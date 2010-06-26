@@ -608,7 +608,7 @@ state.neo1973gta02 {
 		comment.item.3 'Right PGA'
 		iface MIXER
 		name 'Mic Sidetone Mux'
-		value 'Right PGA'
+		value 'Mic 2'
 	}
 	control.64 {
 		comment.access 'read write'

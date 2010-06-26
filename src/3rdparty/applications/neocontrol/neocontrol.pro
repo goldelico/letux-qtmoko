@@ -6,7 +6,9 @@ TEMPLATE = app
 QT += core \
     gui \
     network
+LIBS += -lasound
 SOURCES += main.cpp \
-    neocontrol.cpp
-
-HEADERS += neocontrol.h
+    neocontrol.cpp \
+    mixerslider.cpp
+HEADERS += neocontrol.h \
+    mixerslider.h

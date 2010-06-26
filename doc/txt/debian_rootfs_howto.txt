@@ -80,25 +80,32 @@ echo "deb http://pkg-fso.alioth.debian.org/debian unstable main" >> /media/card/
 Step 4
 ======
 
-* Device drivers modules, we have most of them in kernel now.
+* Device drivers modules. Most of device drivers are built in kernel, but
+  following drivers are exception. g_ether is module so that we can switch
+  between mass storage and with ppp_generic saves space so that we fit under
+  2MB u-boot limit.
 
-echo ppp_generic > /media/card/etc/modules
-
+echo g_ether > /media/card/etc/modules
+echo ppp_generic >> /media/card/etc/modules
 * Old modules were:
 
 # echo g_ether >> /media/card/etc/modules
-# echo hidp >> /media/card/etc/modules
-# echo ipv6 >> /media/card/etc/modules
-# echo ohci-hcd >> /media/card/etc/modules
-# echo rfcomm >> /media/card/etc/modules
-# echo s3cmci >> /media/card/etc/modules
-# echo snd-soc-neo1973-gta02-wm8753 >> /media/card/etc/modules
-# echo snd_pcm_oss >> /media/card/etc/modules
 
 * Modem device nodes
 
-echo "# Samsung UARTS" > /media/card/etc/udev/rules.d/50-qtmoko.rules
-echo "KERNEL==\"s3c2410_serial[0-9]\",   NAME=\"ttySAC%n\"" >> /media/card/etc/udev/rules.d/50-qtmoko.rules
+cat > /media/card/etc/udev/rules.d/50-qtmoko.rules << __END__
+# Samsung UARTS
+KERNEL=="s3c2410_serial[0-9]",   NAME="ttySAC%n"
+
+# Fix bluetooth after resume
+KERNEL=="hci0", SUBSYSTEM=="bluetooth", ACTION=="add", \\
+        RUN+="/opt/qtmoko/bin/btfix.sh"
+
+# Fix wifi after resume
+KERNEL=="eth0", SUBSYSTEM=="net", ACTION=="add", \
+        RUN+="/opt/qtmoko/bin/wifi-suspend-resume.sh"
+
+__END__
 
 * Unpack alsa scenarios to /usr/share/openmoko - you can find these files
   in any openmoko distro.
@@ -171,6 +178,18 @@ dpkg -i pkg-fso-keyring_2009.09.12_all.deb
 rm pkg-fso-keyring_2009.09.12_all.deb
 exit
 
+Step 4.7 - disable logging by defaults
+======================================
+
+* We will have syslogd and klogd disabled by default. If phone works it's not
+  needed and it saves flash memory from wearing off. It can be always enabled
+  in settings->logging or via devtools menu or with logging_enable.sh script.
+
+chroot /media/card
+update-rc.d -f klogd remove
+update-rc.d -f sysklogd remove
+exit
+
 
 Step 5
 ======
@@ -216,7 +235,6 @@ case "$1" in
   start)
 	rm -f /dev/input/mice
 	echo '1' > /proc/sys/kernel/printk
-	echo 5000000 > /sys/module/glamo_mci/parameters/sd_max_clk
 	echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
 	rm -rf /var/run/ppp
 	mkdir /var/run/ppp
@@ -387,7 +405,7 @@ sudo tar xzvpf arm920t-eabi.tgz
 
 mkdir build
 cd build
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license
+../qtmoko/configure -device neo
 make
 make install
 
@@ -406,7 +424,7 @@ git checkout translations
 
   and tell configure (in build dir) which languages you want
 
-../qtmoko/configure -device neo -D _FORTIFY_SOURCE=0 -rtti -confirm-license -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES
+../qtmoko/configure -device neo -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
 
   and rebuild all
 
@@ -525,7 +543,7 @@ apt-get install libasound2-dev libbluetooth-dev libdbus-1-dev libglib2.0-dev \
     libxfontcache-dev libxft-dev libxinerama-dev libxi-dev \
     libxmu-dev libxmuu-dev libxp-dev libxrandr-dev libxts-dev libxtst-dev \
     libxxf86dga-dev libxxf86misc-dev libxxf86vm-dev zlib1g-dev \
-    build-essential libc6-dev
+    build-essential libc6-dev libjpeg-dev libfreetype6-dev libdjvulibre-dev
 
     * Make directory for your toolchain and copy files from toolchain rootfs:
 
