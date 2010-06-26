@@ -1,0 +1,36 @@
+tslib relies on ts pressures events so this hack is needed to get tslib stuff
+working
+
+Signed-off-by: Arnaud Patard <arnaud.patard@rtp-net.org>
+---
+ drivers/input/touchscreen/s3c2410_ts.c |    3 	3 +	0 -	0 !
+ 1 file changed, 3 insertions(+)
+
+Index: linux-2.6/drivers/input/touchscreen/s3c2410_ts.c
+===================================================================
+--- linux-2.6.orig/drivers/input/touchscreen/s3c2410_ts.c	2010-04-21 21:34:48.168181175 +0200
++++ linux-2.6/drivers/input/touchscreen/s3c2410_ts.c	2010-04-21 21:44:00.436110208 +0200
+@@ -139,6 +139,7 @@ static void touch_timer_fire(unsigned lo
+ 			input_report_abs(ts.input, ABS_Y, ts.yp);
+ 
+ 			input_report_key(ts.input, BTN_TOUCH, 1);
++			input_report_abs(ts.input, ABS_PRESSURE, 1);
+ 			input_sync(ts.input);
+ 
+ 			ts.xp = 0;
+@@ -153,6 +154,7 @@ static void touch_timer_fire(unsigned lo
+ 		ts.count = 0;
+ 
+ 		input_report_key(ts.input, BTN_TOUCH, 0);
++		input_report_abs(ts.input, ABS_PRESSURE, 0);
+ 		input_sync(ts.input);
+ 
+ 		writel(WAIT4INT | INT_DOWN, ts.io + S3C2410_ADCTSC);
+@@ -326,6 +328,7 @@ static int __devinit s3c2410ts_probe(str
+ 	ts.input->keybit[BIT_WORD(BTN_TOUCH)] = BIT_MASK(BTN_TOUCH);
+ 	input_set_abs_params(ts.input, ABS_X, 0, 0x3FF, 0, 0);
+ 	input_set_abs_params(ts.input, ABS_Y, 0, 0x3FF, 0, 0);
++	input_set_abs_params(ts.input, ABS_PRESSURE, 0, 1, 0, 0);
+ 
+ 	ts.input->name = "S3C24XX TouchScreen";
+ 	ts.input->id.bustype = BUS_HOST;
