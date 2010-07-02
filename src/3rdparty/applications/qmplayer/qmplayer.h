@@ -42,7 +42,6 @@ public:
     QMplayer(QWidget *parent = 0, Qt::WFlags f = 0);
     ~QMplayer();
 
-private:
     enum Screen
     {
         ScreenInit,
@@ -58,6 +57,7 @@ private:
         ScreenEncodingInProgress,
     };
 
+private:
     Screen screen;
     int maxScanLevel;
     int delTmpFiles;
