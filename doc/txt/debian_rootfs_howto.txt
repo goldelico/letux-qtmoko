@@ -58,7 +58,7 @@ rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
 /dev/mmcblk0p1 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
-tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
+#tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
 192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
 __END__
 cat > /media/card/etc/apt/apt.conf.d/99no-install-recommends << __END__
@@ -501,6 +501,8 @@ Step 11
 * Make jffs image
 
 * Copy your rootfs dir to /tmp/qtmoko-debian
+
+* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
 
 * Delete contents of boot, because for NAND it's not needed:
 
