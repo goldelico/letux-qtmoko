@@ -380,11 +380,11 @@ Step 7.7
 
 * Remove all doc - we dont have space for it
 
-rm -rf /media/card/usr/share/locale/*
-rm -rf /media/card/usr/share/doc/*
-rm -rf /media/card/usr/share/doc-base/*
-rm -rf /media/card/usr/share/info/*
-rm -rf /media/card/usr/share/man/*
+find /media/card/usr/share/locale/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc-base/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/info/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/man/ -type f -exec rm -f '{}' \;
 rm -rf /media/card/usr/share/sounds/alsa/*
 rm -rf /media/card/usr/share/ssh/blacklist*
 
