@@ -23,6 +23,7 @@ PROJECTS*=\
     3rdparty/applications/qmplayer \
     3rdparty/applications/qx \
     3rdparty/applications/qx_helper \
+    3rdparty/applications/gta02-gsm-bt-fix \
     3rdparty/applications/simplefm \
     3rdparty/applications/nerongps \
     3rdparty/applications/arora/src \
