@@ -44,13 +44,15 @@ public:
     virtual bool canSuspend() const;
     virtual bool suspend();
     virtual bool wake();
-private slots:
+private:
+    QProcess resumeScript;
 };
 
 QTOPIA_DEMAND_TASK(NeoSuspend, NeoSuspend);
 QTOPIA_TASK_PROVIDES(NeoSuspend, SystemSuspendHandler);
 
 NeoSuspend::NeoSuspend()
+    : resumeScript(this)
 {
 }
 
@@ -59,13 +61,22 @@ bool NeoSuspend::canSuspend() const
 /*    QPowerSource src( QLatin1String("DefaultBattery") );
     return !src.charging();
 */
-    return true;
+    /* Make sure resume script is finished */
+    bool ok = (resumeScript.state() == QProcess::NotRunning);
+    
+    if(!ok) {
+        qLog(PowerManagement) << "Cant suspend, resume script is running, state=" << resumeScript.state();
+    }
+    
+    return ok;
 }
 
 bool NeoSuspend::suspend()
 {
     qLog(PowerManagement)<< __PRETTY_FUNCTION__;
-
+    
+    QProcess::execute("before-suspend.sh");
+    
     QFile powerStateFile("/sys/power/state");
     if( !powerStateFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
         qWarning()<<"File not opened";
@@ -100,5 +111,10 @@ bool NeoSuspend::wake()
         QtopiaIpcEnvelope("QPE/NetworkState", "updateNetwork()"); //might have changed
     }
 #endif
+
+    /* No waitForFinished after start, because we want the command to complete
+       in the background */
+    resumeScript.start("after-resume.sh");
+
     return true;
 }
