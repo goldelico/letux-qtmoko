@@ -139,7 +139,7 @@ LightSettings::LightSettings( QWidget* parent,  Qt::WFlags fl )
     b->brightness->setSingleStep( qMax(1,maxbright/16) );
     b->brightness->setPageStep( qMax(1,maxbright/16) );
 
-    currentMode = &lockMode;
+    currentMode = &batteryMode;
     applyMode();
 
     connect(b->powerSource, SIGNAL(currentIndexChanged(int)),
@@ -227,11 +227,6 @@ void LightSettings::saveConfig()
         currentMode = &externalMode;
     else
         currentMode = &batteryMode;
-
-    if(lockMode.suspend > 0)
-    {
-        currentMode = &lockMode;
-    }
     
     QSettings cfg("Trolltech","qpe");
     cfg.beginGroup("LockPower");
@@ -307,11 +302,11 @@ void LightSettings::applyBrightness()
 
 void LightSettings::powerTypeChanged(int index)
 {
-    PowerMode *newMode = &lockMode;
+    PowerMode *newMode = &batteryMode;
 
-    if(index == 1)
-        newMode = &batteryMode;
     if(index == 2)
+        newMode = &lockMode;
+    else
         newMode = &externalMode;
 
     /*  store everytime (so we can store from accept)   */
