@@ -26,7 +26,9 @@ class MainWindow : public QMainWindow
     void showPreferences();
 
   private:
+    QWidget *centralWidget;
     QTabWidget *tabs;
+    TerminalDisplay *firstDisplay;
     int _sessionCount;
     QAction *acNewSession;
     QAction *acCloseSession;
