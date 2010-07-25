@@ -1,3 +1,3 @@
 #!/bin/sh
-stty -F /dev/ttySAC1 raw
-gta02-gps gta02-agps-dump /var/cache/agpsdata < /dev/ttySAC1 > /dev/ttySAC1
+#stty -F /dev/ttySAC1 raw
+gta02-gps --setup-serial /dev/ttySAC1 --dump-agps /var/cache/agpsdata

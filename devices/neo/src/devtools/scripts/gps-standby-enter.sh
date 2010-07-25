@@ -1,2 +1,2 @@
 #!/bin/sh
-gta02-gps gta02-set-power fixnow > /dev/ttySAC1
+gta02-gps /dev/ttySAC1 --setup-serial --sleep
