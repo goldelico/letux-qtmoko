@@ -529,6 +529,14 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
 
 void AudioDeviceConnectionStatus::clickedConnectA2dp()
 {
+    if(!QFile::exists("/usr/lib/alsa-lib/libasound_module_pcm_bluetooth.so") &&
+        QMessageBox::question(this, tr("Install bluez-audio"), tr("Install bluez-audio?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        QProcess::execute("raptor", QStringList() << "-u" << "-i" << "bluez-audio");
+        QMessageBox::information(this, tr("Restart needed"), tr("You might need to restart your phone and maybe pair with the device again."));
+        return;
+    }
+  
     m_waitWidget->setText(tr("Connecting A2DP..."));
     m_waitWidget->show();
     QApplication::processEvents();
