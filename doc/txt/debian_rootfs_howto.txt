@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,xterm stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -58,7 +58,7 @@ rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
 /dev/mmcblk0p1 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
-tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
+#tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
 192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
 __END__
 cat > /media/card/etc/apt/apt.conf.d/99no-install-recommends << __END__
@@ -385,11 +385,11 @@ Step 7.7
 
 * Remove all doc - we dont have space for it
 
-rm -rf /media/card/usr/share/locale/*
-rm -rf /media/card/usr/share/doc/*
-rm -rf /media/card/usr/share/doc-base/*
-rm -rf /media/card/usr/share/info/*
-rm -rf /media/card/usr/share/man/*
+find /media/card/usr/share/locale/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc-base/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/info/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/man/ -type f -exec rm -f '{}' \;
 rm -rf /media/card/usr/share/sounds/alsa/*
 rm -rf /media/card/usr/share/ssh/blacklist*
 
@@ -506,6 +506,8 @@ Step 11
 * Make jffs image
 
 * Copy your rootfs dir to /tmp/qtmoko-debian
+
+* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
 
 * Delete contents of boot, because for NAND it's not needed:
 

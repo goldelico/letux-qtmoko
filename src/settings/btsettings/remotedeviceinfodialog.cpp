@@ -39,7 +39,8 @@
 #include <QListWidget>
 #include <QStringListModel>
 #include <QTimer>
-
+#include <QtDBus>
+#include <QProcess>
 
 //===================================================================
 
@@ -118,6 +119,11 @@ void ServicesDisplay::foundServices(const QBluetoothSdpQueryResult &result)
                     m_address,
                     QBluetooth::HandsFreeProfile,
                     QBluetoothSdpRecord::rfcommChannel(services[i]));
+        } else if (services[i].isInstance(QBluetooth::AdvancedAudioSinkProfile)) {
+            BtSettings::setAudioProfileChannel(
+                    m_address,
+                    QBluetooth::AdvancedAudioSinkProfile,
+                    1);     // fake value just to know a2dp is available
         }
     }
     m_serviceModel->setStringList(serviceNames);
@@ -303,6 +309,7 @@ protected slots:
 private slots:
     void clickedConnectHeadset();
     void clickedConnectHandsFree();
+    void clickedConnectA2dp();
     void clickedDisconnect();
 
     void audioGatewayConnected(bool success, const QString &msg);
@@ -313,16 +320,21 @@ private slots:
 
 private:
     QBluetoothAudioGateway *connectedGateway() const;
+    bool connectA2dp(QString, QString &);
+    template <class T> bool bluezCall(QString path, QString interface, QString method, QDBusReply<T> & reply, QString & log, QDBusConnection & dbc, const QVariant & arg1 = QVariant());
 
     QBluetoothAudioGateway *m_headsetGateway;
     QBluetoothAudioGateway *m_handsFreeGateway;
+    QString a2dpDbusPath;
 
     int m_headsetChannel;
     int m_handsFreeChannel;
+    int m_a2dpChannel;
 
     QLabel *m_connectionStatusLabel;
     QPushButton *m_connectHeadsetButton;
     QPushButton *m_connectHandsFreeButton;
+    QPushButton *m_connectA2dpButton;
     QPushButton *m_disconnectButton;
     QWaitWidget *m_waitWidget;
 };
@@ -331,9 +343,11 @@ AudioDeviceConnectionStatus::AudioDeviceConnectionStatus(QBluetoothLocalDevice *
     : DeviceConnectionStatus(local, parent),
       m_headsetGateway(new QBluetoothAudioGateway("BluetoothHeadset", this)),
       m_handsFreeGateway(new QBluetoothAudioGateway("BluetoothHandsfree", this)),
+      a2dpDbusPath(NULL),
       m_connectionStatusLabel(new QLabel),
       m_connectHeadsetButton(new QPushButton(tr("Connect headset"))),
       m_connectHandsFreeButton(new QPushButton(tr("Connect handsfree unit"))),
+      m_connectA2dpButton(new QPushButton(tr("Connect audio (A2DP)"))),
       m_disconnectButton(new QPushButton(tr("Disconnect"))),
       m_waitWidget(new QWaitWidget(this))
 {
@@ -343,6 +357,7 @@ AudioDeviceConnectionStatus::AudioDeviceConnectionStatus(QBluetoothLocalDevice *
     layout->addWidget(m_connectionStatusLabel);
     layout->addWidget(m_connectHeadsetButton);
     layout->addWidget(m_connectHandsFreeButton);
+    layout->addWidget(m_connectA2dpButton);
     layout->addWidget(m_disconnectButton);
 
     m_connectionStatusLabel->setWordWrap(true);
@@ -365,6 +380,9 @@ AudioDeviceConnectionStatus::AudioDeviceConnectionStatus(QBluetoothLocalDevice *
     connect(m_handsFreeGateway, SIGNAL(headsetDisconnected()),
             SLOT(headsetDisconnected()));
 
+    connect(m_connectA2dpButton, SIGNAL(clicked()),
+        SLOT(clickedConnectA2dp()));
+
     connect(m_disconnectButton, SIGNAL(clicked()), SLOT(clickedDisconnect()));
 }
 
@@ -376,23 +394,30 @@ void AudioDeviceConnectionStatus::setRemoteDevice(const QBluetoothAddress &addr)
             QBluetooth::HeadsetProfile);
     m_handsFreeChannel = BtSettings::audioProfileChannel(address(),
             QBluetooth::HandsFreeProfile);
+    m_a2dpChannel = BtSettings::audioProfileChannel(address(),
+            QBluetooth::AdvancedAudioSinkProfile);
 }
 
 void AudioDeviceConnectionStatus::updateConnectionStatus()
 {
     QBluetoothAudioGateway *gateway = connectedGateway();
-    if (gateway) {
+    bool a2dpConnected = QFile::exists("/etc/asound.conf");
+    if (gateway || a2dpConnected) {
         if (gateway == m_headsetGateway) {
             m_connectionStatusLabel->setText(tr("Connected to headset."));
         } else if (gateway == m_handsFreeGateway) {
             m_connectionStatusLabel->setText(tr("Connected to handsfree unit."));
+        } else if (a2dpConnected) {
+            m_connectionStatusLabel->setText(tr("Connected to A2DP."));
         }
+
         QFont f = m_connectionStatusLabel->font();
         f.setBold(true);
         m_connectionStatusLabel->setFont(f);
 
         m_connectHeadsetButton->hide();
         m_connectHandsFreeButton->hide();
+        m_connectA2dpButton->hide();
         m_disconnectButton->show();
 
     } else {
@@ -407,6 +432,7 @@ void AudioDeviceConnectionStatus::updateConnectionStatus()
         } else {
             m_connectHeadsetButton->setVisible(m_headsetChannel != -1);
             m_connectHandsFreeButton->setVisible(m_handsFreeChannel != -1);
+            m_connectA2dpButton->setVisible(m_a2dpChannel != -1);
             m_connectionStatusLabel->setText(QObject::tr("Not connected."));
         }
 
@@ -429,6 +455,101 @@ void AudioDeviceConnectionStatus::clickedConnectHeadset()
 void AudioDeviceConnectionStatus::clickedConnectHandsFree()
 {
     connectAudioGateway(m_handsFreeGateway, m_handsFreeChannel);
+}
+
+template <class T>
+bool AudioDeviceConnectionStatus::bluezCall(QString path, QString interface, QString method, QDBusReply<T> & reply, QString & log, QDBusConnection & dbc, const QVariant & arg1)
+{
+    QDBusInterface iface("org.bluez", path, interface, dbc);
+
+    log += interface + "." + method + "() ";
+
+    if (!iface.isValid()) {
+        log += "invalid interface";
+        return false;
+    }
+    reply = iface.call(method, arg1);
+
+    if (!reply.isValid()) {
+        log += "failed: " + reply.error().message();
+        return false;
+    }
+    log += "ok\n";
+    return true;
+}
+
+bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
+{
+    QDBusConnection dbc = QDBusConnection::systemBus();
+    if (!dbc.isConnected()) {
+        log += "dbus not connected";
+        return false;
+    }
+
+    QDBusReply<QString> activateReply;
+    QDBusReply<QString> createReply;
+    QDBusReply<void> connectReply;
+
+    bool ok =
+        bluezCall("/org/bluez",                       "org.bluez.Manager",       "ActivateService", activateReply, log, dbc, "audio") &&
+        bluezCall("/org/bluez/audio",                 "org.bluez.audio.Manager", "CreateDevice",    createReply,   log, dbc, addr) &&
+        bluezCall(a2dpDbusPath = createReply.value(), "org.bluez.audio.Sink",    "Connect",         connectReply,  log, dbc);
+
+    if(!ok) {
+        return false;
+    } 
+        
+    // Create asound.conf
+    QFile f("/etc/asound.conf");
+    if(!f.open(QFile::WriteOnly)) {
+        log += "failed to open " + f.fileName();
+        return false;
+    }
+    f.write(QString("# %1\n").arg(a2dpDbusPath).toAscii());
+    f.write(QString(
+"pcm.!default {\n"
+"   type plug\n"
+"   slave.pcm \"bluetooth\"\n"
+"}\n"
+"\n"
+"ctl.mixer0 {\n"
+"   type hw\n"
+"   card 0\n"
+"}\n"
+"\n"
+"pcm.bluetooth {\n"
+"       type bluetooth\n"
+"       device \"%1\"\n"
+"       profile \"auto\"\n"
+"}\n").arg(addr).toAscii());
+    f.close();
+    
+    return true;
+}
+
+void AudioDeviceConnectionStatus::clickedConnectA2dp()
+{
+    if(!QFile::exists("/usr/lib/alsa-lib/libasound_module_pcm_bluetooth.so") &&
+        QMessageBox::question(this, tr("Install bluez-audio"), tr("Install bluez-audio?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
+    {
+        QProcess::execute("raptor", QStringList() << "-u" << "-i" << "bluez-audio");
+        QMessageBox::information(this, tr("Restart needed"), tr("You might need to restart your phone and maybe pair with the device again."));
+        return;
+    }
+  
+    m_waitWidget->setText(tr("Connecting A2DP..."));
+    m_waitWidget->show();
+    QApplication::processEvents();
+    
+    QString log;
+    bool ok = connectA2dp(address().toString(), log);
+    qLog(Bluetooth) << log;
+    m_waitWidget->hide();
+    updateConnectionStatus();
+
+    if (!ok) {
+        QMessageBox::warning(this, tr("Connection failed"), log);
+    }
 }
 
 void AudioDeviceConnectionStatus::connectAudioGateway(QBluetoothAudioGateway *gateway, int channel)
@@ -470,13 +591,35 @@ void AudioDeviceConnectionStatus::clickedDisconnect()
 {
     qLog(Bluetooth) << "AudioDeviceConnectionStatus::clickedDisconnect()";
 
+    m_waitWidget->setText(tr("Disconnecting..."));
+    m_waitWidget->setCancelEnabled(false);
+    m_waitWidget->show();
+    
     QBluetoothAudioGateway *gateway = connectedGateway();
+    QFile f("/etc/asound.conf");
+    bool a2dpConnected = f.exists();
     if (gateway) {
-        m_waitWidget->setText(tr("Disconnecting..."));
-        m_waitWidget->setCancelEnabled(false);
-        m_waitWidget->show();
         gateway->disconnect();
+        return;
+    } else if (a2dpConnected) {
+        QApplication::processEvents();
+        if (a2dpDbusPath == NULL && f.open(QFile::ReadOnly)) {
+             a2dpDbusPath = f.readLine().replace("#", "").trimmed();
+             f.close();
+        }
+        f.remove();
+        QString log;
+        QDBusReply<void> reply;
+        QDBusConnection dbc = QDBusConnection::systemBus();
+        if (!dbc.isConnected()) {
+            log += "dbus not connected";
+        } else {
+            bluezCall(a2dpDbusPath, "org.bluez.audio.Sink", "Disconnect", reply, log, dbc);
+        }
+        qLog(Bluetooth) << log;
+        updateConnectionStatus();
     }
+    m_waitWidget->hide();
 }
 
 void AudioDeviceConnectionStatus::remoteAudioDeviceConnected(const QBluetoothAddress &addr)
@@ -633,9 +776,11 @@ void RemoteDeviceInfoDialog::setRemoteDevice(const QBluetoothRemoteDevice &devic
             QBluetooth::HeadsetProfile);
     int handsFreeChannel = BtSettings::audioProfileChannel(m_address,
             QBluetooth::HandsFreeProfile);
+    int a2dpChannel = BtSettings::audioProfileChannel(m_address,
+            QBluetooth::AdvancedAudioSinkProfile);
 
     DeviceConnectionStatus *statusWidget;
-    if (headsetChannel != -1 || handsFreeChannel != -1) {
+    if (headsetChannel != -1 || handsFreeChannel != -1 || a2dpChannel != -1) {
         if (!m_audioDeviceConnStatus)
             m_audioDeviceConnStatus = new AudioDeviceConnectionStatus(m_local);
         statusWidget = m_audioDeviceConnStatus;

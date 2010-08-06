@@ -13,3 +13,12 @@
 [submodule "src/3rdparty/applications/omhacks"]
 	path = src/3rdparty/applications/omhacks
 	url = git://github.com/radekp/omhacks.git
+[submodule "src/3rdparty/applications/gta02-gsm-bt-fix"]
+	path = src/3rdparty/applications/gta02-gsm-bt-fix
+	url = git://github.com/radekp/gta02-gsm-bt-fix.git
+[submodule "src/3rdparty/applications/gta02-agps"]
+	path = src/3rdparty/applications/gta02-agps
+	url = git://github.com/radekp/gta02-agps.git
+[submodule "src/3rdparty/applications/raptor"]
+	path = src/3rdparty/applications/raptor
+	url = git://github.com/radekp/raptor.git
