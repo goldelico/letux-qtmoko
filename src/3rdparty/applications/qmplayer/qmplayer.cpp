@@ -68,6 +68,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     if (dirch.exists(basedir2))
         ubasedir = basedir2;
 
+    tube = false;
     QStringList cl_args = QCoreApplication::arguments();
     int ac = cl_args.count();
     if (ac>1)
@@ -385,6 +386,8 @@ void QMplayer::okClicked()
             }
             else
             {
+                if (isPlaylist(list[mpargs.count()]))
+                    list.insert(mpargs.count(),"-playlist");
                 play(list);
             }
         }
@@ -793,6 +796,12 @@ scan_files:
     showScreen(QMplayer::ScreenInit);
 }
 
+bool QMplayer::isPlaylist(QString fileName)
+{
+    return (fileName.endsWith(".m3u", Qt::CaseInsensitive)
+            || fileName.endsWith(".pls", Qt::CaseInsensitive));
+}
+
 int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks)
 {
     if(abort)
@@ -819,7 +828,8 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
             || fileName.endsWith(".avi", Qt::CaseInsensitive)
             || fileName.endsWith(".mp4", Qt::CaseInsensitive)
             || fileName.endsWith(".wav", Qt::CaseInsensitive)
-            || fileName.endsWith(".flv", Qt::CaseInsensitive))
+            || fileName.endsWith(".flv", Qt::CaseInsensitive)
+            || isPlaylist(fileName))
         {
             if(fileName.contains(".qmplayer."))
             {
@@ -1612,8 +1622,14 @@ bool QMplayer::runCmd(QString cmd, int maxp)
 
 bool QMplayer::youtubeDl()
 {
+    ufname = "";
+    uload = 0;
+    ufinished = false;
+
+    QString cmd = "youtube-dl -t -c " + mplist[0];
     upr = new QProcess(this);
-    QString cmd = "youtube-dl -t -c " + mplist[0]; // -m
+    connect(upr, SIGNAL(readyRead()), this, SLOT(uReadyRead()));
+    connect(upr, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(uFinished(int, QProcess::ExitStatus)));
     upr->setWorkingDirectory(ubasedir);
     upr->start(cmd);
     if(!upr->waitForStarted())
@@ -1621,13 +1637,6 @@ bool QMplayer::youtubeDl()
         //QMessageBox::critical(this, tr("qmplayer"), tr("Unable to start") + " youtube-dl");
         return false;
     }
-
-    ufname = "";
-    uload = 0;
-    ufinished = false;
-    connect(upr, SIGNAL(readyRead()), this, SLOT(uReadyRead()));
-    connect(upr, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(uFinished(int, QProcess::ExitStatus)));
-
     return true;
 }
 
