@@ -497,8 +497,11 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
 
     if(!ok) {
         return false;
-    } 
-        
+    }
+
+    bool defaultDev = (QMessageBox::question(this, tr("A2DP"), tr("Make bluetooth default device?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes);
+    QString slave = (defaultDev ? "bluetooth" : "dmix");
+         
     // Create asound.conf
     QFile f("/etc/asound.conf");
     if(!f.open(QFile::WriteOnly)) {
@@ -509,7 +512,7 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
     f.write(QString(
 "pcm.!default {\n"
 "   type plug\n"
-"   slave.pcm \"bluetooth\"\n"
+"   slave.pcm \"%1\"\n"
 "}\n"
 "\n"
 "ctl.mixer0 {\n"
@@ -519,11 +522,15 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
 "\n"
 "pcm.bluetooth {\n"
 "       type bluetooth\n"
-"       device \"%1\"\n"
+"       device \"%2\"\n"
 "       profile \"auto\"\n"
-"}\n").arg(addr).toAscii());
+"}\n").arg(slave).arg(addr).toAscii());
     f.close();
-    
+
+    if(defaultDev) {
+        QMessageBox::information(this, tr("Problems expected"), tr("All programs will play through bluetooth now, but it could make problems with sound in gsm calls."));
+    }
+
     return true;
 }
 
