@@ -1,4 +1,4 @@
-THEMES=finxi
+THEMES=finxi finximod
 PROJECTS-=\
     games/qasteroids \
     games/parashoot \
