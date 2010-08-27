@@ -1478,27 +1478,27 @@ void QMplayer::setRes(int xy)
 bool QMplayer::installMplayer()
 {
 #ifdef QTOPIA
-//    QDir("/home/root").mkdir(".mplayer");
-//    QFile f("/home/root/.mplayer/config");
-//    f.open(QFile::WriteOnly);
-//    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
-//    f.close();
-//
-//    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
-//                    "/usr/bin/mplayer", "mplayer", false) &&
-//    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
-//                          QFile::WriteOwner | QFile::ExeOwner |
-//                          QFile::ReadUser | QFile::ExeUser |
-//                          QFile::ReadGroup | QFile::ExeGroup |
-//                          QFile::ReadOther | QFile::ExeOther);
-
-    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
-
     QDir("/home/root").mkdir(".mplayer");
     QFile f("/home/root/.mplayer/config");
     f.open(QFile::WriteOnly);
-    f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
     f.close();
+
+    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
+                    "/usr/bin/mplayer", "mplayer", false) &&
+    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
+                          QFile::WriteOwner | QFile::ExeOwner |
+                          QFile::ReadUser | QFile::ExeUser |
+                          QFile::ReadGroup | QFile::ExeGroup |
+                          QFile::ReadOther | QFile::ExeOther);
+
+//    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
+//
+//    QDir("/home/root").mkdir(".mplayer");
+//    QFile f("/home/root/.mplayer/config");
+//    f.open(QFile::WriteOnly);
+//    f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+//    f.close();
 
 #else
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
