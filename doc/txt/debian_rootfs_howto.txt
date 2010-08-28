@@ -439,33 +439,21 @@ cd /media/card/opt/qtmoko/lib
 rm -rf fonts
 ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
 
-Step 9
-======
+Step 9 - Linux kernel
+=====================
 
-* Compile kernel. I am now using andy-tracking and packaging config with
-  CONFIG_INPUT_JOYDEV=m
+* Sources for qtmoko are on github:
 
-* The bluetooth stuff must be compiled as modules otherwise bt does not work
-  for me.
+http://github.com/radekp/linux-2.6/
 
-* To reduce size of modules, you have to remove debugging information.
+* Checkout branch for your qtmoko version:
 
-find  . -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
+git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
 
-* After compiling, upload kernel with modules to neo, and add somewhere in
-  init scripts depmod command. It will update /lib/modules/xxx/modules.dep
-  otherwise modules wont load and neo will not work (no usb networking,
-  no alsa, etc...)
+* Compile kernel and make uboot image:
 
-* For recent openwrt kernels (not using now)
-
-1/ download and unpack linux-2.6.30.4.tar.bz from kernel.org
-2/ svn co svn://svn.openwrt.org/openwrt/trunk/target/linux/s3c24xx
-3/ copy files-2.6.30 on top of unpacked linux-2.6.30
-4/ apply all patches in patches-2.6.30
-5/ copy config-2.6.30 to .config
-5/ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
-
+make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
+make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm  modules_install INSTALL_MOD_PATH=GTA02
 /opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
 mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "QtMoko" -d linux.bin uImage-GTA02.bin
 
