@@ -111,6 +111,7 @@ __END__
 
 * Create /media/card/etc/fb.modes
 
+cat > /media/card/etc/fb.modes << __END__
 mode "vga"
     geometry 480 640 480 1280 16
     timings 40816 8 16 2 16 8 2
@@ -122,6 +123,8 @@ mode "qvga"
     timings 100000 8 16 2 16 8 2
     rgba 5/11,6/5,5/0,0/0
 endmode
+
+__END__
 
   Calling "fbset qvga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
   is needed for mplayer in 320x240 with correct colors.
@@ -455,7 +458,7 @@ git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm  modules_install INSTALL_MOD_PATH=GTA02
 /opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
-mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "QtMoko" -d linux.bin uImage-GTA02.bin
+mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v26" -d linux.bin uImage-GTA02.bin
 
 * Copy kernel to /media/card/boot
 
