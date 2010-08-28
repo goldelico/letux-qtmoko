@@ -457,6 +457,7 @@ git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
 
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm  modules_install INSTALL_MOD_PATH=GTA02
+find  GTA02/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
 /opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
 mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v26" -d linux.bin uImage-GTA02.bin
 
