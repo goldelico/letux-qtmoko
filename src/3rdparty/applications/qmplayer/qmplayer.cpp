@@ -1369,7 +1369,7 @@ void QMplayer::play(QStringList & args)
                             QMessageBox::question(this, tr("qmplayer"), tr("Use bluetooth headset?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes);
         }
     }
-    if(useBluetooth)
+    if(useBluetooth > 0)
     {
         args.insert(0, "alsa:device=bluetooth");
         args.insert(0, "-ao");
