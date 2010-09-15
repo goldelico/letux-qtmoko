@@ -35,6 +35,7 @@
 #include <qvaluespace.h>
 #include <qcommdevicesession.h>
 #include <QStringList>
+#include <QProcess>
 
 #include <bluetooth/bluetooth.h>
 #include <sys/socket.h>
@@ -425,6 +426,13 @@ void QBluetoothHandsfreeService::disconnect()
         delete m_data->m_client;
         m_data->m_client = 0;
         m_data->m_session->endSession();
+
+#ifdef QT_QWS_FICGTA01
+        // Stop GTA02 bluetooth fix, it might drain battery
+        qLog(Bluetooth) << "Stopping gta02-gsm-bt-fix";
+        QProcess::execute("gta02-gsm-bt-fix", QStringList() << "stop");
+#endif
+
         emit disconnected();
         return;
     }
@@ -460,6 +468,13 @@ void QBluetoothHandsfreeService::doDisconnect()
     m_data->m_remotePeer = QBluetoothAddress::invalid;
     m_data->m_interface->setValue("RemotePeer",
                                   QVariant::fromValue(m_data->m_remotePeer));
+                                  
+#ifdef QT_QWS_FICGTA01
+    // Stop GTA02 bluetooth fix, it might drain battery
+    qLog(Bluetooth) << "Stopping gta02-gsm-bt-fix";
+    QProcess::execute("gta02-gsm-bt-fix", QStringList() << "stop");
+#endif                                  
+
     emit disconnected();
 }
 
@@ -755,6 +770,12 @@ bool QBluetoothHandsfreeService::setupTty(QBluetoothRfcommSocket *socket, bool i
         m_data->m_interface->setValue("RemotePeer",
                                       QVariant::fromValue(m_data->m_remotePeer));
 
+#ifdef QT_QWS_FICGTA01
+        // Start GTA02 bluetooth fix, otherwise we got no sound 
+        qLog(Bluetooth) << "Starting gta02-gsm-bt-fix";
+        QProcess::execute("gta02-gsm-bt-fix", QStringList() << "start");
+#endif
+                                      
         if (incoming)
             emit newConnection(socketAddress);
         else

@@ -56,6 +56,7 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
 
     maxScanLevel = 0;
     delTmpFiles = -1;
+    useBluetooth = -1;
     process = NULL;
     tcpServer = NULL;
 
@@ -1353,9 +1354,28 @@ void QMplayer::newConnection()
     con->disconnectFromHost();
 }
 
-void QMplayer::play(QStringList const& args)
+void QMplayer::play(QStringList & args)
 {
     showScreen(QMplayer::ScreenPlay);
+
+    if(useBluetooth < 0)
+    {
+        QFile f("/etc/asound.conf");
+        if(f.exists() && f.open(QIODevice::ReadOnly | QIODevice::Text))
+        {
+            QByteArray text = f.readAll();
+            f.close();
+            useBluetooth = ((text.indexOf("pcm.bluetooth") >= 0) &&
+                            QMessageBox::question(this, tr("qmplayer"), tr("Use bluetooth headset?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes);
+        }
+    }
+    if(useBluetooth > 0)
+    {
+        args.insert(0, "alsa:device=bluetooth");
+        args.insert(0, "-ao");
+    }
+
+    PLAY:
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
@@ -1375,8 +1395,7 @@ void QMplayer::play(QStringList const& args)
            if(installMplayer())
            {
                QMessageBox::information(this, tr("qmplayer"), tr("MPlayer installed sucessfully"));
-               play(args);
-               return;
+               goto PLAY;
            }
            QMessageBox::warning(this, tr("qmplayer"), tr("Failed to install MPlayer"));
            showScreen(QMplayer::ScreenInit);
@@ -1459,27 +1478,27 @@ void QMplayer::setRes(int xy)
 bool QMplayer::installMplayer()
 {
 #ifdef QTOPIA
-//    QDir("/home/root").mkdir(".mplayer");
-//    QFile f("/home/root/.mplayer/config");
-//    f.open(QFile::WriteOnly);
-//    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
-//    f.close();
-//
-//    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
-//                    "/usr/bin/mplayer", "mplayer", false) &&
-//    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
-//                          QFile::WriteOwner | QFile::ExeOwner |
-//                          QFile::ReadUser | QFile::ExeUser |
-//                          QFile::ReadGroup | QFile::ExeGroup |
-//                          QFile::ReadOther | QFile::ExeOther);
-
-    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
-
     QDir("/home/root").mkdir(".mplayer");
     QFile f("/home/root/.mplayer/config");
     f.open(QFile::WriteOnly);
-    f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+    f.write("vo=glamo\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
     f.close();
+
+    return download("http://72.249.85.183/radekp/qmplayer/download/mplayer",
+                    "/usr/bin/mplayer", "mplayer", false) &&
+    QFile::setPermissions("/usr/bin/mplayer", QFile::ReadOwner |
+                          QFile::WriteOwner | QFile::ExeOwner |
+                          QFile::ReadUser | QFile::ExeUser |
+                          QFile::ReadGroup | QFile::ExeGroup |
+                          QFile::ReadOther | QFile::ExeOther);
+
+//    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
+//
+//    QDir("/home/root").mkdir(".mplayer");
+//    QFile f("/home/root/.mplayer/config");
+//    f.open(QFile::WriteOnly);
+//    f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
+//    f.close();
 
 #else
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));

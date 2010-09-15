@@ -62,6 +62,7 @@ private:
     int maxScanLevel;
     int delTmpFiles;
     bool abort;
+    int useBluetooth;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -95,7 +96,7 @@ private:
     void scan();
     int scanDir(QString const& path, int level, int maxLevel, int min, int max, bool followSymLinks);
     void sharing();
-    void play(QStringList const& args);
+    void play(QStringList & args);
     void encode(QString filename);
     void setRes(int xy);
     bool installMplayer();
