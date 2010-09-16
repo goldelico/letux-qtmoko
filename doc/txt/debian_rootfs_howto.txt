@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xserver-xglamo,xfonts-base,x11-xserver-utils,matchbox,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,matchbox,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -58,6 +58,7 @@ rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
 /dev/mmcblk0p1 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
+none    /dev/pts         devpts  defaults                           0 0
 #tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
 192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
 __END__
@@ -236,6 +237,9 @@ nano /media/card/etc/init.d/qpe.sh
 
 case "$1" in
   start)
+	mknod /dev/ttySAC0 c 204 64 -m 660
+	mknod /dev/ttySAC1 c 204 65 -m 660
+	mknod /dev/ttySAC2 c 204 66 -m 660
 	rm -f /dev/input/mice
 	echo '1' > /proc/sys/kernel/printk
 	echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
@@ -396,6 +400,18 @@ find /media/card/usr/share/man/ -type f -exec rm -f '{}' \;
 rm -rf /media/card/usr/share/sounds/alsa/*
 rm -rf /media/card/usr/share/ssh/blacklist*
 
+* We need just 3 fonts
+
+cd /media/card/usr/share/fonts/truetype/ttf-dejavu/
+mv DejaVuSansCondensed-Bold.ttf 1
+mv DejaVuSansCondensed.ttf 2
+mv DejaVuSansMono.ttf 3
+rm *.ttf
+mv 1 DejaVuSansCondensed-Bold.ttf
+mv 2 DejaVuSansCondensed.ttf
+mv 3 DejaVuSansMono.ttf
+
+
 Step 8 - compile Qtopia
 =======================
 
@@ -468,7 +484,7 @@ mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v26
 * Copy kernel to /media/card/boot
 
 cd /media/card/boot
-echo "console=tty0 loglevel=3 rootdelay=1" > append-GTA02
+echo "console=tty0 loglevel=3 rootwait" > append-GTA02
 scp /home/radek/linux-2.6/GTA02/uImage-GTA02.bin root@192.168.0.202:/media/card/boot/uImage-GTA02.bin
 
 Step 9.5 - remove bash history
