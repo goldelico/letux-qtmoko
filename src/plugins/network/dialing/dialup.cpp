@@ -633,7 +633,7 @@ void DialupImpl::timerEvent( QTimerEvent* /*e*/)
                 }
                 if ( log.indexOf(QRegExp("\nNO DIALTONE"), logIndex)>=logIndex
                     || log.indexOf(QRegExp("\nNO CARRIER"), logIndex)>=logIndex
-                    || log.indexOf(QRegExp("\nERROR"), logIndex)>=logIndex
+//                    || log.indexOf(QRegExp("\nERROR"), logIndex)>=logIndex
                     || log.indexOf(QRegExp("\nBUSY"), logIndex)>=logIndex )
                 {
                     ifaceStatus = QtopiaNetworkInterface::Unavailable;

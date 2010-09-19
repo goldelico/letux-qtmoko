@@ -345,7 +345,7 @@ int DialupUI::writeSystemFiles()
         "ABORT \"NO DIALTONE\"\n" // No tr
         "ABORT \"BUSY\"\n" // No tr
         "TIMEOUT 30 \n" // No tr
-        "\"\" "; // No tr
+        "OK "; // No tr
 
     QString dial;
     if ( gprs ) {
