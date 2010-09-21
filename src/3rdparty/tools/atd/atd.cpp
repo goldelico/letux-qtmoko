@@ -41,6 +41,9 @@
 # include "greenphone.h"
 # define NO_LINUX_RTC
 # define BUGGY_RTC_SELECT
+#elif defined(QT_QWS_NEO)
+# define USE_WKALM
+# define DAEMON
 #else
 # define BROKEN_RTC_ALARM
 # define DAEMON
@@ -72,6 +75,9 @@ void waitfor(time_t t) {
   int nfds;
   fd_set afds;
   int setTime = 0; /*We don't have bool in C...*/
+#ifdef USE_WKALM
+    struct rtc_wkalrm wake = {0};
+#endif
 
 #ifdef DAEMON
   syslog(LOG_DEBUG, "waitfor %ld\n", t);
@@ -176,7 +182,23 @@ void waitfor(time_t t) {
     rtc_tm.tm_hour = tm->tm_hour;
 
 #ifndef NO_LINUX_RTC
+    #ifdef USE_WKALM
+    wake.time.tm_sec = tm->tm_sec;
+    wake.time.tm_min = tm->tm_min;
+    wake.time.tm_hour = tm->tm_hour;
+    wake.time.tm_mday = tm->tm_mday;
+    wake.time.tm_mon = tm->tm_mon;
+    wake.time.tm_year = tm->tm_year;
+    /* wday, yday, and isdst fields are unused by Linux */
+    wake.time.tm_wday = -1;
+    wake.time.tm_yday = -1;
+    wake.time.tm_isdst = -1;
+    wake.enabled = 1;
+
+    retval = ioctl(rtcfd, RTC_WKALM_SET, &wake);
+    #else
     retval = ioctl(rtcfd, RTC_ALM_SET, &rtc_tm);
+    #endif
     if (retval == -1) {
 #ifdef DAEMON
       syslog(LOG_ERR, "ioctl: %m\n");
@@ -192,7 +214,12 @@ void waitfor(time_t t) {
 
     /* Read the current alarm settings */
 #ifndef NO_LINUX_RTC
+    #ifdef USE_WKALM
+    retval = ioctl(rtcfd, RTC_WKALM_RD, &wake);
+    rtc_tm=wake.time;
+    #else
     retval = ioctl(rtcfd, RTC_ALM_READ, &rtc_tm);
+    #endif
     if (retval == -1) {
 #ifdef DAEMON
       syslog(LOG_ERR, "ioctl: %m\n");
