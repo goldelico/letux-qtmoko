@@ -88,7 +88,7 @@ void NeoCallProvider::cpiNotification( const QString& msg )
     // dir: 0 = mobile originated, 1 = mobile terminated, 2 = network initiaited mobile
     // originated call, 3 = redialing mobile originated
     uint posn = 5;
-    uint identifier = QAtUtils::parseNumber( msg, posn ) + 1000;
+    uint identifier = QAtUtils::parseNumber( msg, posn );
 
     uint status = QAtUtils::parseNumber( msg, posn );
     QAtUtils::skipField( msg, posn );
