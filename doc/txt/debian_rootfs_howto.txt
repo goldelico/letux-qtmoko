@@ -462,7 +462,7 @@ git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm  modules_install INSTALL_MOD_PATH=GTA02
 /opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
-mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v26" -d linux.bin uImage-GTA02.bin
+mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v28" -d linux.bin uImage-GTA02.bin
 
 * Copy kernel to /media/card/boot
 
@@ -490,22 +490,57 @@ umount /media/card
 cd /media/card
 tar -czvf ../qtmoko-debian.tar.gz .
 
-Step 11
-=======
-
-* Make jffs image
+Step 11 - make jffs2 and ubifs images
+=====================================
 
 * Copy your rootfs dir to /tmp/qtmoko-debian
-
-* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
 
 * Delete contents of boot, because for NAND it's not needed:
 
 rm -rf /tmp/qtmoko-debian/boot/*
 
+* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+
 * Make jffs2 image:
 
 mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/tmp/qtmoko-debian
+
+* Ubifs image:
+
+* Comment back the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+
+* Edit the mount for root in /tmp/qtmoko-debian/etc/fstab so that it reads:
+
+rootfs  /                auto    defaults,no_chk_data_crc,bulk_read 0 1
+
+* Create config for ubinize and create the resulting image:
+
+cat > ubinize.cfg <<__END__
+[ubifs]
+mode=ubi
+image=qtmoko-debian.ubifs
+vol_id=0
+vol_size=230MiB
+vol_type=dynamic
+vol_name=om-gta02-rootfs
+vol_flags=autoresize
+__END__
+
+mkfs.ubifs -r /tmp/qtmoko-debian -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 2047
+ubinize -o qtmoko-debian.ubi -m 2048 -p 128KiB -s 2048 -O 2048 ubinize.cfg
+rm qtmoko-debian.ubifs
+
+
+Step 12 - qi for booting ubi image
+==================================
+
+* Standard qi from openmoko git has jffs2 hardcoded as root file system. If your
+  want to use ubi image you need patched qi.
+
+git clone git://github.com/radekp/qi.git
+cd qi
+git checkout qtmoko-v28
+make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- CPU=s3c2442
 
 
 Boot speedup
