@@ -6,12 +6,16 @@ AppRunningScreen::AppRunningScreen()
 
 void AppRunningScreen::showScreen()
 {
+#ifdef QTOPIA
+    // QtopiaApplication::setInputMethodHint(this, QtopiaApplication::AlwaysOn); // <-- enable later
+#endif
     showMaximized();
     enterFullScreen();
 }
 
 bool AppRunningScreen::event(QEvent *event)
 {
+#ifdef QTOPIA
     if(event->type() == QEvent::WindowDeactivate)
     {
         pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
@@ -25,6 +29,7 @@ bool AppRunningScreen::event(QEvent *event)
         raise();
         setWindowTitle(title);
     }
+#endif
     return QWidget::event(event);
 }
 
@@ -39,6 +44,16 @@ void AppRunningScreen::paintEvent(QPaintEvent *)
     {
         p.drawText(this->rect(), Qt::AlignCenter, tr("press AUX to leave"));
     }
+}
+
+void AppRunningScreen::keyPressEvent(QKeyEvent *e)
+{
+    emit keyPress(e);
+}
+
+void AppRunningScreen::keyReleaseEvent(QKeyEvent *e)
+{
+    emit keyRelease(e);
 }
 
 void AppRunningScreen::enterFullScreen()

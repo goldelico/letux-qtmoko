@@ -34,6 +34,7 @@
 #include <QSoftMenuBar>
 #endif
 #include "rotate.h"
+#include "fakekey.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <linux/vt.h>
@@ -76,6 +77,8 @@ private:
     //QPushButton *bQuit;
     QProcess *process;
     QProcess *xprocess;
+    Display *dpy;
+    FakeKey *fakeKey;
     RotateHelper *rotHelper;
     QString appName;
     bool rotate;
@@ -106,6 +109,8 @@ private slots:
     void okClicked();
     //void tangoClicked();
     //void scummvmClicked();
+    void keyPress(QKeyEvent *);
+    void keyRelease(QKeyEvent *);
     void quitClicked();
     void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);

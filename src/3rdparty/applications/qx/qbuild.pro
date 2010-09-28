@@ -2,7 +2,7 @@ TEMPLATE=app
 TARGET=qx
 
 CONFIG+=qtopia
-LIBS+=-lX11
+LIBS+=-lX11 -lXtst
 DEFINES+=QTOPIA
 
 # I18n info
@@ -26,7 +26,8 @@ HEADERS=\
     DesktopScanner.h \
     AppSettings.h \
     AppInfo.h \
-    rotate.h
+    rotate.h \
+    fakekey.h \
 
 SOURCES=\
     main.cpp\
@@ -36,7 +37,8 @@ SOURCES=\
     DesktopScanner.cpp \
     AppSettings.cpp \
     AppInfo.cpp \
-    rotate.cpp
+    rotate.cpp \
+    libfakekey.c
 
 # Install rules
 target [

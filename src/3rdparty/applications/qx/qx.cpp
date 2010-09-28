@@ -161,6 +161,8 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     appRunScr = new AppRunningScreen();
     connect(appRunScr, SIGNAL(deactivated()), this, SLOT(pauseApp()));
+    connect(appRunScr, SIGNAL(keyPress(QKeyEvent *)), this, SLOT(keyPress(QKeyEvent *)));
+    connect(appRunScr, SIGNAL(keyRelease(QKeyEvent *)), this, SLOT(keyRelease(QKeyEvent *)));
 
     process = NULL;
     xprocess = NULL;
@@ -295,6 +297,11 @@ void QX::showScreen(QX::Screen scr)
 
 void QX::stopX()
 {
+    if(dpy != NULL)
+    {
+        XCloseDisplay(dpy);
+        dpy = NULL;
+    }
     if(xprocess == NULL)
     {
         return;
@@ -342,7 +349,6 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         }
     }
 
-    Display *dpy;
     for(int i = 0; i < 3; i++)
     {
         dpy = XOpenDisplay(NULL);
@@ -359,7 +365,7 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         QMessageBox::critical(this, tr("QX"), tr("Unable to connect to X server"));
         return;
     }
-    XCloseDisplay(dpy);
+    fakeKey = fakekey_init(dpy);
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
@@ -419,6 +425,41 @@ void QX::resumeClicked()
     //if (screen == QX::ScreenPaused)
     resumeApp();
 }
+
+void QX::keyPress(QKeyEvent *e)
+{
+    QString text = e->text();
+    if(text.length() > 0)
+    {
+        QByteArray buf = text.toUtf8();
+        fakekey_press(fakeKey, (unsigned char *)(buf.constData()), buf.length(), 0);
+        return;
+    }
+    // See keysymdef.h for KeySym values
+    KeySym sym = -1;
+    switch(e->key())
+    {
+    case Qt::Key_Left:
+        sym = 0xff51;
+        break;
+    case Qt::Key_Right:
+        sym = 0xff53;
+        break;
+    case Qt::Key_Up:
+        sym = 0xff52;
+        break;
+    case Qt::Key_Down:
+        sym = 0xff54;
+        break;
+    }
+    fakekey_press_keysym(fakeKey, sym, 0);
+}
+
+void QX::keyRelease(QKeyEvent *)
+{
+    fakekey_release(fakeKey);
+}
+
 
 /*
 void QX::tangoClicked()
