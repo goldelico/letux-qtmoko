@@ -35,12 +35,12 @@
 #endif
 #include "rotate.h"
 #include "fakekey.h"
+#include "wm.h"
 #include <unistd.h>
 #include <fcntl.h>
 #include <linux/vt.h>
 #include <sys/ioctl.h>
 #include <X11/Xlib.h>
-
 
 class QX : public QWidget
 {
@@ -79,10 +79,14 @@ private:
     QProcess *xprocess;
     Display *dpy;
     FakeKey *fakeKey;
+    QTimer *wmTimer;
     RotateHelper *rotHelper;
     QString appName;
     bool rotate;
     bool terminating;
+    bool wm;
+    bool kbd;
+    bool fullscreen;
 #if QTOPIA
     QtopiaApplication::PowerConstraint powerConstraint;
 #endif
@@ -111,6 +115,7 @@ private slots:
     //void scummvmClicked();
     void keyPress(QKeyEvent *);
     void keyRelease(QKeyEvent *);
+    void processWmEvents();
     void quitClicked();
     void resumeApp();
     void processFinished(int exitCode, QProcess::ExitStatus exitStatus);

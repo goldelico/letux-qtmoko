@@ -4,13 +4,21 @@ AppRunningScreen::AppRunningScreen()
 {
 }
 
-void AppRunningScreen::showScreen()
+void AppRunningScreen::showScreen(bool fullscreen, bool kbd)
 {
 #ifdef QTOPIA
-    // QtopiaApplication::setInputMethodHint(this, QtopiaApplication::AlwaysOn); // <-- enable later
+    QtopiaApplication::setInputMethodHint
+            (this, kbd ?
+             QtopiaApplication::AlwaysOn :
+             QtopiaApplication::AlwaysOff);
+#else
+    Q_UNUSED(kbd);
 #endif
     showMaximized();
-    enterFullScreen();
+    if(fullscreen)
+    {
+        enterFullScreen();
+    }
 }
 
 bool AppRunningScreen::event(QEvent *event)
@@ -54,6 +62,11 @@ void AppRunningScreen::keyPressEvent(QKeyEvent *e)
 void AppRunningScreen::keyReleaseEvent(QKeyEvent *e)
 {
     emit keyRelease(e);
+}
+
+void AppRunningScreen::resizeEvent(QResizeEvent *)
+{
+    //qDebug() << e->size().width() << "x" << e->size().height();
 }
 
 void AppRunningScreen::enterFullScreen()

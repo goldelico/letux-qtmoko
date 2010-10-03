@@ -28,6 +28,7 @@ HEADERS=\
     AppInfo.h \
     rotate.h \
     fakekey.h \
+    wm.h
 
 SOURCES=\
     main.cpp\
@@ -38,7 +39,8 @@ SOURCES=\
     AppSettings.cpp \
     AppInfo.cpp \
     rotate.cpp \
-    libfakekey.c
+    libfakekey.c \
+    wm.cpp
 
 # Install rules
 target [

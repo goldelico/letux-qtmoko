@@ -9,6 +9,7 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QDesktopWidget>
+#include <QDebug>
 #ifdef QTOPIA
 #include <QtopiaApplication>
 #endif
@@ -23,7 +24,7 @@ class AppRunningScreen : public QWidget
 
 public:
     AppRunningScreen();
-    void showScreen();
+    void showScreen(bool fullscreen, bool kbd);
     QPixmap pixmap;
 
 signals:
@@ -36,6 +37,7 @@ protected:
     void paintEvent(QPaintEvent *);
     void keyPressEvent(QKeyEvent *);
     void keyReleaseEvent(QKeyEvent *);
+    void resizeEvent(QResizeEvent *);
     void enterFullScreen();
 };
 

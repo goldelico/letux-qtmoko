@@ -14,11 +14,14 @@ SOURCES += main.cpp \
     AppSettings.cpp \
     DesktopScanner.cpp \
     rotate.cpp \
-    libfakekey.c
+    libfakekey.c \
+    wm.cpp
 HEADERS += qx.h \
     apprunningscreen.h \
     AppInfo.h \
     AppSettings.h \
     DesktopScanner.h \
     rotate.h \
-    fakekey.h
+    fakekey.h \
+    config.h \
+    wm.h
