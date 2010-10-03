@@ -3,6 +3,7 @@
 # -------------------------------------------------
 TARGET = qx
 TEMPLATE = app
+LIBS += -lXtst
 QT += core \
     gui \
     network
@@ -12,10 +13,15 @@ SOURCES += main.cpp \
     AppInfo.cpp \
     AppSettings.cpp \
     DesktopScanner.cpp \
-    rotate.cpp
+    rotate.cpp \
+    libfakekey.c \
+    wm.cpp
 HEADERS += qx.h \
     apprunningscreen.h \
     AppInfo.h \
     AppSettings.h \
     DesktopScanner.h \
-    rotate.h
+    rotate.h \
+    fakekey.h \
+    config.h \
+    wm.h

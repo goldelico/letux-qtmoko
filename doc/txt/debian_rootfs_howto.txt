@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,matchbox,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,udev,procps,netbase,nano,module-init-tools,wget,dropbear,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -276,21 +276,22 @@ tail -n 100 /var/log/messages
 
 chmod +x /media/card/sbin/logread
 
-Step 7.3 - terminal.sh
-======================
+Step 7.3 - xterm desktop file
+=============================
 
-* This is shell script that starts xterm with matchbox keyboard
+* Xterm does not have .desktop file by default, but we want to launch it easily
+  from QX:
 
-nano /media/card/bin/terminal.sh
+cat > /media/card/usr/share/applications/xterm.desktop << __END__
+[Desktop Entry]
+Name=xterm
+Comment=x terminal emulator 
+Exec=xterm
+Type=Application
+Icon=xterm-color_48x48.xpm
+Categories=System;TerminalEmulator
 
-#!/bin/sh
-matchbox-window-manager &
-sleep 5
-matchbox-keyboard &
-xterm
-
-
-chmod +x /media/card/bin/terminal.sh
+__END__
 
 Step 7.4 - wpa_supplicant
 =========================

@@ -123,7 +123,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     BuildMenu();
     favouritesAction->setChecked(true);
 
-    lineEdit = new QLineEdit("terminal.sh", this);
+    lineEdit = new QLineEdit("xterm", this);
 
     bOk = new QPushButton(this);
     bOk->setMinimumWidth(100);
@@ -161,10 +161,14 @@ QX::QX(QWidget *parent, Qt::WFlags f)
 
     appRunScr = new AppRunningScreen();
     connect(appRunScr, SIGNAL(deactivated()), this, SLOT(pauseApp()));
+    connect(appRunScr, SIGNAL(keyPress(QKeyEvent *)), this, SLOT(keyPress(QKeyEvent *)));
+    connect(appRunScr, SIGNAL(keyRelease(QKeyEvent *)), this, SLOT(keyRelease(QKeyEvent *)));
 
     process = NULL;
     xprocess = NULL;
     rotHelper = new RotateHelper(this, 0);
+    wmTimer = new QTimer(this);
+    connect(wmTimer, SIGNAL(timeout()), this, SLOT(processWmEvents()));
     screen = QX::ScreenMain;
 #if QTOPIA
     powerConstraint = QtopiaApplication::Disable;
@@ -246,7 +250,7 @@ void QX::showScreen(QX::Screen scr)
     }
     if(scr >= QX::ScreenFullscreen && this->screen < QX::ScreenFullscreen)
     {
-        appRunScr->showScreen();
+        appRunScr->showScreen(fullscreen, kbd);
         if(rotate)
         {
             //system("xrandr -o 1");
@@ -295,6 +299,16 @@ void QX::showScreen(QX::Screen scr)
 
 void QX::stopX()
 {
+    if(dpy != NULL)
+    {
+        XCloseDisplay(dpy);
+        dpy = NULL;
+    }
+    if(wm)
+    {
+        wmTimer->stop();
+        wm_stop();
+    }
     if(xprocess == NULL)
     {
         return;
@@ -342,7 +356,6 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         }
     }
 
-    Display *dpy;
     for(int i = 0; i < 3; i++)
     {
         dpy = XOpenDisplay(NULL);
@@ -359,7 +372,29 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         QMessageBox::critical(this, tr("QX"), tr("Unable to connect to X server"));
         return;
     }
-    XCloseDisplay(dpy);
+    fakeKey = fakekey_init(dpy);
+
+    showScreen(QX::ScreenRunning);
+    QApplication::processEvents();
+
+    if(wm)
+    {
+        // Hack - if not in fullscreen we want apps to be started below qtopia
+        // status bar
+        int top = fullscreen ? 0 : 80;
+        int width = appRunScr->width();
+        int height = appRunScr->height();
+
+        if(kbd)
+        {
+            height -= 164;      // hack: keyboard height - how to get correct size?
+        }
+
+        //qDebug() << " top=" << top << " appRunScr size: " << width << "x" << height;
+
+        wm_start(dpy, 0, top, width, height);
+        wmTimer->start(10);
+    }
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
@@ -375,8 +410,11 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         QMessageBox::critical(this, tr("QX"), tr("Unable to start") + " " + filename);
         return;
     }
+}
 
-    showScreen(QX::ScreenRunning);
+void QX::processWmEvents()
+{
+    wm_process_events();
 }
 
 void QX::pauseApp()
@@ -389,6 +427,7 @@ void QX::pauseApp()
     {
         system("xrandr -o 0");
     }
+    wmTimer->stop();
 
     system(QString("kill -STOP %1").arg(process->pid()).toAscii());
     if(xprocess)
@@ -405,6 +444,7 @@ void QX::resumeApp()
         system(QString("kill -CONT %1").arg(xprocess->pid()).toAscii());
     }
     system(QString("kill -CONT %1").arg(process->pid()).toAscii());
+    wmTimer->start(10);
     showScreen(QX::ScreenRunning);
 }
 
@@ -419,6 +459,41 @@ void QX::resumeClicked()
     //if (screen == QX::ScreenPaused)
     resumeApp();
 }
+
+void QX::keyPress(QKeyEvent *e)
+{
+    QString text = e->text();
+    if(text.length() > 0)
+    {
+        QByteArray buf = text.toUtf8();
+        fakekey_press(fakeKey, (unsigned char *)(buf.constData()), buf.length(), 0);
+        return;
+    }
+    // See keysymdef.h for KeySym values
+    KeySym sym = -1;
+    switch(e->key())
+    {
+    case Qt::Key_Left:
+        sym = 0xff51;
+        break;
+    case Qt::Key_Right:
+        sym = 0xff53;
+        break;
+    case Qt::Key_Up:
+        sym = 0xff52;
+        break;
+    case Qt::Key_Down:
+        sym = 0xff54;
+        break;
+    }
+    fakekey_press_keysym(fakeKey, sym, 0);
+}
+
+void QX::keyRelease(QKeyEvent *)
+{
+    fakekey_release(fakeKey);
+}
+
 
 /*
 void QX::tangoClicked()
@@ -508,21 +583,35 @@ void QX::launch_clicked()
     //if (prof.qvga) { }
 
     QString cmd = entry.exec;
+    this->wm = prof.wm;
+    this->kbd = prof.kbd;
+    this->fullscreen = prof.fullscreen;
 
-    if ((prof.wm) || (prof.kbd))
+    if (prof.matchbox)
     {
-        QString script = "/tmp/.QX_app_launcher.sh";
-        QFile f(script);
-        if (f.open(QIODevice::WriteOnly))
+        if(!QFile::exists("/usr/bin/matchbox-window-manager") &&
+           QMessageBox::question(this, "qx", tr("Install matchbox?"),
+                                 QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
         {
-            f.write("matchbox-window-manager &\n");
-            f.write("sleep 5\n");
-            if (prof.kbd)
-                f.write("matchbox-keyboard &\n");
-            f.write(entry.exec.toUtf8());
-            f.close();
+            QProcess::execute("raptor", QStringList() << "-u" << "-i" << "matchbox");
         }
-        cmd = "sh " + script;
+
+        if(prof.wm || prof.kbd)
+        {
+            QString script = "/tmp/.QX_app_launcher.sh";
+            QFile f(script);
+            if (f.open(QIODevice::WriteOnly))
+            {
+                f.write("matchbox-window-manager &\n");
+                f.write("sleep 5\n");
+                if (prof.kbd)
+                    f.write("matchbox-keyboard &\n");
+                f.write(entry.exec.toUtf8());
+                f.close();
+            }
+            cmd = "sh " + script;
+            this->wm = this->kbd = false;
+        }
     }
 
     QString applabel = "<b>"+entry.name+"</b><br/>"+entry.exec;
