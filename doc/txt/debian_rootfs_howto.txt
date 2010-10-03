@@ -226,6 +226,7 @@ case "$1" in
 	rm -f /dev/input/mice
 	echo '1' > /proc/sys/kernel/printk
 	echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
+	echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
 	rm -rf /var/run/ppp
 	mkdir /var/run/ppp
 	mkdir -p /var/cache/apt/archives/partial
@@ -234,7 +235,7 @@ case "$1" in
 	;;
   stop)
 	rm -f /tmp/restart-qtopia
-	killall -q qpe atd qx_helper quicklauncher mediaserver mediaplayer sipagent
+	killall -q qpe atd quicklauncher mediaserver mediaplayer sipagent
 	;;
   restart)
 	/etc/init.d/qpe.sh stop
@@ -243,7 +244,6 @@ case "$1" in
   *)
 	touch /tmp/restart-qtopia
 	while [ -e /tmp/restart-qtopia ]; do
-	qx_helper &
 	qpe 2>&1 | logger -t 'Qtopia'
 	if [ -e /tmp/restart-qtopia-qvga ]; then
 		rm -rf /tmp/restart-qtopia-qvga

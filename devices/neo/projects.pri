@@ -22,7 +22,6 @@ PROJECTS*=\
     3rdparty/applications/screenshot \
     3rdparty/applications/qmplayer \
     3rdparty/applications/qx \
-    3rdparty/applications/qx_helper \
     3rdparty/applications/gta02-gsm-bt-fix \
     3rdparty/applications/gta02-agps/c \
     3rdparty/applications/simplefm \
