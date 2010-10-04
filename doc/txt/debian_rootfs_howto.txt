@@ -290,6 +290,7 @@ Step 7.3 - xterm desktop file
 * Xterm does not have .desktop file by default, but we want to launch it easily
   from QX:
 
+mkdir -p /media/card/usr/share/applications
 cat > /media/card/usr/share/applications/xterm.desktop << __END__
 [Desktop Entry]
 Name=xterm
@@ -404,11 +405,9 @@ sudo tar xzvpf arm920t-eabi.tgz
 
 mkdir build
 cd build
-../qtmoko/configure -device neo
+../qtmoko/configure -device neo -force-build-qt
 make
 make install
-
-* In case of errors you might try -force-build-qt argument.
 
 * Tar build
 
@@ -423,7 +422,7 @@ git checkout translations
 
   and tell configure (in build dir) which languages you want
 
-../qtmoko/configure -device neo -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
+../qtmoko/configure -device neo -force-build-qt -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
 
   and rebuild all
 
