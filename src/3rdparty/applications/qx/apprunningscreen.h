@@ -9,6 +9,10 @@
 #include <QMouseEvent>
 #include <QTimer>
 #include <QDesktopWidget>
+#include <QDebug>
+#ifdef QTOPIA
+#include <QtopiaApplication>
+#endif
 
 // This is fullscreen dialog displayed when X application is running. We need
 // to avoid any Qtopia drawing when X app is running so that it's screen is not
@@ -20,15 +24,20 @@ class AppRunningScreen : public QWidget
 
 public:
     AppRunningScreen();
-    void showScreen();
+    void showScreen(bool fullscreen, bool kbd);
     QPixmap pixmap;
 
 signals:
     void deactivated();
+    void keyPress(QKeyEvent *);
+    void keyRelease(QKeyEvent *);
 
 protected:
     bool event(QEvent *);
     void paintEvent(QPaintEvent *);
+    void keyPressEvent(QKeyEvent *);
+    void keyReleaseEvent(QKeyEvent *);
+    void resizeEvent(QResizeEvent *);
     void enterFullScreen();
 };
 
