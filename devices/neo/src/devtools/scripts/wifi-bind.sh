@@ -1,2 +1,2 @@
 #!/bin/sh
-echo glamo-mci.0 > /sys/bus/platform/drivers/glamo-mci/bind
+echo s3c2440-sdi > /sys/bus/platform/drivers/s3c-sdi/bind
