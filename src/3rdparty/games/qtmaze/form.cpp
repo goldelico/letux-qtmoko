@@ -142,7 +142,7 @@ void Form::BumpVibrate(double speed)
     //if (k>VIB_TRESHHOLD)
     if (v>MIN_BUMP_SPEED)
     {
-        BYTE vlevel = (BYTE)(k*255);
+        BYTE vlevel = (BYTE)(k*63);
         set_vibro(vlevel);
     }
 }
