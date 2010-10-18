@@ -213,23 +213,6 @@ static void gpsPower(const char *powerStr)
     f.close();
 }
 
-static void switchToVt4()
-{
-    int fd;
-
-    if((fd = open("/dev/tty4", O_RDWR|O_NDELAY, 0)) < 0)
-    {
-        perror("QX: Cannot open /dev/tty4");
-        return;
-    }
-
-    if(ioctl(fd, VT_ACTIVATE, 4) != 0)
-    {
-        fprintf(stderr, "QX: VT_ACTIVATE failed\n");
-    }
-
-    close(fd);
-}
 #endif
 
 void QX::showScreen(QX::Screen scr)
@@ -324,9 +307,6 @@ void QX::stopX()
     }
     delete(xprocess);
     xprocess = NULL;
-#ifdef QTOPIA
-    switchToVt4();  // switch to vt4 which has cursor disabled
-#endif
 }
 
 void QX::runApp(QString filename, QString applabel, bool rotate)
@@ -344,7 +324,7 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
         QStringList args;
         args.append("-hide-cursor");
-        args.append("vt4");
+        args.append("vt1");
         args.append("-dpi");
         args.append("128");
         xprocess->start("X", args);
