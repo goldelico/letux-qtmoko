@@ -363,7 +363,7 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         // status bar
         int top = fullscreen ? 0 : 80;
         int width = appRunScr->width();
-        int height = appRunScr->height();
+        int height = 640 - top;
 
         if(kbd)
         {
