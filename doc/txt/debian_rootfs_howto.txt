@@ -23,7 +23,7 @@ apt-get install cdebootstrap
 Step 1
 ======
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,dropbear,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,dropbear,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,xterm,timeout stable /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -173,6 +173,21 @@ chroot /media/card
 update-rc.d -f klogd remove
 update-rc.d -f sysklogd remove
 exit
+
+Step 4.8 - fix GPRS stability
+=============================
+
+* Freerunner has problem with GPRS stability. This will limit max speed on ppp
+insterface to 1000 bytes/s, with faster speed calypso crashes. For more info
+see http://docs.openmoko.org/trac/ticket/2264
+
+cat > /media/card/etc/ppp/ip-up.d/09lindi-tc << __END__
+#!/bin/sh
+/sbin/tc qdisc add dev ppp0 root tbf rate 7kbit latency 4500ms burst 3200
+
+__END__
+
+chmod +x /media/card/etc/ppp/ip-up.d/09lindi-tc
 
 
 Step 5
