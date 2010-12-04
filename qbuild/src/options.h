@@ -39,7 +39,7 @@ struct Options
           executeRules(true),
           debug(None),
           threads(0),
-          filename(0),
+          filename(),
           nodename(0),
           rootdir(0),
           rule(""),
