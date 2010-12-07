@@ -437,7 +437,7 @@ git checkout translations
 
   and tell configure (in build dir) which languages you want
 
-../qtmoko/configure -device neo -force-build-qt -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL
+../qtmoko/configure -device neo -force-build-qt -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL,fr_FR
 
   and rebuild all
 
