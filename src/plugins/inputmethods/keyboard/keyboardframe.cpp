@@ -223,7 +223,8 @@ void KeyboardPicks::initialise()
 
 QSize KeyboardPicks::sizeHint() const
 {
-    return QSize(240,fontMetrics().lineSpacing());
+    //return QSize(240,fontMetrics().lineSpacing());    // <-- uncomment to enable text hints (quite useless for this type of keyboard)
+    return QSize(240, 0);
 }
 
 
@@ -424,7 +425,7 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
     QPainter painter(this);
     painter.setClipRect(e->rect());
     drawKeyboard( painter, e->rect() );
-    picks->dc->draw( &painter );
+    //picks->dc->draw( &painter );
 }
 
 
