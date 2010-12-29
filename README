@@ -1,6 +1,8 @@
 Compling from sources
 =====================
 
+  * Make sure you have libqt4-dev installed on your host PC
+
   * Download and install toolchain
 
 cd /
@@ -31,11 +33,9 @@ cd ../build
 
   * Build it:
 
-../qtmoko/configure -device neo
+../qtmoko/configure -device neo -force-build-qt
 make
 make install
-
-  * In case of errors you might try -force-build-qt argument.
 
   * Upload the result to your device (you must have phone and usb network up)
 
