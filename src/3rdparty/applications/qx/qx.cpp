@@ -387,7 +387,7 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
 
         if(kbd)
         {
-            height -= 164;      // hack: keyboard height - how to get correct size?
+            height -= 137;      // hack: keyboard height - how to get correct size?
         }
 
         //qDebug() << " top=" << top << " appRunScr size: " << width << "x" << height;
