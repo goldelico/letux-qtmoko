@@ -66,9 +66,11 @@ APT::Install-Recommends "0";
 __END__
 sed -i 's/\(PermitEmptyPasswords\) no/\1 yes/' /media/card/etc/ssh/sshd_config
 chroot /media/card /bin/sh -e <<__END_CHROOT__
-echo root: | chpasswd
+echo root: root | chpasswd
+sed -i 's/root:.*/root:C0XOiCyzQDtsA:14973:0:99999:7:::/' /etc/shadow
 apt-get --yes --purge remove cdebootstrap-helper-rc.d
 __END_CHROOT__
+
 
 Step 3 - add more package repositories
 ========================================
