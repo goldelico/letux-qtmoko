@@ -38,3 +38,4 @@
 -rtti
 -confirm-license
 -extra-qt-config "-opensource"
+-force-build-qt
