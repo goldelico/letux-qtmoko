@@ -1,29 +1,35 @@
 Debian rootfs
 =============
 
-Use instructions from http://wiki.openmoko.org/wiki/Manual_Debian
+Step 0 - QEMU image for creating rootfs
+=======================================
 
-I am installing to NFS dir, so that i can make tarbal on my PC. Mount your NFS
-dir to /media/card for simplicity. To mount NFS you need this line in /etc/fstab:
+* I used to create images straight on the device, but i dont do it anymore.
 
-192.168.0.200:/ /mnt/nfs  nfs noauto,nolock,soft,rsize=32768,wsize=32768 0 0
+* Easiest way to create tarbal and NAND images is in qemu. You can download my
+  preinstalled qemu image from:
 
-and you need
+https://sourceforge.net/projects/qtmoko/files/qtmoko-buildhost.tar.bz2/download
 
-apt-get install nfs-common
-modprobe nfs
+* Unpack the tarball, install qemu and run ./start.sh
 
-Always use ext3 on SD cards - ext2 often gets corrupted during reboots.
+* After the system is started you can use redirected port to ssh there:
 
-If you install from debian you need cdebootstrap:
+ssh -p 22222 root@localhost
 
-apt-get install cdebootstrap
+  please note that the root password is empty.
+
+* The system is very minimal, download more packages:
+
+apt-get update
+apt-get install cdebootstrap mtd-utils
 
 
 Step 1
 ======
 
 cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,pciutils,linux-sound-base,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez-utils,dosfstools,fbset,klogd,psmisc,iptables,dash,xfonts-base,x11-xserver-utils,xterm,libxtst6,timeout stable /media/card/ http://ftp.de.debian.org/debian/
+
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
@@ -420,7 +426,12 @@ cd /
 sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
 sudo tar xzvpf arm920t-eabi.tgz
 
+* Install dependencies, they are very similar to what qt has:
+
+apt-get build-dep libqt4-dev
+apt-get install libdbus-1-dev libts-dev libbluetooth-dev
 apt-get install libts-dev
+
 * Build QtMoko
 
 mkdir build
