@@ -3,10 +3,14 @@ Compling from sources
 
   * Make sure you have libqt4-dev installed on your host PC
 
+  * You can also do fetch all build dependecies for qt:
+
+apt-get build-dep libqt4-dev
+
   * Download and install toolchain
 
 cd /
-sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
+sudo wget http://sourceforge.net/projects/qtmoko/files/Toolchain/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
 sudo tar xzvpf qtmoko-debian-toolchain-armv4t-eabi.tar.gz
 
   * If you are on x86_64 you will need to download following 32bit libraries:
@@ -33,7 +37,7 @@ cd ../build
 
   * Build it:
 
-../qtmoko/configure -device neo -force-build-qt
+../qtmoko/configure -device neo
 make
 make install
 
