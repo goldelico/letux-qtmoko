@@ -434,34 +434,38 @@ sudo tar xzvpf arm920t-eabi.tgz
 apt-get build-dep libqt4-dev
 apt-get install libts-dev
 
+* Get QtMoko sources
+
+git clone git://github.com/radekp/qtmoko.git
+
+* Initialize and update submodules
+
+cd qtmoko
+git submodule init
+git submodule update
+
+* Checkout translations branch (this branch is used for qtmoko releases, it has
+  translations to various languages):
+
+git checkout translations
+
 * Build QtMoko
 
-mkdir build
-cd build
+mkdir ../build
+cd ../build
 ../qtmoko/configure -device neo
 make
 make install
 
-* Tar build
+* Tar build - after tarballing it does scp to neo. If scp fails no problem:
+
+../qtmoko/devices/neo/scripts/update_qtmoko
 
 * Unpack QtMoko to target image
 
 cd /media/card
 tar xzvpf qtopia-update.tar.gz
 
-* Translations - you need to checkout QtMoko translation git branch
-
-git checkout translations
-
-  and tell configure (in build dir) which languages you want
-
-../qtmoko/configure -device neo -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL,da_DK,fr_FR
-
-  and rebuild all
-
-make clean
-make
-make install
 
 Step 8.1 - compile QtMoko natively
 ==================================
