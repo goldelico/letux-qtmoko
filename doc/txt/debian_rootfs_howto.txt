@@ -420,6 +420,7 @@ cd /
 sudo wget http://sourceforge.net/projects/qtmoko/files/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
 sudo tar xzvpf arm920t-eabi.tgz
 
+apt-get install libts-dev
 * Build QtMoko
 
 mkdir build
@@ -492,6 +493,17 @@ Step 9.5 - remove bash history
 * Remove .bash_history created during install
 
 rm -f /media/card/root/.bash_history
+
+Step 9.6 - setup default DNS
+============================
+
+* So that internet works on neo, DNS used during installation is not working
+  e.g. when installing from qemu:
+
+cat > /media/card/etc/resolv.conf <<__END__
+nameserver 8.8.8.8
+__END__
+
 
 Step 10
 =======
