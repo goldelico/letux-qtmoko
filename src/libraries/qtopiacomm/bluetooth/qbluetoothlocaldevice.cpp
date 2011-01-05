@@ -153,6 +153,7 @@ public:
     { if (!m_doneInit) lazyInit(); return m_valid; }
 
     void requestSignal(int signal);
+    QVariant getProperty(QString name);
 
 public slots:
     void modeChanged(const QString &mode);
@@ -224,6 +225,17 @@ void PairingCancelledProxy::createBondingError(const QDBusError &error, const QD
 {
     m_parent->createBondingError(m_addr, error);
     deleteLater();
+}
+
+QVariant QBluetoothLocalDevice_Private::getProperty(QString name)
+{
+    QDBusReply< QMap<QString,QVariant> > reply = m_iface->call("GetProperties");
+    if(!reply.isValid()) {
+        qWarning() << "GetProperties failed for adapter " << m_devname << " and property " << name;
+        return QVariant();
+    }
+
+    return reply.value().value(name);
 }
 
 void QBluetoothLocalDevice_Private::requestSignal(int signal)
@@ -363,13 +375,7 @@ void QBluetoothLocalDevice_Private::lazyInit()
         return;
     }
 
-    QDBusReply< QMap<QString,QVariant> > addrReply = m_iface->call("GetProperties");
-    if(!addrReply.isValid()) {
-        qWarning() << "GetProperties failed for adapter " << m_devname;
-        return;
-    }
-
-    QString addrStr = addrReply.value().value("Address").toString();
+    QString addrStr = getProperty("Address").toString();
     m_addr = QBluetoothAddress(addrStr);
     m_valid = true;
 }
