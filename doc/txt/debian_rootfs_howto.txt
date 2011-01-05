@@ -32,6 +32,7 @@ Step 1
 
 cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libxtst6 squeeze /media/card/ http://ftp.de.debian.org/debian/
 
+
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
   can have mplayer working with btluethooth headset.
@@ -349,33 +350,71 @@ sudo tar xzvpf arm920t-eabi.tgz
 * Install dependencies, they are very similar to what qt has:
 
 apt-get build-dep libqt4-dev
+apt-get install libts-dev
+
+* Get QtMoko sources
+
+git clone git://github.com/radekp/qtmoko.git
+
+* Initialize and update submodules
+
+cd qtmoko
+git submodule init
+git submodule update
+
+* Checkout translations branch (this branch is used for qtmoko releases, it has
+  translations to various languages):
+
+git checkout translations
 
 * Build QtMoko
 
-mkdir build
-cd build
+mkdir ../build
+cd ../build
 ../qtmoko/configure -device neo
 make
 make install
 
-* Tar build
+* Tar build - after tarballing it does scp to neo. If scp fails no problem:
+
+../qtmoko/devices/neo/scripts/update_qtmoko
 
 * Unpack QtMoko to target image
 
 cd /media/card
 tar xzvpf qtopia-update.tar.gz
 
-* Translations - you need to checkout QtMoko translation git branch
 
-git checkout translations
+Step 8.1 - compile QtMoko natively
+==================================
 
-  and tell configure (in build dir) which languages you want
+* You need ARM device with a lot of storage or QEMU ARM image (currently with
+  debian squeeze). We call this build host. Storage can be workarounded with
+  NFS mount.
 
-../qtmoko/configure -device neo -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL,da_DK,fr_FR
+* Install dependencies on build host:
 
-  and rebuild all
+apt-get build-dep libqt4-dev
+apt-get install libdbus-1-dev libts-dev libbluetooth-dev libasound2-dev
 
-make clean
+* Get QtMoko sources:
+
+git clone git://github.com/radekp/qtmoko.git
+
+  * Initialize and update submodules
+
+cd qtmoko
+git submodule init
+git submodule update
+
+  * Create build directory (you cant build from the git directory)
+
+mkdir ../build
+cd ../build
+
+  * Build it:
+
+../qtmoko/configure -device neo -xplatform linux-native-g++ -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
 make
 make install
 
@@ -411,6 +450,8 @@ cd ../build
 ../qtmoko/configure -device neo -xplatform linux-native-g++ -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
 make
 make install
+
+
 
 
 
