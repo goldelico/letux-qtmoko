@@ -330,13 +330,20 @@ void QBluetoothLocalDevice_Private::lazyInit()
 #else
         QDBusConnection::systemBus();
 #endif
-    QDBusInterface iface("org.bluez", "/org/bluez",
+    QDBusInterface iface("org.bluez", "/",
                          "org.bluez.Manager", dbc);
     if (!iface.isValid()) {
         return;
     }
 
-    QDBusReply<QString> reply = iface.call("FindAdapter", m_initString);
+    // m_initString can be either MAC address, hciXX or /full/path/to/hciXX
+    // Bluez understands the first two, for the last we strip the full/path.
+    QRegExp rx("hci\\d+");
+    if(rx.indexIn(m_initString) >= 0) {
+        m_initString = rx.cap();
+    }
+
+    QDBusReply<QDBusObjectPath> reply = iface.call("FindAdapter", m_initString);
     m_initString.clear();
 
     if (!reply.isValid()) {
@@ -344,9 +351,9 @@ void QBluetoothLocalDevice_Private::lazyInit()
         return;
     }
 
-    m_devname = reply.value().mid(11);
+    m_devname = reply.value().path();
 
-    m_iface = new QDBusInterface("org.bluez", reply.value(), "org.bluez.Adapter",
+    m_iface = new QDBusInterface("org.bluez", m_devname, "org.bluez.Adapter",
                                  dbc);
 
     if (!m_iface->isValid()) {
@@ -356,14 +363,14 @@ void QBluetoothLocalDevice_Private::lazyInit()
         return;
     }
 
-    reply = m_iface->call("GetAddress");
-
-    if (!reply.isValid()) {
+    QDBusReply< QMap<QString,QVariant> > addrReply = m_iface->call("GetProperties");
+    if(!addrReply.isValid()) {
+        qWarning() << "GetProperties failed for adapter " << m_devname;
         return;
     }
 
-    m_addr = QBluetoothAddress(reply.value());
-
+    QString addrStr = addrReply.value().value("Address").toString();
+    m_addr = QBluetoothAddress(addrStr);
     m_valid = true;
 }
 
