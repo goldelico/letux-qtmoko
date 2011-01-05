@@ -34,9 +34,9 @@ public:
     QBluetoothLocalDeviceManager_Private(QBluetoothLocalDeviceManager *parent);
 
 public slots:
-    void deviceAdded(const QString &device);
-    void deviceRemoved(const QString &device);
-    void defaultDeviceChanged(const QString &device);
+    void deviceAdded(const QDBusObjectPath &device);
+    void deviceRemoved(const QDBusObjectPath &device);
+    void defaultDeviceChanged(const QDBusObjectPath &device);
 
 public:
     QBluetoothLocalDeviceManager *m_parent;
@@ -66,26 +66,26 @@ QBluetoothLocalDeviceManager_Private::QBluetoothLocalDeviceManager_Private(
     }
 
     dbc.connect("org.bluez", "/org/bluez", "org.bluez.Manager", "AdapterAdded",
-                this, SIGNAL(deviceAdded(QString)));
+                this, SIGNAL(deviceAdded(QDBusObjectPath)));
     dbc.connect("org.bluez", "/org/bluez", "org.bluez.Manager", "AdapterRemoved",
-                this, SIGNAL(deviceRemoved(QString)));
+                this, SIGNAL(deviceRemoved(QDBusObjectPath)));
     dbc.connect("org.bluez", "/org/bluez", "org.bluez.Manager", "DefaultAdapterChanged",
-                this, SIGNAL(defaultDeviceChanged(QString)));
+                this, SIGNAL(defaultDeviceChanged(QDBusObjectPath)));
 }
 
-void QBluetoothLocalDeviceManager_Private::deviceAdded(const QString &device)
+void QBluetoothLocalDeviceManager_Private::deviceAdded(const QDBusObjectPath &device)
 {
-    emit m_parent->deviceAdded(device.mid(11));
+    emit m_parent->deviceAdded(device.path());
 }
 
-void QBluetoothLocalDeviceManager_Private::deviceRemoved(const QString &device)
+void QBluetoothLocalDeviceManager_Private::deviceRemoved(const QDBusObjectPath &device)
 {
-    emit m_parent->deviceRemoved(device.mid(11));
+    emit m_parent->deviceRemoved(device.path());
 }
 
-void QBluetoothLocalDeviceManager_Private::defaultDeviceChanged(const QString &device)
+void QBluetoothLocalDeviceManager_Private::defaultDeviceChanged(const QDBusObjectPath &device)
 {
-    emit m_parent->defaultDeviceChanged(device.mid(11));
+    emit m_parent->defaultDeviceChanged(device.path());
 }
 
 /*!
