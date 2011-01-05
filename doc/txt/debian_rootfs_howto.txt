@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout squeeze /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libxtst6 squeeze /media/card/ http://ftp.de.debian.org/debian/
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
   dependencies on gstreamer it takes 4MB. With this package and some tweaks you
