@@ -58,7 +58,7 @@ QBluetoothLocalDeviceManager_Private::QBluetoothLocalDeviceManager_Private(
         return;
     }
 
-    m_iface = new QDBusInterface("org.bluez", "/org/bluez",
+    m_iface = new QDBusInterface("org.bluez", "/",
                                  "org.bluez.Manager", dbc);
     if (!m_iface->isValid()) {
         qWarning() << "Could not find org.bluez interface";
@@ -175,13 +175,13 @@ QString QBluetoothLocalDeviceManager::defaultDevice()
     if (!m_data->m_iface || !m_data->m_iface->isValid())
         return QString();
 
-    QDBusReply<QString> reply = m_data->m_iface->call("DefaultAdapter");
+    QDBusReply<QDBusObjectPath> reply = m_data->m_iface->call("DefaultAdapter");
 
     if (!reply.isValid()) {
         return QString();
     }
 
-    return reply.value().mid(11);
+    return reply.value().path();
 }
 
 /*!
