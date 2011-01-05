@@ -147,14 +147,14 @@ QStringList QBluetoothLocalDeviceManager::devices()
     if (!m_data->m_iface || !m_data->m_iface->isValid())
         return ret;
 
-    QDBusReply<QStringList> reply = m_data->m_iface->call("ListAdapters");
+    QDBusReply< QList<QDBusObjectPath> > reply = m_data->m_iface->call("ListAdapters");
 
     if (!reply.isValid()) {
         return ret;
     }
 
-    foreach (QString device, reply.value()) {
-        ret.push_back(device.mid(11));
+    foreach (QDBusObjectPath path, reply.value()) {
+        ret.push_back(path.path());
     }
 
     return ret;
