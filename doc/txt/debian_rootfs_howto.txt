@@ -418,41 +418,6 @@ cd ../build
 make
 make install
 
-Step 8.1 - compile QtMoko natively
-==================================
-
-* You need ARM device with a lot of storage or QEMU ARM image (currently with
-  debian squeeze). We call this build host. Storage can be workarounded with
-  NFS mount.
-
-* Install dependencies on build host:
-
-apt-get build-dep libqt4-dev
-apt-get install libdbus-1-dev libts-dev libbluetooth-dev libasound2-dev
-
-* Get QtMoko sources:
-
-git clone git://github.com/radekp/qtmoko.git
-
-  * Initialize and update submodules
-
-cd qtmoko
-git submodule init
-git submodule update
-
-  * Create build directory (you cant build from the git directory)
-
-mkdir ../build
-cd ../build
-
-  * Build it:
-
-../qtmoko/configure -device neo -xplatform linux-native-g++ -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
-make
-make install
-
-
-
 
 
 
