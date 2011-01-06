@@ -91,6 +91,7 @@ public:
     QString errorString() const;
 
     QString deviceName() const;
+    QString adapterName() const;
     QBluetoothAddress address() const;
 
     QBluetoothReply<QString> manufacturer() const;
@@ -135,6 +136,8 @@ public:
     QBluetoothReply<uchar> pinCodeLength(const QBluetoothAddress &addr) const;
 
     bool disconnectRemoteDevice(const QBluetoothAddress &addr);
+    
+    static QString adapterNameToDevName(QString adapterName);
 
 public slots:
     bool discoverRemoteDevices();

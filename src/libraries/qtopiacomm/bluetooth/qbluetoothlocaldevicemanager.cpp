@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 #include <qbluetoothlocaldevicemanager.h>
+#include <qbluetoothlocaldevice.h>
 
 #include <QDBusArgument>
 #include <QDBusConnection>
@@ -103,9 +104,7 @@ void QBluetoothLocalDeviceManager_Private::defaultDeviceChanged(const QDBusObjec
 
     On Linux, each Bluetooth device on the system has a Bluetooth device
     name and an address associated with it.  The Bluetooth device name
-    is of the same form as in bluez stack, usually /org/bluez/1006/hciXX
-    where XX is a number between 0 and 31 and 1006 is bluetooth daemon
-    pid number.
+    is of the form hciXX where XX is a number between 0 and 31.
 
     Use deviceRemoved() and deviceAdded() signals to subscribe to device
     removed and device added events, respectively.  Use defaultDeviceChanged()
@@ -183,7 +182,7 @@ QString QBluetoothLocalDeviceManager::defaultDevice()
         return QString();
     }
 
-    return reply.value().path();
+    return QBluetoothLocalDevice::adapterNameToDevName(reply.value().path());
 }
 
 /*!
