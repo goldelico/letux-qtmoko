@@ -143,6 +143,9 @@ public:
     inline QString& devname()
     { if (!m_doneInit) lazyInit(); return m_devname; }
 
+    inline QString& adapterName()
+    { if (!m_doneInit) lazyInit(); return m_adapterName; }
+
     inline QBluetoothAddress& addr()
     { if (!m_doneInit) lazyInit(); return m_addr; }
 
@@ -190,6 +193,7 @@ private:
     bool m_doneInit;
 
     QString m_devname;
+    QString m_adapterName;
     QBluetoothAddress m_addr;
     QDBusInterface *m_iface;
     bool m_valid;
@@ -235,7 +239,7 @@ bool QBluetoothLocalDevice_Private::invalidIface()
     if(m_iface != NULL && m_iface->isValid())
         return false;
     
-    qWarning() << "Dbus interface for adapter " << m_devname << " is not valid";
+    qWarning() << "Dbus interface for adapter " << m_adapterName << " is not valid";
     return true;
 }
 
@@ -247,7 +251,7 @@ QVariant QBluetoothLocalDevice_Private::getProperty(QString name)
     
     QDBusReply< QMap<QString,QVariant> > reply = m_iface->call("GetProperties");
     if(!reply.isValid()) {
-        qWarning() << "GetProperties failed for adapter " << m_devname << " and property " << name;
+        qWarning() << "GetProperties failed for adapter " << m_adapterName << " and property " << name;
         handleError(reply.error());
         return QVariant();
     }
@@ -269,7 +273,7 @@ bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
     if(reply.isValid())
         return true;
     
-    qWarning() << "SetProperty failed for adapter " << m_devname << " and property " << name << "=" << value << " with error " << reply.error();
+    qWarning() << "SetProperty failed for adapter " << m_adapterName << " and property " << name << "=" << value << " with error " << reply.error();
     handleError(reply.error());
     return false;
 }
@@ -403,10 +407,7 @@ void QBluetoothLocalDevice_Private::lazyInit()
 
     // m_initString can be either MAC address, hciXX or /full/path/to/hciXX
     // Bluez understands the first two, for the last we strip the full/path.
-    QRegExp rx("hci\\d+");
-    if(rx.indexIn(m_initString) >= 0) {
-        m_initString = rx.cap();
-    }
+    m_initString = QBluetoothLocalDevice::adapterNameToDevName(m_initString);
 
     QDBusReply<QDBusObjectPath> reply = iface.call("FindAdapter", m_initString);
     m_initString.clear();
@@ -416,13 +417,14 @@ void QBluetoothLocalDevice_Private::lazyInit()
         return;
     }
 
-    m_devname = reply.value().path();
+    m_adapterName = reply.value().path();
+    m_devname = QBluetoothLocalDevice::adapterNameToDevName(m_adapterName);
 
-    m_iface = new QDBusInterface("org.bluez", m_devname, "org.bluez.Adapter",
+    m_iface = new QDBusInterface("org.bluez", m_adapterName, "org.bluez.Adapter",
                                  dbc);
 
     if (!m_iface->isValid()) {
-        qWarning() << "Could not find org.bluez Adapter interface for" << m_devname;
+        qWarning() << "Could not find org.bluez Adapter interface for" << m_adapterName;
         delete m_iface;
         m_iface = 0;
         return;
@@ -975,6 +977,16 @@ QBluetoothAddress QBluetoothLocalDevice::address() const
 QString QBluetoothLocalDevice::deviceName() const
 {
     return m_data->devname();
+}
+
+/*!
+    Returns the bluez adapter name as used for bluez4 dbus calls. For example \bold /org/bluez/906/hci0.
+
+    \sa address()
+*/
+QString QBluetoothLocalDevice::adapterName() const
+{
+    return m_data->adapterName();
 }
 
 /*!
@@ -1722,6 +1734,21 @@ bool QBluetoothLocalDevice::disconnectRemoteDevice(const QBluetoothAddress &addr
     }
 
     return true;
+}
+
+/*!
+    Returns a device name of the Bluetooth adapter. This is typically 'hci0'.
+    Parameter \a adapterName is full object path used for bluez dbus calls.
+
+    \sa adapterName()
+ */
+QString QBluetoothLocalDevice::adapterNameToDevName(QString adapterName)
+{
+    QRegExp rx("hci\\d+");
+    if(rx.indexIn(adapterName) >= 0) {
+        return rx.cap();
+    }
+    return adapterName;
 }
 
 /*!
