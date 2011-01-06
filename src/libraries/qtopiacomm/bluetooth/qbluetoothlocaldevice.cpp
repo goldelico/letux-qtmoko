@@ -261,7 +261,7 @@ bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
         return false;
     }
     
-    QDBusReply<void> reply = m_iface->call("SetProperty", name, value);
+    QDBusReply<void> reply = m_iface->call("SetProperty", name, qVariantFromValue(QDBusVariant(value)));
     if(reply.isValid())
         return true;
     
@@ -277,7 +277,7 @@ bool QBluetoothLocalDevice_Private::setPropertyAsync(QString name, QVariant valu
     
     QList<QVariant> args;
     args << name;
-    args << value;
+    args << qVariantFromValue(QDBusVariant(value));
     
     return m_iface->callWithCallback("SetProperty", args, this, returnMethod,
                                      SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
