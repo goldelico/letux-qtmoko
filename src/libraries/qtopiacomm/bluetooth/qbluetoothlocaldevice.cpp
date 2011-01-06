@@ -1082,17 +1082,7 @@ QBluetoothReply<QString> QBluetoothLocalDevice::company() const
 */
 QBluetoothReply<QString> QBluetoothLocalDevice::name() const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return QBluetoothReply<QString>();
-    }
-
-    QDBusReply<QString> reply = m_data->iface()->call("GetName");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return QBluetoothReply<QString>();
-    }
-
-    return reply.value();
+    return m_data->getProperty("Name").toString();
 }
 
 /*!
@@ -1105,17 +1095,7 @@ QBluetoothReply<QString> QBluetoothLocalDevice::name() const
 */
 bool QBluetoothLocalDevice::setName(const QString &name)
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QDBusReply<void> reply = m_data->iface()->call("SetName", name);
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return false;
-    }
-
-    return true;
+    return m_data->setProperty("Name", name);
 }
 
 /*!
