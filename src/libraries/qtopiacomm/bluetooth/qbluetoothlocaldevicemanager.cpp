@@ -155,7 +155,7 @@ QStringList QBluetoothLocalDeviceManager::devices()
     }
 
     foreach (QDBusObjectPath path, reply.value()) {
-        ret.push_back(path.path());
+        ret.push_back(QBluetoothLocalDevice::adapterNameToDevName(path.path()));
     }
 
     return ret;
