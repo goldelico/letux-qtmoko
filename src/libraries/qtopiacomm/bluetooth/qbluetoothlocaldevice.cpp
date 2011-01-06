@@ -154,10 +154,13 @@ public:
 
     void requestSignal(int signal);
     QVariant getProperty(QString name);
+    bool invalidIface();
+    bool setProperty(QString name, QVariant value);
+    bool setPropertyAsync(QString name, QVariant value, const char * returnMethod);
 
 public slots:
     void modeChanged(const QString &mode);
-    void asyncModeChange(const QDBusMessage &msg);
+    void asyncDiscoverableChange(const QDBusMessage &msg);
     void asyncReply(const QDBusMessage &msg);
     void asyncErrorReply(const QDBusError &error, const QDBusMessage &msg);
     void cancelScanReply(const QDBusMessage  &msg);
@@ -227,15 +230,57 @@ void PairingCancelledProxy::createBondingError(const QDBusError &error, const QD
     deleteLater();
 }
 
+bool QBluetoothLocalDevice_Private::invalidIface()
+{
+    if(m_iface != NULL && m_iface->isValid())
+        return false;
+    
+    qWarning() << "Dbus interface for adapter " << m_devname << " is not valid";
+    return true;
+}
+
 QVariant QBluetoothLocalDevice_Private::getProperty(QString name)
 {
+    if (invalidIface()) {
+        return QVariant();
+    }
+    
     QDBusReply< QMap<QString,QVariant> > reply = m_iface->call("GetProperties");
     if(!reply.isValid()) {
         qWarning() << "GetProperties failed for adapter " << m_devname << " and property " << name;
+        handleError(reply.error());
         return QVariant();
     }
 
     return reply.value().value(name);
+}
+
+bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
+{
+    if (invalidIface()) {
+        return false;
+    }
+    
+    QDBusReply<void> reply = m_iface->call("SetProperty", name, value);
+    if(reply.isValid())
+        return true;
+    
+    qWarning() << "SetProperty failed for adapter " << m_devname << " and property " << name << "=" << value << " with error " << reply.error();
+    handleError(reply.error());
+    return false;
+}
+
+bool QBluetoothLocalDevice_Private::setPropertyAsync(QString name, QVariant value, const char * returnMethod)
+{
+    if (invalidIface())
+        return false;
+    
+    QList<QVariant> args;
+    args << name;
+    args << value;
+    
+    return m_iface->callWithCallback("SetProperty", args, this, returnMethod,
+                                     SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
 }
 
 void QBluetoothLocalDevice_Private::requestSignal(int signal)
@@ -476,10 +521,9 @@ void QBluetoothLocalDevice_Private::asyncReply(const QDBusMessage &)
     // On a success, the signal should have been emitted already
 }
 
-void QBluetoothLocalDevice_Private::asyncModeChange(const QDBusMessage &)
+void QBluetoothLocalDevice_Private::asyncDiscoverableChange(const QDBusMessage &)
 {
-    QDBusReply<void> reply = iface()->call("SetDiscoverableTimeout",
-            QVariant::fromValue(m_discovTo));
+    setProperty("DiscoverableTimeout", m_discovTo);
 }
 
 void QBluetoothLocalDevice_Private::asyncErrorReply(const QDBusError &error, const QDBusMessage &)
@@ -1061,18 +1105,8 @@ bool QBluetoothLocalDevice::setName(const QString &name)
 */
 bool QBluetoothLocalDevice::setDiscoverable(uint timeout)
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
     m_data->m_discovTo = timeout;
-
-    QList<QVariant> args;
-    args << QString("discoverable");
-
-    return m_data->iface()->callWithCallback("SetMode", args, m_data,
-                                             SLOT(asyncModeChange(QDBusMessage)),
-                                             SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    return m_data->setPropertyAsync("Discoverable", true, SLOT(asyncDiscoverableChange(QDBusMessage)));
 }
 
 /*!
@@ -1083,17 +1117,7 @@ bool QBluetoothLocalDevice::setDiscoverable(uint timeout)
 */
 QBluetoothReply<uint> QBluetoothLocalDevice::discoverableTimeout() const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return QBluetoothReply<uint>();
-    }
-
-    QDBusReply<quint32> reply = m_data->iface()->call("GetDiscoverableTimeout");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return QBluetoothReply<uint>();
-    }
-
-    return reply.value();
+    return m_data->getProperty("DiscoverableTimeout").toUInt();
 }
 
 /*!
@@ -1107,17 +1131,7 @@ QBluetoothReply<uint> QBluetoothLocalDevice::discoverableTimeout() const
  */
 QBluetoothReply<bool> QBluetoothLocalDevice::discoverable() const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QDBusReply<bool> reply = m_data->iface()->call("IsDiscoverable");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return false;
-    }
-
-    return reply.value();
+    return m_data->getProperty("Discoverable").toBool();
 }
 
 /*!
@@ -1132,16 +1146,7 @@ QBluetoothReply<bool> QBluetoothLocalDevice::discoverable() const
  */
 bool QBluetoothLocalDevice::setConnectable()
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QList<QVariant> args;
-    args << QString("connectable");
-
-    return m_data->iface()->callWithCallback("SetMode", args, m_data,
-                                             SLOT(asyncReply(QDBusMessage)),
-                                             SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    return m_data->setPropertyAsync("Powered", true, SLOT(asyncReply(QDBusMessage)));
 }
 
 /*!
@@ -1151,17 +1156,7 @@ bool QBluetoothLocalDevice::setConnectable()
  */
 QBluetoothReply<bool> QBluetoothLocalDevice::connectable() const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QDBusReply<bool> reply = m_data->iface()->call("IsConnectable");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return false;
-    }
-
-    return reply.value();
+    return m_data->getProperty("Powered").toBool();
 }
 
 /*!
