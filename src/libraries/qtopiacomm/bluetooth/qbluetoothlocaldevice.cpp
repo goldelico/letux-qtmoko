@@ -528,6 +528,7 @@ void QBluetoothLocalDevice_Private::asyncDiscoverableChange(const QDBusMessage &
 
 void QBluetoothLocalDevice_Private::asyncErrorReply(const QDBusError &error, const QDBusMessage &)
 {
+    qWarning() << "asyncErrorReply " << error;
     emitError(error);
 }
 
