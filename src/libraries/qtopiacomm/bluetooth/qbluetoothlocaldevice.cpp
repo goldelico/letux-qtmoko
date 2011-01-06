@@ -113,7 +113,7 @@ enum __q__signals_enum {
     REMOTE_CLASS_UPDATED,
     REMOTE_DEVICE_DISAPPEARED,
     DISCOVERABLE_TIMEOUT_CHANGED,
-    MODE_CHANGED
+    PROPERTY_CHANGED
 };
 
 class QBluetoothLocalDevice_Private : public QObject
@@ -159,7 +159,7 @@ public:
     bool setPropertyAsync(QString name, QVariant value, const char * returnMethod);
 
 public slots:
-    void modeChanged(const QString &mode);
+    void propertyChanged(const QString &name, const QDBusVariant &value);
     void asyncDiscoverableChange(const QDBusMessage &msg);
     void asyncReply(const QDBusMessage &msg);
     void asyncErrorReply(const QDBusError &error, const QDBusMessage &msg);
@@ -252,11 +252,15 @@ QVariant QBluetoothLocalDevice_Private::getProperty(QString name)
         return QVariant();
     }
 
-    return reply.value().value(name);
+    QVariant value = reply.value().value(name);
+    qLog(Bluetooth) << "getProperty " << name << "=" << value;
+    return value;
 }
 
 bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
 {
+    qLog(Bluetooth) << "setProperty " << name << "=" << value;
+
     if (invalidIface()) {
         return false;
     }
@@ -272,9 +276,11 @@ bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
 
 bool QBluetoothLocalDevice_Private::setPropertyAsync(QString name, QVariant value, const char * returnMethod)
 {
+    qLog(Bluetooth) << "setPropertyAsync " << name << "=" << value;
+    
     if (invalidIface())
         return false;
-    
+
     QList<QVariant> args;
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
@@ -289,6 +295,8 @@ void QBluetoothLocalDevice_Private::requestSignal(int signal)
         qWarning("Trying to connect a signal of an invalid QBluetoothLocalDevice instance!");
         return;
     }
+
+    qWarning() << "XXXXXXXXXXX requestSignal " << signal;
 
     if (m_sigSet.contains(signal))
         return;
@@ -367,9 +375,9 @@ void QBluetoothLocalDevice_Private::requestSignal(int signal)
             dbc.connect(service, path, interface, "DiscoverableTimeoutChanged",
                 m_parent, SIGNAL(discoverableTimeoutChanged(uint)));
             break;
-        case MODE_CHANGED:
-            dbc.connect(service, path, interface, "ModeChanged",
-                this, SLOT(modeChanged(QString)));
+        case PROPERTY_CHANGED:
+            dbc.connect(service, path, interface, "PropertyChanged",
+                this, SLOT(propertyChanged(QString,QDBusVariant)));
             break;
         default:
             break;
@@ -502,17 +510,23 @@ void QBluetoothLocalDevice_Private::emitError(const QDBusError &error)
     emit m_parent->error(err, error.message());
 }
 
-void QBluetoothLocalDevice_Private::modeChanged(const QString &mode)
-//void QBluetoothLocalDevice_Private::PropertyChanged(const QString & mode, const QVariant &value)
+void QBluetoothLocalDevice_Private::propertyChanged(const QString &name, const QDBusVariant &value)
 {
-    if (mode == "off") {
-        emit m_parent->stateChanged(QBluetoothLocalDevice::Off);
+    QVariant val = value.variant();
+    
+    qWarning() << "propertyChanged " << name << "=" << val;
+    
+    if (name == "Powered") {
+        if (val.toBool())
+            emit m_parent->stateChanged(QBluetoothLocalDevice::Connectable);
+        else
+            emit m_parent->stateChanged(QBluetoothLocalDevice::Off);
     }
-    else if (mode == "connectable") {
-        emit m_parent->stateChanged(QBluetoothLocalDevice::Connectable);
-    }
-    else if (mode == "discoverable") {
-        emit m_parent->stateChanged(QBluetoothLocalDevice::Discoverable);
+    else if (name == "Discoverable") {
+        if (val.toBool())
+            emit m_parent->stateChanged(QBluetoothLocalDevice::Discoverable);
+        else
+            emit m_parent->stateChanged(QBluetoothLocalDevice::Connectable);
     }
 }
 
@@ -911,7 +925,7 @@ void QBluetoothLocalDevice::connectNotify(const char *signal)
     }
 
     else if (sig == QMetaObject::normalizedSignature(SIGNAL(stateChanged(QBluetoothLocalDevice::State)))) {
-        m_data->requestSignal(MODE_CHANGED);
+        m_data->requestSignal(PROPERTY_CHANGED);
     }
 }
 
@@ -1173,16 +1187,7 @@ QBluetoothReply<bool> QBluetoothLocalDevice::connectable() const
  */
 bool QBluetoothLocalDevice::turnOff()
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QList<QVariant> args;
-    args << QString("off");
-
-    return m_data->iface()->callWithCallback("SetMode", args, m_data,
-                                             SLOT(asyncReply(QDBusMessage)),
-                                             SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    return m_data->setPropertyAsync("Powered", false, SLOT(asyncReply(QDBusMessage)));   
 }
 
 /*!
