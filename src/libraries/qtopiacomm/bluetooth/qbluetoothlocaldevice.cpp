@@ -179,7 +179,7 @@ public slots:
     void remoteDeviceDisconnected(const QString &dev);
 
     void discoveryStarted();
-    void remoteDeviceFound(const QString &addr, uint cls, short rssi);
+    void remoteDeviceFound(const QString &addr, const QMap< QString,QVariant > & values);
     void remoteDeviceDisappeared(const QString &addr);
     void discoveryCompleted();
 
@@ -338,8 +338,8 @@ void QBluetoothLocalDevice_Private::requestSignal(int signal)
                         this, SLOT(discoveryStarted()));
             dbc.connect(service, path, interface, "DiscoveryCompleted",
                         this, SLOT(discoveryCompleted()));
-            dbc.connect(service, path, interface, "RemoteDeviceFound",
-                this, SLOT(remoteDeviceFound(QString,uint,short)));
+            dbc.connect(service, path, interface, "DeviceFound",
+                this, SLOT(remoteDeviceFound(const QString &, const QMap< QString,QVariant > &)));
             break;
         case NAME_CHANGED:
             dbc.connect(service, path, interface, "NameChanged",
@@ -626,17 +626,19 @@ void QBluetoothLocalDevice_Private::remoteClassUpdated(const QString &addr, uint
                                       minor, QBluetooth::ServiceClasses(service));
 }
 
-void QBluetoothLocalDevice_Private::remoteDeviceFound(const QString &addr,
-        uint cls, short rssi)
+void QBluetoothLocalDevice_Private::remoteDeviceFound(const QString &addr, const QMap< QString,QVariant > & values)
 {
+    // Check the truly bizarre case
+    if (invalidIface()) {
+        return;
+    }
+
+    uint cls = values.value("Class").toUInt();
+    int rssi = values.value("RSSI").toInt();
+    
     quint8 major = (cls >> 8) & 0x1F;
     quint8 minor = (cls >> 2) & 0x3F;
     quint8 service = (cls >> 16) & 0xFF;
-
-    // Check the truly bizarre case
-    if (!iface() || !iface()->isValid()) {
-        return;
-    }
 
     // Check if we already have this device in the list, sometimes we get spurious
     // signals
@@ -655,8 +657,11 @@ void QBluetoothLocalDevice_Private::remoteDeviceFound(const QString &addr,
     QString revision;
     QString manufacturer;
     QString company;
-    QString name;
+    QString name = values.value("Name").toString();
 
+    /*
+     * TODO: fill properties for bluez4
+     * 
     QDBusReply<QString> reply;
 
     reply = iface()->call("GetRemoteVersion", addr);
@@ -682,7 +687,7 @@ void QBluetoothLocalDevice_Private::remoteDeviceFound(const QString &addr,
     reply = iface()->call("GetRemoteName", addr);
     if (reply.isValid()) {
         name = reply.value();
-    }
+    } */
 
     QBluetoothRemoteDevice dev(a, name, version, revision,
                                manufacturer, company, rssi,
@@ -1276,17 +1281,7 @@ QBluetoothReply<bool> QBluetoothLocalDevice::isConnected(const QBluetoothAddress
 */
 bool QBluetoothLocalDevice::discoverRemoteDevices()
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
-    QDBusReply<void> reply = m_data->iface()->call("DiscoverDevices");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return false;
-    }
-
-    return true;
+    return m_data->callAdapter<void>("StartDiscovery").isValid();
 }
 
 /*!
