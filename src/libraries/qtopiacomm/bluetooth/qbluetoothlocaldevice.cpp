@@ -1345,15 +1345,10 @@ bool QBluetoothLocalDevice::discoverRemoteDevices()
 */
 bool QBluetoothLocalDevice::cancelDiscovery()
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
     QList<QVariant> args;
-
-    return m_data->iface()->callWithCallback("CancelDiscovery", args, m_data,
-                                                SLOT(cancelScanReply(QDBusMessage)),
-                                                SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    QDBusReply<void> reply;
+    
+    return m_data->callAdapter("StopDiscovery", args, reply, true, SLOT(cancelScanReply(QDBusMessage)));
 }
 
 /*!
