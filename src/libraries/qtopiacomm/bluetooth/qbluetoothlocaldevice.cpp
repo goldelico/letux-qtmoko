@@ -139,7 +139,9 @@ public:
                              QList<QVariant> args,
                              QDBusReply<T> & reply = QDBusReply<T>(),
                              bool async = false,
-                             const char * returnMethod = NULL);
+                             QObject * receiver = NULL,
+                             const char * returnMethod = NULL,
+                             const char * errorMethod = NULL);
     
     QBluetoothLocalDevice::Error handleError(const QDBusError &error);
     void emitError(const QDBusError &error);
@@ -261,7 +263,9 @@ template <class T>
                                                         QList<QVariant> args,
                                                         QDBusReply<T> & reply,
                                                         bool async,
-                                                        const char * returnMethod)
+                                                        QObject * receiver,
+                                                        const char * returnMethod,
+                                                        const char * errorMethod)
 {
     if (invalidIface())
         return false;
@@ -280,9 +284,16 @@ template <class T>
     methodStr += ")";
     qLog(Bluetooth) << "calling " << methodStr;
     
-    if(async)
-        return m_iface->callWithCallback(method, args, this, returnMethod,
-                                         SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    if(async) {
+        if(receiver == NULL)
+            receiver = this;
+        if(returnMethod == NULL)
+            returnMethod = SLOT(asyncReply(QDBusMessage));
+        if(errorMethod == NULL)
+            errorMethod = SLOT(asyncErrorReply(QDBusError,QDBusMessage));
+
+        return m_iface->callWithCallback(method, args, receiver, returnMethod, errorMethod);
+    }
     else {
         reply = m_iface->callWithArgumentList(QDBus::AutoDetect, method, args);
         if(reply.isValid())
@@ -354,7 +365,7 @@ bool QBluetoothLocalDevice_Private::setPropertyAsync(QString name, QVariant valu
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
     
-    return callAdapter("SetProperty", args, reply, true, returnMethod);
+    return callAdapter("SetProperty", args, reply, true, this, returnMethod);
 }
 
 void QBluetoothLocalDevice_Private::requestSignal(int signal)
@@ -1352,7 +1363,7 @@ bool QBluetoothLocalDevice::cancelDiscovery()
     QList<QVariant> args;
     QDBusReply<void> reply;
     
-    return m_data->callAdapter("StopDiscovery", args, reply, true, SLOT(cancelScanReply(QDBusMessage)));
+    return m_data->callAdapter("StopDiscovery", args, reply, true, m_data, SLOT(cancelScanReply(QDBusMessage)));
 }
 
 /*!
@@ -1486,18 +1497,20 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
     QList<QVariant> args;
+    QDBusReply<QDBusObjectPath> reply;
+    QDBusObjectPath agent("/test/agent");
+    QString capability;
+    
     args << addr.toString();
+    //args << agent;
+    args << capability;
 
     PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
-
-    return m_data->iface()->callWithCallback("CreateBonding", args, proxy,
-                                             SLOT(createBondingReply(QDBusMessage)),
-                                             SLOT(createBondingError(QDBusError,QDBusMessage)));
+    
+    return m_data->callAdapter("CreatePairedDevice", args, reply, true, proxy,
+                               SLOT(createBondingReply(QDBusMessage)),
+                               SLOT(createBondingError(QDBusError,QDBusMessage)));
 }
 
 /*!
