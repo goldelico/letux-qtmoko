@@ -34,6 +34,7 @@
 #include <QDBusInterface>
 #include <QDBusReply>
 #include <QDBusMessage>
+#include <QDBusAbstractAdaptor>
 #include <QSet>
 #include <QDebug>
 
@@ -98,6 +99,8 @@
     Convenience method, same as value()
 */
 
+const char PAIRING_AGENT_PATH[] = "/qtmoko/bt_pairing_agent";
+
 enum __q__signals_enum {
     REMOTE_DEVICE_DISCOVERED = 1,
     NAME_CHANGED,
@@ -115,6 +118,72 @@ enum __q__signals_enum {
     DISCOVERABLE_TIMEOUT_CHANGED,
     PROPERTY_CHANGED
 };
+
+class AgentAdaptor: public QDBusAbstractAdaptor
+{
+    Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.bluez.Agent")
+
+public:
+    AgentAdaptor(QObject *parent);
+
+public slots:
+    void Authorize(const QDBusObjectPath &device, const QString &uuid);
+    void Cancel();
+    void ConfirmModeChange(const QString &mode);
+    void DisplayPasskey(const QDBusObjectPath &device, uint passkey);
+    void Release();
+    void RequestConfirmation(const QDBusObjectPath &device, uint passkey);
+    uint RequestPasskey(const QDBusObjectPath &device);
+    QString RequestPinCode(const QDBusObjectPath &device);
+};
+
+AgentAdaptor::AgentAdaptor(QObject *parent) : QDBusAbstractAdaptor(parent)
+{
+}
+
+void AgentAdaptor::Authorize(const QDBusObjectPath &deviceObject, const QString &uuid)
+{
+    qWarning() << "Authorize";
+}
+
+void AgentAdaptor::Cancel()
+{
+    qWarning() << "Cancel";
+}
+
+void AgentAdaptor::ConfirmModeChange(const QString &mode)
+{
+    qWarning() << "ConfirmModeChange";
+}
+
+void AgentAdaptor::DisplayPasskey(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "DisplayPasskey";
+}
+
+void AgentAdaptor::Release()
+{
+    qWarning() << "Release";
+}
+
+void AgentAdaptor::RequestConfirmation(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "RequestConfirmation";
+}
+
+uint AgentAdaptor::RequestPasskey(const QDBusObjectPath &deviceObject)
+{
+    qWarning() << "RequestPasskey";
+    return 0;
+}
+
+QString AgentAdaptor::RequestPinCode(const QDBusObjectPath &deviceObject)
+{
+    qWarning() << "RequestPinCode";
+    return "0000";
+}
+
 
 class QBluetoothLocalDevice_Private : public QObject
 {
@@ -1497,13 +1566,21 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
+    AgentAdaptor *agent;
+
+    agent = new AgentAdaptor(this);
+    if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, agent))
+        qLog(Bluetooth) << ">>>>>>>>>>>>>>>>>>> Registered pairing agent, path=" << PAIRING_AGENT_PATH;
+    else
+        qWarning() << ">>>>>>>>>>>>>>>>>>>>>>>> Registering BT pairing agent failed";
+    
     QList<QVariant> args;
     QDBusReply<QDBusObjectPath> reply;
-    QDBusObjectPath agent("/test/agent");
+    QDBusObjectPath agentPath(PAIRING_AGENT_PATH);
     QString capability;
     
     args << addr.toString();
-    //args << agent;
+    args << qVariantFromValue(agentPath);
     args << capability;
 
     PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
