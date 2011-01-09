@@ -269,9 +269,13 @@ template <class T>
     QString methodStr(method + "(");
     for(int i = 0; i < args.count(); i++)
     {
+        QVariant arg = args.at(i);
         if(i > 0)
             methodStr += ", ";
-        methodStr += args.at(i).toString();
+        if(arg.canConvert<QDBusVariant>())
+            methodStr += arg.value<QDBusVariant>().variant().toString();
+        else
+            methodStr += args.at(i).toString();
     }
     methodStr += ")";
     qLog(Bluetooth) << "calling " << methodStr;
@@ -576,7 +580,7 @@ void QBluetoothLocalDevice_Private::propertyChanged(const QString &name, const Q
 {
     QVariant val = value.variant();
     
-    qWarning() << "propertyChanged " << name << "=" << val;
+    qWarning() << "propertyChanged " << name << "=" << val.toString();
     
     if (name == "Powered") {
         if (val.toBool())
