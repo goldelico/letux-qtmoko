@@ -129,11 +129,17 @@ public:
     ~QBluetoothLocalDevice_Private();
 
     template <class T>
-    QDBusReply<T> callAdapter(const QString & method,
-                              const QVariant & arg1 = QVariant(),
-                              const QVariant & arg2 = QVariant(),
-                              const QVariant & arg3 = QVariant(),
-                              bool arg2Variant = false);
+            QDBusReply<T> callAdapter(const QString & method,
+                                      const QVariant & arg1 = QVariant(),
+                                      const QVariant & arg2 = QVariant(),
+                                      const QVariant & arg3 = QVariant());
+
+    template <class T>
+            bool callAdapter(const QString & method,
+                             QList<QVariant> args,
+                             QDBusReply<T> & reply = QDBusReply<T>(),
+                             bool async = false,
+                             const char * returnMethod = NULL);
     
     QBluetoothLocalDevice::Error handleError(const QDBusError &error);
     void emitError(const QDBusError &error);
@@ -251,61 +257,100 @@ bool QBluetoothLocalDevice_Private::invalidIface()
 }
 
 template <class T>
-QDBusReply<T> QBluetoothLocalDevice_Private::callAdapter(const QString & method,
-                                                         const QVariant & arg1,
-                                                         const QVariant & arg2,
-                                                         const QVariant & arg3,
-                                                         bool arg2Variant
-                                                        )
+        bool QBluetoothLocalDevice_Private::callAdapter(const QString & method,
+                                                        QList<QVariant> args,
+                                                        QDBusReply<T> & reply,
+                                                        bool async,
+                                                        const char * returnMethod)
 {
     if (invalidIface())
-        return QDBusReply<T>(QDBusError(QDBusError::Other, "invalid adapter interface"));
-    
-    QDBusReply<T> reply = m_iface->call(method, arg1, arg2Variant ? qVariantFromValue(QDBusVariant(arg2)) : arg2, arg3);
+        return false;
 
-    if(reply.isValid()) {
-        qLog(Bluetooth) << method << "(" << arg1.toString() << ", "
-                        << arg2.toString() << ", " << arg3.toString() << ")"; 
-        return reply;
+    QString methodStr(method + "(");
+    for(int i = 0; i < args.count(); i++)
+    {
+        if(i > 0)
+            methodStr += ", ";
+        methodStr += args.at(i).toString();
     }
-        
-    qWarning() << "Call for adapter " << m_adapterName << " failed " << method
-               << "(" << arg1.toString() << ", " << arg2.toString() << ", "
-               << arg3.toString() << ") with error " << reply.error();
+    methodStr += ")";
+    qLog(Bluetooth) << "calling " << methodStr;
+    
+    if(async)
+        return m_iface->callWithCallback(method, args, this, returnMethod,
+                                         SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    else {
+        reply = m_iface->callWithArgumentList(QDBus::AutoDetect, method, args);
+        if(reply.isValid())
+            return true;
+    }
 
+    qWarning() << "Method call " << methodStr << " for adapter " << m_adapterName << " failed: " << reply.error();
     handleError(reply.error());
+    return false;
+}
+
+template <class T>
+        QDBusReply<T> QBluetoothLocalDevice_Private::callAdapter(const QString & method,
+                                                                 const QVariant & arg1,
+                                                                 const QVariant & arg2,
+                                                                 const QVariant & arg3)
+{
+    QList<QVariant> args;
+    QDBusReply<T> reply;
+    
+    if(arg1.isValid()) {
+        args << arg1;
+        if(arg2.isValid()) {
+            args << arg2;
+            if(arg3.isValid()) {
+                args << arg3;
+            }
+        }
+    }
+    
+    if(callAdapter(method, args, reply))
+        return reply;
+    
     return reply;
 }
 
+
 QVariant QBluetoothLocalDevice_Private::getProperty(QString name)
 {
-    QDBusReply< QMap<QString,QVariant> > reply = callAdapter< QMap<QString,QVariant> >("GetProperties");
+    QList<QVariant> args;   
+    QDBusReply< QMap<QString,QVariant> > reply;
+    
+    callAdapter("GetProperties", args, reply);
 
-    if(reply.isValid())
-        return reply.value().value(name);
-    else
+    if(!reply.isValid())
         return QVariant();
+    
+    QVariant value = reply.value().value(name);
+    qLog(Bluetooth) << "        " << name + "=" + value.toString();
+    return value;
 }
 
 bool QBluetoothLocalDevice_Private::setProperty(QString name, QVariant value)
 {
-    QDBusReply<void> reply = callAdapter<void>("SetProperty", name, value, QVariant(), true);
-    return reply.isValid();
+    QList<QVariant> args;
+    QDBusReply<void> reply;
+
+    args << name;
+    args << qVariantFromValue(QDBusVariant(value));
+
+    return callAdapter<void>("SetProperty", args, reply);
 }
 
 bool QBluetoothLocalDevice_Private::setPropertyAsync(QString name, QVariant value, const char * returnMethod)
 {
-    qLog(Bluetooth) << "setPropertyAsync " << name << "=" << value;
-
-    if (invalidIface())
-        return false;
-
     QList<QVariant> args;
+    QDBusReply<void> reply;
+
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
     
-    return m_iface->callWithCallback("SetProperty", args, this, returnMethod,
-                                     SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+    return callAdapter("SetProperty", args, reply, true, returnMethod);
 }
 
 void QBluetoothLocalDevice_Private::requestSignal(int signal)
