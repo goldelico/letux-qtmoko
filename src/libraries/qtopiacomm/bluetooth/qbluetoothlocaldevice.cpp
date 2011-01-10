@@ -1568,8 +1568,8 @@ bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
     AgentAdaptor *agent;
 
-    agent = new AgentAdaptor(this);
-    if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, agent))
+    agent = new AgentAdaptor(m_data);
+    if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, m_data))
         qLog(Bluetooth) << ">>>>>>>>>>>>>>>>>>> Registered pairing agent, path=" << PAIRING_AGENT_PATH;
     else
         qWarning() << ">>>>>>>>>>>>>>>>>>>>>>>> Registering BT pairing agent failed";
@@ -1583,11 +1583,12 @@ bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
     args << qVariantFromValue(agentPath);
     args << capability;
 
-    PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
+    //PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
     
-    return m_data->callAdapter("CreatePairedDevice", args, reply, true, proxy,
-                               SLOT(createBondingReply(QDBusMessage)),
-                               SLOT(createBondingError(QDBusError,QDBusMessage)));
+    return m_data->callAdapter("CreatePairedDevice", args, reply);
+    //return m_data->callAdapter("CreatePairedDevice", args, reply, true, proxy,
+      //                         SLOT(createBondingReply(QDBusMessage)),
+        //                       SLOT(createBondingError(QDBusError,QDBusMessage)));
 }
 
 /*!
