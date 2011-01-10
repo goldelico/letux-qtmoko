@@ -221,6 +221,7 @@ public:
     QList<QBluetoothRemoteDevice> m_discovered;
     QSet<int> m_sigSet;
     uint m_discovTo;
+    AgentAdaptor *m_agent;
 
     void lazyInit();
 
@@ -584,6 +585,7 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         const QBluetoothAddress &addr) : QObject(parent),
         m_parent(parent),
         m_error(QBluetoothLocalDevice::NoError),
+        m_agent(NULL),
         m_initString(addr.toString()), m_doneInit(false),
         m_iface(0), m_valid(false)
 {
@@ -594,6 +596,7 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         const QString &devName) : QObject(parent),
         m_parent(parent),
         m_error(QBluetoothLocalDevice::NoError),
+        m_agent(NULL),
         m_initString(devName), m_doneInit(false),
         m_iface(0), m_valid(false)
 {
@@ -601,7 +604,11 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
 
 QBluetoothLocalDevice_Private::~QBluetoothLocalDevice_Private()
 {
-    delete iface();
+    if(m_agent != NULL) {
+        QDBusConnection::systemBus().unregisterObject(PAIRING_AGENT_PATH);
+        delete m_agent;
+    }
+    delete iface();    
 }
 
 struct bluez_error_mapping
@@ -1566,13 +1573,13 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
-    AgentAdaptor *agent;
-
-    agent = new AgentAdaptor(m_data);
-    if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, m_data))
-        qLog(Bluetooth) << ">>>>>>>>>>>>>>>>>>> Registered pairing agent, path=" << PAIRING_AGENT_PATH;
-    else
-        qWarning() << ">>>>>>>>>>>>>>>>>>>>>>>> Registering BT pairing agent failed";
+    if (m_data->m_agent == NULL) {
+        m_data->m_agent = new AgentAdaptor(m_data);
+        if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, m_data))
+            qLog(Bluetooth) << "Registered pairing agent, path=" << PAIRING_AGENT_PATH;
+        else
+            qWarning() << "Registering BT pairing agent failed";
+    }
     
     QList<QVariant> args;
     QDBusReply<QDBusObjectPath> reply;
@@ -1583,12 +1590,11 @@ bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
     args << qVariantFromValue(agentPath);
     args << capability;
 
-    //PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
+    PairingCancelledProxy *proxy = new PairingCancelledProxy(addr, m_data);
     
-    return m_data->callAdapter("CreatePairedDevice", args, reply);
-    //return m_data->callAdapter("CreatePairedDevice", args, reply, true, proxy,
-      //                         SLOT(createBondingReply(QDBusMessage)),
-        //                       SLOT(createBondingError(QDBusError,QDBusMessage)));
+    return m_data->callAdapter("CreatePairedDevice", args, reply, true, proxy,
+                               SLOT(createBondingReply(QDBusMessage)),
+                               SLOT(createBondingError(QDBusError,QDBusMessage)));
 }
 
 /*!
