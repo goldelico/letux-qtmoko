@@ -35,6 +35,7 @@
 #include <QDBusReply>
 #include <QDBusMessage>
 #include <QDBusAbstractAdaptor>
+#include <QDBusArgument>
 #include <QSet>
 #include <QDebug>
 
@@ -1638,22 +1639,17 @@ bool QBluetoothLocalDevice::removePairing(const QBluetoothAddress &addr)
 */
 QBluetoothReply<QList<QBluetoothAddress> > QBluetoothLocalDevice::pairedDevices() const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return QBluetoothReply<QList<QBluetoothAddress> >();
-    }
-
-    QDBusReply<QStringList> reply = m_data->iface()->call("ListBondings");
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return QBluetoothReply<QList<QBluetoothAddress> >();
-    }
-
     QList<QBluetoothAddress> ret;
-
-    foreach (QString addr, reply.value()) {
+    
+    QVariant devices = m_data->getProperty("Devices");
+    if (!devices.isValid())
+        return ret;
+      
+    QList<QDBusObjectPath> list = qdbus_cast<QList<QDBusObjectPath> > (devices.value<QDBusArgument>());
+    foreach (QDBusObjectPath path, list) {
+        QString addr = path.path().right(17).replace('_', ':');     // e.g. "/org/bluez/923/hci0/dev_30_38_55_02_34_21"
         ret.push_back(QBluetoothAddress(addr));
     }
-
     return ret;
 }
 
@@ -1667,17 +1663,12 @@ QBluetoothReply<QList<QBluetoothAddress> > QBluetoothLocalDevice::pairedDevices(
 */
 QBluetoothReply<bool> QBluetoothLocalDevice::isPaired(const QBluetoothAddress &addr) const
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return QBluetoothReply<bool>();
-    }
-
-    QDBusReply<bool> reply = m_data->iface()->call("HasBonding", addr.toString());
-    if (!reply.isValid()) {
-        m_data->handleError(reply.error());
-        return QBluetoothReply<bool>();
-    }
-
-    return reply.value();
+    QList<QBluetoothAddress> list = pairedDevices();
+    foreach (QBluetoothAddress a, list)
+        if(a == addr)
+            return true;
+    
+    return false;
 }
 
 /*!
