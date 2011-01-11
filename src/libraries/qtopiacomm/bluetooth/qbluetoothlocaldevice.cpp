@@ -1684,7 +1684,7 @@ QBluetoothReply<bool> QBluetoothLocalDevice::isPaired(const QBluetoothAddress &a
  */
 bool QBluetoothLocalDevice::cancelPairing(const QBluetoothAddress &addr)
 {
-    return m_data->callAdapter("CancelDeviceCreation", addr.toString());
+    return m_data->callAdapter<void>("CancelDeviceCreation", addr.toString()).isValid();
 }
 
 /*!
