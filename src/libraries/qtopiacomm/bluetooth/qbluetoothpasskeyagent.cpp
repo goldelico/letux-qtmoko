@@ -22,6 +22,7 @@
 
 #include <QList>
 #include <qglobal.h>
+#include <qtopialog.h>
 
 #include <QDBusArgument>
 #include <QDBusConnection>
@@ -35,16 +36,6 @@
 #include <string.h>
 
 
-class PasskeyAgentDBusAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.PasskeyAgent")
-
-public:
-    PasskeyAgentDBusAdaptor(QObject *parent);
-    ~PasskeyAgentDBusAdaptor();
-};
-
 PasskeyAgentDBusAdaptor::PasskeyAgentDBusAdaptor(QObject *parent) :
          QDBusAbstractAdaptor(parent)
 {
@@ -56,10 +47,52 @@ PasskeyAgentDBusAdaptor::~PasskeyAgentDBusAdaptor()
 
 }
 
+void PasskeyAgentDBusAdaptor::Authorize(const QDBusObjectPath &deviceObject, const QString &uuid)
+{
+    qWarning() << "Authorize";
+}
+
+void PasskeyAgentDBusAdaptor::Cancel()
+{
+    qWarning() << "Cancel";
+}
+
+void PasskeyAgentDBusAdaptor::ConfirmModeChange(const QString &mode)
+{
+    qWarning() << "ConfirmModeChange";
+}
+
+void PasskeyAgentDBusAdaptor::DisplayPasskey(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "DisplayPasskey";
+}
+
+void PasskeyAgentDBusAdaptor::Release()
+{
+    qWarning() << "Release";
+}
+
+void PasskeyAgentDBusAdaptor::RequestConfirmation(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "RequestConfirmation";
+}
+
+uint PasskeyAgentDBusAdaptor::RequestPasskey(const QDBusObjectPath &deviceObject)
+{
+    qWarning() << "RequestPasskey";
+    return 0;
+}
+
+QString PasskeyAgentDBusAdaptor::RequestPinCode(const QDBusObjectPath &deviceObject)
+{
+    qWarning() << "RequestPinCode";
+    return "0000";
+}
+
+
 class QBluetoothPasskeyAgent_Private : public QObject
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.PasskeyAgent")
 
 public:
     QBluetoothPasskeyAgent_Private(QBluetoothPasskeyAgent *parent,
@@ -96,12 +129,14 @@ QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskey
         return;
     }
 
-
     QString path = m_name;
     path.prepend('/');
 
     new PasskeyAgentDBusAdaptor(this);
-    dbc.registerObject(path, this, QDBusConnection::ExportNonScriptableSlots);
+    if(dbc.registerObject(path, this))
+        qLog(Bluetooth) << "Registered pairing agent, path=" << path;
+    else
+        qWarning() << "Registering BT pairing agent failed";
 }
 
 struct bluez_error_mapping

@@ -22,6 +22,7 @@
 #include "qbluetoothnamespace_p.h"
 #include <qbluetoothlocaldevicemanager.h>
 #include <qbluetoothaddress.h>
+#include <qbluetoothpasskeyagent.h>
 
 #include <QList>
 #include <QStringList>
@@ -120,72 +121,6 @@ enum __q__signals_enum {
     PROPERTY_CHANGED
 };
 
-class AgentAdaptor: public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.Agent")
-
-public:
-    AgentAdaptor(QObject *parent);
-
-public slots:
-    void Authorize(const QDBusObjectPath &device, const QString &uuid);
-    void Cancel();
-    void ConfirmModeChange(const QString &mode);
-    void DisplayPasskey(const QDBusObjectPath &device, uint passkey);
-    void Release();
-    void RequestConfirmation(const QDBusObjectPath &device, uint passkey);
-    uint RequestPasskey(const QDBusObjectPath &device);
-    QString RequestPinCode(const QDBusObjectPath &device);
-};
-
-AgentAdaptor::AgentAdaptor(QObject *parent) : QDBusAbstractAdaptor(parent)
-{
-}
-
-void AgentAdaptor::Authorize(const QDBusObjectPath &deviceObject, const QString &uuid)
-{
-    qWarning() << "Authorize";
-}
-
-void AgentAdaptor::Cancel()
-{
-    qWarning() << "Cancel";
-}
-
-void AgentAdaptor::ConfirmModeChange(const QString &mode)
-{
-    qWarning() << "ConfirmModeChange";
-}
-
-void AgentAdaptor::DisplayPasskey(const QDBusObjectPath &deviceObject, uint passkey)
-{
-    qWarning() << "DisplayPasskey";
-}
-
-void AgentAdaptor::Release()
-{
-    qWarning() << "Release";
-}
-
-void AgentAdaptor::RequestConfirmation(const QDBusObjectPath &deviceObject, uint passkey)
-{
-    qWarning() << "RequestConfirmation";
-}
-
-uint AgentAdaptor::RequestPasskey(const QDBusObjectPath &deviceObject)
-{
-    qWarning() << "RequestPasskey";
-    return 0;
-}
-
-QString AgentAdaptor::RequestPinCode(const QDBusObjectPath &deviceObject)
-{
-    qWarning() << "RequestPinCode";
-    return "0000";
-}
-
-
 class QBluetoothLocalDevice_Private : public QObject
 {
     Q_OBJECT
@@ -222,7 +157,7 @@ public:
     QList<QBluetoothRemoteDevice> m_discovered;
     QSet<int> m_sigSet;
     uint m_discovTo;
-    AgentAdaptor *m_agent;
+    PasskeyAgentDBusAdaptor *m_agent;
 
     void lazyInit();
 
@@ -1580,7 +1515,7 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
     if (m_data->m_agent == NULL) {
-        m_data->m_agent = new AgentAdaptor(m_data);
+        m_data->m_agent = new PasskeyAgentDBusAdaptor(m_data);
         if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, m_data))
             qLog(Bluetooth) << "Registered pairing agent, path=" << PAIRING_AGENT_PATH;
         else
