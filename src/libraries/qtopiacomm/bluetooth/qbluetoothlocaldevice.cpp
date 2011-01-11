@@ -110,8 +110,8 @@ enum __q__signals_enum {
     REMOTE_DEVICE_CONNECTED,
     REMOTE_DEVICE_DISCONNECTED,
     REMOTE_DEVICE_DISCONNECT_REQUEST,
-    BONDING_CREATED,
-    BONDING_REMOVED,
+    DEVICE_CREATED,
+    DEVICE_REMOVED,
     REMOTE_NAME_UPDATED,
     REMOTE_NAME_FAILED,
     REMOTE_CLASS_UPDATED,
@@ -266,8 +266,8 @@ public slots:
     void remoteAliasRemoved(const QString &addr);
 
     void createBondingError(const QBluetoothAddress &addr, const QDBusError &error);
-    void bondingCreated(const QString &addr);
-    void bondingRemoved(const QString &addr);
+    void deviceCreated(const QDBusObjectPath &device);
+    void deviceRemoved(const QDBusObjectPath &device);
 
     void remoteNameUpdated(const QString &addr, const QString &name);
     void remoteNameFailed(const QString &addr);
@@ -318,6 +318,11 @@ void PairingCancelledProxy::createBondingError(const QDBusError &error, const QD
 {
     m_parent->createBondingError(m_addr, error);
     deleteLater();
+}
+
+static QString btAddr(const QDBusObjectPath & path)
+{
+    return path.path().right(17).replace('_', ':');     // e.g. "/org/bluez/923/hci0/dev_30_38_55_02_34_21"
 }
 
 bool QBluetoothLocalDevice_Private::invalidIface()
@@ -497,13 +502,13 @@ void QBluetoothLocalDevice_Private::requestSignal(int signal)
             dbc.connect(service, path, interface, "RemoteDeviceDisconnectRequested",
                 this, SLOT(disconnectRemoteDeviceRequested(QString)));
             break;
-        case BONDING_CREATED:
-            dbc.connect(service, path, interface, "BondingCreated",
-                this, SLOT(bondingCreated(QString)));
+        case DEVICE_CREATED:
+            dbc.connect(service, path, interface, "DeviceCreated",
+                this, SLOT(deviceCreated(const QDBusObjectPath &)));
             break;
-        case BONDING_REMOVED:
-            dbc.connect(service, path, interface, "BondingRemoved",
-                this, SLOT(bondingRemoved(QString)));
+        case DEVICE_REMOVED:
+            dbc.connect(service, path, interface, "DeviceRemoved",
+                this, SLOT(deviceRemoved(const QDBusObjectPath &)));
             break;
         case REMOTE_NAME_UPDATED:
             dbc.connect(service, path, interface, "RemoteNameUpdated",
@@ -850,14 +855,14 @@ void QBluetoothLocalDevice_Private::createBondingError(const QBluetoothAddress &
     emit m_parent->pairingFailed(addr);
 }
 
-void QBluetoothLocalDevice_Private::bondingCreated(const QString &addr)
+void QBluetoothLocalDevice_Private::deviceCreated(const QDBusObjectPath &device)
 {
-    emit m_parent->pairingCreated(QBluetoothAddress(addr));
+    emit m_parent->pairingCreated(QBluetoothAddress(btAddr(device)));
 }
 
-void QBluetoothLocalDevice_Private::bondingRemoved(const QString &addr)
+void QBluetoothLocalDevice_Private::deviceRemoved(const QDBusObjectPath &device)
 {
-    emit m_parent->pairingRemoved(QBluetoothAddress(addr));
+    emit m_parent->pairingRemoved(QBluetoothAddress(btAddr(device)));
 }
 
 void QBluetoothLocalDevice_Private::remoteNameUpdated(const QString &addr, const QString &name)
@@ -1056,11 +1061,11 @@ void QBluetoothLocalDevice::connectNotify(const char *signal)
     }
 
     else if (sig == QMetaObject::normalizedSignature(SIGNAL(pairingCreated(QBluetoothAddress)))) {
-        m_data->requestSignal(BONDING_CREATED);
+        m_data->requestSignal(DEVICE_CREATED);
     }
 
     else if (sig == QMetaObject::normalizedSignature(SIGNAL(pairingRemoved(QBluetoothAddress)))) {
-        m_data->requestSignal(BONDING_REMOVED);
+        m_data->requestSignal(DEVICE_REMOVED);
     }
 
     else if (sig == QMetaObject::normalizedSignature(SIGNAL(remoteNameUpdated(QBluetoothAddress,QString)))) {
@@ -1609,16 +1614,27 @@ bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
  */
 bool QBluetoothLocalDevice::removePairing(const QBluetoothAddress &addr)
 {
-    if (!m_data->iface() || !m_data->iface()->isValid()) {
-        return false;
-    }
-
+    QDBusReply<void> reply;
     QList<QVariant> args;
-    args << addr.toString();
+    
+    QVariant devices = m_data->getProperty("Devices");
+    if (!devices.isValid())
+        return false;
+      
+    QList<QDBusObjectPath> list = qdbus_cast<QList<QDBusObjectPath> > (devices.value<QDBusArgument>());
+    QString search = addr.toString().replace(':', '_');
+    foreach (QDBusObjectPath path, list) {
 
-    return m_data->iface()->callWithCallback("RemoveBonding", args, m_data,
-                                             SLOT(asyncReply(QDBusMessage)),
-                                             SLOT(asyncErrorReply(QDBusError,QDBusMessage)));
+        qWarning() << "search=" << search << " path=" << path.path();
+
+        if(!path.path().endsWith(search))
+            continue;
+
+        args << qVariantFromValue(path);
+        return m_data->callAdapter("RemoveDevice", args, reply, true);
+    }
+    
+    return false;
 }
 
 /*!
@@ -1647,8 +1663,7 @@ QBluetoothReply<QList<QBluetoothAddress> > QBluetoothLocalDevice::pairedDevices(
       
     QList<QDBusObjectPath> list = qdbus_cast<QList<QDBusObjectPath> > (devices.value<QDBusArgument>());
     foreach (QDBusObjectPath path, list) {
-        QString addr = path.path().right(17).replace('_', ':');     // e.g. "/org/bluez/923/hci0/dev_30_38_55_02_34_21"
-        ret.push_back(QBluetoothAddress(addr));
+        ret.push_back(QBluetoothAddress(btAddr(path)));
     }
     return ret;
 }
