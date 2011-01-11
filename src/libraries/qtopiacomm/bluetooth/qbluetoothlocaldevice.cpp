@@ -1624,14 +1624,10 @@ bool QBluetoothLocalDevice::removePairing(const QBluetoothAddress &addr)
     QList<QDBusObjectPath> list = qdbus_cast<QList<QDBusObjectPath> > (devices.value<QDBusArgument>());
     QString search = addr.toString().replace(':', '_');
     foreach (QDBusObjectPath path, list) {
-
-        qWarning() << "search=" << search << " path=" << path.path();
-
-        if(!path.path().endsWith(search))
-            continue;
-
-        args << qVariantFromValue(path);
-        return m_data->callAdapter("RemoveDevice", args, reply, true);
+        if(path.path().endsWith(search)) {
+            args << qVariantFromValue(path);
+            return m_data->callAdapter("RemoveDevice", args, reply, true);
+        }
     }
     
     return false;
