@@ -22,6 +22,7 @@
 
 #include <qbluetoothglobal.h>
 #include <qbluetoothnamespace.h>
+#include <qbluetoothpasskeyagent.h>
 
 #include <qobject.h>
 #include <qglobal.h>
@@ -117,6 +118,7 @@ public:
     QBluetoothReply<QDateTime> lastUsed(const QBluetoothAddress &addr) const;
     bool updateRemoteDevice(QBluetoothRemoteDevice &device) const;
 
+    bool registerAgent(QBluetoothPasskeyAgent *);
     bool requestPairing(const QBluetoothAddress &addr);
     bool removePairing(const QBluetoothAddress &addr);
     QBluetoothReply<QList<QBluetoothAddress> > pairedDevices() const;

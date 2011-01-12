@@ -134,9 +134,9 @@ QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskey
 
     new PasskeyAgentDBusAdaptor(this);
     if(dbc.registerObject(path, this))
-        qLog(Bluetooth) << "Registered pairing agent, path=" << path;
+        qLog(Bluetooth) << "Registered pairing agent object on dbus path=" << path;
     else
-        qWarning() << "Registering BT pairing agent failed";
+        qWarning() << "Registering BT pairing agent object on dbus failed";
 }
 
 struct bluez_error_mapping

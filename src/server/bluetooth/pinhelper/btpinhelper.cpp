@@ -33,6 +33,7 @@
 #include <qpassworddialog.h>
 #include <qtopiaipcenvelope.h>
 #include <qbluetoothlocaldevice.h>
+#include <qbluetoothlocaldevicemanager.h>
 #include <qbluetoothpasskeyrequest.h>
 #include <qbluetoothremotedevice.h>
 #include <qtopialog.h>
@@ -62,7 +63,10 @@ BTPinHelper::BTPinHelper(QObject *parent)
 {
     m_passDialog->setInputMode(QPasswordDialog::Plain);
 
-    registerDefault();
+    QBluetoothLocalDeviceManager manager;
+    QBluetoothLocalDevice defaultDevice(manager.defaultDevice());
+    qLog(Bluetooth) << "Registering BTPinHelper for device " << defaultDevice.adapterName();
+    defaultDevice.registerAgent(this);
 }
 
 /*!

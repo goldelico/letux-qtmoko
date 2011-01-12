@@ -22,7 +22,6 @@
 #include "qbluetoothnamespace_p.h"
 #include <qbluetoothlocaldevicemanager.h>
 #include <qbluetoothaddress.h>
-#include <qbluetoothpasskeyagent.h>
 
 #include <QList>
 #include <QStringList>
@@ -262,6 +261,9 @@ static QString btAddr(const QDBusObjectPath & path)
 
 bool QBluetoothLocalDevice_Private::invalidIface()
 {
+    if (!m_doneInit)
+        lazyInit();
+
     if(m_iface != NULL && m_iface->isValid())
         return false;
     
@@ -1502,6 +1504,25 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
     device.setName(name);
 
     return true;
+}
+
+/*!
+    Registers pairing agent for this adapter. Agent will be used to display PIN
+    dialog when remote device connects to this adapter.
+
+    \sa QBluetoothPasskeyAgent
+*/
+bool QBluetoothLocalDevice::registerAgent(QBluetoothPasskeyAgent *agent)
+{
+    QList<QVariant> args;
+    QDBusReply<void> reply;
+    QDBusObjectPath agentPath("/" + agent->name());
+    QString capability;
+
+    args << qVariantFromValue(agentPath);
+    args << capability;
+
+    return m_data->callAdapter("RegisterAgent", args, reply);
 }
 
 /*!
