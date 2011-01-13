@@ -22,6 +22,7 @@
 #include "qbluetoothnamespace_p.h"
 #include <qbluetoothlocaldevicemanager.h>
 #include <qbluetoothaddress.h>
+#include <qbluetoothdefaultpasskeyagent.h>
 
 #include <QList>
 #include <QStringList>
@@ -1526,11 +1527,11 @@ bool QBluetoothLocalDevice::registerAgent(QBluetoothPasskeyAgent *agent)
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
-    new QBluetoothPasskeyAgent("TestAgent", this);
+    new QBluetoothDefaultPasskeyAgent("DefaultAgent", this);
     
     QList<QVariant> args;
     QDBusReply<QDBusObjectPath> reply;
-    QDBusObjectPath agentPath("/TestAgent");
+    QDBusObjectPath agentPath("/DefaultAgent");
     QString capability;
     
     args << addr.toString();

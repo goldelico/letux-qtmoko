@@ -30,6 +30,7 @@ BLUETOOTH_HEADERS+=\
     qbluetoothlocaldevicemanager.h\
     qbluetoothnamespace.h\
     qbluetoothpasskeyagent.h\
+    qbluetoothdefaultpasskeyagent.h\
     qbluetoothpasskeyrequest.h\
     qbluetoothremotedevice.h\
     qbluetoothabstractserver.h\
@@ -57,6 +58,7 @@ BLUETOOTH_SOURCES+=\
     qbluetoothlocaldevicemanager.cpp\
     qbluetoothnamespace.cpp\
     qbluetoothpasskeyagent.cpp\
+    qbluetoothdefaultpasskeyagent.cpp\
     qbluetoothpasskeyrequest.cpp\
     qbluetoothabstractserver.cpp\
     qbluetoothscoserver.cpp\

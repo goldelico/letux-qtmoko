@@ -17,24 +17,29 @@
 **
 ****************************************************************************/
 
-#ifndef BTPINHELPER_H
-#define BTPINHELPER_H
+#ifndef QBLUETOOTHDEFAULTPASSKEYAGENT_H
+#define QBLUETOOTHDEFAULTPASSKEYAGENT_H
 
-#include <qbluetoothdefaultpasskeyagent.h>
+#include <qbluetoothpasskeyagent.h>
 
 class QPasswordDialog;
-class QValueSpaceItem;
 
-class BluetoothPasskeyAgentTask : public QObject 
-{
+class QBLUETOOTH_EXPORT QBluetoothDefaultPasskeyAgent : public QBluetoothPasskeyAgent {
     Q_OBJECT
 public:
-    BluetoothPasskeyAgentTask( QObject* parent = 0 );
-protected slots:
-    void activateAgent();
-    void delayedAgentStart();
+    explicit QBluetoothDefaultPasskeyAgent(const QString &name, QObject *parent = 0);
+    ~QBluetoothDefaultPasskeyAgent();
+
+    virtual void requestPasskey(QBluetoothPasskeyRequest &req);
+    virtual void cancelRequest(const QString &localDevice,
+                               const QBluetoothAddress &remoteAddr);
+    virtual void release();
+
+private slots:
+    void stopVibration();
+
 private:
-    QValueSpaceItem* serverWidgetVsi;
+    QPasswordDialog *m_passDialog;
 };
 
 #endif
