@@ -44,6 +44,8 @@ class QBluetoothPasskeyAgent_Private : public QDBusAbstractAdaptor
 public:
     QBluetoothPasskeyAgent_Private(QBluetoothPasskeyAgent *parent,
                                    const QString &name);
+    ~QBluetoothPasskeyAgent_Private();
+    
     QString m_name;
     QBluetoothPasskeyAgent *m_parent;
     QBluetoothPasskeyAgent::Error m_error;
@@ -84,13 +86,18 @@ QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskey
         return;
     }
 
-    QString path = m_name;
-    path.prepend('/');
-
+    QString path = "/" + m_name;
     if(dbc.registerObject(path, parent))
         qLog(Bluetooth) << "Registered pairing agent object on dbus path=" << path;
     else
         qWarning() << "Registering BT pairing agent object on dbus failed";
+}
+
+QBluetoothPasskeyAgent_Private::~QBluetoothPasskeyAgent_Private()
+{
+    QString path = "/" + m_name;
+    qLog(Bluetooth) << "Unregistering pairing agent object on dbus path=" << path;
+    QDBusConnection::systemBus().unregisterObject(path);
 }
 
 struct bluez_error_mapping

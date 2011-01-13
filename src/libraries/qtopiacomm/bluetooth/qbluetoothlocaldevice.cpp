@@ -150,6 +150,7 @@ public:
     void emitError(const QDBusError &error);
 
     QBluetoothLocalDevice *m_parent;
+    QBluetoothDefaultPasskeyAgent *m_agent;
     QBluetoothLocalDevice::Error m_error;
     QString m_errorString;
     QList<QBluetoothRemoteDevice> m_discovered;
@@ -525,6 +526,7 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         QBluetoothLocalDevice *parent,
         const QBluetoothAddress &addr) : QObject(parent),
         m_parent(parent),
+        m_agent(NULL),
         m_error(QBluetoothLocalDevice::NoError),
         m_initString(addr.toString()), m_doneInit(false),
         m_iface(0), m_valid(false)
@@ -535,6 +537,7 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         QBluetoothLocalDevice *parent,
         const QString &devName) : QObject(parent),
         m_parent(parent),
+        m_agent(NULL),
         m_error(QBluetoothLocalDevice::NoError),
         m_initString(devName), m_doneInit(false),
         m_iface(0), m_valid(false)
@@ -543,7 +546,10 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
 
 QBluetoothLocalDevice_Private::~QBluetoothLocalDevice_Private()
 {
-    delete iface();    
+    if (m_agent)
+        delete m_agent;
+
+    delete iface(); 
 }
 
 struct bluez_error_mapping
@@ -1527,11 +1533,12 @@ bool QBluetoothLocalDevice::registerAgent(QBluetoothPasskeyAgent *agent)
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
-    new QBluetoothDefaultPasskeyAgent("DefaultAgent", this);
+    if (m_data->m_agent == NULL)
+        m_data->m_agent = new QBluetoothDefaultPasskeyAgent("DefaultAgent", this);
     
     QList<QVariant> args;
     QDBusReply<QDBusObjectPath> reply;
-    QDBusObjectPath agentPath("/DefaultAgent");
+    QDBusObjectPath agentPath("/" + m_data->m_agent->name());
     QString capability;
     
     args << addr.toString();
