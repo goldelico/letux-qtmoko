@@ -387,8 +387,6 @@ void QBluetoothLocalDevice_Private::requestSignal(int signal)
         return;
     }
 
-    qWarning() << "XXXXXXXXXXX requestSignal " << signal;
-
     if (m_sigSet.contains(signal))
         return;
 
@@ -608,7 +606,7 @@ void QBluetoothLocalDevice_Private::propertyChanged(const QString &name, const Q
 {
     QVariant val = value.variant();
     
-    qWarning() << "propertyChanged " << name << "=" << val.toString();
+    qLog(Bluetooth) << "propertyChanged " << name << "=" << val.toString();
     
     if (name == "Powered") {
         if (val.toBool())
