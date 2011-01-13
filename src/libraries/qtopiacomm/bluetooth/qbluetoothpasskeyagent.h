@@ -41,7 +41,7 @@ public:
     QString name() const;
 
 protected:
-    virtual void requestPasskey(QBluetoothPasskeyRequest &req); // = 0; <-- just to make test in QBluetoothLocalDevice::requestPairing()
+    virtual void requestPasskey(QBluetoothPasskeyRequest &req) = 0;
     virtual void cancelRequest(const QString &localDevice,
                                const QBluetoothAddress &remoteAddr);
     virtual bool confirmPasskey(const QString &localDevice,
