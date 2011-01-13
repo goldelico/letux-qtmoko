@@ -58,19 +58,13 @@ public:
     
     template <class T>
             bool btcall(const QString & method,
-                      QList<QVariant> args,
                       QDBusReply<T> & reply = QDBusReply<T>(),
+                      QList<QVariant> args = QList<QVariant>(),
                       bool async = false,
                       QObject * receiver = NULL,
                       const char * returnMethod = NULL,
                       const char * errorMethod = NULL);
-            
-                template <class T>
-            QDBusReply<T> btcall(const QString & method,
-                                      const QVariant & arg1 = QVariant(),
-                                      const QVariant & arg2 = QVariant(),
-                                      const QVariant & arg3 = QVariant());
-            
+           
     QVariant getProperty(QString name);
     bool setProperty(QString name, QVariant value);
     bool setPropertyAsync(QString name, 
@@ -86,8 +80,8 @@ protected:
 
 template <class T>
         bool QBluetoothDbusIface::btcall(const QString & method,
-                                       QList<QVariant> args,
                                        QDBusReply<T> & reply,
+                                       QList<QVariant> args,
                                        bool async,
                                        QObject * receiver,
                                        const char * returnMethod,
@@ -130,31 +124,6 @@ template <class T>
 
     qWarning() << "Method call " << methodStr << " failed: " << reply.error();
     return false;
-}
-
-template <class T>
-        QDBusReply<T> QBluetoothDbusIface::btcall(const QString & method,
-                                                                 const QVariant & arg1,
-                                                                 const QVariant & arg2,
-                                                                 const QVariant & arg3)
-{
-    QList<QVariant> args;
-    QDBusReply<T> reply;
-    
-    if(arg1.isValid()) {
-        args << arg1;
-        if(arg2.isValid()) {
-            args << arg2;
-            if(arg3.isValid()) {
-                args << arg3;
-            }
-        }
-    }
-    
-    if(btcall(method, args, reply))
-        return reply;
-    
-    return reply;
 }
 
 #endif

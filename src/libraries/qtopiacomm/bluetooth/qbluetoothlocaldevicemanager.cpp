@@ -145,11 +145,10 @@ QBluetoothLocalDeviceManager::~QBluetoothLocalDeviceManager()
 QStringList QBluetoothLocalDeviceManager::devices()
 {
     QStringList ret;
-    QDBusReply< QList<QDBusObjectPath> > reply = m_data->m_iface->btcall< QList<QDBusObjectPath> >("ListAdapters");
-
-    if (!reply.isValid()) {
+    QDBusReply< QList<QDBusObjectPath> > reply;
+    
+    if(!m_data->m_iface->btcall("ListAdapters", reply))
         return ret;
-    }
 
     foreach (QDBusObjectPath path, reply.value()) {
         ret.push_back(QBluetoothLocalDevice::adapterPathToDevName(path.path()));
@@ -170,14 +169,10 @@ QStringList QBluetoothLocalDeviceManager::devices()
  */
 QString QBluetoothLocalDeviceManager::defaultDevice()
 {
-    if (!m_data->m_iface || !m_data->m_iface->isValid())
+    QDBusReply<QDBusObjectPath> reply;
+    
+    if(!m_data->m_iface->btcall("DefaultAdapter", reply))
         return QString();
-
-    QDBusReply<QDBusObjectPath> reply = m_data->m_iface->btcall<QDBusObjectPath>("DefaultAdapter");
-
-    if (!reply.isValid()) {
-        return QString();
-    }
 
     return QBluetoothLocalDevice::adapterPathToDevName(reply.value().path());
 }

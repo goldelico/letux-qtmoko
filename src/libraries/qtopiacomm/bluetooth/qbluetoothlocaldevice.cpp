@@ -495,7 +495,12 @@ void QBluetoothLocalDevice_Private::lazyInit()
     // Bluez understands the first two, for the last we strip the full/path.
     m_initString = QBluetoothLocalDevice::adapterPathToDevName(m_initString);
 
-    QDBusReply<QDBusObjectPath> reply = iface.btcall<QDBusObjectPath>("FindAdapter", m_initString);
+    QDBusReply<QDBusObjectPath> reply;
+    QList<QVariant> args;
+
+    args << m_initString;
+    
+    iface.btcall("FindAdapter", reply, args);
     m_initString.clear();
 
     if (!reply.isValid()) {

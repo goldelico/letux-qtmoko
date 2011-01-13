@@ -27,10 +27,9 @@ QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &
 
 QVariant QBluetoothDbusIface::getProperty(QString name)
 {
-    QList<QVariant> args;   
     QDBusReply< QMap<QString,QVariant> > reply;
     
-    btcall("GetProperties", args, reply);
+    btcall("GetProperties", reply);
 
     if(!reply.isValid())
         return QVariant();
@@ -48,7 +47,7 @@ bool QBluetoothDbusIface::setProperty(QString name, QVariant value)
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
 
-    return btcall<void>("SetProperty", args, reply);
+    return btcall<void>("SetProperty", reply, args);
 }
 
 bool QBluetoothDbusIface::setPropertyAsync(QString name,
@@ -63,7 +62,7 @@ bool QBluetoothDbusIface::setPropertyAsync(QString name,
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
     
-    return btcall("SetProperty", args, reply, true, receiver, returnMethod, errorMethod);
+    return btcall("SetProperty", reply, args, true, receiver, returnMethod, errorMethod);
 }
 
 
