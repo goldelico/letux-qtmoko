@@ -36,9 +36,9 @@
 
 #include <QMetaObject>
 
-QBluetoothDbusIface::QBluetoothDbusIface(const QString & interface) :
-        m_interface(interface),
-        m_iface("org.bluez", interface, "org.bluez.Adapter", QDBusConnection::sessionBus())
+QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &path, const char *interface,
+                        const QDBusConnection &connection, QObject *parent) :
+        QDBusInterface(service, path, interface, connection, parent)
 {
 }
 
@@ -51,12 +51,12 @@ template <class T>
                                        const char * returnMethod,
                                        const char * errorMethod)
 {
-    if(!m_iface.isValid()) {
-        qWarning() << "Dbus interface " << m_interface << " is not valid";
+    if(!isValid()) {
+        qWarning() << "Dbus interface " << path() << " is not valid";
         return true;
     }
 
-    QString methodStr(m_interface + "->" + method + "(");
+    QString methodStr(path() + "->" + method + "(");
     for(int i = 0; i < args.count(); i++)
     {
         QVariant arg = args.at(i);
@@ -78,10 +78,10 @@ template <class T>
         if(errorMethod == NULL)
             errorMethod = SLOT(asyncErrorReply(QDBusError,QDBusMessage));
 
-        return m_iface.callWithCallback(method, args, receiver, returnMethod, errorMethod);
+        return callWithCallback(method, args, receiver, returnMethod, errorMethod);
     }
     else {
-        reply = m_iface.callWithArgumentList(QDBus::AutoDetect, method, args);
+        reply = callWithArgumentList(QDBus::AutoDetect, method, args);
         if(reply.isValid())
             return true;
     }

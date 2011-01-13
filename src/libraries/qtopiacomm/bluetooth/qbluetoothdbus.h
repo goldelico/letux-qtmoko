@@ -34,13 +34,14 @@
  * Helper class for calling bluez4 dbus interface, It can log dbus calls and
  * handle errors.
  */
-class QBluetoothDbusIface : public QObject
+class QBluetoothDbusIface : public QDBusInterface
 {
     Q_OBJECT
 
 public:
     
-    QBluetoothDbusIface(const QString & interface);
+    QBluetoothDbusIface(const QString &service, const QString &path, const char *interface,
+                        const QDBusConnection &connection, QObject *parent);
     
     template <class T>
             bool call(const QString & method,
@@ -59,12 +60,9 @@ public:
                           const char * returnMethod,
                           const char * errorMethod);
 
-private:
-    QString m_interface;
-    QDBusInterface m_iface;
-
-    void asyncReply(const QDBusMessage &msg);
-    void asyncErrorReply(const QDBusError &error, const QDBusMessage &msg);        
+protected:
+    virtual void asyncReply(const QDBusMessage &msg);
+    virtual void asyncErrorReply(const QDBusError &error, const QDBusMessage &msg);        
 };
 
 #endif
