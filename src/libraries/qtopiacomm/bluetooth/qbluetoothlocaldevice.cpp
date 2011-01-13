@@ -100,8 +100,6 @@
     Convenience method, same as value()
 */
 
-const char PAIRING_AGENT_PATH[] = "/qtmoko/bt_pairing_agent";
-
 enum __q__signals_enum {
     REMOTE_DEVICE_DISCOVERED = 1,
     NAME_CHANGED,
@@ -156,7 +154,6 @@ public:
     QList<QBluetoothRemoteDevice> m_discovered;
     QSet<int> m_sigSet;
     uint m_discovTo;
-    PasskeyAgentDBusAdaptor *m_agent;
 
     void lazyInit();
 
@@ -528,7 +525,6 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         const QBluetoothAddress &addr) : QObject(parent),
         m_parent(parent),
         m_error(QBluetoothLocalDevice::NoError),
-        m_agent(NULL),
         m_initString(addr.toString()), m_doneInit(false),
         m_iface(0), m_valid(false)
 {
@@ -539,7 +535,6 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
         const QString &devName) : QObject(parent),
         m_parent(parent),
         m_error(QBluetoothLocalDevice::NoError),
-        m_agent(NULL),
         m_initString(devName), m_doneInit(false),
         m_iface(0), m_valid(false)
 {
@@ -547,10 +542,6 @@ QBluetoothLocalDevice_Private::QBluetoothLocalDevice_Private(
 
 QBluetoothLocalDevice_Private::~QBluetoothLocalDevice_Private()
 {
-    if(m_agent != NULL) {
-        QDBusConnection::systemBus().unregisterObject(PAIRING_AGENT_PATH);
-        delete m_agent;
-    }
     delete iface();    
 }
 
@@ -1535,17 +1526,11 @@ bool QBluetoothLocalDevice::registerAgent(QBluetoothPasskeyAgent *agent)
 */
 bool QBluetoothLocalDevice::requestPairing(const QBluetoothAddress &addr)
 {
-    if (m_data->m_agent == NULL) {
-        m_data->m_agent = new PasskeyAgentDBusAdaptor(m_data);
-        if(QDBusConnection::systemBus().registerObject(PAIRING_AGENT_PATH, m_data))
-            qLog(Bluetooth) << "Registered pairing agent, path=" << PAIRING_AGENT_PATH;
-        else
-            qWarning() << "Registering BT pairing agent failed";
-    }
+    new QBluetoothPasskeyAgent("TestAgent", this);
     
     QList<QVariant> args;
     QDBusReply<QDBusObjectPath> reply;
-    QDBusObjectPath agentPath(PAIRING_AGENT_PATH);
+    QDBusObjectPath agentPath("/TestAgent");
     QString capability;
     
     args << addr.toString();

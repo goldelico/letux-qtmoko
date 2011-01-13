@@ -21,35 +21,14 @@
 #define QBLUETOOTHPASSKEYAGENT_H
 
 #include <QObject>
-#include <QDBusAbstractAdaptor>
-#include <QDBusObjectPath>
 
 #include <qbluetoothglobal.h>
+
 class QBluetoothPasskeyAgent_Private;
 class QBluetoothLocalDevice;
 class QBluetoothPasskeyRequest;
 class QString;
 class QBluetoothAddress;
-
-class PasskeyAgentDBusAdaptor : public QDBusAbstractAdaptor
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.Agent")
-
-public:
-    PasskeyAgentDBusAdaptor(QObject *parent);
-    ~PasskeyAgentDBusAdaptor();
-    
-public slots:
-    void Authorize(const QDBusObjectPath &device, const QString &uuid);
-    void Cancel();
-    void ConfirmModeChange(const QString &mode);
-    void DisplayPasskey(const QDBusObjectPath &device, uint passkey);
-    void Release();
-    void RequestConfirmation(const QDBusObjectPath &device, uint passkey);
-    uint RequestPasskey(const QDBusObjectPath &device);
-    QString RequestPinCode(const QDBusObjectPath &device);
-};
 
 class QBLUETOOTH_EXPORT QBluetoothPasskeyAgent : public QObject
 {
@@ -62,7 +41,7 @@ public:
     QString name() const;
 
 protected:
-    virtual void requestPasskey(QBluetoothPasskeyRequest &req) = 0;
+    virtual void requestPasskey(QBluetoothPasskeyRequest &req); // = 0; <-- just to make test in QBluetoothLocalDevice::requestPairing()
     virtual void cancelRequest(const QString &localDevice,
                                const QBluetoothAddress &remoteAddr);
     virtual bool confirmPasskey(const QString &localDevice,
