@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 #include <qbluetoothlocaldevice.h>
+#include <qbluetoothdbus.h>
 #include <qbluetoothremotedevice.h>
 #include "qbluetoothnamespace_p.h"
 #include <qbluetoothlocaldevicemanager.h>
@@ -484,7 +485,7 @@ void QBluetoothLocalDevice_Private::lazyInit()
 #else
         QDBusConnection::systemBus();
 #endif
-    QDBusInterface iface("org.bluez", "/",
+    QBluetoothDbusIface iface("org.bluez", "/",
                          "org.bluez.Manager", dbc);
     if (!iface.isValid()) {
         return;
@@ -494,7 +495,7 @@ void QBluetoothLocalDevice_Private::lazyInit()
     // Bluez understands the first two, for the last we strip the full/path.
     m_initString = QBluetoothLocalDevice::adapterPathToDevName(m_initString);
 
-    QDBusReply<QDBusObjectPath> reply = iface.call("FindAdapter", m_initString);
+    QDBusReply<QDBusObjectPath> reply = iface.btcall<QDBusObjectPath>("FindAdapter", m_initString);
     m_initString.clear();
 
     if (!reply.isValid()) {

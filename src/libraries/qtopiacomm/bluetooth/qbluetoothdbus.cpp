@@ -17,24 +17,7 @@
 **
 ****************************************************************************/
 
-#include "qbluetoothnamespace_p.h"
 #include "qbluetoothdbus.h"
-
-#include <QStringList>
-#include <QDateTime>
-
-#include <QDBusArgument>
-#include <QDBusConnection>
-#include <QDBusMessage>
-#include <QSet>
-#include <QDebug>
-
-#include <qglobal.h>
-#include <qtopialog.h>
-#include <stdio.h>
-#include <string.h>
-
-#include <QMetaObject>
 
 QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &path, const char *interface,
                         const QDBusConnection &connection, QObject *parent) :
@@ -42,60 +25,12 @@ QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &
 {
 }
 
-template <class T>
-        bool QBluetoothDbusIface::call(const QString & method,
-                                       QList<QVariant> args,
-                                       QDBusReply<T> & reply,
-                                       bool async,
-                                       QObject * receiver,
-                                       const char * returnMethod,
-                                       const char * errorMethod)
-{
-    if(!isValid()) {
-        qWarning() << "Dbus interface " << path() << " is not valid";
-        return true;
-    }
-
-    QString methodStr(path() + "->" + method + "(");
-    for(int i = 0; i < args.count(); i++)
-    {
-        QVariant arg = args.at(i);
-        if(i > 0)
-            methodStr += ", ";
-        if(arg.canConvert<QDBusVariant>())
-            methodStr += arg.value<QDBusVariant>().variant().toString();
-        else
-            methodStr += args.at(i).toString();
-    }
-    methodStr += ")";
-    qLog(Bluetooth) << "calling " << methodStr;
-    
-    if(async) {
-        if(receiver == NULL)
-            receiver = this;
-        if(returnMethod == NULL)
-            returnMethod = SLOT(asyncReply(QDBusMessage));
-        if(errorMethod == NULL)
-            errorMethod = SLOT(asyncErrorReply(QDBusError,QDBusMessage));
-
-        return callWithCallback(method, args, receiver, returnMethod, errorMethod);
-    }
-    else {
-        reply = callWithArgumentList(QDBus::AutoDetect, method, args);
-        if(reply.isValid())
-            return true;
-    }
-
-    qWarning() << "Method call " << methodStr << " failed: " << reply.error();
-    return false;
-}
-
 QVariant QBluetoothDbusIface::getProperty(QString name)
 {
     QList<QVariant> args;   
     QDBusReply< QMap<QString,QVariant> > reply;
     
-    call("GetProperties", args, reply);
+    btcall("GetProperties", args, reply);
 
     if(!reply.isValid())
         return QVariant();
@@ -113,7 +48,7 @@ bool QBluetoothDbusIface::setProperty(QString name, QVariant value)
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
 
-    return call<void>("SetProperty", args, reply);
+    return btcall<void>("SetProperty", args, reply);
 }
 
 bool QBluetoothDbusIface::setPropertyAsync(QString name,
@@ -128,7 +63,7 @@ bool QBluetoothDbusIface::setPropertyAsync(QString name,
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
     
-    return call("SetProperty", args, reply, true, receiver, returnMethod, errorMethod);
+    return btcall("SetProperty", args, reply, true, receiver, returnMethod, errorMethod);
 }
 
 

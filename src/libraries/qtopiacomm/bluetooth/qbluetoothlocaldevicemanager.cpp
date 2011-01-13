@@ -19,6 +19,7 @@
 
 #include <qbluetoothlocaldevicemanager.h>
 #include <qbluetoothlocaldevice.h>
+#include <qbluetoothdbus.h>
 
 #include <QDBusArgument>
 #include <QDBusConnection>
@@ -41,7 +42,7 @@ public slots:
 
 public:
     QBluetoothLocalDeviceManager *m_parent;
-    QDBusInterface *m_iface;
+    QBluetoothDbusIface *m_iface;
 };
 
 QBluetoothLocalDeviceManager_Private::QBluetoothLocalDeviceManager_Private(
@@ -59,8 +60,8 @@ QBluetoothLocalDeviceManager_Private::QBluetoothLocalDeviceManager_Private(
         return;
     }
 
-    m_iface = new QDBusInterface("org.bluez", "/",
-                                 "org.bluez.Manager", dbc);
+    m_iface = new QBluetoothDbusIface("org.bluez", "/",
+                                      "org.bluez.Manager", dbc);
     if (!m_iface->isValid()) {
         qWarning() << "Could not find org.bluez interface";
         return;
@@ -144,11 +145,7 @@ QBluetoothLocalDeviceManager::~QBluetoothLocalDeviceManager()
 QStringList QBluetoothLocalDeviceManager::devices()
 {
     QStringList ret;
-
-    if (!m_data->m_iface || !m_data->m_iface->isValid())
-        return ret;
-
-    QDBusReply< QList<QDBusObjectPath> > reply = m_data->m_iface->call("ListAdapters");
+    QDBusReply< QList<QDBusObjectPath> > reply = m_data->m_iface->btcall< QList<QDBusObjectPath> >("ListAdapters");
 
     if (!reply.isValid()) {
         return ret;
@@ -176,7 +173,7 @@ QString QBluetoothLocalDeviceManager::defaultDevice()
     if (!m_data->m_iface || !m_data->m_iface->isValid())
         return QString();
 
-    QDBusReply<QDBusObjectPath> reply = m_data->m_iface->call("DefaultAdapter");
+    QDBusReply<QDBusObjectPath> reply = m_data->m_iface->btcall<QDBusObjectPath>("DefaultAdapter");
 
     if (!reply.isValid()) {
         return QString();
