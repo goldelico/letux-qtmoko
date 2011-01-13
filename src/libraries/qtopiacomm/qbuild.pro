@@ -86,6 +86,7 @@ BLUETOOTH [
     CONDITION=enable_bluetooth
     HEADERS=\
         qbluetoothaddress.h\
+        qbluetoothdbus.h\
         qbluetoothlocaldevice.h\
         qbluetoothlocaldevicemanager.h\
         qbluetoothnamespace.h\
@@ -123,6 +124,7 @@ BLUETOOTH [
         qbluetoothremotedeviceselector_p.h
     SOURCES=\
         qbluetoothaddress.cpp\
+        qbluetoothdbus.cpp\
         qbluetoothlocaldevice.cpp\
         qbluetoothlocaldevicemanager.cpp\
         qbluetoothnamespace.cpp\
