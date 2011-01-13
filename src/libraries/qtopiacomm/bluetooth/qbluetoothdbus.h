@@ -58,15 +58,15 @@ public:
     
     template <class T>
             bool btcall(const QString & method,
-                      QDBusReply<T> & reply = QDBusReply<T>(),
-                      QList<QVariant> args = QList<QVariant>(),
-                      bool async = false,
-                      QObject * receiver = NULL,
-                      const char * returnMethod = NULL,
-                      const char * errorMethod = NULL);
-           
-    QVariant getProperty(QString name);
-    bool setProperty(QString name, QVariant value);
+                        QDBusReply<T> & reply = QDBusReply<T>(),
+                        QList<QVariant> args = QList<QVariant>(),
+                        bool async = false,
+                        QObject * receiver = NULL,
+                        const char * returnMethod = NULL,
+                        const char * errorMethod = NULL);
+
+    QVariant getProperty(QString name, QDBusError * error = 0);
+    bool setProperty(QString name, QVariant value, QDBusError * error = 0);
     bool setPropertyAsync(QString name, 
                           QVariant value,
                           QObject * receiver,
@@ -80,12 +80,12 @@ protected:
 
 template <class T>
         bool QBluetoothDbusIface::btcall(const QString & method,
-                                       QDBusReply<T> & reply,
-                                       QList<QVariant> args,
-                                       bool async,
-                                       QObject * receiver,
-                                       const char * returnMethod,
-                                       const char * errorMethod)
+                                         QDBusReply<T> & reply,
+                                         QList<QVariant> args,
+                                         bool async,
+                                         QObject * receiver,
+                                         const char * returnMethod,
+                                         const char * errorMethod)
 {
     if(!isValid()) {
         qWarning() << "Dbus interface " << path() << " is not valid";

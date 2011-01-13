@@ -20,26 +20,30 @@
 #include "qbluetoothdbus.h"
 
 QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &path, const char *interface,
-                        const QDBusConnection &connection, QObject *parent) :
-        QDBusInterface(service, path, interface, connection, parent)
+                                         const QDBusConnection &connection, QObject *parent) :
+QDBusInterface(service, path, interface, connection, parent)
 {
 }
 
-QVariant QBluetoothDbusIface::getProperty(QString name)
+QVariant QBluetoothDbusIface::getProperty(QString name, QDBusError * error)
 {
     QDBusReply< QMap<QString,QVariant> > reply;
     
     btcall("GetProperties", reply);
 
-    if(!reply.isValid())
-        return QVariant();
-    
-    QVariant value = reply.value().value(name);
-    qLog(Bluetooth) << "        " << name + "=" + value.toString();
-    return value;
+    if(reply.isValid()) {
+        QVariant value = reply.value().value(name);
+        qLog(Bluetooth) << "        " << name + "=" + value.toString();
+        return value;
+    }
+           
+    if(error) {
+        *error = reply.error();
+    }
+    return QVariant();
 }
 
-bool QBluetoothDbusIface::setProperty(QString name, QVariant value)
+bool QBluetoothDbusIface::setProperty(QString name, QVariant value, QDBusError * error)
 {
     QList<QVariant> args;
     QDBusReply<void> reply;
@@ -47,7 +51,13 @@ bool QBluetoothDbusIface::setProperty(QString name, QVariant value)
     args << name;
     args << qVariantFromValue(QDBusVariant(value));
 
-    return btcall<void>("SetProperty", reply, args);
+    if(btcall<void>("SetProperty", reply, args))
+        return true;
+    
+    if(error) {
+        *error = reply.error();
+    }
+    return false;
 }
 
 bool QBluetoothDbusIface::setPropertyAsync(QString name,
