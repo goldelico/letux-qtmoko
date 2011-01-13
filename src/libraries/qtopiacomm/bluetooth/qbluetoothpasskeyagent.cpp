@@ -19,6 +19,7 @@
 
 #include <qbluetoothpasskeyrequest.h>
 #include <qbluetoothpasskeyagent.h>
+#include <qbluetoothlocaldevice.h>
 
 #include <QList>
 #include <qglobal.h>
@@ -152,8 +153,19 @@ uint QBluetoothPasskeyAgent_Private::RequestPasskey(const QDBusObjectPath &devic
 
 QString QBluetoothPasskeyAgent_Private::RequestPinCode(const QDBusObjectPath &deviceObject)
 {
-    qWarning() << "RequestPinCode";
-    return "0000";
+    QString addrStr = QBluetoothLocalDevice::adapterPathToDevAddr(deviceObject.path());
+    QString devname = QBluetoothLocalDevice::adapterPathToDevName(deviceObject.path());
+    QBluetoothAddress addr(addrStr);
+
+    qLog(Bluetooth) << "RequestPinCode addr=" << addrStr << ", devname=" << devname;
+    
+    QBluetoothPasskeyRequest req(devname, addr);
+    m_parent->requestPasskey(req);
+
+    if (req.isRejected()) {
+        return "";                  // TODO: is this correctly handled cancel?
+    }
+    return req.passkey();
 }
 
 void QBluetoothPasskeyAgent_Private::Confirm(const QString &path,

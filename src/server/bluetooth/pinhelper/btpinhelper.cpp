@@ -65,7 +65,7 @@ BTPinHelper::BTPinHelper(QObject *parent)
 
     QBluetoothLocalDeviceManager manager;
     QBluetoothLocalDevice defaultDevice(manager.defaultDevice());
-    qLog(Bluetooth) << "Registering BTPinHelper for device " << defaultDevice.adapterName();
+    qLog(Bluetooth) << "Registering BTPinHelper for device " << defaultDevice.adapterPath();
     defaultDevice.registerAgent(this);
 }
 

@@ -155,7 +155,7 @@ QStringList QBluetoothLocalDeviceManager::devices()
     }
 
     foreach (QDBusObjectPath path, reply.value()) {
-        ret.push_back(QBluetoothLocalDevice::adapterNameToDevName(path.path()));
+        ret.push_back(QBluetoothLocalDevice::adapterPathToDevName(path.path()));
     }
 
     return ret;
@@ -182,7 +182,7 @@ QString QBluetoothLocalDeviceManager::defaultDevice()
         return QString();
     }
 
-    return QBluetoothLocalDevice::adapterNameToDevName(reply.value().path());
+    return QBluetoothLocalDevice::adapterPathToDevName(reply.value().path());
 }
 
 /*!

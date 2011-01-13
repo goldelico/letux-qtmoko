@@ -92,7 +92,7 @@ public:
     QString errorString() const;
 
     QString deviceName() const;
-    QString adapterName() const;
+    QString adapterPath() const;
     QBluetoothAddress address() const;
 
     QBluetoothReply<QString> manufacturer() const;
@@ -139,7 +139,8 @@ public:
 
     bool disconnectRemoteDevice(const QBluetoothAddress &addr);
     
-    static QString adapterNameToDevName(QString adapterName);
+    static QString adapterPathToDevName(QString adapterPath);
+    static QString adapterPathToDevAddr(QString adapterPath);
 
 public slots:
     bool discoverRemoteDevices();

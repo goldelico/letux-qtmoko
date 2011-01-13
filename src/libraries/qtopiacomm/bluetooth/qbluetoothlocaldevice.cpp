@@ -160,8 +160,8 @@ public:
     inline QString& devname()
     { if (!m_doneInit) lazyInit(); return m_devname; }
 
-    inline QString& adapterName()
-    { if (!m_doneInit) lazyInit(); return m_adapterName; }
+    inline QString& adapterPath()
+    { if (!m_doneInit) lazyInit(); return m_adapterPath; }
 
     inline QBluetoothAddress& addr()
     { if (!m_doneInit) lazyInit(); return m_addr; }
@@ -210,7 +210,7 @@ private:
     bool m_doneInit;
 
     QString m_devname;
-    QString m_adapterName;
+    QString m_adapterPath;
     QBluetoothAddress m_addr;
     QDBusInterface *m_iface;
     bool m_valid;
@@ -264,7 +264,7 @@ bool QBluetoothLocalDevice_Private::invalidIface()
     if(m_iface != NULL && m_iface->isValid())
         return false;
     
-    qWarning() << "Dbus interface for adapter " << m_adapterName << " is not valid";
+    qWarning() << "Dbus interface for adapter " << m_adapterPath << " is not valid";
     return true;
 }
 
@@ -310,7 +310,7 @@ template <class T>
             return true;
     }
 
-    qWarning() << "Method call " << methodStr << " for adapter " << m_adapterName << " failed: " << reply.error();
+    qWarning() << "Method call " << methodStr << " for adapter " << m_adapterPath << " failed: " << reply.error();
     handleError(reply.error());
     return false;
 }
@@ -492,7 +492,7 @@ void QBluetoothLocalDevice_Private::lazyInit()
 
     // m_initString can be either MAC address, hciXX or /full/path/to/hciXX
     // Bluez understands the first two, for the last we strip the full/path.
-    m_initString = QBluetoothLocalDevice::adapterNameToDevName(m_initString);
+    m_initString = QBluetoothLocalDevice::adapterPathToDevName(m_initString);
 
     QDBusReply<QDBusObjectPath> reply = iface.call("FindAdapter", m_initString);
     m_initString.clear();
@@ -502,14 +502,14 @@ void QBluetoothLocalDevice_Private::lazyInit()
         return;
     }
 
-    m_adapterName = reply.value().path();
-    m_devname = QBluetoothLocalDevice::adapterNameToDevName(m_adapterName);
+    m_adapterPath = reply.value().path();
+    m_devname = QBluetoothLocalDevice::adapterPathToDevName(m_adapterPath);
 
-    m_iface = new QDBusInterface("org.bluez", m_adapterName, "org.bluez.Adapter",
+    m_iface = new QDBusInterface("org.bluez", m_adapterPath, "org.bluez.Adapter",
                                  dbc);
 
     if (!m_iface->isValid()) {
-        qWarning() << "Could not find org.bluez Adapter interface for" << m_adapterName;
+        qWarning() << "Could not find org.bluez Adapter interface for" << m_adapterPath;
         delete m_iface;
         m_iface = 0;
         return;
@@ -1074,9 +1074,9 @@ QString QBluetoothLocalDevice::deviceName() const
 
     \sa address()
 */
-QString QBluetoothLocalDevice::adapterName() const
+QString QBluetoothLocalDevice::adapterPath() const
 {
-    return m_data->adapterName();
+    return m_data->adapterPath();
 }
 
 /*!
@@ -1802,18 +1802,31 @@ bool QBluetoothLocalDevice::disconnectRemoteDevice(const QBluetoothAddress &addr
 }
 
 /*!
-    Returns a device name of the Bluetooth adapter. This is typically 'hci0'.
-    Parameter \a adapterName is full object path used for bluez dbus calls.
-
-    \sa adapterName()
+    Returns a device address of the Bluetooth adapter.
+    E.g. for "/org/bluez/923/hci0/dev_30_38_55_02_34_21" returns "30:38:55:02:34:21"
+    Parameter \a adapterPath is full object path used for bluez dbus calls.
+    
+    \sa adapterPath()
  */
-QString QBluetoothLocalDevice::adapterNameToDevName(QString adapterName)
+QString QBluetoothLocalDevice::adapterPathToDevAddr(QString adapterPath)
+{
+    return adapterPath.right(17).replace('_', ':');     // 
+}
+
+/*!
+    Returns a device name of the Bluetooth adapter. This is typically 'hci0'.
+    E.g. for "/org/bluez/923/hci0/dev_30_38_55_02_34_21" returns "hci0"
+    Parameter \a adapterPath is full object path used for bluez dbus calls.
+
+    \sa adapterPath()
+ */
+QString QBluetoothLocalDevice::adapterPathToDevName(QString adapterPath)
 {
     QRegExp rx("hci\\d+");
-    if(rx.indexIn(adapterName) >= 0) {
+    if(rx.indexIn(adapterPath) >= 0) {
         return rx.cap();
     }
-    return adapterName;
+    return adapterPath;
 }
 
 /*!
