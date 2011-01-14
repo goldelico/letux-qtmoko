@@ -198,7 +198,9 @@ public slots:
     void remoteAliasChanged(const QString &addr, const QString &alias);
     void remoteAliasRemoved(const QString &addr);
 
+    void pairingCreated(const QBluetoothAddress &addr);
     void createBondingError(const QBluetoothAddress &addr, const QDBusError &error);
+    
     void deviceCreated(const QDBusObjectPath &device);
     void deviceRemoved(const QDBusObjectPath &device);
 
@@ -244,6 +246,7 @@ PairingCancelledProxy::PairingCancelledProxy(const QBluetoothAddress &addr,
 
 void PairingCancelledProxy::createBondingReply(const QDBusMessage &)
 {
+    m_parent->pairingCreated(m_addr);
     deleteLater();
 }
 
@@ -756,9 +759,14 @@ void QBluetoothLocalDevice_Private::createBondingError(const QBluetoothAddress &
     emit m_parent->pairingFailed(addr);
 }
 
+void QBluetoothLocalDevice_Private::pairingCreated(const QBluetoothAddress &addr)
+{
+    emit m_parent->pairingCreated(addr);
+}
+
 void QBluetoothLocalDevice_Private::deviceCreated(const QDBusObjectPath &device)
 {
-    emit m_parent->pairingCreated(QBluetoothAddress(btAddr(device)));
+    Q_UNUSED(device);
 }
 
 void QBluetoothLocalDevice_Private::deviceRemoved(const QDBusObjectPath &device)
@@ -1859,6 +1867,11 @@ QBluetoothReply<QList<QBluetoothAddress> >
     }
 
     return ret;
+}
+
+QBluetoothDbusIface * QBluetoothLocalDevice::iface() const
+{
+    return m_data->iface();
 }
 
 /*!

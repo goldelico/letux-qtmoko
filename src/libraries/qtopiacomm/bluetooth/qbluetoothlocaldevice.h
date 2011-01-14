@@ -31,8 +31,10 @@
 class QBluetoothRemoteDevice;
 template <class T> class QList;
 class QBluetoothLocalDevice_Private;
+class QBluetoothSdpQuery_Private;
 class QDateTime;
 class QBluetoothAddress;
+class QBluetoothDbusIface;
 
 template <typename T> class QBLUETOOTH_EXPORT QBluetoothReply {
 public:
@@ -53,6 +55,7 @@ class QBLUETOOTH_EXPORT QBluetoothLocalDevice : public QObject
 {
     Q_OBJECT
     friend class QBluetoothLocalDevice_Private;
+    friend class QBluetoothSdpQuery_Private;
 
 public:
 
@@ -141,7 +144,7 @@ public:
     
     static QString adapterPathToDevName(QString adapterPath);
     static QString adapterPathToDevAddr(QString adapterPath);
-
+    
 public slots:
     bool discoverRemoteDevices();
     bool cancelDiscovery();
@@ -183,6 +186,8 @@ private:
 
     Q_DISABLE_COPY(QBluetoothLocalDevice)
     QBluetoothLocalDevice_Private *m_data;
+    QBluetoothDbusIface *iface() const;
+    
 };
 
 #endif
