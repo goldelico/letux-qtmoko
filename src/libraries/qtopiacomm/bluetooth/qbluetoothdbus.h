@@ -42,6 +42,8 @@
 #include <QDebug>
 #include <QMetaObject>
 
+typedef QMap<uint,QString> UintStringMap;
+Q_DECLARE_METATYPE(UintStringMap)
 
 /*
  * Helper class for calling bluez4 dbus interface, It can log dbus calls and

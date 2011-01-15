@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 #include <qbluetoothsdpquery.h>
+#include <qbluetoothdbus.h>
 #include <qbluetoothsdpuuid.h>
 #include <qbluetoothsdprecord.h>
 #include <qbluetoothlocaldevice.h>
@@ -35,6 +36,7 @@
 #include <QDBusArgument>
 #include <QDebug>
 
+#include <QMap>
 #include <QList>
 #include <QString>
 #include <QProcess>
@@ -181,9 +183,8 @@ public:
     QBluetoothSdpQueryResult m_result;
 
 public slots:
-    void asyncGetHandlesReply(const QDBusMessage &msg);
-    void asyncGetRecordReply(const QDBusMessage &msg);
-    void asyncGetRecordError(const QDBusError &error, const QDBusMessage &msg);
+    void asyncDiscoverReply(const QDBusMessage &msg);
+    void asyncDiscoverError(const QDBusError &error, const QDBusMessage &msg);
 
 private:
     void requestNextRecord();
@@ -195,6 +196,7 @@ QBluetoothSdpQuery_Private::QBluetoothSdpQuery_Private(QBluetoothSdpQuery *paren
 {
     m_parent = parent;
     m_finished = true;
+    qDBusRegisterMetaType<UintStringMap>();
 }
 
 QBluetoothSdpQuery_Private::~QBluetoothSdpQuery_Private()
@@ -211,7 +213,7 @@ void QBluetoothSdpQuery_Private::reset()
 
 void QBluetoothSdpQuery_Private::requestNextRecord()
 {
-    QList<QVariant> args;
+/*    QList<QVariant> args;
     args << m_remote.toString() << m_handles[m_index];
 
     bool ret = m_iface->callWithCallback("GetRemoteServiceRecordAsXML", args, this,
@@ -222,10 +224,10 @@ void QBluetoothSdpQuery_Private::requestNextRecord()
         m_result.setError("Call failed");
         emit m_parent->searchComplete(m_result);
         m_finished = true;
-    }
+    }*/
 }
 
-void QBluetoothSdpQuery_Private::asyncGetRecordError(const QDBusError &error, const QDBusMessage &)
+void QBluetoothSdpQuery_Private::asyncDiscoverError(const QDBusError &error, const QDBusMessage &)
 {
     if (m_cancelled) {
         emit m_parent->searchCancelled();
@@ -238,55 +240,32 @@ void QBluetoothSdpQuery_Private::asyncGetRecordError(const QDBusError &error, co
     m_finished = true;
 }
 
-void QBluetoothSdpQuery_Private::asyncGetRecordReply(const QDBusMessage &msg)
+void QBluetoothSdpQuery_Private::asyncDiscoverReply(const QDBusMessage &msg)
 {
     if (m_cancelled) {
         emit m_parent->searchCancelled();
         m_finished = true;
         return;
     }
+    
+    QDBusReply<UintStringMap> reply(msg);
+    QMapIterator<uint, QString> i(reply.value());
+    while (i.hasNext()) {
+        i.next();
+        //qWarning() << i.key() << ": " << i.value() << endl;
 
-    QDBusReply<QString> reply(msg);
-
-    // Grab the result here and parse
-    QSdpXmlParser parser;
-    if (parser.parseRecord(reply.value().toUtf8())) {
-        m_result.addService(parser.record());
-    } else {
-        qWarning() << "QBluetoothSdpQuery::Trouble parsing record:" << m_handles[m_index];
-        qWarning() << "QBluetoothSdpQuery::The error was:" << parser.errorString();
+        // Grab the result here and parse
+        QSdpXmlParser parser;
+        if (parser.parseRecord(i.value().toUtf8())) {
+            m_result.addService(parser.record());
+        } else {
+            qWarning() << "QBluetoothSdpQuery::Trouble parsing record:" << m_handles[m_index];
+            qWarning() << "QBluetoothSdpQuery::The error was:" << parser.errorString();
+        }
     }
-
-    m_index++;
-
-    if (m_index < m_handles.size()) {
-        requestNextRecord();
-    } else {
-        emit m_parent->searchComplete(m_result);
-        m_finished = true;
-    }
-}
-
-void QBluetoothSdpQuery_Private::asyncGetHandlesReply(const QDBusMessage &msg)
-{
-    if (m_cancelled) {
-        emit m_parent->searchCancelled();
-        m_finished = true;
-        return;
-    }
-
-    QDBusReply<QList<uint> > reply(msg);
-
-    m_handles = reply.value();
-
-    // No records found
-    if (m_handles.size() == 0) {
-        emit m_parent->searchComplete(m_result);
-        m_finished = true;
-        return;
-    }
-
-    requestNextRecord();
+    
+    emit m_parent->searchComplete(m_result);
+    m_finished = true;
 }
 
 bool QBluetoothSdpQuery_Private::haveInterface(const QString &device)
@@ -332,6 +311,36 @@ bool QBluetoothSdpQuery_Private::searchServices(const QBluetoothAddress &remote,
                                    const QBluetoothLocalDevice &local,
                                    const QString &searchString)
 {
+    QBluetoothDbusIface *iface = local.iface();
+
+    QVariant devices = iface->getProperty("Devices");
+    if (!devices.isValid())
+        return false;
+      
+    QList<QDBusObjectPath> devList = qdbus_cast<QList<QDBusObjectPath> > (devices.value<QDBusArgument>());
+    QString search = remote.toString().replace(':', '_');
+    QDBusObjectPath remotePath;
+    foreach (QDBusObjectPath path, devList) {
+        if(path.path().endsWith(search)) {
+            remotePath = path;
+            break;
+        }
+    }
+    if(remotePath.path().isEmpty())
+        return false;
+
+
+    QBluetoothDbusIface remoteIface("org.bluez", remotePath.path(),
+                                    "org.bluez.Device", iface->connection());
+    
+    QDBusReply<UintStringMap> reply;
+    QList<QVariant> args;
+    args << "";
+
+    return remoteIface.btcall("DiscoverServices", reply, args, true, this,
+                       SLOT(asyncDiscoverReply(QDBusMessage)),
+                       SLOT(asyncDiscoverError(QDBusError,QDBusMessage)));
+    /*
     if (!haveInterface(local.deviceName()))
         return false;
 
@@ -348,7 +357,7 @@ bool QBluetoothSdpQuery_Private::searchServices(const QBluetoothAddress &remote,
 
     return m_iface->callWithCallback("GetRemoteServiceHandles", args, this,
                                      SLOT(asyncGetHandlesReply(QDBusMessage)),
-                                     SLOT(asyncGetRecordError(QDBusError,QDBusMessage)));
+                                     SLOT(asyncGetRecordError(QDBusError,QDBusMessage)));*/
 }
 
 /*!

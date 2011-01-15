@@ -21,7 +21,7 @@
 
 QBluetoothDbusIface::QBluetoothDbusIface(const QString &service, const QString &path, const char *interface,
                                          const QDBusConnection &connection, QObject *parent) :
-QDBusInterface(service, path, interface, connection, parent)
+    QDBusInterface(service, path, interface, connection, parent)
 {
 }
 
