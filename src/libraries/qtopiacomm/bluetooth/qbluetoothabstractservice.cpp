@@ -19,6 +19,7 @@
 
 #include "qbluetoothabstractservice.h"
 
+#include <qbluetoothdbus.h>
 #include <qbluetoothaddress.h>
 #include <qbluetoothsdprecord.h>
 #include <qbluetoothlocaldevice.h>
@@ -145,7 +146,7 @@ public:
     QString m_name;
     QString m_displayName;
     QString m_description;
-    QDBusInterface *m_ifc;
+    QBluetoothDbusIface *m_ifc;
     QBluetoothAbstractService::Error m_error;
     QString m_errorString;
     bool m_isRegistered;
@@ -170,13 +171,14 @@ QBluetoothAbstractServicePrivate::QBluetoothAbstractServicePrivate(const QString
       m_isRegistered(false)
 {
     QDBusConnection dbc = QDBusConnection::systemBus();
-    m_ifc = new QDBusInterface("org.bluez", "/org/bluez",
-                        "org.bluez.Database", dbc);
-    if (!m_ifc) {
-        qWarning("Unable to obtain org.bluez.Database interface");
-        delete m_ifc;
-        m_ifc = 0;
-    }
+
+    QBluetoothDbusIface manager("org.bluez", "/", "org.bluez.Manager", dbc);
+
+    QDBusReply<QDBusObjectPath> reply;
+    manager.btcall("DefaultAdapter", reply);
+    
+    m_ifc = new QBluetoothDbusIface("org.bluez", reply.value().path(),
+                                    "org.bluez.Service", dbc);
 
     QObject::connect(parent, SIGNAL(started(bool,QString)),
                      SLOT(serviceStarted(bool,QString)));
@@ -263,46 +265,42 @@ void QBluetoothAbstractServicePrivate::handleError(const QDBusError &error)
 
 quint32 QBluetoothAbstractServicePrivate::registerRecord(const QString &record)
 {
-    if (!m_ifc || !m_ifc->isValid())
-        return 0;
+    QDBusReply<quint32> reply;
+    QList<QVariant> args;
+    args << record;
+    
+    if(m_ifc->btcall("AddRecord", reply, args))
+        return reply.value();
 
-    QDBusReply<quint32> reply = m_ifc->call("AddServiceRecordFromXML", record);
-    if (!reply.isValid()) {
-        handleError(reply.error());
-        return 0;
-    }
-
-    return reply.value();
+    handleError(reply.error());
+    return 0;
 }
 
 bool QBluetoothAbstractServicePrivate::updateRecord(quint32 handle, const QString &record)
 {
-    if (!m_ifc || !m_ifc->isValid())
-        return false;
+    QDBusReply<void> reply;
+    QList<QVariant> args;
+    args << handle;
+    args << record;    
+    
+    if(m_ifc->btcall("UpdateRecord", reply, args))
+        return true;
 
-    QDBusReply<void> reply = m_ifc->call("UpdateServiceRecordFromXML",
-                                         handle, record);
-    if (!reply.isValid()) {
-        handleError(reply.error());
-        return false;
-    }
-
-    return true;
+    handleError(reply.error());
+    return false;
 }
 
 bool QBluetoothAbstractServicePrivate::unregisterRecord(quint32 handle)
 {
-    if (!m_ifc || !m_ifc->isValid())
-        return false;
+    QDBusReply<void> reply;
+    QList<QVariant> args;
+    args << handle;
 
-    QDBusReply<void> reply = m_ifc->call("RemoveServiceRecord",
-                                        QVariant::fromValue(handle));
-    if (!reply.isValid()) {
-        handleError(reply.error());
-        return false;
-    }
-
-    return true;
+    if(m_ifc->btcall("RemoveRecord", reply, args))
+        return true;
+    
+    handleError(reply.error());
+    return false;
 }
 
 void QBluetoothAbstractServicePrivate::authorizationFailed(const QDBusError &error, const QDBusMessage &)
