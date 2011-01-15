@@ -683,8 +683,9 @@ void QBluetoothHandsfreeService::newConnection()
 /*!
     \internal
 */
-void QBluetoothHandsfreeService::error(QBluetoothAbstractSocket::SocketError)
+void QBluetoothHandsfreeService::error(QBluetoothAbstractSocket::SocketError err)
 {
+    qWarning() << "QBluetoothHandsfreeService::error " << err << ": " << m_data->m_client->errorString();
     if (!m_data->m_connectInProgress) {
         qWarning("Unknown error occrred in handsfree service");
     }
@@ -713,7 +714,7 @@ void QBluetoothHandsfreeService::stateChanged(QBluetoothAbstractSocket::SocketSt
             // We only need to catch connection failures here
             if (m_data->m_connectInProgress) {
                 m_data->m_connectInProgress = false;
-                emit connectResult(false, "Connection failed.");
+                emit connectResult(false, m_data->m_client->errorString());
                 m_data->m_client->deleteLater();
                 m_data->m_client = 0;
                 m_data->m_session->endSession();

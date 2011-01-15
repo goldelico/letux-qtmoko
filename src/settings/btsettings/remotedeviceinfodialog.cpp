@@ -586,8 +586,7 @@ void AudioDeviceConnectionStatus::audioGatewayConnected(bool success, const QStr
         if (!success) {
             qLog(Bluetooth) << "AudioDeviceConnectionStatus: Headset/Handsfree connection failed:"
                     << msg;
-            QMessageBox::warning(this, tr("Error"),
-                tr("<qt>Connection failed.</qt>"), QMessageBox::Ok);
+            QMessageBox::warning(this, tr("Connection failed."), msg, QMessageBox::Ok);
         }
     }
 }
