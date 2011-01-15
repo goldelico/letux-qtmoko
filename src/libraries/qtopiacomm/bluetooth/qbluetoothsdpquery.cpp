@@ -249,7 +249,7 @@ bool QBluetoothSdpQuery_Private::searchServices(const QBluetoothAddress &remote,
     
     QDBusReply<UintStringMap> reply;
     QList<QVariant> args;
-    args << "";
+    args << searchString;
 
     return remoteIface.btcall("DiscoverServices", reply, args, true, this,
                        SLOT(asyncDiscoverReply(QDBusMessage)),
