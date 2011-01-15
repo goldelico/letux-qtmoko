@@ -98,12 +98,18 @@ template <class T>
     for(int i = 0; i < args.count(); i++)
     {
         QVariant arg = args.at(i);
+        QString argStr;
         if(i > 0)
             methodStr += ", ";
         if(arg.canConvert<QDBusVariant>())
-            methodStr += arg.value<QDBusVariant>().variant().toString();
+            argStr = arg.value<QDBusVariant>().variant().toString();
         else
-            methodStr += args.at(i).toString();
+            argStr = args.at(i).toString();
+        
+        int lf;
+        if((lf = argStr.indexOf('\n')) > 0)
+            argStr = argStr.left(lf) + "...";
+        methodStr += argStr;
     }
     methodStr += ")";
     qLog(Bluetooth) << "calling " << methodStr;
