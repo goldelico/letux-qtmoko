@@ -486,18 +486,16 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
         return false;
     }
 
-    QDBusReply<QString> activateReply;
-    QDBusReply<QString> createReply;
+    QDBusReply<QDBusObjectPath> adapterReply;
     QDBusReply<void> connectReply;
 
-    bool ok =
-        bluezCall("/org/bluez",                       "org.bluez.Manager",       "ActivateService", activateReply, log, dbc, "audio") &&
-        bluezCall("/org/bluez/audio",                 "org.bluez.audio.Manager", "CreateDevice",    createReply,   log, dbc, addr) &&
-        bluezCall(a2dpDbusPath = createReply.value(), "org.bluez.audio.Sink",    "Connect",         connectReply,  log, dbc);
-
-    if(!ok) {
+    if(!bluezCall("/", "org.bluez.Manager", "DefaultAdapter", adapterReply, log, dbc))
         return false;
-    }
+    
+    a2dpDbusPath = adapterReply.value().path() + "/dev_" + addr.replace(':', '_');      // e.g. /org/bluez/2541/hci0/dev_30_38_55_02_34_21
+
+    if(!bluezCall(a2dpDbusPath, "org.bluez.AudioSink", "Connect", connectReply, log, dbc))
+        return false;
 
     bool defaultDev = (QMessageBox::question(this, tr("A2DP"), tr("Make bluetooth default device?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes);
     QString slave = (defaultDev ? "bluetooth" : "dmix");
@@ -621,7 +619,7 @@ void AudioDeviceConnectionStatus::clickedDisconnect()
         if (!dbc.isConnected()) {
             log += "dbus not connected";
         } else {
-            bluezCall(a2dpDbusPath, "org.bluez.audio.Sink", "Disconnect", reply, log, dbc);
+            bluezCall(a2dpDbusPath, "org.bluez.AudioSink", "Disconnect", reply, log, dbc);
         }
         qLog(Bluetooth) << log;
         updateConnectionStatus();
