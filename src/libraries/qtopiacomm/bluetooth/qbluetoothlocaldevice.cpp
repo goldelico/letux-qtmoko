@@ -1299,6 +1299,8 @@ QBluetoothReply<QList<QBluetoothAddress> > QBluetoothLocalDevice::connections() 
 */
 QBluetoothReply<bool> QBluetoothLocalDevice::isConnected(const QBluetoothAddress &addr) const
 {
+    return false;
+    /*
     if (!m_data->iface() || !m_data->iface()->isValid()) {
         return QBluetoothReply<bool>();
     }
@@ -1309,7 +1311,7 @@ QBluetoothReply<bool> QBluetoothLocalDevice::isConnected(const QBluetoothAddress
         return QBluetoothReply<bool>();
     }
 
-    return reply.value();
+    return reply.value();*/
 }
 
 /*!
