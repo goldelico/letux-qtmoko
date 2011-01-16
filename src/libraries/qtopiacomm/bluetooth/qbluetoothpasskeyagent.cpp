@@ -19,9 +19,11 @@
 
 #include <qbluetoothpasskeyrequest.h>
 #include <qbluetoothpasskeyagent.h>
+#include <qbluetoothlocaldevice.h>
 
 #include <QList>
 #include <qglobal.h>
+#include <qtopialog.h>
 
 #include <QDBusArgument>
 #include <QDBusConnection>
@@ -34,36 +36,16 @@
 #include <stdio.h>
 #include <string.h>
 
-
-class PasskeyAgentDBusAdaptor : public QDBusAbstractAdaptor
+class QBluetoothPasskeyAgent_Private : public QDBusAbstractAdaptor
 {
     Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.PasskeyAgent")
-
-public:
-    PasskeyAgentDBusAdaptor(QObject *parent);
-    ~PasskeyAgentDBusAdaptor();
-};
-
-PasskeyAgentDBusAdaptor::PasskeyAgentDBusAdaptor(QObject *parent) :
-         QDBusAbstractAdaptor(parent)
-{
-
-}
-
-PasskeyAgentDBusAdaptor::~PasskeyAgentDBusAdaptor()
-{
-
-}
-
-class QBluetoothPasskeyAgent_Private : public QObject
-{
-    Q_OBJECT
-    Q_CLASSINFO("D-Bus Interface", "org.bluez.PasskeyAgent")
+    Q_CLASSINFO("D-Bus Interface", "org.bluez.Agent")
 
 public:
     QBluetoothPasskeyAgent_Private(QBluetoothPasskeyAgent *parent,
                                    const QString &name);
+    ~QBluetoothPasskeyAgent_Private();
+    
     QString m_name;
     QBluetoothPasskeyAgent *m_parent;
     QBluetoothPasskeyAgent::Error m_error;
@@ -73,6 +55,15 @@ public:
     void handleError(const QDBusError &error);
 
 public slots:
+    void Authorize(const QDBusObjectPath &device, const QString &uuid);
+    void Cancel();
+    void ConfirmModeChange(const QString &mode);
+    void DisplayPasskey(const QDBusObjectPath &device, uint passkey);
+    void Release();
+    void RequestConfirmation(const QDBusObjectPath &device, uint passkey);
+    uint RequestPasskey(const QDBusObjectPath &device);
+    QString RequestPinCode(const QDBusObjectPath &device);
+    
     void Request(const QString &path,
                  const QString &address,
                  const QDBusMessage &msg);
@@ -81,10 +72,9 @@ public slots:
                  const QString &value,
                  const QDBusMessage &msg);
     void Cancel(const QString &path, const QString &address);
-    void Release();
 };
 
-QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskeyAgent *parent, const QString &name) : QObject(parent)
+QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskeyAgent *parent, const QString &name) : QDBusAbstractAdaptor(parent)
 {
     m_parent = parent;
     m_name = name;
@@ -96,12 +86,18 @@ QBluetoothPasskeyAgent_Private::QBluetoothPasskeyAgent_Private(QBluetoothPasskey
         return;
     }
 
+    QString path = "/" + m_name;
+    if(dbc.registerObject(path, parent))
+        qLog(Bluetooth) << "Registered pairing agent object on dbus path=" << path;
+    else
+        qWarning() << "Registering BT pairing agent object on dbus failed";
+}
 
-    QString path = m_name;
-    path.prepend('/');
-
-    new PasskeyAgentDBusAdaptor(this);
-    dbc.registerObject(path, this, QDBusConnection::ExportNonScriptableSlots);
+QBluetoothPasskeyAgent_Private::~QBluetoothPasskeyAgent_Private()
+{
+    QString path = "/" + m_name;
+    qLog(Bluetooth) << "Unregistering pairing agent object on dbus path=" << path;
+    QDBusConnection::systemBus().unregisterObject(path);
 }
 
 struct bluez_error_mapping
@@ -129,6 +125,54 @@ void QBluetoothPasskeyAgent_Private::handleError(const QDBusError &error)
         }
         i++;
     }
+}
+
+void QBluetoothPasskeyAgent_Private::Authorize(const QDBusObjectPath &deviceObject, const QString &uuid)
+{
+    qWarning() << "Authorize";
+}
+
+void QBluetoothPasskeyAgent_Private::Cancel()
+{
+    qWarning() << "Cancel";
+}
+
+void QBluetoothPasskeyAgent_Private::ConfirmModeChange(const QString &mode)
+{
+    qWarning() << "ConfirmModeChange";
+}
+
+void QBluetoothPasskeyAgent_Private::DisplayPasskey(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "DisplayPasskey";
+}
+
+void QBluetoothPasskeyAgent_Private::RequestConfirmation(const QDBusObjectPath &deviceObject, uint passkey)
+{
+    qWarning() << "RequestConfirmation";
+}
+
+uint QBluetoothPasskeyAgent_Private::RequestPasskey(const QDBusObjectPath &deviceObject)
+{
+    qWarning() << "RequestPasskey";
+    return 0;
+}
+
+QString QBluetoothPasskeyAgent_Private::RequestPinCode(const QDBusObjectPath &deviceObject)
+{
+    QString addrStr = QBluetoothLocalDevice::adapterPathToDevAddr(deviceObject.path());
+    QString devname = QBluetoothLocalDevice::adapterPathToDevName(deviceObject.path());
+    QBluetoothAddress addr(addrStr);
+
+    qLog(Bluetooth) << "RequestPinCode addr=" << addrStr << ", devname=" << devname;
+    
+    QBluetoothPasskeyRequest req(devname, addr);
+    m_parent->requestPasskey(req);
+
+    if (req.isRejected()) {
+        return "";                  // TODO: is this correctly handled cancel?
+    }
+    return req.passkey();
 }
 
 void QBluetoothPasskeyAgent_Private::Confirm(const QString &path,
@@ -184,6 +228,7 @@ void QBluetoothPasskeyAgent_Private::Cancel(const QString &path, const QString &
 
 void QBluetoothPasskeyAgent_Private::Release()
 {
+    qWarning() << "Release";
     m_parent->release();
 }
 

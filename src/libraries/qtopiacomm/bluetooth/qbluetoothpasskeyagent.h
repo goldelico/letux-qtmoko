@@ -23,6 +23,7 @@
 #include <QObject>
 
 #include <qbluetoothglobal.h>
+
 class QBluetoothPasskeyAgent_Private;
 class QBluetoothLocalDevice;
 class QBluetoothPasskeyRequest;
