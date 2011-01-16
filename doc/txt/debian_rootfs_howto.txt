@@ -122,6 +122,14 @@ __END__
   Calling "fbset qvga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
   is needed for mplayer in 320x240 with correct colors.
 
+* Configure bluez4 for handsfreee calls, otherwise there is no sounds:
+
+nano /media/card/etc/bluetooth/audio.conf
+
+  and uncomment SCORouting=PCM setting in [General]:
+
+SCORouting=PCM
+
 Step 4.1 - DHCP server - not using now
 ======================================
 
