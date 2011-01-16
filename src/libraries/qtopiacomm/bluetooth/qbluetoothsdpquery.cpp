@@ -29,7 +29,6 @@
 #include "qsdpxmlparser_p.h"
 
 #include <QDBusConnection>
-#include <QDBusInterface>
 #include <QDBusReply>
 #include <QDBusMessage>
 #include <QDBusMetaType>
