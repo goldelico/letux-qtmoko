@@ -1423,6 +1423,32 @@ QBluetoothReply<QDateTime> QBluetoothLocalDevice::lastUsed(const QBluetoothAddre
 */
 bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) const
 {
+    QDBusReply<QDBusObjectPath> reply;
+    QList<QVariant> args;
+    args << device.address().toString();
+    
+    if(!m_data->iface()->btcall("FindDevice", reply, args))
+        return false;
+    
+    QBluetoothDbusIface iface("org.bluez", reply.value().path(),
+                              "org.bluez.Device", m_data->iface()->connection());
+
+    uint cls = iface.getProperty("Class").toUInt();
+    QString name = iface.getProperty("Name").toString();
+    
+    quint8 major = (cls >> 8) & 0x1F;
+    quint8 minor = (cls >> 2) & 0x3F;
+    quint8 service = (cls >> 16) & 0xFF;
+ 
+    device.setDeviceMajor(major_to_device_major(major));
+    device.setDeviceMinor(minor);
+    device.setServiceClasses(QBluetooth::ServiceClasses(service));   
+    device.setName(name);
+    
+    return true;
+    
+    /*
+    
     if (!m_data->iface() || !m_data->iface()->isValid()) {
         return false;
     }
@@ -1477,7 +1503,7 @@ bool QBluetoothLocalDevice::updateRemoteDevice(QBluetoothRemoteDevice &device) c
     device.setCompany(company);
     device.setName(name);
 
-    return true;
+    return true;*/
 }
 
 /*!
