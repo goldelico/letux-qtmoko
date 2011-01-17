@@ -1,0 +1,6 @@
+<RCC>
+    <qresource prefix="/">
+        <file>xglamo.conf</file>
+        <file>xorg-glamo.conf</file>
+    </qresource>
+</RCC>

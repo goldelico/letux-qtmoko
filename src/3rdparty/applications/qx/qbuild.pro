@@ -42,6 +42,8 @@ SOURCES=\
     libfakekey.c \
     wm.cpp
 
+RESOURCES = qresources.qrc
+
 # Install rules
 target [
     hint=sxe

@@ -309,12 +309,86 @@ void QX::stopX()
     xprocess = NULL;
 }
 
+static bool saveConf(QX * parent, const char * srcFilename, const char * dstFilename)
+{
+    QFile src(srcFilename);
+    QFile dst(dstFilename);
+    if(!src.open(QIODevice::ReadOnly))
+    {
+        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to open xorg.conf, ") + src.errorString());
+        return false;
+    }
+    if(!dst.open(QIODevice::WriteOnly))
+    {
+        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to save xorg.conf, ") + dst.errorString());
+        src.close();
+        return false;
+    }
+    QByteArray content = src.readAll();
+    src.close();
+    dst.write(content);
+    dst.close();
+    return true;
+}
+
+bool QX::checkX()
+{
+    if(QFile::exists("/usr/bin/Xorg") ||
+       QFile::exists("/usr/bin/Xglamo"))
+    {
+        return true;
+    }
+    int val = QMessageBox::question(this, tr("X server not found"),
+                                    tr("You don't have X server."),
+                                    tr("Install Xorg server"),
+                                    tr("Install Xglamo"),
+                                    tr("Cancel"), 0, 2);
+
+    if(val == 2)
+    {
+        return false;
+    }
+    if(val == 0)
+    {
+        QStringList args;
+        args << "-u";
+        args << "-i";
+        args << "xserver-xorg-video-glamo";
+        args << "xserver-xorg-input-tslib";
+        args << "xinput";
+        args << "xterm";
+        QProcess::execute("raptor", args);
+
+        return saveConf(this, ":/xorg-glamo.conf", "/etc/X11/xorg.conf");
+    }
+
+    system("wget -P /usr/bin/ http://activationrecord.net/radekp/qtmoko/download/Xglamo");
+    system("chmod +x /usr/bin/Xglamo");
+
+    if(!QFile::exists("/usr/bin/Xglamo"))
+    {
+        QMessageBox::critical(this, tr("Xglamo download failed"), tr("Check your connection or download Xglamo manually from http://activationrecord.net/radekp/qtmoko/download/Xglamo"));
+        return false;
+    }
+
+    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "xfonts-base");
+
+    return saveConf(this, ":/xglamo.conf", "/etc/X11/xorg.conf");
+}
+
+void QX::fixTs()
+{
+    system("DISPLAY=:0 xinput set-int-prop \"Touchscreen\" \"Evdev Axis Calibration\" 32 107 918 911 98");
+    system("DISPLAY=:0 xinput set-int-prop \"Touchscreen\" \"Evdev Axes Swap\" 8 1");
+}
+
 void QX::runApp(QString filename, QString applabel, bool rotate)
 {
     //this->appName = filename;
     this->appName = applabel;
     this->rotate = rotate;
     terminating = false;
+    bool xorg = QFile::exists("/usr/bin/Xorg");
 
     showScreen(QX::ScreenStarting);
 
@@ -323,11 +397,18 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         xprocess = new QProcess(this);
         xprocess->setProcessChannelMode(QProcess::ForwardedChannels);
         QStringList args;
-        args.append("-hide-cursor");
-        args.append("vt1");
-        args.append("-dpi");
-        args.append("128");
-        xprocess->start("X", args);
+        if(xorg)
+        {
+            xprocess->start("/usr/bin/Xorg", args);
+        }
+        else
+        {
+            args.append("-hide-cursor");
+            args.append("vt1");
+            args.append("-dpi");
+            args.append("128");
+            xprocess->start("/usr/bin/Xglamo", args);
+        }
         if(!xprocess->waitForStarted())
         {
             showScreen(QX::ScreenMain);
@@ -390,6 +471,11 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         QMessageBox::critical(this, tr("QX"), tr("Unable to start") + " " + filename);
         return;
     }
+
+    if(xorg)
+    {
+        QTimer::singleShot(1000, this, SLOT(fixTs()));
+    }
 }
 
 void QX::processWmEvents()
@@ -436,6 +522,7 @@ void QX::resumeApp()
 
 void QX::okClicked()
 {
+    if(!checkX()) return;
     //if (screen == QX::ScreenMain)
     runApp(lineEdit->text(), lineEdit->text(), false);
 }
@@ -541,6 +628,8 @@ void QX::launch_clicked()
 {
     int sel = GetClickedId();
     if (sel<0) return;
+
+    if(!checkX()) return;
 
     DesktopEntry entry = scanner->entries[sel];
     QString appname = entry.file;

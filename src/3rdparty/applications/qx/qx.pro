@@ -25,3 +25,6 @@ HEADERS += qx.h \
     fakekey.h \
     config.h \
     wm.h
+
+RESOURCES += \
+    qresources.qrc
