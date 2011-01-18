@@ -282,6 +282,8 @@ esac
 
 exit 0
 
+* Make it executable and add it to startup scripts:
+
 chmod +x /media/card/etc/init.d/qpe.sh
 chroot /media/card
 update-rc.d qpe.sh defaults
@@ -321,16 +323,6 @@ ln -s dash sh
 
 Step 7.7
 ========
-
-* Remove all doc - we dont have space for it
-
-find /media/card/usr/share/locale/ -type f -exec rm -f '{}' \;
-find /media/card/usr/share/doc/ -type f -exec rm -f '{}' \;
-find /media/card/usr/share/doc-base/ -type f -exec rm -f '{}' \;
-find /media/card/usr/share/info/ -type f -exec rm -f '{}' \;
-find /media/card/usr/share/man/ -type f -exec rm -f '{}' \;
-rm -rf /media/card/usr/share/sounds/alsa/*
-rm -rf /media/card/usr/share/ssh/blacklist*
 
 * We need just 3 fonts
 
@@ -483,21 +475,25 @@ nameserver 8.8.8.8
 __END__
 
 
-Step 10
-=======
+Step 9.7 - fix owner on files that were compiled on PC
+======================================================
 
-* Unmount nfs on Neo
+* Ouput on PC is usually with local user that compiled stuff, we want it to be
+  root on Neo:
 
-sync
-umount /media/card
+chown -R root:root /media/card/boot
+chown -R root:root /media/card/lib/modules
+chown -R root:root /media/card/lib/firmware/
+chown -R root:root /media/card/opt
 
-* Pack it all on your desktop
+Step 10 - release tarball
+=========================
 
 cd /media/card
 tar -czvf ../qtmoko-debian.tar.gz .
 
-Step 11 - make jffs2 and ubifs images
-=====================================
+Step 11 - make ubifs images
+===========================
 
 * Copy your rootfs dir to /tmp/qtmoko-debian
 
@@ -505,15 +501,15 @@ Step 11 - make jffs2 and ubifs images
 
 rm -rf /tmp/qtmoko-debian/boot/*
 
-* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+* Remove doc and stuff that is not needed and makes NAND image slower:
 
-* Make jffs2 image:
-
-mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/tmp/qtmoko-debian
-
-* Ubifs image:
-
-* Comment back the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+find /tmp/qtmoko-debian/usr/share/locale/ -type f -exec rm -f '{}' \;
+find /tmp/qtmoko-debian/usr/share/doc/ -type f -exec rm -f '{}' \;
+find /tmp/qtmoko-debian/usr/share/doc-base/ -type f -exec rm -f '{}' \;
+find /tmp/qtmoko-debian/usr/share/info/ -type f -exec rm -f '{}' \;
+find /tmp/qtmoko-debian/usr/share/man/ -type f -exec rm -f '{}' \;
+rm -rf /tmp/qtmoko-debian/usr/share/sounds/alsa/*
+rm -rf /tmp/qtmoko-debian/usr/share/ssh/blacklist*
 
 * Edit the mount for root in /tmp/qtmoko-debian/etc/fstab so that it reads:
 
@@ -535,6 +531,18 @@ __END__
 mkfs.ubifs -r /tmp/qtmoko-debian -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 2047
 ubinize -o qtmoko-debian.ubi -m 2048 -p 128KiB -s 2048 -O 2048 ubinize.cfg
 rm qtmoko-debian.ubifs
+
+Step 12 - jffs2 image (not using anymore)
+=========================================
+
+* Same first 2 steps as with ubi (copy&delete /boot)
+
+* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+
+* Make jffs2 image:
+
+mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/tmp/qtmoko-debian
+
 
 
 Step 12 - qi for booting ubi image
