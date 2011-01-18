@@ -69,13 +69,13 @@ case "$1" in
             enable_gps
             sync_time
             load_agps
-            om gps keep-on-in-suspend 1
+            #om gps keep-on-in-suspend 1
         fi
         ;;
     off)
         echo 0 > "$STATE_PATH"
-        sleep_gps
         dump_agps
+        disable_gps
         ;;
     suspend)
         if gps_enabled; then
