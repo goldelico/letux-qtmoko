@@ -304,10 +304,10 @@ void LightSettings::powerTypeChanged(int index)
 {
     PowerMode *newMode = &batteryMode;
 
-    if(index == 2)
-        newMode = &lockMode;
-    else
+    if(index == 1)
         newMode = &externalMode;
+    else if(index == 2)
+        newMode = &lockMode;
 
     /*  store everytime (so we can store from accept)   */
     currentMode->intervalDim = b->interval_dim->value();
