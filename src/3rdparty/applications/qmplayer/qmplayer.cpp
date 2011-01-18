@@ -1452,7 +1452,7 @@ void QMplayer::setRes(int xy)
 #ifdef QTOPIA
     if(xy == 320240 || xy == 640480)
     {
-        QFile f("/sys/bus/spi/devices/spi2.0/resolution");
+        QFile f("/sys/class/lcd/jbt6k74-lcd/device/resolution");
         f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         if(xy == 320240)
         {

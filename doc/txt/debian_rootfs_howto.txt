@@ -119,7 +119,7 @@ endmode
 
 __END__
 
-  Calling "fbset qvga" and "echo qvga-normal > /sys/bus/spi/devices/spi2.0/state"
+  Calling "fbset qvga" and "echo qvga > /sys/class/lcd/jbt6k74-lcd/device/resolution"
   is needed for mplayer in 320x240 with correct colors.
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
