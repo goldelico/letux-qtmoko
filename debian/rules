@@ -1,0 +1,33 @@
+#!/usr/bin/make -f
+
+CONFIGURE = $(PWD)/configure
+
+build:
+	mkdir -p ../build
+	cd ../build && "$(CONFIGURE)" -device neo
+	cd ../build && make
+
+clean:
+	rm -rf debian/tmp
+	rm -f debian/files
+
+binary: build
+	cd ../build && make install
+	mkdir -p debian/tmp/opt/qtmoko
+	cp -r ../build/image/* debian/tmp/opt/qtmoko
+	rm -rf /tmp/qtmoko
+	mv ../build /tmp/qtmoko
+
+	# remove patented stuff - can be installed via package later
+	rm -f debian/tmp/opt/qtmoko/plugins/codecs/libmadplugin.so
+	rm -f debian/tmp/opt/qtmoko/lib/libmad.so.0
+
+	# symlink to ttfont installed together with X
+	rm -rf debian/tmp/opt/qtmoko/lib/fonts
+	ln -s /usr/share/fonts/truetype/ttf-dejavu/ debian/tmp/opt/qtmoko/lib/fonts
+
+	install -d debian/tmp/DEBIAN
+	dpkg-gencontrol
+	chown -R root:root debian/tmp/opt
+	chmod -R u+w,go=rX debian/tmp/opt
+	dpkg --build debian/tmp ..
