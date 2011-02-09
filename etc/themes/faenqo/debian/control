@@ -1,0 +1,8 @@
+Package: Faenqo
+Version: 11.02.07
+Section: base
+Priority: optional
+Architecture: armel
+Depends: 
+Maintainer: cyberesprit <cyberesprit@cyberesprit.fr>
+Description: Theme Faenqo for QtMoko version EN

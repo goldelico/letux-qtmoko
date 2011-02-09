@@ -5,7 +5,10 @@
   <level rect="5,5,32x30" name="signal" src="signal.png" scale="yes" count="5" min="0" max="100" active="expr:@/Hardware/Accessories/QSignalSource/DefaultSignal/SignalStrength" replacecolor="no">
     expr:@/Hardware/Accessories/QSignalSource/DefaultSignal/SignalStrength
   </level>
-  <level rect="-53,6,48x30" name="battery" src="battery.png" count="6" min="0" max="100" scale="yes" delay="1000" loop="0" play="expr:@/Hardware/Accessories/QPowerSource/DefaultBattery/Charging == true" replacecolor="no">
+  <level rect="-53,6,48x30" name="battery" src="battery.png" count="6" min="0" max="100" scale="yes" delay="1000" loop="0" active="expr:@/Hardware/Accessories/QPowerSource/DefaultBattery/Charging == false" replacecolor="no">
+    expr:@/Hardware/Accessories/QPowerSource/DefaultBattery/Charge
+  </level>
+  <level rect="-53,6,48x30" name="batteryc" src="batteryc.png" count="6" min="0" max="100" scale="yes" delay="1000" loop="0" active="expr:@/Hardware/Accessories/QPowerSource/DefaultBattery/Charging == true" replacecolor="no">
     expr:@/Hardware/Accessories/QPowerSource/DefaultBattery/Charge
   </level>
 	<rect rect="48,10,0x0">
