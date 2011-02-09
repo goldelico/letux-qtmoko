@@ -21,7 +21,7 @@ qtmoko_dir=${script_dir%/*}
 echo $qtmoko_dir
 
 echo "============================================== Building qtmoko-theme-faenqo.deb"
-cd $qtmoko_dir/etc/themes/faenqo/ && dpkg-buildpackage
-mv $qtmoko_dir/etc/themes/qtmoko-theme-faenqo_*_all.deb $outdir
+cd $qtmoko_dir/etc/themes/faenqo/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-faenqo_*-* $outdir
 
 echo "============================================= Packages should be now in $outdir"
