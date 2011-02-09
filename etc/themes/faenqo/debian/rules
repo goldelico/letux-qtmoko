@@ -1,0 +1,22 @@
+#!/usr/bin/make -f
+
+build:
+
+clean:
+	rm -rf debian/tmp
+	rm -f debian/files
+
+binary: build
+	mkdir -p debian/tmp/opt/qtmoko/etc/colors
+	mkdir -p debian/tmp/opt/qtmoko/etc/themes/faenqo
+	mkdir -p debian/tmp/opt/qtmoko/pics/themes/faenqo
+	cp faenqo.scheme debian/tmp/opt/qtmoko/etc/colors
+	cp faenqo.conf debian/tmp/opt/qtmoko/etc/themes
+	cp *.xml debian/tmp/opt/qtmoko/etc/themes/faenqo
+	cp decorationrc debian/tmp/opt/qtmoko/etc/themes/faenqo
+	cp -r pics/* debian/tmp/opt/qtmoko/pics/themes/faenqo
+	install -d debian/tmp/DEBIAN
+	dpkg-gencontrol
+	chown -R root:root debian/tmp/opt
+	chmod -R u+w,go=rX debian/tmp/opt
+	dpkg --build debian/tmp ..
