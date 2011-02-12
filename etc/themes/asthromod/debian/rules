@@ -1,0 +1,20 @@
+#!/usr/bin/make -f
+
+build:
+
+clean:
+	rm -rf debian/tmp
+	rm -f debian/files
+
+binary: build
+	mkdir -p debian/tmp/opt/qtmoko/etc/themes/asthromod
+	mkdir -p debian/tmp/opt/qtmoko/pics/themes/asthromod
+	cp asthromod.conf debian/tmp/opt/qtmoko/etc/themes
+	cp *.xml debian/tmp/opt/qtmoko/etc/themes/asthromod
+	cp decorationrc debian/tmp/opt/qtmoko/etc/themes/asthromod
+	cp -r pics/* debian/tmp/opt/qtmoko/pics/themes/asthromod
+	install -d debian/tmp/DEBIAN
+	dpkg-gencontrol
+	chown -R root:root debian/tmp/opt
+	chmod -R u+w,go=rX debian/tmp/opt
+	dpkg --build debian/tmp ..

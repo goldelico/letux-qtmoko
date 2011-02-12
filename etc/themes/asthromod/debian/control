@@ -1,0 +1,15 @@
+Source: qtmoko-theme-asthromod
+Section: comm
+Priority: optional
+Maintainer: Thomas HOCEDEZ <thomas.hocedez@free.fr>
+Build-Depends: debhelper (>= 7.0.50~)
+Standards-Version: 3.8.4
+Homepage: http://www.qtmoko.org
+Vcs-Git: git://github.com/radekp/qtmoko.git
+Vcs-Browser: https://github.com/radekp/qtmoko
+
+Package: qtmoko-theme-asthromod
+Architecture: all
+Depends: 
+Description: Theme Asthromod for QtMoko
+

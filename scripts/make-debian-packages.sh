@@ -24,4 +24,8 @@ echo "============================================== Building qtmoko-theme-faenq
 cd $qtmoko_dir/etc/themes/faenqo/ && dpkg-buildpackage -tc
 mv $qtmoko_dir/etc/themes/qtmoko-theme-faenqo_*-* $outdir
 
+echo "=========================================== Building qtmoko-theme-asthromod.deb"
+cd $qtmoko_dir/etc/themes/asthromod/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-asthromod_*-* $outdir
+
 echo "============================================= Packages should be now in $outdir"
