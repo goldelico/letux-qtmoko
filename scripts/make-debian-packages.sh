@@ -1,5 +1,8 @@
 #!/bin/sh
 
+# build dir - let's assume it's current dir
+export QTMOKO_BUILD_DIR=$PWD
+
 # output dir
 outdir=$PWD/debian_packages
 rm -rf $outdir
@@ -55,5 +58,9 @@ mv $qtmoko_dir/etc/themes/qtmoko-theme-qtopia_*-* $outdir
 echo "=============================================== Building qtmoko-theme-smart.deb"
 cd $qtmoko_dir/etc/themes/smart/ && dpkg-buildpackage -tc
 mv $qtmoko_dir/etc/themes/qtmoko-theme-smart_*-* $outdir
+
+echo "==================================================== Building qtmoko-codecs.deb"
+cd $qtmoko_dir/qtmoko-apps/codecs && dpkg-buildpackage -tc
+mv $qtmoko_dir/qtmoko-apps/qtmoko-codecs_*-* $outdir
 
 echo "============================================= Packages should be now in $outdir"
