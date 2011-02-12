@@ -28,4 +28,32 @@ echo "=========================================== Building qtmoko-theme-asthromo
 cd $qtmoko_dir/etc/themes/asthromod/ && dpkg-buildpackage -tc
 mv $qtmoko_dir/etc/themes/qtmoko-theme-asthromod_*-* $outdir
 
+echo "============================================= Building qtmoko-theme-classic.deb"
+cd $qtmoko_dir/etc/themes/classic/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-classic_*-* $outdir
+
+echo "=============================================== Building qtmoko-theme-crisp.deb"
+cd $qtmoko_dir/etc/themes/crisp/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-crisp_*-* $outdir
+
+echo "=========================================== Building qtmoko-theme-deskphone.deb"
+cd $qtmoko_dir/etc/themes/deskphone/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-deskphone_*-* $outdir
+
+echo "============================================ Building qtmoko-theme-finximod.deb"
+cd $qtmoko_dir/etc/themes/finximod/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-finximod_*-* $outdir
+
+echo "=========================================== Building qtmoko-theme-home-wvga.deb"
+cd $qtmoko_dir/etc/themes/home_wvga/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-home-wvga_*-* $outdir
+
+echo "============================================== Building qtmoko-theme-qtopia.deb"
+cd $qtmoko_dir/etc/themes/qtopia/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-qtopia_*-* $outdir
+
+echo "=============================================== Building qtmoko-theme-smart.deb"
+cd $qtmoko_dir/etc/themes/smart/ && dpkg-buildpackage -tc
+mv $qtmoko_dir/etc/themes/qtmoko-theme-smart_*-* $outdir
+
 echo "============================================= Packages should be now in $outdir"
