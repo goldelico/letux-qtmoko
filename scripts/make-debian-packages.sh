@@ -124,9 +124,9 @@ echo "================================================ Building qtmoko-qalsamixe
 cd $qtmoko_dir/qtmoko-apps/qalsamixer && dpkg-buildpackage -tc
 mv $qtmoko_dir/qtmoko-apps/qtmoko-qalsamixer_*-* $outdir
 
-# echo "================================================= Building qtmoko-qdictopia.deb"
-# cd $qtmoko_dir/qtmoko-apps/qdictopia && dpkg-buildpackage -tc
-# mv $qtmoko_dir/qtmoko-apps/qtmoko-qdictopia_*-* $outdir
+echo "================================================== Building qtmoko-dictopia.deb"
+cd $qtmoko_dir/qtmoko-apps/qdictopia && dpkg-buildpackage -tc
+mv $qtmoko_dir/qtmoko-apps/qtmoko-dictopia_*-* $outdir
 
 echo "========================================== Building qtmoko-qgoogletranslate.deb"
 cd $qtmoko_dir/qtmoko-apps/qgoogletranslate && dpkg-buildpackage -tc
