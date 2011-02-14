@@ -1,0 +1,16 @@
+<package
+      name="qtmoko-qgcide"
+      version="1-1"
+      title="Qgcide"
+      summary="Offline English explanatory dictionary with more then 130000 words"
+      tags="dictionary"
+      >
+      <details>
+          <br/>
+          <h3>Notes</h3>
+          <ul>
+          <li>Dictionary is downloaded upon first use.</li>
+          </ul>
+      </details>
+</package>
+  

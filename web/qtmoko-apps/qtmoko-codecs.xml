@@ -1,0 +1,18 @@
+<package
+      name="qtmoko-codecs"
+      version="1-1"
+      title="QtMoko codecs"
+      summary="MP3 and other codecs that are patented in US"
+      tags="multimedia,mp3"
+      >
+      <details>
+          <br/>
+          <h3>Notes</h3>
+          <ul>
+          <li>After installing this package you have to restart your phone.</li>
+          <li>Then you can start listening to MP3 in media player and use
+             MP3 files as ringtones.</li>
+          </ul>
+      </details>
+</package>
+  
