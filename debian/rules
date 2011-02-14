@@ -28,6 +28,8 @@ binary: build
 
 	install -d debian/tmp/DEBIAN
 	dpkg-gencontrol
+	dh_installdeb -P debian/tmp
+	dh_installinit -P debian/tmp
 	chown -R root:root debian/tmp/opt
 	chmod -R u+w,go=rX debian/tmp/opt
 	dpkg --build debian/tmp ..
