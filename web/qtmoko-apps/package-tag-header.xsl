@@ -9,7 +9,7 @@
 </head>
 <xsl:text disable-output-escaping="yes">&lt;body&gt;</xsl:text>
 <img src="qtmoko.svg" width="320" border="0" alt="QtMoko" />
-<center><h1><xsl:apply-templates select="@category"/> category</h1></center>
+<h1><xsl:apply-templates select="@category"/> category</h1>
 </xsl:template>
 
 <xsl:template match="@category">
