@@ -64,3 +64,24 @@
 [submodule "src/3rdparty/plugins/inputmethods/keyboard-skin-silver"]
 	path = src/3rdparty/plugins/inputmethods/keyboard-skin-silver
 	url = git://github.com/radekp/keyboard-skin-silver.git
+[submodule "src/3rdparty/applications/keypebble"]
+	path = src/3rdparty/applications/keypebble
+	url = git://github.com/radekp/keypebble.git
+[submodule "src/3rdparty/applications/mqutim"]
+	path = src/3rdparty/applications/mqutim
+	url = git://github.com/radekp/mqutim.git
+[submodule "src/3rdparty/applications/noxchat"]
+	path = src/3rdparty/applications/noxchat
+	url = git://github.com/radekp/noxchat.git
+[submodule "src/3rdparty/applications/qalsamixer"]
+	path = src/3rdparty/applications/qalsamixer
+	url = git://github.com/radekp/qalsamixer.git
+[submodule "src/3rdparty/applications/qgoogletranslate"]
+	path = src/3rdparty/applications/qgoogletranslate
+	url = git://github.com/radekp/qgoogletranslate.git
+[submodule "src/3rdparty/games/qsolitaire"]
+	path = src/3rdparty/games/qsolitaire
+	url = git://github.com/radekp/qsolitaire.git
+[submodule "src/3rdparty/applications/qweather"]
+	path = src/3rdparty/applications/qweather
+	url = git://github.com/radekp/qweather.git
