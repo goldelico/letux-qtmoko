@@ -22,3 +22,45 @@
 [submodule "src/3rdparty/applications/raptor"]
 	path = src/3rdparty/applications/raptor
 	url = git://github.com/radekp/raptor.git
+[submodule "src/3rdparty/applications/qtpedometer"]
+	path = src/3rdparty/applications/qtpedometer
+	url = git://github.com/radekp/qtpedometer.git
+[submodule "src/3rdparty/applications/qtopiagps"]
+	path = src/3rdparty/applications/qtopiagps
+	url = git://github.com/radekp/qtopiagps.git
+[submodule "src/3rdparty/applications/qtbackup"]
+	path = src/3rdparty/applications/qtbackup
+	url = git://github.com/radekp/qtbackup.git
+[submodule "src/3rdparty/applications/qmokoplayer"]
+	path = src/3rdparty/applications/qmokoplayer
+	url = git://github.com/radekp/qmokoplayer.git
+[submodule "src/3rdparty/applications/spectemu"]
+	path = src/3rdparty/applications/spectemu
+	url = git://github.com/radekp/spectemu.git
+[submodule "src/3rdparty/applications/qdictopia"]
+	path = src/3rdparty/applications/qdictopia
+	url = git://github.com/radekp/qdictopia.git
+[submodule "src/3rdparty/applications/phonetiq"]
+	path = src/3rdparty/applications/phonetiq
+	url = git://github.com/radekp/phonetiq.git
+[submodule "src/3rdparty/applications/qgcide"]
+	path = src/3rdparty/applications/qgcide
+	url = git://github.com/radekp/qgcide.git
+[submodule "src/3rdparty/applications/qneoroid"]
+	path = src/3rdparty/applications/qneoroid
+	url = git://github.com/radekp/qneoroid.git
+[submodule "src/3rdparty/applications/eyepiece"]
+	path = src/3rdparty/applications/eyepiece
+	url = git://github.com/radekp/eyepiece.git
+[submodule "src/3rdparty/applications/gqsync"]
+	path = src/3rdparty/applications/gqsync
+	url = git://github.com/radekp/gqsync.git
+[submodule "src/3rdparty/games/greensudoku"]
+	path = src/3rdparty/games/greensudoku
+	url = git://github.com/radekp/greensudoku.git
+[submodule "src/3rdparty/plugins/inputmethods/keyboard-russian-abc"]
+	path = src/3rdparty/plugins/inputmethods/keyboard-russian-abc
+	url = git://github.com/radekp/keyboard-russian-abc.git
+[submodule "src/3rdparty/plugins/inputmethods/keyboard-skin-silver"]
+	path = src/3rdparty/plugins/inputmethods/keyboard-skin-silver
+	url = git://github.com/radekp/keyboard-skin-silver.git
