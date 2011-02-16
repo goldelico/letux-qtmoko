@@ -85,3 +85,6 @@
 [submodule "src/3rdparty/applications/qweather"]
 	path = src/3rdparty/applications/qweather
 	url = git://github.com/radekp/qweather.git
+[submodule "src/3rdparty/applications/shopper"]
+	path = src/3rdparty/applications/shopper
+	url = git://github.com/radekp/shopper.git
