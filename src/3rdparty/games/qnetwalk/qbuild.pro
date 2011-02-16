@@ -1,5 +1,5 @@
 TARGET=qnetwalk
-CONFIG+=qtopia quicklaunch 
+CONFIG+=qtopia
 
 # Input
 HEADERS=cell.h mainwindow.h

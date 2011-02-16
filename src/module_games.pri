@@ -9,7 +9,7 @@ PROJECTS*=\
         games/parashoot \
 #       3rdparty/games/cutemaze \
 #       3rdparty/games/gottet \
-        3rdparty/games/qnetwalk \
+#       3rdparty/games/qnetwalk \
         3rdparty/games/qtmaze
 #       3rdparty/games/qsamegame
 

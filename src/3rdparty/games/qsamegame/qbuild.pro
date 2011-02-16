@@ -1,5 +1,5 @@
 TEMPLATE=app
-CONFIG+=qtopia singleexec quicklaunch
+CONFIG+=qtopia
 TARGET=qsamegame
 QT+=svg
 

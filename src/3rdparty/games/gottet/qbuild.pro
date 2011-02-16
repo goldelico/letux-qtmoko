@@ -1,5 +1,5 @@
 TEMPLATE=app
-CONFIG+=qtopia quicklaunch
+CONFIG+=qtopia
 TARGET = gottet
 
 

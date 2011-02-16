@@ -92,6 +92,22 @@ echo "=============================================== Building qtmoko-greensudok
 cd $qtmoko_dir/src/3rdparty/games/greensudoku && dpkg-buildpackage -tc
 mv $qtmoko_dir/src/3rdparty/games/qtmoko-greensudoku_*-* $outdir
 
+echo "================================================== Building qtmoko-cutemaze.deb"
+cd $qtmoko_dir/src/3rdparty/games/cutemaze && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/games/qtmoko-cutemaze_*-* $outdir
+
+echo "==================================================== Building qtmoko-gottet.deb"
+cd $qtmoko_dir/src/3rdparty/games/gottet && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/games/qtmoko-gottet_*-* $outdir
+
+echo "================================================== Building qtmoko-qnetwalk.deb"
+cd $qtmoko_dir/src/3rdparty/games/qnetwalk && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/games/qtmoko-qnetwalk_*-* $outdir
+
+echo "================================================= Building qtmoko-qsamegame.deb"
+cd $qtmoko_dir/src/3rdparty/games/qsamegame && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/games/qtmoko-qsamegame_*-* $outdir
+
 echo "================================================= Building qtmoko-keypebble.deb"
 cd $qtmoko_dir/src/3rdparty/applications/keypebble && dpkg-buildpackage -tc
 mv $qtmoko_dir/src/3rdparty/applications/qtmoko-keypebble_*-* $outdir

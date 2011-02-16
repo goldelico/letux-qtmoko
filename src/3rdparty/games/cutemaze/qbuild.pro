@@ -1,6 +1,6 @@
 TEMPLATE=app
 QT+=svg
-CONFIG+=qtopia singleexec quicklaunch
+CONFIG+=qtopia
 TARGET=cutemaze
 
 pkg [
