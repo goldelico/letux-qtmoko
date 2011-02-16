@@ -3,8 +3,12 @@
       version="1-1"
       title="QtMoko codecs"
       summary="MP3 and other codecs that are patented in US"
-      tags="multimedia,mp3"
+      category="multimedia"
       >
+      <tag>mp3</tag>
+      <tag>music</tag>
+      <tag>codecs</tag>
+      <tag>ringtones</tag>
       <details>
           <br/>
           <h3>Notes</h3>
