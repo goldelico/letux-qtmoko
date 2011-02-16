@@ -72,6 +72,10 @@ echo "==================================================== Building qtmoko-qgcid
 cd $qtmoko_dir/src/3rdparty/applications/qgcide && dpkg-buildpackage -tc
 mv $qtmoko_dir/src/3rdparty/applications/qtmoko-qgcide_*-* $outdir
 
+echo "=============================================== Building qtmoko-melodiq.deb"
+cd $qtmoko_dir/src/3rdparty/applications/melodiq && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/applications/qtmoko-melodiq_*-* $outdir
+
 echo "=============================================== Building qtmoko-qtpedometer.deb"
 cd $qtmoko_dir/src/3rdparty/applications/qtpedometer && dpkg-buildpackage -tc
 mv $qtmoko_dir/src/3rdparty/applications/qtmoko-qtpedometer_*-* $outdir
