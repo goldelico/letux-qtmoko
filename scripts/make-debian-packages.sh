@@ -80,9 +80,9 @@ echo "=============================================== Building qtmoko-qtpedomete
 cd $qtmoko_dir/src/3rdparty/applications/qtpedometer && dpkg-buildpackage -tc
 mv $qtmoko_dir/src/3rdparty/applications/qtmoko-qtpedometer_*-* $outdir
 
-# echo "================================================== Building qtmoko-eyepiece.deb"
-# cd $qtmoko_dir/src/3rdparty/applications/eyepiece && dpkg-buildpackage -tc
-# mv $qtmoko_dir/src/3rdparty/applications/qtmoko-eyepiece_*-* $outdir
+echo "================================================== Building qtmoko-eyepiece.deb"
+cd $qtmoko_dir/src/3rdparty/applications/eyepiece && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/applications/qtmoko-eyepiece_*-* $outdir
 
 echo "==================================================== Building qtmoko-gqsync.deb"
 cd $qtmoko_dir/src/3rdparty/applications/gqsync && dpkg-buildpackage -tc
