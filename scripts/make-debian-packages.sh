@@ -20,6 +20,14 @@ echo $script_dir
 qtmoko_dir=${script_dir%/*}
 echo $qtmoko_dir
 
+echo "====================================== Building qtmoko-keyboard-russian-abc.deb"
+cd $qtmoko_dir/src/3rdparty/plugins/inputmethods/keyboard-russian-abc && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/plugins/inputmethods/qtmoko-keyboard-russian-abc_*-* $outdir
+
+echo "====================================== Building qtmoko-keyboard-russian-abc.deb"
+cd $qtmoko_dir/src/3rdparty/plugins/inputmethods/keyboard-skin-silver && dpkg-buildpackage -tc
+mv $qtmoko_dir/src/3rdparty/plugins/inputmethods/qtmoko-keyboard-skin-silver_*-* $outdir
+
 echo "============================================== Building qtmoko-theme-faenqo.deb"
 cd $qtmoko_dir/etc/themes/faenqo/ && dpkg-buildpackage -tc
 mv $qtmoko_dir/etc/themes/qtmoko-theme-faenqo_*-* $outdir
