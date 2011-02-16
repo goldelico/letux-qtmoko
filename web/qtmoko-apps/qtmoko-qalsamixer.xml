@@ -1,0 +1,11 @@
+<package
+      name="qtmoko-qalsamixer"
+      version="32-1"
+      title="Alsa mixer"
+      summary="Mixer application"
+      category="utility"
+      >
+          <tag>sound</tag>
+          <tag>volume</tag>
+</package>
+  

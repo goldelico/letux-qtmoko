@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-qtbackup"
+      version="32-1"
+      title="QtBackup"
+      summary="Backup utility"
+      category="utility"
+      >
+</package>
+  

@@ -1,0 +1,10 @@
+<package
+      name="qtmoko-keyboard-russian-abc"
+      version="1-1"
+      title="Russian keyboard"
+      summary="Russian layout for finger keyboard"
+      category="input"
+      >
+          <tag>keyboard</tag>
+</package>
+  

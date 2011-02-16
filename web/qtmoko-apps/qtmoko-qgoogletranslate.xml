@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-qgoogletranslate"
+      version="32-1"
+      title="Google translate"
+      summary="Google translating program"
+      category="dictionaries"
+      >
+</package>
+  

@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-spectemu"
+      version="32-1"
+      title="Spectemu"
+      summary="ZX-spectrum emulator"
+      category="games"
+      >
+</package>
+  

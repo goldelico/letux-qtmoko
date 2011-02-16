@@ -1,0 +1,10 @@
+<package
+      name="qtmoko-keypebble"
+      version="32-1"
+      title="Keybebble"
+      summary="VNC viewer"
+      category="utility"
+      >
+          <tag>vnc</tag>      
+</package>
+  

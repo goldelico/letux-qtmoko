@@ -1,0 +1,11 @@
+<package
+      name="qtmoko-noxchat"
+      version="32-1"
+      title="Noxchat"
+      summary="IRC client"
+      category="utility"
+      >
+          <tag>irc</tag>
+          <tag>chat</tag>
+</package>
+  

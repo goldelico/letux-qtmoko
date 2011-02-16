@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-qweather"
+      version="32-1"
+      title="Yahoo! weather"
+      summary="Yahoo! weather client"
+      category="utility"
+      >
+</package>
+  

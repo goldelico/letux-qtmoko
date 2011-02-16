@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-gqsync"
+      version="32-1"
+      title="Gqsync"
+      summary="Google contact sync"
+      category="utility"
+      >
+</package>
+  

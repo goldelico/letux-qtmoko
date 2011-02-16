@@ -1,0 +1,11 @@
+<package
+      name="qtmoko-eyepiece"
+      version="32-1"
+      title="Eyepiece"
+      summary="PDF and DjVu viewer"
+      category="utility"
+      >
+          <tag>pdf</tag>
+          <tag>viewer</tag>
+</package>
+  

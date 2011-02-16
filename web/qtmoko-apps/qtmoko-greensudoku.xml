@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-greensudoku"
+      version="32-1"
+      title="Green sudoku"
+      summary="Sudoku game"
+      category="games"
+      >
+</package>
+  

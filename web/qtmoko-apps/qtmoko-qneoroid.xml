@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-qneoroid"
+      version="32-1"
+      title="Neoroid"
+      summary="Variation of QNetWalk game"
+      category="games"
+      >
+</package>
+  

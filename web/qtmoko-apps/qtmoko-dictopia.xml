@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-dictopia"
+      version="32-1"
+      title="Dictopia"
+      summary="Bilingual dictinary compatible with StarDict format"
+      category="dictionaries"
+      >
+</package>
+  

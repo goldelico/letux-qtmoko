@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-shopper"
+      version="32-1"
+      title="Shopper"
+      summary="Shopping list application"
+      category="utility"
+      >
+</package>
+  
