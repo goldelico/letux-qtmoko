@@ -23,7 +23,7 @@ case "$1" in
     purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
         # rescan .desktop files so that we disappear from the list
         . /opt/qtmoko/qpe.env
-        qcop QPE/DocAPI 'scanPath(QString,int)' /opt/qtmoko/apps/Applications 1
+        qcop QPE/DocAPI 'scanPath(QString,int)' /opt/qtmoko/apps/Games 1
     ;;
 
     *)
