@@ -115,7 +115,7 @@ QSame::Board::Board( QObject *parent )
 	: QGraphicsScene( parent ),
 #ifdef QTOPIA_PHONE
 	/* FIXME: need to find a way to load the pic file or at least the path*/
-	  m_renderer( "/opt/Qtopia/pics/qsamegame/default_theme.svg" , QSize(), QSize( 64, 128 ), this ),
+	  m_renderer( "/opt/qtmoko/pics/qsamegame/default_theme.svg" , QSize(), QSize( 64, 128 ), this ),
 #else
 	  m_renderer( "./pics/default_theme.svg" , QSize(), QSize( 64, 128 ), this ),
 #endif

@@ -28,7 +28,7 @@ desktop [
 
 pics [
     hint=pics
-    files=pics/qsamegame.png
+    files=pics/*
     path=/pics/qsamegame
 ]
 
