@@ -23,6 +23,8 @@
 <xsl:apply-templates select="@name"/>
 <xsl:text>.png</xsl:text>
 </xsl:attribute>
+<xsl:attribute name="width">120</xsl:attribute>
+<xsl:attribute name="height">180</xsl:attribute>
 <xsl:attribute name="border">0</xsl:attribute>
 </xsl:element>
 </xsl:element>
