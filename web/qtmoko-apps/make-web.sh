@@ -56,7 +56,7 @@ do
             echo "</head><body><img src=\"qtmoko.svg\" width=\"320\" border=\"0\" alt=\"QtMoko\"><center><h1>packages tagged with $tag</h1></center>" >> $tag_html
             xsltproc package-item.xsl $f >> $tag_html
             echo "echo \"</body></html>\" >> $tag_html" >> write-tag-footers.sh
-            echo "echo \"<a href=\"$tag_html\"> $tag </a>\" >> index.html"  >> write-tags.sh
+            echo "echo \" <a href=\"$tag_html\">$tag</a>\"  >> index.html"  >> write-tags.sh
         fi
 
     done
