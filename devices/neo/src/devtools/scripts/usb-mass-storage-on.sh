@@ -1,6 +1,13 @@
 #!/bin/sh
 
-DEV_NAME=/dev/mmcblk0
+DEV_NAME=/dev/mmcblk0p1
+
+# check if we run from NAND (assuming ubifs with no_chk_data_crc option)
+# if yes we can export whole sdcard
+if mount | grep "no_chk_data_crc"; then
+    DEV_NAME=/dev/mmcblk0
+fi
+
 ifdown usb0
 # sync all buffers
 sync ; echo 3 > /proc/sys/vm/drop_caches
