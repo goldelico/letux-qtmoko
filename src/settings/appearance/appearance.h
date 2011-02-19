@@ -94,6 +94,8 @@ private:
     QSoftMenuBar::LabelType m_savedLabelType;
 
     bool m_isStatusView;
+    QString m_moreThemes;
+    int m_prevIndex;
 };
 
 #endif

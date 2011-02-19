@@ -39,6 +39,7 @@
 #include <QScrollArea>
 #include <QMenu>
 #include <QTimer>
+#include <QProcess>
 
 #include <QtopiaServiceRequest>
 #include <QtopiaIpcEnvelope>
@@ -494,7 +495,9 @@ void Theme::setAvailableColorSchemes(const QHash<QString, QString> &schemes)
 
 AppearanceSettings::AppearanceSettings(QWidget* parent, Qt::WFlags fl)
     : QDialog(parent, fl),
-      m_isStatusView(false)
+      m_isStatusView(false),
+      m_moreThemes(tr("More themes...")),
+      m_prevIndex(-1)
 {
     initUi();
     loadThemes();
@@ -525,10 +528,19 @@ Theme *AppearanceSettings::currentTheme() const
 
 void AppearanceSettings::themeChanged(int index)
 {
+    // Launch web browser for more themes
+    if(index == (m_themeCombo->count() - 1)) {
+        QProcess::execute("arora", QStringList() << "http://qtmoko.sourceforge.net/apps/category-themes.html");
+        loadThemes();
+        m_themeCombo->setCurrentIndex(m_prevIndex);
+        return;
+    }
+
     Theme *theme = m_themes.value(index, 0);
     if (!theme)
         return;
 
+    m_prevIndex = index;
     QStringListModel *model;
 
     model = qobject_cast<QStringListModel *>(m_colorCombo->model());
@@ -754,6 +766,7 @@ void AppearanceSettings::loadThemes()
             }
         }
     }
+    themeNames << m_moreThemes;
 
     QStringListModel *model;
     model = qobject_cast<QStringListModel *>(m_themeCombo->model());
