@@ -531,7 +531,19 @@ void AppearanceSettings::themeChanged(int index)
     // Launch web browser for more themes
     if(index == (m_themeCombo->count() - 1)) {
         QProcess::execute("arora", QStringList() << "http://qtmoko.sourceforge.net/apps/category-themes.html");
+        QStringListModel *model = qobject_cast<QStringListModel *>(m_themeCombo->model());
+        QStringList oldThemes = model->stringList();
         loadThemes();
+        
+        // Find theme which was installed
+        model = qobject_cast<QStringListModel *>(m_themeCombo->model());
+        QStringList newThemes = model->stringList();
+        for(int i = 0; i < newThemes.count(); i++) {
+            if(oldThemes.count() <= i || oldThemes[i] != newThemes[i]) {
+                m_prevIndex = i;
+                break;
+            }
+        }
         m_themeCombo->setCurrentIndex(m_prevIndex);
         return;
     }
@@ -745,6 +757,8 @@ void AppearanceSettings::loadThemes()
 {
     QStringList themeNames;
     QStringList installPaths = Qtopia::installPaths();
+    qDeleteAll(m_themes);
+    m_themes.clear();
     for (int i=0; i<installPaths.size(); i++) {
         QString path(installPaths[i] + "etc/themes/");
         QDir dir;
