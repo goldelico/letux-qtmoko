@@ -1,0 +1,9 @@
+[Translation]
+File=QtopiaApplications
+Context=PowerManagerServices
+[Desktop Entry]
+Comment[]=Install more games
+Exec=install-apps.sh
+Icon=pkginstall/pkginstall
+Type=ConsoleApplication
+Name[]=More games
