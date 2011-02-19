@@ -16,16 +16,15 @@
 <xsl:apply-templates select="@name"/>
 <xsl:text>_</xsl:text>
 <xsl:apply-templates select="@version"/>
-
+<xsl:text>_</xsl:text>
 <xsl:choose>
   <xsl:when test="@arch">
-    <xsl:text>_any</xsl:text>
+    <xsl:apply-templates select="@arch"/>
   </xsl:when>
   <xsl:otherwise>
-    <xsl:text>_armel</xsl:text>
+    <xsl:text>armel</xsl:text>
   </xsl:otherwise>
 </xsl:choose>
-
 <xsl:text>.deb</xsl:text>
 </xsl:attribute>
 <xsl:element name="img">
@@ -46,7 +45,16 @@
 <xsl:apply-templates select="@name"/>
 <xsl:text>_</xsl:text>
 <xsl:apply-templates select="@version"/>
-<xsl:text>_armel.deb</xsl:text>
+<xsl:text>_</xsl:text>
+<xsl:choose>
+  <xsl:when test="@arch">
+    <xsl:apply-templates select="@arch"/>
+  </xsl:when>
+  <xsl:otherwise>
+    <xsl:text>armel</xsl:text>
+  </xsl:otherwise>
+</xsl:choose>
+<xsl:text>.deb</xsl:text>
 </xsl:attribute>
 <xsl:text>Click here to install</xsl:text>
 </xsl:element>
