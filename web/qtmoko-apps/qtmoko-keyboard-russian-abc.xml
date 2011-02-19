@@ -1,5 +1,6 @@
 <package
       name="qtmoko-keyboard-russian-abc"
+      arch="all"
       version="1-1"
       title="Russian keyboard"
       summary="Russian layout for finger keyboard"

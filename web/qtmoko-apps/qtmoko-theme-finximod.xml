@@ -1,5 +1,6 @@
 <package
       name="qtmoko-theme-finximod"
+      arch="all"
       version="1-1"
       title="Finximod theme"
       summary="Finximod is yet another nice theme created by Joif"
