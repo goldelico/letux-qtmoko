@@ -14,6 +14,11 @@ do
 	out=${f%.xml}.html
 	echo generating $out
 
+    # thumbnail for screenshot
+    png=${f%.xml}.png
+    thumb=${f%.xml}60.png
+    convert -sample 60x80 $png $thumb
+
     # html for package
 	xsltproc package.xsl $f > $out
 
