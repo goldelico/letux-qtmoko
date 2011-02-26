@@ -93,7 +93,7 @@ void PowerAlertDialogTask::powerChanged()
     // Set Orange Diode on battery chargeing
     QFile f("/sys/class/leds/gta02:orange:power/brightness");
     if(f.open(QFile::WriteOnly)) {
-        f.write(powerstatus->batteryCharging() ? "1" : "0", 1);
+        f.write(powerstatus->batteryCharging() ? "255" : "0", 1);
         f.close();
     }
 
