@@ -15,7 +15,7 @@
 <xsl:element name="img">
 <xsl:attribute name="src">
 <xsl:apply-templates select="@name"/>
-<xsl:text>.png</xsl:text>
+<xsl:text>60.png</xsl:text>
 </xsl:attribute>
 <xsl:attribute name="border">0</xsl:attribute>
 <xsl:attribute name="width">60</xsl:attribute>
