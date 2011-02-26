@@ -903,15 +903,13 @@ bool QMplayer::startMencoder(QString srcFile, QString dstFile)
     args.append("-ovc");
     args.append("lavc");
     args.append("-lavcopts");
-    args.append("vcodec=mpeg4:vhq:vbitrate=300");
+    args.append("vcodec=mpeg4:vhq:vbitrate=300:acodec=ac3");
     args.append("-vf");
     args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
     args.append("-oac");
-    args.append("mp3lame");
+    args.append("lavc");
     args.append("-ofps");
     args.append("15");
-    args.append("-lameopts");
-    args.append("br=64:cbr");
     args.append("-o");
     args.append(dstFile);
 
@@ -948,6 +946,7 @@ void QMplayer::mencoderReadyRead()
 {
     QString txt = process->readAll().trimmed();
     label->setText(txt);
+    qDebug() << txt;
 
     // Search for percents - e.g. (34%)
     int index = txt.indexOf("%)");
