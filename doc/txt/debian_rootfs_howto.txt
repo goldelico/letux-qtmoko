@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libxtst6 squeeze /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://ftp.de.debian.org/debian/
 
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
@@ -85,6 +85,7 @@ Step 3 - add more package repositories
 
 echo "deb http://ftp.de.debian.org/debian squeeze contrib" >> /media/card/etc/apt/sources.list
 echo "deb http://ftp.de.debian.org/debian squeeze non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
 
 Step 4
 ======
@@ -222,72 +223,23 @@ mkdir /media/card/var/spool/at
 Step 6 - qpe bootscript
 =======================
 
-* Create qpe init script and link in runlevel 2
+* not using now - it's in debian package already
 
-nano /media/card/etc/init.d/qpe.sh
+Step 6.5 - omhacks
+==================
 
-#!/bin/sh
-### BEGIN INIT INFO
-# Provides: qtopia
-# Required-Start:    $local_fs $syslog $remote_fs dbus bluetooth
-# Required-Stop:     $local_fs $syslog $remote_fs
-# Default-Start:     2 3 4 5
-# Default-Stop:      0 1 6
-# Short-Description: Start qtopia phone
-### END INIT INFO
+* omhacks is used for controlling neo hardware, the version in squeeze is old
+  and can't be used with > 2.6.34 kernels, so install from sid:
 
-. /opt/qtmoko/qpe.env
-
-case "$1" in
-  start)
-	if [ ! -d /dev/pts ]; then
-		# running on devtmpfs
-		mkdir -p /dev/pts
-		mount -t devpts none /dev/pts
-		modprobe joydev
-	fi
-	rm -f /dev/input/mice
-	echo '1' > /proc/sys/kernel/printk
-	echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
-	echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
-	rm -rf /var/run/ppp
-	mkdir /var/run/ppp
-	mkdir -p /var/cache/apt/archives/partial
-	atd /var/spool/at
-	/etc/init.d/qpe.sh &
-	;;
-  stop)
-	rm -f /tmp/restart-qtopia
-	killall -q qpe atd quicklauncher mediaserver mediaplayer sipagent
-	;;
-  restart)
-	/etc/init.d/qpe.sh stop
-	/etc/init.d/qpe.sh start
-	;;
-  *)
-	touch /tmp/restart-qtopia
-	while [ -e /tmp/restart-qtopia ]; do
-	qpe 2>&1 | logger -t 'Qtopia'
-	if [ -e /tmp/restart-qtopia-qvga ]; then
-		rm -rf /tmp/restart-qtopia-qvga
-		export QWS_SIZE="240x320+0+0"
-		export POINTERCAL_FILE=/etc/pointercal_qvga
-		fbset qvga
-		echo qvga > /sys/bus/spi/devices/spi2.0/resolution
-		#qcop service send Launcher "execute(QString)" "calibrate"
-	fi
-	done
-	;;
-esac
-
-exit 0
-
-* Make it executable and add it to startup scripts:
-
-chmod +x /media/card/etc/init.d/qpe.sh
 chroot /media/card
-update-rc.d qpe.sh defaults
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.13-1_armel.deb
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.13-1_armel.deb
+dpkg -i libomhacks0_0.13-1_armel.deb
+dpkg -i omhacks_0.13-1_armel.deb
+rm libomhacks0_0.13-1_armel.deb
+rm omhacks_0.13-1_armel.deb
 exit
+
 
 Step 7 - logread utility
 ========================
@@ -318,119 +270,31 @@ Step 7.5 - dash
 
 cd /media/card/bin/
 rm sh
-ln -s dash sh 
+ln -s dash sh
 
+Step 8 - install QtMoko
+=======================
 
-Step 7.7
-========
+* I use qemu armel host for building qtmoko package. It should be as simple as
 
-* We need just 3 fonts
+git checkout v33
+dpkg-buildpackage
 
-cd /media/card/usr/share/fonts/truetype/ttf-dejavu/
-mv DejaVuSansCondensed-Bold.ttf 1
-mv DejaVuSansCondensed.ttf 2
-mv DejaVuSansMono.ttf 3
-rm *.ttf
-mv 1 DejaVuSansCondensed-Bold.ttf
-mv 2 DejaVuSansCondensed.ttf
-mv 3 DejaVuSansMono.ttf
+* Please note that releases are made from translations branch so that we have
+  all languages.
 
+* Now upload the package to sourceforge. In filezilla connect to sourceforge
+  sftp and upload it to /home/project-web/qtmoko/htdocs/debian
 
-Step 8 - cross compile QtMoko
-=============================
+* Install it
 
-* You can also compile natively on ARM device or in qemu, see step 8.1.
+chroot /media/card/
+wget http://qtmoko.sourceforge.net/debian/qtmoko_33-1_armel.deb
+dpkg -i qtmoko_33-1_armel.deb
+update-rc.d qtmoko defaults
+rm qtmoko_33-1_armel.deb
+exit
 
-* Download and unpack toolchain:
-
-cd /
-sudo http://sourceforge.net/projects/qtmoko/files/Toolchain/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
-sudo tar xzvpf arm920t-eabi.tgz
-
-* Install dependencies, they are very similar to what qt has:
-
-apt-get build-dep libqt4-dev
-apt-get install libts-dev
-
-* Get QtMoko sources
-
-git clone git://github.com/radekp/qtmoko.git
-
-* Initialize and update submodules
-
-cd qtmoko
-git submodule init
-git submodule update
-
-* Checkout translations branch (this branch is used for qtmoko releases, it has
-  translations to various languages):
-
-git checkout translations
-
-* Build QtMoko
-
-mkdir ../build
-cd ../build
-../qtmoko/configure -device neo
-make
-make install
-
-* Tar build - after tarballing it does scp to neo. If scp fails no problem:
-
-../qtmoko/devices/neo/scripts/update_qtmoko
-
-* Unpack QtMoko to target image
-
-cd /media/card
-tar xzvpf qtopia-update.tar.gz
-
-
-Step 8.1 - compile QtMoko natively
-==================================
-
-* You need ARM device with a lot of storage or QEMU ARM image (currently with
-  debian squeeze). We call this build host. Storage can be workarounded with
-  NFS mount.
-
-* Install dependencies on build host:
-
-apt-get build-dep libqt4-dev
-apt-get install libdbus-1-dev libts-dev libbluetooth-dev libasound2-dev
-
-* Get QtMoko sources:
-
-git clone git://github.com/radekp/qtmoko.git
-
-  * Initialize and update submodules
-
-cd qtmoko
-git submodule init
-git submodule update
-
-  * Create build directory (you cant build from the git directory)
-
-mkdir ../build
-cd ../build
-
-  * Build it:
-
-../qtmoko/configure -device neo -xplatform linux-native-g++ -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
-make
-make install
-
-
-
-
-Step 8.5 - Fonts
-================
-
-* We will use truetype fonts installed with X. They have several benefits:
-  bigger size, international characters, fixed size font (good for terminal).
-  
-  
-cd /media/card/opt/qtmoko/lib
-rm -rf fonts
-ln -s ../../../usr/share/fonts/truetype/ttf-dejavu/ fonts
 
 Step 9 - Linux kernel
 =====================
@@ -453,9 +317,14 @@ mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v28
 
 * Copy kernel to /media/card/boot
 
+cp /path/to/cross/compiled/linux-2.6/uImage-GTA02 /media/card/boot/uImage-GTA02.bin
+cp -r /path/to/cross/compiled/linux-2.6/GTA02/lib /media/card/lib
+
+* Create boot args for qi:
+
 cd /media/card/boot
 echo "console=tty0 loglevel=3 rootwait" > append-GTA02
-scp /home/radek/linux-2.6/GTA02/uImage-GTA02.bin root@192.168.0.202:/media/card/boot/uImage-GTA02.bin
+
 
 Step 9.5 - remove bash history
 ==============================
@@ -484,7 +353,6 @@ Step 9.7 - fix owner on files that were compiled on PC
 chown -R root:root /media/card/boot
 chown -R root:root /media/card/lib/modules
 chown -R root:root /media/card/lib/firmware/
-chown -R root:root /media/card/opt
 
 Step 10 - release tarball
 =========================
@@ -510,6 +378,18 @@ find /tmp/qtmoko-debian/usr/share/info/ -type f -exec rm -f '{}' \;
 find /tmp/qtmoko-debian/usr/share/man/ -type f -exec rm -f '{}' \;
 rm -rf /tmp/qtmoko-debian/usr/share/sounds/alsa/*
 rm -rf /tmp/qtmoko-debian/usr/share/ssh/blacklist*
+
+* We need just 3 fonts
+
+cd /tmp/qtmoko-debian/usr/share/fonts/truetype/ttf-dejavu/
+mv DejaVuSansCondensed-Bold.ttf 1
+mv DejaVuSansCondensed.ttf 2
+mv DejaVuSansMono.ttf 3
+rm *.ttf
+mv 1 DejaVuSansCondensed-Bold.ttf
+mv 2 DejaVuSansCondensed.ttf
+mv 3 DejaVuSansMono.ttf
+
 
 * Edit the mount for root in /tmp/qtmoko-debian/etc/fstab so that it reads:
 
