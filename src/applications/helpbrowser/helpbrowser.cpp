@@ -179,7 +179,7 @@ void HelpBrowser::init()
     browser->ensurePolished();
     browser->setSource( HOMEPAGE );
 
-    QSoftMenuBar::setLabel(browser, Qt::Key_Back, "close", tr("Close"));
+    //QSoftMenuBar::setLabel(browser, Qt::Key_Back, "close", tr("Close"));
 }
 
 void HelpBrowser::updateLabels()
