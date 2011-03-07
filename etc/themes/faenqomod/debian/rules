@@ -16,6 +16,9 @@ binary: build
 	cp decorationrc debian/tmp/opt/qtmoko/etc/themes/faenqomod
 	cp -r pics/* debian/tmp/opt/qtmoko/pics/themes/faenqomod
 	find debian/tmp/opt/qtmoko/pics/themes/faenqomod -type f -name "*.svg" -exec rm -f {} \;
+	# We need svg ones for SIM ping unlock
+	rm -f debian/tmp/opt/qtmoko/pics/themes/faenqomod/buttonpin*
+	cp pics/buttonpin*.svg debian/tmp/opt/qtmoko/pics/themes/faenqomod
 	install -d debian/tmp/DEBIAN
 	dpkg-gencontrol
 	chown -R root:root debian/tmp/opt
