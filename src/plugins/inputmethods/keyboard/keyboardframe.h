@@ -124,6 +124,8 @@ private:
     int keycode( int i2, int j, const uchar **keyboard, QRect *repaintrect );
     int getKey( int &w, int j = -1 );
     void clearHighlight();
+    void clearMod(int mod);
+    void clearMods();
 
     uint shift:1;
     uint lock:1;

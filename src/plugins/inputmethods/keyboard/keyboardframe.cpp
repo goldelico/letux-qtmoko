@@ -323,6 +323,20 @@ struct ShiftMap {
     char shifted;
 };
 
+enum modsIndex {
+    ShiftMod = 0,
+    AltMod = 1,
+    CtrlMod = 2
+};
+
+struct keyLocation {
+    int x, y;
+};
+
+static const keyLocation modsLocMap[] = {
+  {0, 3}, {1, 4}, {0, 4}
+};
+
 
 static const ShiftMap shiftMap[] = {
     { '`', '~' },
@@ -619,7 +633,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 
         qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, false );
 
-        shift = alt = ctrl = false;
+	clearMods();
 
         KeyboardConfig *dc = picks->dc;
 
@@ -690,6 +704,44 @@ void KeyboardFrame::repeat()
         qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, true );
     } else
         repeatTimer->stop();
+}
+
+void KeyboardFrame::clearMod(int modindex) {
+    const keyLocation* loc = &modsLocMap[modindex];
+
+    const uchar **keyboard = (const uchar **)((useOptiKeys) ? keyboard_opti : keyboard_standard);
+
+    const uchar *row = keyboard[loc->y];
+
+    int x = 0;
+
+    for ( int id = 0; id != loc->x; row += 2, id++ )
+	x += *row;
+
+    QRect toRepaint = QRect(
+	x*defaultKeyWidth/2+xoffs,
+        loc->y*keyHeight+picks->height(),
+        *row*defaultKeyWidth/2,keyHeight
+    );
+
+    repaint (toRepaint);
+}
+
+void KeyboardFrame::clearMods()
+{
+    if (shift) {
+	shift = false;
+	clearMod(ShiftMod);
+
+    }
+    if (alt) {
+	alt = false;
+	clearMod(AltMod);
+    }
+    if (ctrl) {
+	ctrl = false;
+	clearMod(CtrlMod);
+    }
 }
 
 void KeyboardFrame::clearHighlight()
