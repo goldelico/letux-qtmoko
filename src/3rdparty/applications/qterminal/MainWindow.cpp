@@ -28,6 +28,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags f)
   // setup the ui
 #ifdef QTOPIA_PHONE
   QMenu *m = QSoftMenuBar::menuFor(this);
+  QSoftMenuBar::setLabel(this, Qt::Key_Back, QSoftMenuBar::NoLabel);
 #else
   resize(800,600);
   QMenu *m = menuBar()->addMenu(tr("Options"));

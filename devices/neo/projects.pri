@@ -29,5 +29,4 @@ PROJECTS*=\
     3rdparty/applications/arora/src \
     3rdparty/tools/atd \
     3rdparty/applications/neocontrol \
-    3rdparty/applications/raptor \
-    3rdparty/applications/omhacks
+    3rdparty/applications/raptor

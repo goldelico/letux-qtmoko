@@ -4,7 +4,7 @@ CONFIGURE = $(PWD)/configure
 
 build:
 	mkdir -p ../build
-	cd ../build && "$(CONFIGURE)" -device neo
+	cd ../build && "$(CONFIGURE)" -device neo -xplatform linux-native-g++ -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
 	cd ../build && make
 
 clean:
