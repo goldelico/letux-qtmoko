@@ -155,6 +155,17 @@ subnet 192.168.0.0 netmask 255.255.255.0 {
 }
 __END__
 
+Step 4.6 - get rid of getty in inittab
+======================================
+
+* TTY's are for logging to console which is useful only if you have USB
+  keyboard. So tty respawning is in done in usb-host.sh script and we can
+  comment it out from /etc/inittab:
+
+nano /media/card/etc/inittab
+
+  and comment all lines with "respawn:/sbin/getty 38400 ttyX"
+
 
 Step 4.7 - disable logging by defaults
 ======================================

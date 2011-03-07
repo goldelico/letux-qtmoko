@@ -404,7 +404,6 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         else
         {
             args.append("-hide-cursor");
-            args.append("vt1");
             args.append("-dpi");
             args.append("128");
             xprocess->start("/usr/bin/Xglamo", args);
