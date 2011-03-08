@@ -62,10 +62,10 @@ private:
     QPushButton *bSave;
     QCheckBox *chkDeepSleep;
     QCheckBox *chkMux;
-    QLabel *label5;
+    QLabel *label4;
     QLabel *label12;
     QLabel *label48;
-    MixerSlider *slider5;
+    MixerSlider *slider4;
     MixerSlider *slider12;
     MixerSlider *slider48;
 
