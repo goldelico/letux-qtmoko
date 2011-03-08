@@ -24,4 +24,4 @@ if mount | grep "^${DEV_NAME}p[[:digit:]]* "; then
     exit 1
 fi
 rmmod g_ether
-modprobe g_file_storage file=${DEV_NAME} stall=0
+modprobe g_file_storage file=${DEV_NAME} stall=0 removable=y
