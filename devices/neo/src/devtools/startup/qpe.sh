@@ -11,6 +11,7 @@ rm -f /dev/input/mice
 echo '1' > /proc/sys/kernel/printk
 echo 1 > /sys/devices/platform/gta02-pm-bt.0/power_on
 echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
+stty -F /dev/tty1 -echo
 rm -rf /var/run/ppp
 mkdir /var/run/ppp
 mkdir -p /var/cache/apt/archives/partial
