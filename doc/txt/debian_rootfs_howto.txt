@@ -97,6 +97,7 @@ Step 4
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
+echo joydev >> /media/card/etc/modules
 
 * Unpack alsa scenarios to /usr/share/openmoko - you can find these files
   in any openmoko distro.

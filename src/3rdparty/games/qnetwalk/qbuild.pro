@@ -1,4 +1,8 @@
+# This is an application
+TEMPLATE=app
+
 TARGET=qnetwalk
+
 CONFIG+=qtopia
 
 # Input
