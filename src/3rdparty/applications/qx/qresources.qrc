@@ -2,5 +2,6 @@
     <qresource prefix="/">
         <file>xglamo.conf</file>
         <file>xorg-glamo.conf</file>
+        <file>xterm.desktop</file>
     </qresource>
 </RCC>

@@ -309,18 +309,24 @@ void QX::stopX()
     xprocess = NULL;
 }
 
-static bool saveConf(QX * parent, const char * srcFilename, const char * dstFilename)
+static bool saveConf(QX * parent, const char * srcFilename, const char * dstDir, const char * dstFile)
 {
     QFile src(srcFilename);
-    QFile dst(dstFilename);
+    QFile dst(dstDir + QString("/") + dstFile);
+
+    if(!QDir::root().mkpath(dstDir))
+    {
+        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to create directory") + " " + dstDir);
+        return false;
+    }
     if(!src.open(QIODevice::ReadOnly))
     {
-        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to open xorg.conf, ") + src.errorString());
+        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to open") + " " + srcFilename + ": " + src.errorString());
         return false;
     }
     if(!dst.open(QIODevice::WriteOnly))
     {
-        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to save xorg.conf, ") + dst.errorString());
+        QMessageBox::critical(parent, QObject::tr("QX"), QObject::tr("Unable to save ") + " " + dstFile + ": " + dst.errorString());
         src.close();
         return false;
     }
@@ -359,21 +365,15 @@ bool QX::checkX()
         args << "xterm";
         QProcess::execute("raptor", args);
 
-        return saveConf(this, ":/xorg-glamo.conf", "/etc/X11/xorg.conf");
+        return saveConf(this, ":/xorg-glamo.conf", "/etc/X11", "xorg.conf") &&
+                saveConf(this, ":/xterm.desktop", "/usr/share/applications", "xterm.desktop");
     }
 
-    system("wget -P /usr/bin/ http://activationrecord.net/radekp/qtmoko/download/Xglamo");
-    system("chmod +x /usr/bin/Xglamo");
+    QProcess::execute("raptor", QStringList() << "-i" << "http://qtmoko.sourceforge.net/download/Xglamo.deb");
+    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "xfonts-base" << "xterm");
 
-    if(!QFile::exists("/usr/bin/Xglamo"))
-    {
-        QMessageBox::critical(this, tr("Xglamo download failed"), tr("Check your connection or download Xglamo manually from http://activationrecord.net/radekp/qtmoko/download/Xglamo"));
-        return false;
-    }
-
-    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "xfonts-base");
-
-    return saveConf(this, ":/xglamo.conf", "/etc/X11/xorg.conf");
+    return saveConf(this, ":/xglamo.conf", "/etc/X11", "xorg.conf") &&
+            saveConf(this, ":/xterm.desktop", "/usr/share/applications", "xterm.desktop");
 }
 
 void QX::fixTs()

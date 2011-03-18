@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=xterm
+Comment=x terminal emulator 
+Exec=xterm
+Type=Application
+Icon=xterm-color_48x48.xpm
+Categories=System;TerminalEmulator
