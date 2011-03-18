@@ -339,9 +339,9 @@ bool QX::checkX()
         return true;
     }
     int val = QMessageBox::question(this, tr("X server not found"),
-                                    tr("You don't have X server."),
-                                    tr("Install Xorg server"),
-                                    tr("Install Xglamo"),
+                                    tr("You don't have X server. Choose X server to install:"),
+                                    tr("Xorg"),
+                                    tr("Xglamo"),
                                     tr("Cancel"), 0, 2);
 
     if(val == 2)
