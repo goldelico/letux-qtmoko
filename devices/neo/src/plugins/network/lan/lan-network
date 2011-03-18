@@ -481,7 +481,7 @@ stop()
     fi
     om wifi maxperf "$1" 0 > /dev/null 2>&1
     om led gta02-power:blue 0 > /dev/null 2>&1
-    
+    killall -q wpa_supplicant
 
     ifup usb0
 }
