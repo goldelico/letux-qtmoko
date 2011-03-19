@@ -1,3 +1,23 @@
+qtmoko (34-1) unstable; urgency=low
+
+  * QX installs Xglamo as debian package
+  * WLAN with wpa-psk can now connect more then once (Alfa21)
+  * QNetWalk package has been fixed
+  * accelerometers in QtMaze now work
+  * NeronGPS moved back to old nice version
+  * disabled disk cache in Arora
+  * qtmoko bookmarks in Arora
+  * usb mass storage has now param removable=y for happy winxp (Alfa21)
+  * faenqo theme - added golden debian background (Tiago Bortoletto Vaz)
+  * themes now use jpg for backgrounds to save space (Tiago Bortoletto Vaz)
+  * docked keyboard - fix ctl and alt keys always pressed (Gennady Kupava)
+  * disabled login on tty1..tty6 to save memory
+  * qterminal - dont display back icon because it does nothing (Gennady Kupava)
+  * fix back icon in help browser (Gennady Kupava)
+  * new beautiful theme faenqomod (Joif)
+
+ -- Radek Polak <psonek2@seznam.cz>  Sat, 19 Mar 2011 10:23:56 +0100
+
 qtmoko (33-1) unstable; urgency=low
 
   * Initial release
