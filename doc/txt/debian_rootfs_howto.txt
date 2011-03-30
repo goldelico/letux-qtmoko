@@ -244,12 +244,12 @@ Step 6.5 - omhacks
   and can't be used with > 2.6.34 kernels, so install from sid:
 
 chroot /media/card
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.13-1_armel.deb
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.13-1_armel.deb
-dpkg -i libomhacks0_0.13-1_armel.deb
-dpkg -i omhacks_0.13-1_armel.deb
-rm libomhacks0_0.13-1_armel.deb
-rm omhacks_0.13-1_armel.deb
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.14-1_armel.deb
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.14-1_armel.deb
+dpkg -i libomhacks0_0.14-1_armel.deb
+dpkg -i omhacks_0.14-1_armel.deb
+rm libomhacks0_0.14-1_armel.deb
+rm omhacks_0.14-1_armel.deb
 exit
 
 
@@ -301,10 +301,10 @@ dpkg-buildpackage
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/qtmoko_33-1_armel.deb
-dpkg -i qtmoko_33-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
+dpkg -i qtmoko_34-1_armel.deb
 update-rc.d qtmoko defaults
-rm qtmoko_33-1_armel.deb
+rm qtmoko_34-1_armel.deb
 exit
 
 
@@ -319,23 +319,38 @@ http://github.com/radekp/linux-2.6/
 
 git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
 
-* Compile kernel and make uboot image:
+* Create package in buildhost:
+
+cd linux-2.6
+dpkg-buildpackage
+
+* You should remove .git while building the package so that the tar with
+  sources is not that big. The package to sourceforge.
+
+* Install kernel image:
+
+chroot /media/card
+wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
+dpkg -i linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
+rm linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
+exit
+
+* Create boot args and symlink for qi:
+
+cd /media/card/boot
+echo "console=tty0 loglevel=3 rootwait" > append-GTA02
+ln -s uImage.bin uImage-GTA02.bin
+
+Step 9.1 - Linux kernel cross compiling - not using anymore
+===========================================================
+
+* If you want to cross compile kernel and make uboot image on PC:
 
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm  modules_install INSTALL_MOD_PATH=GTA02
 find  GTA02/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
 /opt/toolchains/arm920t-eabi/bin/arm-linux-objcopy -O binary -R .note -R .comment -S arch/arm/boot/compressed/vmlinux linux.bin
 mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v28" -d linux.bin uImage-GTA02.bin
-
-* Copy kernel to /media/card/boot
-
-cp /path/to/cross/compiled/linux-2.6/uImage-GTA02 /media/card/boot/uImage-GTA02.bin
-cp -r /path/to/cross/compiled/linux-2.6/GTA02/lib /media/card/lib
-
-* Create boot args for qi:
-
-cd /media/card/boot
-echo "console=tty0 loglevel=3 rootwait" > append-GTA02
 
 
 Step 9.5 - remove bash history
@@ -355,16 +370,6 @@ cat > /media/card/etc/resolv.conf <<__END__
 nameserver 8.8.8.8
 __END__
 
-
-Step 9.7 - fix owner on files that were compiled on PC
-======================================================
-
-* Ouput on PC is usually with local user that compiled stuff, we want it to be
-  root on Neo:
-
-chown -R root:root /media/card/boot
-chown -R root:root /media/card/lib/modules
-chown -R root:root /media/card/lib/firmware/
 
 Step 10 - release tarball
 =========================
@@ -408,6 +413,8 @@ mv 3 DejaVuSansMono.ttf
 rootfs  /                auto    defaults,no_chk_data_crc,bulk_read 0 1
 
 * Create config for ubinize and create the resulting image:
+
+cd /root
 
 cat > ubinize.cfg <<__END__
 [ubifs]
