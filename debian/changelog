@@ -1,3 +1,10 @@
+qtmoko (35-1) unstable; urgency=low
+
+  * Fix missing icon for qtmoko apps web
+  * Build with translations
+
+ -- Radek Polak <psonek2@seznam.cz>  Fri, 01 Apr 2011 10:41:56 +0100
+
 qtmoko (34-1) unstable; urgency=low
 
   * QX installs Xglamo as debian package
