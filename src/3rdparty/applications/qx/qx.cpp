@@ -369,8 +369,8 @@ bool QX::checkX()
                 saveConf(this, ":/xterm.desktop", "/usr/share/applications", "xterm.desktop");
     }
 
+    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "xfonts-base" << "xterm" << "x11-xserver-utils");
     QProcess::execute("raptor", QStringList() << "-i" << "http://qtmoko.sourceforge.net/download/Xglamo.deb");
-    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "xfonts-base" << "xterm");
 
     return saveConf(this, ":/xglamo.conf", "/etc/X11", "xorg.conf") &&
             saveConf(this, ":/xterm.desktop", "/usr/share/applications", "xterm.desktop");
