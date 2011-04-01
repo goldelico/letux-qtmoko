@@ -25,6 +25,7 @@
 -add-module messaging
 -add-module pim
 -add-module pkgmanagement
+-add-module pkginstall
 -add-module telephony
 -add-module ui
 -add-module ipcomms
