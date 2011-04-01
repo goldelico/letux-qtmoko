@@ -4,7 +4,7 @@ CONFIGURE = $(PWD)/configure
 
 build:
 	mkdir -p ../build
-	cd ../build && "$(CONFIGURE)" -device neo -xplatform linux-native-g++ -remove-module pkgmanagement -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
+	cd ../build && "$(CONFIGURE)" -device neo -xplatform linux-native-g++ -remove-module pkgmanagement -languages cs_CZ,en_US,it_IT,ru_RU,de_DE,es_ES,pl_PL,da_DK,fr_FR -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
 	cd ../build && make
 
 clean:
