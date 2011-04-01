@@ -11,8 +11,7 @@ desktop.depends+=install_docapi_f_dir
 desktop.hint=desktop
 INSTALLS+=desktop
 
-pics.files=*.png\
-           *.svg
+pics.files=*.svg
 pics.path=/pics/pkginstall
 pics.hint=pics
 INSTALLS+=pics
