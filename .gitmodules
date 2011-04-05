@@ -91,3 +91,6 @@
 [submodule "src/3rdparty/applications/melodiq"]
 	path = src/3rdparty/applications/melodiq
 	url = git://github.com/radekp/melodiq.git
+[submodule "src/3rdparty/games/chess"]
+	path = src/3rdparty/games/chess
+	url = git://github.com/radekp/qtmoko-chess.git
