@@ -402,8 +402,10 @@ void Theme::getSoftMenuBarPreview(QPixmap *pixmap, QSoftMenuBar::LabelType label
 void Theme::getBackgroundPreview(QPixmap *pixmap)
 {
     ensureLoaded();
-    QString fileName = AppearanceSettings::findFile("pics/themes/"
-        + m_uniqueName + '/' + m_backgrounds.value(m_backgroundIndex) + ".png");
+    QString name = "pics/themes/" + m_uniqueName + '/' + m_backgrounds.value(m_backgroundIndex);
+    QString fileName = AppearanceSettings::findFile(name + ".png");
+    if(fileName.isEmpty())
+        fileName = AppearanceSettings::findFile(name + ".jpg");
 
     QPixmap bg(fileName);
     *pixmap = bg;
