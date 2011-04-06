@@ -23,6 +23,11 @@ upload_image()
     scp $QTOPIA_IMAGE root@$PHONEIP:/ || die upload_image
 }
 
+move_image()
+{
+    scp $QTOPIA_IMAGE cin8249a@login.plx.cineca.it:$CINECA_SCRATCH || die upload_image
+}
+
 install_image()
 {
     ssh root@$PHONEIP "gzip -dc /${QTOPIA_IMAGE} | tar -C / -xvpf -"
@@ -76,13 +81,15 @@ fi
 # Flash Process
 echo "Starting Flash process, please wait..."
 # prepare_device
-echo "device prep stage complete."
-upload_image
-echo "uploading image stage complete."
-echo
-echo "Flashing begins..........please wait....."
-install_image
-echo "Image installed, phone will automatically restart Qtopia"
+#echo "device prep stage complete."
+#upload_image
+#echo "uploading image stage complete."
+#echo
+#echo "Flashing begins..........please wait....."
+#install_image
+#echo "Image installed, phone will automatically restart Qtopia"
+echo "Preparing and pushing images on scratch.."
+move_image
 echo
 echo
 
