@@ -63,11 +63,9 @@ private:
     QCheckBox *chkDeepSleep;
     QCheckBox *chkMux;
     QLabel *label4;
-    QLabel *label12;
-    QLabel *label48;
+    QLabel *label5;
     MixerSlider *slider4;
-    MixerSlider *slider12;
-    MixerSlider *slider48;
+    MixerSlider *slider5;
 
     void showScreen(NeoControl::Screen scr);
     int openAlsaMixer();
