@@ -1,0 +1,9 @@
+<package
+      name="qtmoko-qphysics"
+      version="35-1"
+      title="QPhysics"
+      summary="Simple physics simulator"
+      category="games"
+      >
+</package>
+  
