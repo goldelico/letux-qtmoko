@@ -1,0 +1,12 @@
+<package
+      name="qtmoko-mqutim"
+      version="32-1"
+      title="mqutIM"
+      summary="Jabber and ICQ client"
+      category="communication"
+      >
+          <tag>jabber</tag>
+          <tag>icq</tag>
+          <tag>chat</tag>
+</package>
+  
