@@ -1,0 +1,57 @@
+QtMoko and Freesmartphone
+=========================
+
+* This is my log and notes about porting QtMoko on Freesmartphone.org
+  framework.
+
+QtMoko on SHR rootfs
+====================
+
+* In fact you can skip this step because we will do the development on PC
+
+* Easiest way for getting started is to use rootfs from shr-project.org. They
+  already use FSO for telephony and they always have most recent versions.
+
+* For qtmoko running on SHR rootfs you need to compile with bluetooth disabled.
+  I suppose you know how to build qtmoko, if not check README [1]. The
+  configure command will be:
+
+../qtmoko/configure -device neo -remove-module bluetooth
+
+* Pack it up and transfer the contents of /opt to SHR rootfs and launch it:
+
+../qtmoko/devices/neo/scripts/update_qtmoko
+
+ssh root@192.168.0.202
+. /opt/qtmoko/qpe.env
+qpe
+
+Develop on PC
+=============
+
+* FSO uses dbus as communication transport. Thankfully dbus calls can be
+  redirected from phone to PC. Nice tutorial is here [1].
+
+* First install latest SHR unstable
+
+* SSH to your phone running SHR unstable and do:
+
+dbus-daemon-proxy --system --port 8080
+
+* On your PC do:
+
+export DBUS_SYSTEM_BUS_ADDRESS=tcp:host=192.168.0.202,port=8080
+mdbus2 --system
+
+  and you will see dbus interface of your phone. This interface we will call
+  from our QT dialer/SMS handler etc...
+
+
+
+
+
+
+
+
+[1] https://github.com/radekp/qtmoko/blob/master/README
+[2] http://blog.shr-project.org/2010/05/howto-develop-and-debug-the-shr-phone-stack-on-your-desktop.html
