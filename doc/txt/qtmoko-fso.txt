@@ -4,6 +4,7 @@ QtMoko and Freesmartphone
 * This is my log and notes about porting QtMoko on Freesmartphone.org
   framework.
 
+
 QtMoko on SHR rootfs
 ====================
 
@@ -26,6 +27,7 @@ ssh root@192.168.0.202
 . /opt/qtmoko/qpe.env
 qpe
 
+
 Develop on PC
 =============
 
@@ -47,9 +49,152 @@ mdbus2 --system
   from our QT dialer/SMS handler etc...
 
 
+Blinking LEDS
+=============
+
+* We will start with something very simple - blinking with leds. Let's see how
+  we can do this from command line on your phone.
+
+* mdbus2 is the best command line tool for calling dbus. FSO is running on
+  system bus. Let's check this:
+
+ssh root@192.168.0.202
+
+root@om-gta02 ~ # mdbus2 --system
+net.connman
+org.freedesktop.DBus
+org.freedesktop.Gypsy
+org.freesmartphone.frameworkd
+org.freesmartphone.oaudiod
+org.freesmartphone.odatad
+org.freesmartphone.odeviced
+org.freesmartphone.oeventsd
+org.freesmartphone.ogpsd
+org.freesmartphone.ogsmd
+org.freesmartphone.opimd
+org.freesmartphone.opreferencesd
+org.freesmartphone.otimed
+org.freesmartphone.ousaged
+org.freesmartphone.testing
+org.openmoko.projects.ffalarms.atd
+org.shr.phonefso
+
+* As you can see, there are plenty of busses listed, let's explore the one we
+  are most interested in:
+
+root@om-gta02 ~ # mdbus2 --system org.freesmartphone.odeviced
+/
+/org
+/org/freesmartphone
+/org/freesmartphone/Resource
+/org/freesmartphone/Resource/CPU
+/org/freesmartphone/Resource/UsbHost
+/org/freesmartphone/Resource/Bluetooth
+/org/freesmartphone/Resource/WiFi
+/org/freesmartphone/Resource/Accelerometer
+/org/freesmartphone/Resource/Display
+/org/freesmartphone/Device
+/org/freesmartphone/Device/RTC
+/org/freesmartphone/Device/RTC/0
+/org/freesmartphone/Device/Orientation
+/org/freesmartphone/Device/Vibrator
+/org/freesmartphone/Device/Vibrator/0
+/org/freesmartphone/Device/IdleNotifier
+/org/freesmartphone/Device/IdleNotifier/0
+/org/freesmartphone/Device/Info
+/org/freesmartphone/Device/Audio
+/org/freesmartphone/Device/PowerControl
+/org/freesmartphone/Device/PowerControl/3
+/org/freesmartphone/Device/PowerControl/2
+/org/freesmartphone/Device/PowerControl/1
+/org/freesmartphone/Device/PowerControl/0
+/org/freesmartphone/Device/PowerSupply
+/org/freesmartphone/Device/PowerSupply/3
+/org/freesmartphone/Device/PowerSupply/2
+/org/freesmartphone/Device/PowerSupply/1
+/org/freesmartphone/Device/PowerSupply/0
+/org/freesmartphone/Device/LED
+/org/freesmartphone/Device/LED/gta02_blue_power
+/org/freesmartphone/Device/LED/gta02_red_aux
+/org/freesmartphone/Device/LED/gta02_orange_power
+/org/freesmartphone/Device/Input
+/org/freesmartphone/Device/Input/3
+/org/freesmartphone/Device/Input/2
+/org/freesmartphone/Device/Input/1
+/org/freesmartphone/Device/Input/0
+/org/freesmartphone/Device/Display
+/org/freesmartphone/Device/Display/0
+
+* Above are listed all available objects that we can call, so let's choose the
+  blue led device:
+
+root@om-gta02 ~ # mdbus2 --system org.freesmartphone.odeviced /org/freesmartphone/Device/LED/gta02_blue_power
+[METHOD]    org.freedesktop.DBus.Properties.Get( s:interface_name, s:property_name ) -> ( v:value )
+[METHOD]    org.freedesktop.DBus.Properties.GetAll( s:interface_name ) -> ( a{sv}:properties )
+[METHOD]    org.freedesktop.DBus.Properties.Set( s:interface_name, s:property_name, v:value ) -> ()
+[SIGNAL]    org.freedesktop.DBus.Properties.PropertiesChanged( s:interface_name, a{sv}:changed_properties, as:invalidated_properties )
+[METHOD]    org.freedesktop.DBus.Introspectable.Introspect() -> ( s:xml_data )
+[METHOD]    org.freedesktop.DBus.Peer.Ping() -> ()
+[METHOD]    org.freedesktop.DBus.Peer.GetMachineId() -> ( s:machine_uuid )
+[METHOD]    org.freesmartphone.Device.LED.SetBrightness( i:brightness ) -> ()
+[METHOD]    org.freesmartphone.Device.LED.SetBlinking( i:on_duration, i:off_duration ) -> ()
+[METHOD]    org.freesmartphone.Device.LED.BlinkSeconds( i:seconds, i:on_duration, i:off_duration ) -> ()
+[METHOD]    org.freesmartphone.Device.LED.SetNetworking( s:interface, s:mode ) -> ()
+
+* Result above is list of callable methods, now we can use SetBrightness to
+  turn on/off the led:
+
+mdbus2 --system org.freesmartphone.odeviced /org/freesmartphone/Device/LED/gta02_blue_power org.freesmartphone.Device.LED.SetBrightness 255
+
+* The blue led should turn off:
+
+mdbus2 --system org.freesmartphone.odeviced /org/freesmartphone/Device/LED/gta02_blue_power org.freesmartphone.Device.LED.SetBrightness 0
 
 
+QT bindings for FSO
+===================
 
+* We can use FSO for turning on/off leds from command line on your phone. We
+  will now do it from Qt/C++ program.
+
+* QT can autogenerate C++ files for calling dbus. The tool is called
+  qdbusxml2cpp. As input it needs XML files that describe dbus objects.
+
+* FSO maintains XML descriptions for their dbus objects in git:
+
+http://git.freesmartphone.org/?p=aurora.git;a=summary
+
+* You have to clone that git and build it with:
+
+./autogen.sh
+make
+make install
+
+* Resulting XML description files are in xml folder. You can try to generate
+  e.g. our LED interface:
+
+qdbusxml2cpp -p org.freesmartphone.Device.LED org.freesmartphone.Device.LED.xml
+
+* QtMoko has script for generating all FSO APIs in src/libraries/qfso
+
+
+QT program for LEDS
+===================
+
+* You can open FSO bindings from and example program in QtCreator. It's in
+  QtMoko's git under libraries/qfso/test.
+
+* It should built just fine. Now you need dbus-daemon-proxy running on your
+  phone (see above) and you need to tell QtCreator to connect to that proxy. In
+  "Projects" you have to set:
+
+DBUS_SYSTEM_BUS_ADDRESS to tcp:host=192.168.0.202,port=8080
+
+  you can check it also in screenshot creator_dbus_proxy_env.png
+
+* If you run the program and have correct environment then dbus-daemon-proxy
+  program should inform you about new connection when you press led checkbox
+  and leds should turn on/off.
 
 
 

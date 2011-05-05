@@ -1,0 +1,9 @@
+[Desktop Entry]
+Comment[]=FSO test program for QtMoko
+Exec=qfsotest
+Type=Application
+Name[]=QFsoTest
+Icon=qfsotest/qfsotest
+[Translation]
+File=QtopiaApplications
+Context=qfsotest
