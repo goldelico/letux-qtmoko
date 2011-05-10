@@ -4,10 +4,12 @@
 QT += dbus
 TARGET = qfsotest
 TEMPLATE = app
-INCLUDEPATH +=..
+INCLUDEPATH += ..
 SOURCES += main.cpp \
     mainwindow.cpp \
-    ../org.freesmartphone.Device.LED.cpp
+    ../org.freesmartphone.Device.LED.cpp \
+    ../org.freesmartphone.GSM.Device.cpp
 HEADERS += mainwindow.h \
-    ../org.freesmartphone.Device.LED.h
+    ../org.freesmartphone.Device.LED.h \
+    ../org.freesmartphone.GSM.Device.h
 FORMS += mainwindow.ui

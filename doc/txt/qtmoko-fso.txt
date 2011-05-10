@@ -38,11 +38,11 @@ Develop on PC
 
 * SSH to your phone running SHR unstable and do:
 
-dbus-daemon-proxy --system --port 8080
+dbus-daemon-proxy --system --port 8081
 
 * On your PC do:
 
-export DBUS_SYSTEM_BUS_ADDRESS=tcp:host=192.168.0.202,port=8080
+export DBUS_SYSTEM_BUS_ADDRESS=tcp:host=192.168.0.202,port=8081
 mdbus2 --system
 
   and you will see dbus interface of your phone. This interface we will call
@@ -188,7 +188,7 @@ QT program for LEDS
   phone (see above) and you need to tell QtCreator to connect to that proxy. In
   "Projects" you have to set:
 
-DBUS_SYSTEM_BUS_ADDRESS to tcp:host=192.168.0.202,port=8080
+DBUS_SYSTEM_BUS_ADDRESS to tcp:host=192.168.0.202,port=8081
 
   you can check it also in screenshot creator_dbus_proxy_env.png
 
@@ -196,6 +196,15 @@ DBUS_SYSTEM_BUS_ADDRESS to tcp:host=192.168.0.202,port=8080
   program should inform you about new connection when you press led checkbox
   and leds should turn on/off.
 
+
+GSM
+===
+
+* You will need to modify org.freesmartphone.GSM.Device.xml and add:
+
+<annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
+
+  to make qdbusxml2cpp happy.
 
 
 [1] https://github.com/radekp/qtmoko/blob/master/README

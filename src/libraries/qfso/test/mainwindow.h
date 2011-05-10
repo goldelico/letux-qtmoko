@@ -3,6 +3,7 @@
 
 #include <QMainWindow>
 #include <QtDBus>
+#include <QTimer>
 
 namespace Ui {
     class MainWindow;
@@ -19,11 +20,14 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    QDBusPendingReply<QString> gsmStatusReply;
 
 private slots:
+    void on_pushButton_clicked();
     void on_cbOrangeLed_stateChanged(int );
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );
+    void refresh();
 };
 
 #endif // MAINWINDOW_H

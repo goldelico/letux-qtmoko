@@ -10,3 +10,4 @@
 
 export LD_LIBRARY_PATH=../../../../build/qtopiacore/host/lib/
 ../../../../build/qtopiacore/host/bin/qdbusxml2cpp -p org.freesmartphone.Device.LED specs/xml/org.freesmartphone.Device.LED.xml
+../../../../build/qtopiacore/host/bin/qdbusxml2cpp -p org.freesmartphone.GSM.Device specs/xml/org.freesmartphone.GSM.Device.xml
