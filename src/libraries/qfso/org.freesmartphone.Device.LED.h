@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef ORG_FREESMARTPHONE_DEVICE_LED_H_1304946960
-#define ORG_FREESMARTPHONE_DEVICE_LED_H_1304946960
+#ifndef ORG_FREESMARTPHONE_DEVICE_LED_H_1305187329
+#define ORG_FREESMARTPHONE_DEVICE_LED_H_1305187329
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

@@ -5,6 +5,9 @@
 #include <QtDBus>
 #include <QTimer>
 
+#include "org.freesmartphone.Device.LED.h"
+#include "org.freesmartphone.GSM.Device.h"
+
 namespace Ui {
     class MainWindow;
 }
@@ -20,7 +23,12 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    OrgFreesmartphoneDeviceLEDInterface redLed;
+    OrgFreesmartphoneDeviceLEDInterface blueLed;
+    OrgFreesmartphoneDeviceLEDInterface orangeLed;
+    OrgFreesmartphoneGSMDeviceInterface gsm;
     QDBusPendingReply<QString> gsmStatusReply;
+    void checkIface(QDBusAbstractInterface *iface);
 
 private slots:
     void on_pushButton_clicked();

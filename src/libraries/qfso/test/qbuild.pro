@@ -22,12 +22,14 @@ pkg [
 # Input files
 HEADERS=\
     mainwindow.h \
-    ../org.freesmartphone.Device.LED.h
+    ../org.freesmartphone.Device.LED.h \
+	../org.freesmartphone.GSM.Device.h
 
 SOURCES=\
     main.cpp \
     mainwindow.cpp \
-    ../org.freesmartphone.Device.LED.cpp
+    ../org.freesmartphone.Device.LED.cpp \
+	../org.freesmartphone.GSM.Device.cpp
 
 FORMS += mainwindow.ui
 

@@ -200,11 +200,14 @@ DBUS_SYSTEM_BUS_ADDRESS to tcp:host=192.168.0.202,port=8081
 GSM
 ===
 
-* You will need to modify org.freesmartphone.GSM.Device.xml and add:
+* qdbusxml2cpp can't automatically generate functions with more complicated
+  types in signature. As a workaround, you can delete such methods from xml.
+
+* Another way how to fix these errors is appending something like:
 
 <annotation name="com.trolltech.QtDBus.QtTypeName.Out0" value="QVariantMap"/>
 
-  to make qdbusxml2cpp happy.
+  before the problematic type.
 
 
 [1] https://github.com/radekp/qtmoko/blob/master/README

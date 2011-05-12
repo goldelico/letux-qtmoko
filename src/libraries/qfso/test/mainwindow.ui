@@ -18,8 +18,18 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
+      <widget class="QWidget" name="tabInit">
+       <attribute name="title">
+        <string>Init</string>
+       </attribute>
+       <layout class="QHBoxLayout" name="horizontalLayout_2">
+        <item>
+         <widget class="QTextBrowser" name="tbInit"/>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabLeds">
        <attribute name="title">
         <string>Leds</string>
@@ -48,7 +58,7 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tab_2">
+      <widget class="QWidget" name="tabGsm">
        <attribute name="title">
         <string>GSM</string>
        </attribute>
