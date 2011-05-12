@@ -7,7 +7,9 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         redLed("org.freesmartphone.odeviced", "/org/freesmartphone/Device/LED/gta02_red_aux", QDBusConnection::systemBus(), this),
         blueLed("org.freesmartphone.odeviced", "/org/freesmartphone/Device/LED/gta02_blue_power", QDBusConnection::systemBus(), this),
         orangeLed("org.freesmartphone.odeviced", "/org/freesmartphone/Device/LED/gta02_orange_power", QDBusConnection::systemBus(), this),
-        gsm("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+        gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
@@ -67,12 +69,15 @@ void MainWindow::refresh()
         checkIface(&redLed);
         checkIface(&blueLed);
         checkIface(&orangeLed);
-        checkIface(&gsm);
+        checkIface(&gsmDev);
+        checkIface(&gsmNet);
+        checkIface(&gsmCall);
     }
 
-    // GSM status
+    // GSM
     if(ui->tabGsm->isVisible())
     {
+        // Device status
         if(gsmStatusReply.isFinished())
         {
             if(gsmStatusReply.isValid())
@@ -83,18 +88,60 @@ void MainWindow::refresh()
             {
                 ui->lGsmStatus->setText("GSM status: error " + gsmStatusReply.error().message());
             }
-            gsmStatusReply = gsm.GetDeviceStatus();
+            gsmStatusReply = gsmDev.GetDeviceStatus();
         }
         else
         {
             ui->lGsmStatus->setText(ui->lGsmStatus->text() + ".");
         }
-    }
+
+        // Signal strength
+        if(gsmSignalReply.isFinished())
+        {
+            if(gsmSignalReply.isValid())
+            {
+                ui->lSignalStrength->setText(QString("Signal strength: %1").arg(gsmSignalReply.value()));
+            }
+            else
+            {
+                ui->lSignalStrength->setText("Signal strength: " + gsmSignalReply.error().message());
+            }
+            gsmSignalReply = gsmNet.GetSignalStrength();
+        }
+        else
+        {
+            ui->lSignalStrength->setText(ui->lSignalStrength->text() + ".");
+        }
+    }  
 
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
 
-void MainWindow::on_pushButton_clicked()
+void MainWindow::on_bRegister_clicked()
 {
+    QDBusPendingReply<void> reply = gsmNet.Register();
+    reply.waitForFinished();
+    if(reply.isValid())
+    {
+        QMessageBox::information(this, "Register", "Register ok");
+    }
+    else
+    {
+        QMessageBox::critical(this, "Register", "Register failed: " + reply.error().message());
+    }
+}
+
+void MainWindow::on_bUnregister_clicked()
+{
+    QDBusPendingReply<void> reply = gsmNet.Unregister();
+    reply.waitForFinished();
+    if(reply.isValid())
+    {
+        QMessageBox::information(this, "Unregister", "Unregister ok");
+    }
+    else
+    {
+        QMessageBox::critical(this, "Unregister", "Unregister failed: " + reply.error().message());
+    }
 }

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef ORG_FREESMARTPHONE_GSM_NETWORK_H_1305187329
-#define ORG_FREESMARTPHONE_GSM_NETWORK_H_1305187329
+#ifndef ORG_FREESMARTPHONE_GSM_NETWORK_H_1305201492
+#define ORG_FREESMARTPHONE_GSM_NETWORK_H_1305201492
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -36,20 +36,6 @@ public:
     ~OrgFreesmartphoneGSMNetworkInterface();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> DisableCallForwarding(const QString &reason, const QString &class)
-    {
-        QList<QVariant> argumentList;
-        argumentList << qVariantFromValue(reason) << qVariantFromValue(class);
-        return asyncCallWithArgumentList(QLatin1String("DisableCallForwarding"), argumentList);
-    }
-
-    inline QDBusPendingReply<> EnableCallForwarding(const QString &reason, const QString &class, const QString &number, int timeout)
-    {
-        QList<QVariant> argumentList;
-        argumentList << qVariantFromValue(reason) << qVariantFromValue(class) << qVariantFromValue(number) << qVariantFromValue(timeout);
-        return asyncCallWithArgumentList(QLatin1String("EnableCallForwarding"), argumentList);
-    }
-
     inline QDBusPendingReply<QString> GetCallingIdentification()
     {
         QList<QVariant> argumentList;

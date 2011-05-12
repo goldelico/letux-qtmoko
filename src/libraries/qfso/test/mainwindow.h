@@ -4,9 +4,12 @@
 #include <QMainWindow>
 #include <QtDBus>
 #include <QTimer>
+#include <QMessageBox>
 
 #include "org.freesmartphone.Device.LED.h"
 #include "org.freesmartphone.GSM.Device.h"
+#include "org.freesmartphone.GSM.Network.h"
+#include "org.freesmartphone.GSM.Call.h"
 
 namespace Ui {
     class MainWindow;
@@ -26,12 +29,17 @@ private:
     OrgFreesmartphoneDeviceLEDInterface redLed;
     OrgFreesmartphoneDeviceLEDInterface blueLed;
     OrgFreesmartphoneDeviceLEDInterface orangeLed;
-    OrgFreesmartphoneGSMDeviceInterface gsm;
+    OrgFreesmartphoneGSMDeviceInterface gsmDev;
+    OrgFreesmartphoneGSMNetworkInterface gsmNet;
+    OrgFreesmartphoneGSMCallInterface gsmCall;
+
     QDBusPendingReply<QString> gsmStatusReply;
+    QDBusPendingReply<int> gsmSignalReply;
     void checkIface(QDBusAbstractInterface *iface);
 
 private slots:
-    void on_pushButton_clicked();
+    void on_bUnregister_clicked();
+    void on_bRegister_clicked();
     void on_cbOrangeLed_stateChanged(int );
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );

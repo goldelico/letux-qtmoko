@@ -62,32 +62,36 @@
        <attribute name="title">
         <string>GSM</string>
        </attribute>
-       <widget class="QPushButton" name="pushButton">
-        <property name="geometry">
-         <rect>
-          <x>90</x>
-          <y>80</y>
-          <width>83</width>
-          <height>26</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>PushButton</string>
-        </property>
-       </widget>
-       <widget class="QLabel" name="lGsmStatus">
-        <property name="geometry">
-         <rect>
-          <x>10</x>
-          <y>20</y>
-          <width>361</width>
-          <height>16</height>
-         </rect>
-        </property>
-        <property name="text">
-         <string>GSM status:</string>
-        </property>
-       </widget>
+       <layout class="QVBoxLayout" name="verticalLayout">
+        <item>
+         <widget class="QLabel" name="lGsmStatus">
+          <property name="text">
+           <string>GSM status:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QLabel" name="lSignalStrength">
+          <property name="text">
+           <string>Signal strength:</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bUnregister">
+          <property name="text">
+           <string>Unregister from network</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bRegister">
+          <property name="text">
+           <string>Register to network</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
       </widget>
      </widget>
     </item>
