@@ -43,6 +43,7 @@ private:
             bool checkReply(QDBusPendingReply<T> & reply,
                             const QString & fn,
                             bool okBox,
+                            bool waitForFinished,
                             QLabel * label = NULL);
 
 private slots:
@@ -59,8 +60,13 @@ template <class T>
         bool MainWindow::checkReply(QDBusPendingReply<T> & reply,
                                     const QString & fn,
                                     bool okBox,
+                                    bool waitForFinished,
                                     QLabel * label)
 {
+    if(waitForFinished)
+    {
+        reply.waitForFinished();
+    }
     if(reply.isFinished())
     {
         if(reply.isValid())

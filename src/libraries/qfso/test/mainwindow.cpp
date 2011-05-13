@@ -79,7 +79,7 @@ void MainWindow::refresh()
     if(ui->tabGsm->isVisible())
     {
         // Device status
-        if(checkReply(gsmStatusReply, "GSM status", false, ui->lGsmStatus))
+        if(checkReply(gsmStatusReply, "GSM status", false, false, ui->lGsmStatus))
         {
             ui->lGsmStatus->setText("GSM status: " + gsmStatusReply.value());
         }
@@ -89,7 +89,7 @@ void MainWindow::refresh()
         }
 
         // Signal strength
-        if(checkReply(gsmSignalReply, "Signal strength", false, ui->lSignalStrength))
+        if(checkReply(gsmSignalReply, "Signal strength", false, false, ui->lSignalStrength))
         {
             ui->lSignalStrength->setText(QString("Signal strength: %1").arg(gsmSignalReply.value()));
         }
@@ -105,22 +105,19 @@ void MainWindow::refresh()
 void MainWindow::on_bRegister_clicked()
 {
     QDBusPendingReply<void> reply = gsmNet.Register();
-    reply.waitForFinished();
-    checkReply(reply, "Register", true);
+    checkReply(reply, "Register", true, true);
 }
 
 void MainWindow::on_bUnregister_clicked()
 {
     QDBusPendingReply<void> reply = gsmNet.Unregister();
-    reply.waitForFinished();
-    checkReply(reply, "Unregister", true);
+    checkReply(reply, "Unregister", true, true);
 }
 
 void MainWindow::on_bCall_clicked()
 {
     QDBusPendingReply<int> reply = gsmCall.Initiate(ui->tbCallNum->text(), "voice");
-    reply.waitForFinished();
-    if(checkReply(reply, "Initiate", false))
+    if(checkReply(reply, "Initiate", false, true))
     {
         callId = reply.value();
     }
