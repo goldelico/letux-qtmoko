@@ -122,3 +122,19 @@ void MainWindow::on_bCall_clicked()
         callId = reply.value();
     }
 }
+
+void MainWindow::on_bGsmFeatures_clicked()
+{
+    QDBusPendingReply<QVariantMap> reply = gsmDev.GetFeatures();
+    if(checkReply(reply, "GetFeatures", false, true))
+    {
+        QVariantMap map = reply.value();
+        QString str;
+        for(int i = 0; i < map.count(); i++)
+        {
+            QString key = map.keys().at(i);
+            str += key + ": " + map.value(key).toString() + "\n";
+        }
+        QMessageBox::information(this, "Modem features", str);
+    }
+}

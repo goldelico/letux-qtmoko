@@ -18,7 +18,7 @@
     <item row="0" column="0">
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -109,6 +109,13 @@
          <widget class="QPushButton" name="bRegister">
           <property name="text">
            <string>Register to network</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bGsmFeatures">
+          <property name="text">
+           <string>GSM features</string>
           </property>
          </widget>
         </item>

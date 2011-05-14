@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef ORG_FREESMARTPHONE_GSM_DEVICE_H_1305201492
-#define ORG_FREESMARTPHONE_GSM_DEVICE_H_1305201492
+#ifndef ORG_FREESMARTPHONE_GSM_DEVICE_H_1305360883
+#define ORG_FREESMARTPHONE_GSM_DEVICE_H_1305360883
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>
@@ -40,6 +40,12 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         return asyncCallWithArgumentList(QLatin1String("GetDeviceStatus"), argumentList);
+    }
+
+    inline QDBusPendingReply<QVariantMap> GetFeatures()
+    {
+        QList<QVariant> argumentList;
+        return asyncCallWithArgumentList(QLatin1String("GetFeatures"), argumentList);
     }
 
     inline QDBusPendingReply<QString, bool, QString> GetFunctionality()
