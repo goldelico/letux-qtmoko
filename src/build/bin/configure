@@ -5271,7 +5271,7 @@ sub setup_dqt_config
     }
     map { $args .= " -no-sql-".basename($_) if ( basename($_) ne "tmp" && -d $_ ); } glob("$qt_depot_path/src/plugins/sqldrivers/*");
     $args .= " -qt-sql-sqlite";
-    $args .= " -no-dbus -no-openssl".
+    $args .= " -no-openssl".
              " -nomake examples -nomake demos -nomake docs";
     $args .= " -prefix ".fixpath("$SDKROOT/qtopiacore/host");
     if ( opt("release") ) {
