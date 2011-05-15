@@ -9,8 +9,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         orangeLed("org.freesmartphone.odeviced", "/org/freesmartphone/Device/LED/gta02_orange_power", QDBusConnection::systemBus(), this),
         gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
-        gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
-        callId(-1)
+        gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
@@ -134,7 +133,7 @@ void MainWindow::on_bCall_clicked()
     QDBusPendingReply<int> reply = gsmCall.Initiate(ui->tbCallNum->text(), "voice");
     if(checkReply(reply, "Initiate", false, true))
     {
-        callId = reply.value();
+        ui->tbCallId->setText(QString::number(reply.value()));
     }
 }
 
@@ -208,6 +207,7 @@ void MainWindow::gsmCallStatusChange(int id, const QString &status, const QVaria
     }
     qDebug() << "CallStatusChange" << str;
     ui->lLastCall->setText("Last call: " + str);
+    ui->tbCallId->setText(QString::number(id));
 }
 
 void MainWindow::incomingUssd(const QString &mode, const QString &message)
@@ -219,4 +219,52 @@ void MainWindow::on_bUssdReq_clicked()
 {
     QDBusPendingReply<> reply = gsmNet.SendUssdRequest(ui->tbUssdReq->text());
     checkReply(reply, "SendUssdRequest", true, true);
+}
+
+void MainWindow::on_bActivateCall_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.Activate(ui->tbCallId->text().toInt());
+    checkReply(reply, "Activate", true, true);
+}
+
+void MainWindow::on_bActivateConference_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.ActivateConference(ui->tbCallId->text().toInt());
+    checkReply(reply, "ActivateConference", true, true);
+}
+
+void MainWindow::on_bRelease_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.Release(ui->tbCallId->text().toInt());
+    checkReply(reply, "Release", true, true);
+}
+
+void MainWindow::on_bHoldActive_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.HoldActive();
+    checkReply(reply, "HoldActive", true, true);
+}
+
+void MainWindow::on_bJoin_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.Join();
+    checkReply(reply, "Join", true, true);
+}
+
+void MainWindow::on_bReleaseHeld_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.ReleaseHeld();
+    checkReply(reply, "ReleaseHeld", true, true);
+}
+
+void MainWindow::on_bReleaseAll_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.ReleaseAll();
+    checkReply(reply, "ReleaseAll", true, true);
+}
+
+void MainWindow::on_bTransfer_clicked()
+{
+    QDBusPendingReply<> reply = gsmCall.Transfer(ui->tbTransferNumber->text());
+    checkReply(reply, "Transfer", true, true);
 }

@@ -34,7 +34,6 @@ private:
     OrgFreesmartphoneGSMDeviceInterface gsmDev;
     OrgFreesmartphoneGSMNetworkInterface gsmNet;
     OrgFreesmartphoneGSMCallInterface gsmCall;
-    int callId;
 
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;
@@ -47,6 +46,14 @@ private:
                             QLabel * label = NULL);
 
 private slots:
+    void on_bTransfer_clicked();
+    void on_bReleaseAll_clicked();
+    void on_bReleaseHeld_clicked();
+    void on_bJoin_clicked();
+    void on_bHoldActive_clicked();
+    void on_bRelease_clicked();
+    void on_bActivateConference_clicked();
+    void on_bActivateCall_clicked();
     void on_bUssdReq_clicked();
     void on_bListCalls_clicked();
     void on_bListProviders_clicked();

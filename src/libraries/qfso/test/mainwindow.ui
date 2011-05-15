@@ -81,6 +81,58 @@
          </widget>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="tbTransferNumber">
+            <property name="text">
+             <string>608828973</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bTransfer">
+            <property name="text">
+             <string>Transfer</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_6">
+          <item>
+           <widget class="QPushButton" name="bReleaseAll">
+            <property name="text">
+             <string>Release
+All</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bReleaseHeld">
+            <property name="text">
+             <string>Release
+Held</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bJoin">
+            <property name="text">
+             <string>Join</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bHoldActive">
+            <property name="text">
+             <string>Hold active</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QLabel" name="lLastCall">
           <property name="text">
            <string>Last call:</string>
@@ -89,6 +141,39 @@
            <bool>true</bool>
           </property>
          </widget>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLineEdit" name="tbCallId">
+            <property name="text">
+             <string>Call ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bRelease">
+            <property name="text">
+             <string>Release</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bActivateConference">
+            <property name="text">
+             <string>Activate
+Conference</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bActivateCall">
+            <property name="text">
+             <string>Activate</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_4">
