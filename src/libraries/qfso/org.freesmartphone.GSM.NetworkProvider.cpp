@@ -13,15 +13,23 @@ void OrgFreesmartphoneGSMNetworkProvider::registerMetaType()
 QDBusArgument &operator<<(QDBusArgument &argument, const OrgFreesmartphoneGSMNetworkProvider & provider)
 {
     argument.beginStructure();
+    argument << provider.status;
+    argument << provider.shortname;
+    argument << provider.longname;
+    argument << provider.mccmnc;
+    argument << provider.act;
     argument.endStructure();
-
     return argument;
 }
 
-const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMNetworkProvider & provide)
+const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMNetworkProvider & provider)
 {
     argument.beginStructure();
+    argument >> provider.status;
+    argument >> provider.shortname;
+    argument >> provider.longname;
+    argument >> provider.mccmnc;
+    argument >> provider.act;
     argument.endStructure();
-
     return argument;
 }

@@ -8,6 +8,12 @@ class OrgFreesmartphoneGSMNetworkProvider
 public:
     explicit OrgFreesmartphoneGSMNetworkProvider();
 
+    QString status;
+    QString shortname;
+    QString longname;
+    QString mccmnc;
+    QString act;
+
     friend QDBusArgument &operator<<(QDBusArgument &argument, const OrgFreesmartphoneGSMNetworkProvider & provider);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMNetworkProvider & provider);
 

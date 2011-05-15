@@ -4,18 +4,12 @@
 #include <QObject>
 #include <QList>
 #include <QtDBus>
-#include <QMap>
 
 #include <org.freesmartphone.GSM.CallDetail.h>
 
-class OrgFreesmartphoneGSMCallDetailList
+class OrgFreesmartphoneGSMCallDetailList : public QList<OrgFreesmartphoneGSMCallDetail>
 {
 public:
-    explicit OrgFreesmartphoneGSMCallDetailList();
-
-    friend QDBusArgument &operator<<(QDBusArgument &argument, const OrgFreesmartphoneGSMCallDetailList &list);
-    friend const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMCallDetailList &list);
-
     static void registerMetaType();
 };
 

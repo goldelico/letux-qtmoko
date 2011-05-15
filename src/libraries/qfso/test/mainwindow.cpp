@@ -14,6 +14,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 {
     ui->setupUi(this);
 
+    OrgFreesmartphoneGSMNetworkProvider::registerMetaType();
+    OrgFreesmartphoneGSMNetworkProviderList::registerMetaType();
+    OrgFreesmartphoneGSMCallDetail::registerMetaType();
+    OrgFreesmartphoneGSMCallDetailList::registerMetaType();
+
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
 
@@ -136,5 +141,49 @@ void MainWindow::on_bGsmFeatures_clicked()
             str += key + ": " + map.value(key).toString() + "\n";
         }
         QMessageBox::information(this, "Modem features", str);
+    }
+}
+
+void MainWindow::on_bListProviders_clicked()
+{
+    QDBusPendingReply<OrgFreesmartphoneGSMNetworkProviderList> reply = gsmNet.ListProviders();
+    if(checkReply(reply, "ListProviders", false, true))
+    {
+        QString str;
+        OrgFreesmartphoneGSMNetworkProviderList list = reply.value();
+        for(int i = 0; i < list.count(); i++)
+        {
+            OrgFreesmartphoneGSMNetworkProvider provider = list.at(i);
+            str += "shortname=" + provider.shortname +
+                   ", longname=" + provider.longname +
+                   ", mccmnc=" + provider.mccmnc +
+                   ", act=" + provider.act +
+                   ", status=" + provider.status + "\n";
+        }
+        QMessageBox::information(this, "Network providers", str);
+    }
+}
+
+void MainWindow::on_bListCalls_clicked()
+{
+    QDBusPendingReply<OrgFreesmartphoneGSMCallDetailList> reply = gsmCall.ListCalls();
+    if(checkReply(reply, "ListCalls", false, true))
+    {
+        QString str;
+        OrgFreesmartphoneGSMCallDetailList list = reply.value();
+        for(int i = 0; i < list.count(); i++)
+        {
+            OrgFreesmartphoneGSMCallDetail call = list.at(i);
+            str += "id=" + QString::number(call.id) +
+                   ", status=" + call.status + "\n";
+
+            QVariantMap properties = call.properties;
+            for(int j = 0; j < properties.count(); j++)
+            {
+                QString key = properties.keys().at(j);
+                str += ", " + key + "=" + properties.value(key).toString();
+            }
+        }
+        QMessageBox::information(this, "Call list", str);
     }
 }

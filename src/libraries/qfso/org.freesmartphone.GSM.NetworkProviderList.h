@@ -2,15 +2,12 @@
 #define ORG_FREESMARTPHONE_GSM_NETWORK_PROVIDER_LIST_H
 
 #include <QtDBus>
+#include <QList>
+#include "org.freesmartphone.GSM.NetworkProvider.h"
 
-class OrgFreesmartphoneGSMNetworkProviderList
+class OrgFreesmartphoneGSMNetworkProviderList : public QList<OrgFreesmartphoneGSMNetworkProvider>
 {
 public:
-    explicit OrgFreesmartphoneGSMNetworkProviderList();
-
-    friend QDBusArgument &operator<<(QDBusArgument &argument, const OrgFreesmartphoneGSMNetworkProviderList &list);
-    friend const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMNetworkProviderList &list);
-
     static void registerMetaType();
 };
 

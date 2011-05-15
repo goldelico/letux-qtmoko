@@ -8,6 +8,10 @@ class OrgFreesmartphoneGSMCallDetail
 public:
     explicit OrgFreesmartphoneGSMCallDetail();
 
+    int id;
+    QString status;
+    QVariantMap properties;
+
     friend QDBusArgument &operator<<(QDBusArgument &argument, const OrgFreesmartphoneGSMCallDetail & detail);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, OrgFreesmartphoneGSMCallDetail & detail);
 

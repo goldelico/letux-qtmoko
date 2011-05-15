@@ -47,6 +47,8 @@ private:
                             QLabel * label = NULL);
 
 private slots:
+    void on_bListCalls_clicked();
+    void on_bListProviders_clicked();
     void on_bGsmFeatures_clicked();
     void on_bCall_clicked();
     void on_bUnregister_clicked();
