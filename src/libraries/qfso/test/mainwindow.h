@@ -47,6 +47,7 @@ private:
                             QLabel * label = NULL);
 
 private slots:
+    void on_bUssdReq_clicked();
     void on_bListCalls_clicked();
     void on_bListProviders_clicked();
     void on_bGsmFeatures_clicked();
@@ -57,6 +58,8 @@ private slots:
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );
     void refresh();
+    void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
+    void incomingUssd(const QString &mode, const QString &message);
 };
 
 template <class T>

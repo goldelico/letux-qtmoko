@@ -19,6 +19,16 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
     OrgFreesmartphoneGSMCallDetail::registerMetaType();
     OrgFreesmartphoneGSMCallDetailList::registerMetaType();
 
+    connect(&gsmCall,
+            SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
+            this,
+            SLOT(gsmCallStatusChange(int, const QString &, const QVariantMap &)));
+
+    connect(&gsmNet,
+            SIGNAL(IncomingUssd(const QString &, const QString &)),
+            this,
+            SLOT(incomingUssd(const QString &, const QString &)));
+
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
 
@@ -186,4 +196,27 @@ void MainWindow::on_bListCalls_clicked()
         }
         QMessageBox::information(this, "Call list", str);
     }
+}
+
+void MainWindow::gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties)
+{
+    QString str = QString("id=%1, status=%2").arg(id).arg(status);
+    for(int i = 0; i < properties.count(); i++)
+    {
+        QString key = properties.keys().at(i);
+        str += ", " + key + "=" + properties.value(key).toString();
+    }
+    qDebug() << "CallStatusChange" << str;
+    ui->lLastCall->setText("Last call: " + str);
+}
+
+void MainWindow::incomingUssd(const QString &mode, const QString &message)
+{
+    QMessageBox::information(this, "Incomming ussd", "mode=" + mode + ", message=" + message);
+}
+
+void MainWindow::on_bUssdReq_clicked()
+{
+    QDBusPendingReply<> reply = gsmNet.SendUssdRequest(ui->tbUssdReq->text());
+    checkReply(reply, "SendUssdRequest", true, true);
 }

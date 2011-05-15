@@ -209,6 +209,21 @@ GSM
 
   before the problematic type.
 
+* For even more complex types we have to specify our custom type instead of
+  QVariantMap. Those types should be able to serialize and deserialize to dbus.
+  Please check e.g. OrgFreesmartphoneGSMCallDetail. And dont forget to register
+  metatypes information before calling function with these types:
+
+OrgFreesmartphoneGSMCallDetail::registerMetaType();
+
+* For more information about dbus marshalling of custom classes see:
+
+http://techbase.kde.org/Development/Tutorials/D-Bus/CustomTypes
+
+* Hopefully all QT annotations should be now in upstream FSO.
+
+
+
 
 [1] https://github.com/radekp/qtmoko/blob/master/README
 [2] http://blog.shr-project.org/2010/05/howto-develop-and-debug-the-shr-phone-stack-on-your-desktop.html
