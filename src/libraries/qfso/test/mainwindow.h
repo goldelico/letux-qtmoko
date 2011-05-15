@@ -8,10 +8,10 @@
 #include <QMessageBox>
 #include <QLabel>
 
-#include "org.freesmartphone.Device.LED.h"
-#include "org.freesmartphone.GSM.Device.h"
-#include "org.freesmartphone.GSM.Network.h"
-#include "org.freesmartphone.GSM.Call.h"
+#include "orgfreesmartphonedeviceled.h"
+#include "orgfreesmartphonegsmdevice.h"
+#include "orgfreesmartphonegsmnetwork.h"
+#include "orgfreesmartphonegsmcall.h"
 
 namespace Ui {
     class MainWindow;

@@ -3,7 +3,7 @@
 
 #include <QtDBus>
 #include <QList>
-#include "org.freesmartphone.GSM.NetworkProvider.h"
+#include "orgfreesmartphonegsmnetworkprovider.h"
 
 class OrgFreesmartphoneGSMNetworkProviderList : public QList<OrgFreesmartphoneGSMNetworkProvider>
 {

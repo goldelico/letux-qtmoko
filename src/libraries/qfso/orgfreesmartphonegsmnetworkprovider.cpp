@@ -1,4 +1,4 @@
-#include "org.freesmartphone.GSM.NetworkProvider.h"
+#include "orgfreesmartphonegsmnetworkprovider.h"
 
 OrgFreesmartphoneGSMNetworkProvider::OrgFreesmartphoneGSMNetworkProvider()
 {

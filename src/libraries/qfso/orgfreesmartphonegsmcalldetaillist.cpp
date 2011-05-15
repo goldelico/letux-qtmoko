@@ -1,4 +1,4 @@
-#include "org.freesmartphone.GSM.CallDetailList.h"
+#include "orgfreesmartphonegsmcalldetaillist.h"
 
 void OrgFreesmartphoneGSMCallDetailList::registerMetaType()
 {

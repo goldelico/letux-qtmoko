@@ -5,7 +5,7 @@
 #include <QList>
 #include <QtDBus>
 
-#include <org.freesmartphone.GSM.CallDetail.h>
+#include "orgfreesmartphonegsmcalldetail.h"
 
 class OrgFreesmartphoneGSMCallDetailList : public QList<OrgFreesmartphoneGSMCallDetail>
 {

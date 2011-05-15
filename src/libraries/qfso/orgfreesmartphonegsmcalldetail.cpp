@@ -1,4 +1,4 @@
-#include "org.freesmartphone.GSM.CallDetail.h"
+#include "orgfreesmartphonegsmcalldetail.h"
 
 OrgFreesmartphoneGSMCallDetail::OrgFreesmartphoneGSMCallDetail()
 {

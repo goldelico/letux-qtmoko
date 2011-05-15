@@ -1,4 +1,4 @@
-#include "org.freesmartphone.GSM.NetworkProviderList.h"
+#include "orgfreesmartphonegsmnetworkproviderlist.h"
 
 void OrgFreesmartphoneGSMNetworkProviderList::registerMetaType()
 {
