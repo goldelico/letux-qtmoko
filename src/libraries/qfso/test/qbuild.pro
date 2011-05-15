@@ -30,17 +30,17 @@ SOURCES +=\
     ../org_freesmartphone_GSM_CallDetailList.cpp \
     ../org_freesmartphone_GSM_Call.cpp \
     mainwindow.cpp \
-    main.cpp \
+    main.cpp
 
 HEADERS += mainwindow.h \
-    ../org.freesmartphone.Device.LED.h \
-    ../org.freesmartphone.GSM.Device.h \
-    ../org.freesmartphone.GSM.Call.h \
-    ../org.freesmartphone.GSM.Network.h \
-    ../org.freesmartphone.GSM.CallDetail.h \
-    ../org.freesmartphone.GSM.CallDetailList.h \
-    ../org.freesmartphone.GSM.NetworkProviderList.h \
-    ../org.freesmartphone.GSM.NetworkProvider.h
+    ../org_freesmartphone_Device_LED.h \
+    ../org_freesmartphone_GSM_Device.h \
+    ../org_freesmartphone_GSM_Call.h \
+    ../org_freesmartphone_GSM_Network.h \
+    ../org_freesmartphone_GSM_CallDetail.h \
+    ../org_freesmartphone_GSM_CallDetailList.h \
+    ../org_freesmartphone_GSM_NetworkProviderList.h \
+    ../org_freesmartphone_GSM_NetworkProvider.h
 
 FORMS += mainwindow.ui
 
