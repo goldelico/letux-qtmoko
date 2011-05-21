@@ -34,7 +34,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
     connect(&gsmSms,
             SIGNAL(IncomingTextMessage(const QString &, const QString &, const QString &)),
             this,
-            SLOT(incomingUssd(const QString &, const QString &)));
+            SLOT(incomingTextMessage(const QString &, const QString &, const QString &)));
+
+    connect(&gsmSms,
+            SIGNAL(IncomingMessageReport(int, const QString &, const QString &, const QString &)),
+            this,
+            SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -98,7 +103,7 @@ void MainWindow::refresh()
         checkIface(&gsmSms);
     }
 
-    // GSM
+    // GSM device & network
     if(ui->tabGsm->isVisible())
     {
         // Device status
@@ -120,7 +125,20 @@ void MainWindow::refresh()
         {
             gsmSignalReply = gsmNet.GetSignalStrength();
         }
-    }  
+    }
+
+    // SMS
+    if(ui->tabGsmSms->isVisible())
+    {
+        if(checkReply(gsmMessageSizeReply, "Message size", false, false, ui->lSmsSplit))
+        {
+            ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(gsmMessageSizeReply.value()));
+        }
+        if(gsmMessageSizeReply.isFinished())
+        {
+            gsmMessageSizeReply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
+        }
+    }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -297,9 +315,13 @@ void MainWindow::incomingMessageReport(int reference, const QString &status, con
 
 void MainWindow::on_bSend_clicked()
 {
-//    QDBusPendingReply<int> reply = gsmSms.SendTextMessage(ui->tbSmsPhoneNumber->text(),
-//                                                          ui->tbSmsContent->toPlainText(),
-//                                                          ui->cbReport->checkState() == Qt::Checked,
-//                                                          ui->tbSmsTimestamp->text());
-//    checkReply(reply, "SendTextMessage", true, true);
+    QDBusPendingReply<int, QString> reply = gsmSms.SendTextMessage(ui->tbSmsPhoneNumber->text(),
+                                                                   ui->tbSmsContent->toPlainText(),
+                                                                   ui->cbReport->checkState() == Qt::Checked);
+    if(checkReply(reply, "SendTextMessage", true, true))
+    {
+        QMessageBox::information(this, "SMS sent", "SMS sent ok, reference=" +
+                                 reply.argumentAt(0).toString() +
+                                 ", timestamp=" + reply.argumentAt(1).toString());
+    }
 }

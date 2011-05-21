@@ -40,13 +40,21 @@ private:
 
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;
+    QDBusPendingReply<uint> gsmMessageSizeReply;
     void checkIface(QDBusAbstractInterface *iface);
-    template <class T>
-            bool checkReply(QDBusPendingReply<T> & reply,
+    template <class T, class T2>
+            bool checkReply(QDBusPendingReply<T,T2> & reply,
                             const QString & fn,
                             bool okBox,
                             bool waitForFinished,
                             QLabel * label = NULL);
+
+    template<class T, class T2>
+    bool checkReply2(QDBusPendingReply<T,T2> & reply,
+                     const QString & fn,
+                     bool okBox,
+                     bool waitForFinished,
+                     QLabel * label = NULL);
 
 private slots:
     void on_bSend_clicked();
@@ -75,8 +83,8 @@ private slots:
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
 };
 
-template <class T>
-        bool MainWindow::checkReply(QDBusPendingReply<T> & reply,
+template <class T, class T2>
+        bool MainWindow::checkReply(QDBusPendingReply<T, T2> & reply,
                                     const QString & fn,
                                     bool okBox,
                                     bool waitForFinished,
