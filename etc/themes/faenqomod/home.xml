@@ -10,44 +10,62 @@
     </text>
     </rect>-->
 
-    <layout rect="0,40,0,120" orientation="vertical">
-    <layout rect="0,40,0,90" orientation="horizontal">
-	<rect name="oper_name" rect="0,0,0x0">
-		<rect rect="20,22,180,50">
-			<text name="caption" size="5" bold="no" outline="#000000" color="#FFFFFF" align="left" transient="yes" active="expr:!@/UI/ActiveWindow/Caption">
-			expr:@/Telephony/Status/OperatorName
-			</text>
-		</rect>
-	</rect>
-	<rect name="time" rect="0,0,0x0">
-		<rect rect="-100,10,-20,50">
-			<text outline="#000000" color="#FFFFFF" bold="no" align="right" size="8" active="expr:@/UI/HomeScreen/ShowTime">
-			expr:@/UI/DisplayTime/Time
-			</text>
-		</rect>
-	</rect>
-    </layout>
-    <layout rect="0,90,0,120" orientation="horizontal">
-	<rect name="profile" rect="0,0,0x0">
-		<rect rect="20,0,180,30">
-    			<text size="5" bold="yes" align="left" color="#ffffff" outline="#000000" transient="yes" active="expr:@/UI/HomeScreen/ShowProfile &amp;&amp; !@/UI/Profile/Default">
-      			expr:@/UI/Profile/Name . " "
-    			</text>
-		</rect>
-	</rect>
-	<rect name="date" rect="0,0,0x0">
-		<rect rect="-100,0,-20,30">
-			<text outline="#000000" color="#FFFFFF" bold="no" align="right" size="5" active="expr:@/UI/HomeScreen/ShowTime">
+
+   <layout rect="0,45,100%x160" orientation="vertical" align="hcenter">
+   <group rect="0,0,100%x160">
+     <image rect="0,0,0,0" src="clock.png" scale="no" align="hcenter"/>
+
+	<layout rect="0,12,100%x100%" orientation="vertical" spacing="10">
+	<rect name="date" rect="0,0,140x30">
+		<layout align="hcenter">
+		<rect rect="0,0,140x30">
+			<text outline="#000000" color="#FFFFFF" bold="no" align="hcenter,vcenter" size="8" active="expr:@/UI/HomeScreen/ShowTime">
 			expr:@/UI/DisplayTime/BriefDate
 			</text>
 		</rect>
+		</layout>
 	</rect>
-    </layout>
-    </layout>
+	<rect name="time" rect="0,0,200x60">
+		<layout align="hcenter">
+		<rect rect="0,0,200x60">
+			<text outline="#000000" color="#FFFFFF" bold="no" align="hcenter,vcenter" size="16" active="expr:@/UI/HomeScreen/ShowTime">
+			expr:@/UI/DisplayTime/Time
+			</text>
+		</rect>
+		</layout>
+	</rect>
+
+    <layout rect="0,0,100%x30" orientation="horizontal" align="hcenter">
+	<rect name="oper_name" rect="0,0,190x30">
+	<layout align="hcenter">
+		<rect rect="0,0,190x30">
+			<text name="caption" size="5" bold="no" outline="#000000" color="#FFFFFF" align="hcenter,vcenter" transient="yes" active="expr:!@/UI/ActiveWindow/Caption">
+			expr:@/Telephony/Status/OperatorName
+			</text>
+		</rect>
+	</layout>
+	</rect>
+
+	<rect name="profile" rect="0,0,190x30">
+		<layout align="hcenter">
+		<rect rect="0,0,190x30">
+    			<text size="5" bold="yes" align="hcenter,vcenter" color="#ffffff" outline="#000000" transient="yes" active="expr:@/UI/HomeScreen/ShowProfile &amp;&amp; !@/UI/Profile/Default">
+      			expr:@/UI/Profile/Name . " "
+    			</text>
+		</rect>
+		</layout>
+	</rect>
+
+      </layout>
+      </layout>
+
+
+   </group>
+   </layout>
 
 
 
-    <layout rect="0,150,0x45pt" orientation="horizontal">
+    <layout rect="0,40%,0x45pt" orientation="horizontal">
 	<rect name="calls" rect="0,28pt,0x0" transient="yes" active="expr:@/Communications/Calls/MissedCalls == 1" interactive="yes">
 		<layout align="hcenter">
 			<rect rect="0,0,137x95">
@@ -94,7 +112,7 @@
     </rect>
 
 
-    <layout rect="0,-200,100%x168" orientation="horizontal">
+    <layout rect="0,-170,100%x168" orientation="horizontal">
       <rect rect="0,0,0x0">
         <image name="dialer" rect="10%,0,100%x100%" src="button.svg" onclick="src=buttonp.svg" interactive="yes">
           <image rect="0%,0%,96x96" src="phone.png" scale="yes"/>
