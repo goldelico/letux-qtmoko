@@ -29,7 +29,10 @@ SOURCES += main.cpp \
     ../orgfreesmartphonegsmcalldetail.cpp \
     ../orgfreesmartphonegsmcalldetaillist.cpp \
     ../orgfreesmartphonegsmnetworkproviderlist.cpp \
-    ../orgfreesmartphonegsmnetworkprovider.cpp
+    ../orgfreesmartphonegsmnetworkprovider.cpp \
+    ../orgfreesmartphonegsmsms.cpp \
+    ../orgfreesmartphonegsmtextmessage.cpp \
+    ../orgfreesmartphonegsmtextmessagelist.cpp
 
 HEADERS += mainwindow.h \
     ../orgfreesmartphonedeviceled.h \
@@ -39,7 +42,10 @@ HEADERS += mainwindow.h \
     ../orgfreesmartphonegsmcalldetail.h \
     ../orgfreesmartphonegsmcalldetaillist.h \
     ../orgfreesmartphonegsmnetworkproviderlist.h \
-    ../orgfreesmartphonegsmnetworkprovider.h
+    ../orgfreesmartphonegsmnetworkprovider.h \
+    ../orgfreesmartphonegsmtextmessagelist.h \
+    ../orgfreesmartphonegsmtextmessage.h \
+    ../orgfreesmartphonegsmsms.h
 
 FORMS += mainwindow.ui
 

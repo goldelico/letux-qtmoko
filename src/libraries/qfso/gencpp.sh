@@ -17,7 +17,10 @@ echo "Generating org.freesmartphone.GSM.Device.xml"
 ../../../../build/qtopiacore/host/bin/qdbusxml2cpp -p orgfreesmartphonegsmdevice specs/xml/org.freesmartphone.GSM.Device.xml
 
 echo "Generating org.freesmartphone.GSM.Network.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i org.freesmartphonegsmnetworkproviderlist.h -p orgfreesmartphonegsmnetwork specs/xml/org.freesmartphone.GSM.Network.xml
+../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmnetworkproviderlist.h -p orgfreesmartphonegsmnetwork specs/xml/org.freesmartphone.GSM.Network.xml
 
 echo "Generating org.freesmartphone.GSM.Call.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i org.freesmartphonegsmcalldetaillist.h -p orgfreesmartphonegsmcall specs/xml/org.freesmartphone.GSM.Call.xml
+../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmcalldetaillist.h -p orgfreesmartphonegsmcall specs/xml/org.freesmartphone.GSM.Call.xml
+
+echo "Generating org.freesmartphone.GSM.SMS.xml"
+../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmtextmessagelist.h -p orgfreesmartphonegsmsms specs/xml/org.freesmartphone.GSM.SMS.xml
