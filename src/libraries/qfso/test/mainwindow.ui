@@ -14,11 +14,11 @@
    <string>MainWindow</string>
   </property>
   <widget class="QWidget" name="centralWidget">
-   <layout class="QGridLayout" name="gridLayout">
-    <item row="0" column="0">
+   <layout class="QVBoxLayout" name="verticalLayout_3">
+    <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -81,18 +81,107 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
+         <layout class="QHBoxLayout" name="horizontalLayout_4">
           <item>
-           <widget class="QLineEdit" name="tbTransferNumber">
+           <widget class="QLineEdit" name="tbUssdReq">
             <property name="text">
-             <string>608828973</string>
+             <string>*22#</string>
             </property>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="bTransfer">
+           <widget class="QPushButton" name="bUssdReq">
             <property name="text">
-             <string>Transfer</string>
+             <string>USSD Request</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bListProviders">
+          <property name="text">
+           <string>List providers</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bUnregister">
+          <property name="text">
+           <string>Unregister from network</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bRegister">
+          <property name="text">
+           <string>Register to network</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bGsmFeatures">
+          <property name="text">
+           <string>GSM features</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabGsmCall">
+       <attribute name="title">
+        <string>GSM call</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_4">
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_3">
+          <item>
+           <widget class="QLineEdit" name="tbCallNum">
+            <property name="inputMask">
+             <string/>
+            </property>
+            <property name="text">
+             <string>800123456</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bCall">
+            <property name="text">
+             <string>Dial</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_5">
+          <item>
+           <widget class="QLineEdit" name="tbCallId">
+            <property name="text">
+             <string>Call ID:</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bRelease">
+            <property name="text">
+             <string>Release</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bActivateConference">
+            <property name="text">
+             <string>Activate
+Conference</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bActivateCall">
+            <property name="text">
+             <string>Activate</string>
             </property>
            </widget>
           </item>
@@ -133,6 +222,24 @@ Held</string>
          </layout>
         </item>
         <item>
+         <layout class="QHBoxLayout" name="horizontalLayout_7">
+          <item>
+           <widget class="QLineEdit" name="tbTransferNumber">
+            <property name="text">
+             <string>608828973</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bTransfer">
+            <property name="text">
+             <string>Transfer</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </item>
+        <item>
          <widget class="QLabel" name="lLastCall">
           <property name="text">
            <string>Last call:</string>
@@ -143,109 +250,9 @@ Held</string>
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QLineEdit" name="tbCallId">
-            <property name="text">
-             <string>Call ID:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bRelease">
-            <property name="text">
-             <string>Release</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bActivateConference">
-            <property name="text">
-             <string>Activate
-Conference</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bActivateCall">
-            <property name="text">
-             <string>Activate</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLineEdit" name="tbUssdReq">
-            <property name="text">
-             <string>*22#</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bUssdReq">
-            <property name="text">
-             <string>USSD Request</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_3">
-          <item>
-           <widget class="QLineEdit" name="tbCallNum">
-            <property name="inputMask">
-             <string/>
-            </property>
-            <property name="text">
-             <string>800123456</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bCall">
-            <property name="text">
-             <string>Dial</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
          <widget class="QPushButton" name="bListCalls">
           <property name="text">
            <string>List calls</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bListProviders">
-          <property name="text">
-           <string>List providers</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bUnregister">
-          <property name="text">
-           <string>Unregister from network</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bRegister">
-          <property name="text">
-           <string>Register to network</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGsmFeatures">
-          <property name="text">
-           <string>GSM features</string>
           </property>
          </widget>
         </item>
