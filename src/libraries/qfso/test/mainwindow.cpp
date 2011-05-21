@@ -9,7 +9,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         orangeLed("org.freesmartphone.odeviced", "/org/freesmartphone/Device/LED/gta02_orange_power", QDBusConnection::systemBus(), this),
         gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
-        gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+        gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
@@ -17,6 +18,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
     OrgFreesmartphoneGSMNetworkProviderList::registerMetaType();
     OrgFreesmartphoneGSMCallDetail::registerMetaType();
     OrgFreesmartphoneGSMCallDetailList::registerMetaType();
+    OrgFreesmartphoneGSMTextMessage::registerMetaType();
+    OrgFreesmartphoneGSMTextMessageList::registerMetaType();
 
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
@@ -25,6 +28,11 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 
     connect(&gsmNet,
             SIGNAL(IncomingUssd(const QString &, const QString &)),
+            this,
+            SLOT(incomingUssd(const QString &, const QString &)));
+
+    connect(&gsmSms,
+            SIGNAL(IncomingTextMessage(const QString &, const QString &, const QString &)),
             this,
             SLOT(incomingUssd(const QString &, const QString &)));
 
@@ -87,6 +95,7 @@ void MainWindow::refresh()
         checkIface(&gsmDev);
         checkIface(&gsmNet);
         checkIface(&gsmCall);
+        checkIface(&gsmSms);
     }
 
     // GSM
@@ -267,4 +276,30 @@ void MainWindow::on_bTransfer_clicked()
 {
     QDBusPendingReply<> reply = gsmCall.Transfer(ui->tbTransferNumber->text());
     checkReply(reply, "Transfer", true, true);
+}
+
+void MainWindow::incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents)
+{
+    QMessageBox::information(this, "Incomming SMS",
+                             "From: " + number + "\n" +
+                             "Time: " + timestamp + "\n" +
+                             contents);
+}
+
+void MainWindow::incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents)
+{
+    QMessageBox::information(this, "SMS status report",
+                             "Reference: " + QString::number(reference) + "\n" +
+                             "Status: " + status + "\n" +
+                             "Sender number: " + sender_number + "\n" +
+                             contents);
+}
+
+void MainWindow::on_bSend_clicked()
+{
+//    QDBusPendingReply<int> reply = gsmSms.SendTextMessage(ui->tbSmsPhoneNumber->text(),
+//                                                          ui->tbSmsContent->toPlainText(),
+//                                                          ui->cbReport->checkState() == Qt::Checked,
+//                                                          ui->tbSmsTimestamp->text());
+//    checkReply(reply, "SendTextMessage", true, true);
 }

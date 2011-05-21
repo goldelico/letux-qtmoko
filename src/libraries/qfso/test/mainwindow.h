@@ -12,6 +12,8 @@
 #include "orgfreesmartphonegsmdevice.h"
 #include "orgfreesmartphonegsmnetwork.h"
 #include "orgfreesmartphonegsmcall.h"
+#include "orgfreesmartphonegsmsms.h"
+#include "orgfreesmartphonegsmtextmessagelist.h"
 
 namespace Ui {
     class MainWindow;
@@ -34,6 +36,7 @@ private:
     OrgFreesmartphoneGSMDeviceInterface gsmDev;
     OrgFreesmartphoneGSMNetworkInterface gsmNet;
     OrgFreesmartphoneGSMCallInterface gsmCall;
+    OrgFreesmartphoneGSMSMSInterface gsmSms;
 
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;
@@ -46,6 +49,7 @@ private:
                             QLabel * label = NULL);
 
 private slots:
+    void on_bSend_clicked();
     void on_bTransfer_clicked();
     void on_bReleaseAll_clicked();
     void on_bReleaseHeld_clicked();
@@ -67,6 +71,8 @@ private slots:
     void refresh();
     void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
     void incomingUssd(const QString &mode, const QString &message);
+    void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
+    void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
 };
 
 template <class T>
