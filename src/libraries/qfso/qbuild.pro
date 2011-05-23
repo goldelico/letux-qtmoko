@@ -15,22 +15,27 @@ pkg [
     maintainer=$$QTOPIA_MAINTAINER
 ]
 
-SOURCES +=\
-    org.freesmartphone.Device.LED.cpp \
-    org.freesmartphone.GSM.Device.cpp \
-    org.freesmartphone.GSM.Call.cpp \
-    org.freesmartphone.GSM.Network.cpp \
-    org.freesmartphone.GSM.CallDetail.cpp \
-    org.freesmartphone.GSM.CallDetailList.cpp \
-    org.freesmartphone.GSM.NetworkProviderList.cpp \
-    org.freesmartphone.GSM.NetworkProvider.cpp
-
-HEADERS +=\
-    org.freesmartphone.Device.LED.h \
-    org.freesmartphone.GSM.Device.h \
-    org.freesmartphone.GSM.Call.h \
-    org.freesmartphone.GSM.Network.h \
-    org.freesmartphone.GSM.CallDetail.h \
-    org.freesmartphone.GSM.CallDetailList.h \
-    org.freesmartphone.GSM.NetworkProviderList.h \
-    org.freesmartphone.GSM.NetworkProvider.h
+SOURCES += \
+    orgfreesmartphonedeviceled.cpp \
+    orgfreesmartphonegsmdevice.cpp \
+    orgfreesmartphonegsmcall.cpp \
+    orgfreesmartphonegsmnetwork.cpp \
+    orgfreesmartphonegsmcalldetail.cpp \
+    orgfreesmartphonegsmcalldetaillist.cpp \
+    orgfreesmartphonegsmnetworkproviderlist.cpp \
+    orgfreesmartphonegsmnetworkprovider.cpp \
+    orgfreesmartphonegsmsms.cpp \
+    orgfreesmartphonegsmtextmessage.cpp \
+    orgfreesmartphonegsmtextmessagelist.cpp
+HEADERS += \
+    orgfreesmartphonedeviceled.h \
+    orgfreesmartphonegsmdevice.h \
+    orgfreesmartphonegsmcall.h \
+    orgfreesmartphonegsmnetwork.h \
+    orgfreesmartphonegsmcalldetail.h \
+    orgfreesmartphonegsmcalldetaillist.h \
+    orgfreesmartphonegsmnetworkproviderlist.h \
+    orgfreesmartphonegsmnetworkprovider.h \
+    orgfreesmartphonegsmtextmessagelist.h \
+    orgfreesmartphonegsmtextmessage.h \
+    orgfreesmartphonegsmsms.h
