@@ -8,12 +8,11 @@
 #include <QMessageBox>
 #include <QLabel>
 
-#include "orgfreesmartphonedeviceled.h"
-#include "orgfreesmartphonegsmdevice.h"
-#include "orgfreesmartphonegsmnetwork.h"
-#include "orgfreesmartphonegsmcall.h"
-#include "orgfreesmartphonegsmsms.h"
-#include "orgfreesmartphonegsmtextmessagelist.h"
+#include "qfsodeviceled.h"
+#include "qfsogsmdevice.h"
+#include "qfsogsmnetwork.h"
+#include "qfsogsmcall.h"
+#include "qfsogsmsms.h"
 
 namespace Ui {
     class MainWindow;
@@ -30,13 +29,13 @@ protected:
 
 private:
     Ui::MainWindow *ui;
-    OrgFreesmartphoneDeviceLEDInterface redLed;
-    OrgFreesmartphoneDeviceLEDInterface blueLed;
-    OrgFreesmartphoneDeviceLEDInterface orangeLed;
-    OrgFreesmartphoneGSMDeviceInterface gsmDev;
-    OrgFreesmartphoneGSMNetworkInterface gsmNet;
-    OrgFreesmartphoneGSMCallInterface gsmCall;
-    OrgFreesmartphoneGSMSMSInterface gsmSms;
+    QFsoDeviceLED redLed;
+    QFsoDeviceLED blueLed;
+    QFsoDeviceLED orangeLed;
+    QFsoGSMDevice gsmDev;
+    QFsoGSMNetwork gsmNet;
+    QFsoGSMCall gsmCall;
+    QFsoGSMSMS gsmSms;
 
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;

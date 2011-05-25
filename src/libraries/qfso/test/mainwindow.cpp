@@ -14,13 +14,6 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 {
     ui->setupUi(this);
 
-    OrgFreesmartphoneGSMNetworkProvider::registerMetaType();
-    OrgFreesmartphoneGSMNetworkProviderList::registerMetaType();
-    OrgFreesmartphoneGSMCallDetail::registerMetaType();
-    OrgFreesmartphoneGSMCallDetailList::registerMetaType();
-    OrgFreesmartphoneGSMTextMessage::registerMetaType();
-    OrgFreesmartphoneGSMTextMessageList::registerMetaType();
-
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
@@ -67,7 +60,7 @@ void MainWindow::checkIface(QDBusAbstractInterface *iface)
     ui->tbInit->append(status + " " + iface->service() + " " + iface->path());
 }
 
-void toggleLed(OrgFreesmartphoneDeviceLEDInterface *led, int state)
+void toggleLed(QFsoDeviceLED *led, int state)
 {
     int brightness = (state == Qt::Checked ? 255 : 0);
     led->SetBrightness(brightness);
@@ -182,34 +175,34 @@ void MainWindow::on_bGsmFeatures_clicked()
 
 void MainWindow::on_bListProviders_clicked()
 {
-    QDBusPendingReply<OrgFreesmartphoneGSMNetworkProviderList> reply = gsmNet.ListProviders();
+    QDBusPendingReply<QFsoNetworkProviderList> reply = gsmNet.ListProviders();
     if(checkReply(reply, "ListProviders", false, true))
     {
         QString str;
-        OrgFreesmartphoneGSMNetworkProviderList list = reply.value();
-        for(int i = 0; i < list.count(); i++)
-        {
-            OrgFreesmartphoneGSMNetworkProvider provider = list.at(i);
-            str += "shortname=" + provider.shortname +
-                   ", longname=" + provider.longname +
-                   ", mccmnc=" + provider.mccmnc +
-                   ", act=" + provider.act +
-                   ", status=" + provider.status + "\n";
-        }
+//        QFsoNetworkProviderList list = reply.value();
+//        for(int i = 0; i < list.count(); i++)
+//        {
+//            QFsoNetworkProvider provider = list.at(i);
+//            str += "shortname=" + provider.shortname +
+//                   ", longname=" + provider.longname +
+//                   ", mccmnc=" + provider.mccmnc +
+//                   ", act=" + provider.act +
+//                   ", status=" + provider.status + "\n";
+//        }
         QMessageBox::information(this, "Network providers", str);
     }
 }
 
 void MainWindow::on_bListCalls_clicked()
 {
-    QDBusPendingReply<OrgFreesmartphoneGSMCallDetailList> reply = gsmCall.ListCalls();
+    QDBusPendingReply<QFsoCallDetailList> reply = gsmCall.ListCalls();
     if(checkReply(reply, "ListCalls", false, true))
     {
         QString str;
-        OrgFreesmartphoneGSMCallDetailList list = reply.value();
+        QFsoCallDetailList list = reply.value();
         for(int i = 0; i < list.count(); i++)
         {
-            OrgFreesmartphoneGSMCallDetail call = list.at(i);
+            QFsoCallDetail call = list.at(i);
             str += "id=" + QString::number(call.id) +
                    ", status=" + call.status + "\n";
 

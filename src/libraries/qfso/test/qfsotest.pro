@@ -7,27 +7,21 @@ TEMPLATE = app
 INCLUDEPATH += ..
 SOURCES += main.cpp \
     mainwindow.cpp \
-    ../orgfreesmartphonedeviceled.cpp \
-    ../orgfreesmartphonegsmdevice.cpp \
-    ../orgfreesmartphonegsmcall.cpp \
-    ../orgfreesmartphonegsmnetwork.cpp \
-    ../orgfreesmartphonegsmcalldetail.cpp \
-    ../orgfreesmartphonegsmcalldetaillist.cpp \
-    ../orgfreesmartphonegsmnetworkproviderlist.cpp \
-    ../orgfreesmartphonegsmnetworkprovider.cpp \
-    ../orgfreesmartphonegsmsms.cpp \
-    ../orgfreesmartphonegsmtextmessage.cpp \
-    ../orgfreesmartphonegsmtextmessagelist.cpp
+    ../qfsodeviceled.cpp \
+    ../qfsogsmcall.cpp \
+    ../qfsocalldetail.cpp \
+    ../qfsonetworkprovider.cpp \
+    ../qfsogsmnetwork.cpp \
+    ../qfsogsmdevice.cpp \
+    ../qfsogsmsms.cpp \
+    ../qfsosimmessage.cpp
 HEADERS += mainwindow.h \
-    ../orgfreesmartphonedeviceled.h \
-    ../orgfreesmartphonegsmdevice.h \
-    ../orgfreesmartphonegsmcall.h \
-    ../orgfreesmartphonegsmnetwork.h \
-    ../orgfreesmartphonegsmcalldetail.h \
-    ../orgfreesmartphonegsmcalldetaillist.h \
-    ../orgfreesmartphonegsmnetworkproviderlist.h \
-    ../orgfreesmartphonegsmnetworkprovider.h \
-    ../orgfreesmartphonegsmtextmessagelist.h \
-    ../orgfreesmartphonegsmtextmessage.h \
-    ../orgfreesmartphonegsmsms.h
+    ../qfsodeviceled.h \
+    ../qfsocalldetail.h \
+    ../qfsogsmcall.h \
+    ../qfsonetworkprovider.h \
+    ../qfsogsmnetwork.h \
+    ../qfsogsmdevice.h \
+    ../qfsogsmsms.h \
+    ../qfsosimmessage.h
 FORMS += mainwindow.ui
