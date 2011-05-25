@@ -50,6 +50,7 @@
 #include <QtCore/qset.h>
 
 #include <QtDBus/QtDBus>
+#include <QtXml>
 #include "private/qdbusmetaobject_p.h"
 #include "private/qdbusintrospection_p.h"
 
@@ -61,7 +62,7 @@
 #include <process.h>
 #endif
 
-#define PROGRAMNAME     "qdbusxml2cpp"
+#define PROGRAMNAME     "qfsodbusxml2cpp"
 #define PROGRAMVERSION  "0.7"
 #define PROGRAMCOPYRIGHT "Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)."
 
@@ -78,6 +79,7 @@ static bool includeMocs;
 static QString commandLine;
 static QStringList includes;
 static QStringList wantedInterfaces;
+static QStringList customTypes;
 
 static const char help[] =
     "Usage: " PROGRAMNAME " [options...] [xml-or-xml-file] [interfaces...]\n"
@@ -344,16 +346,229 @@ static QString classNameForInterface(const QString &interface, ClassType classTy
     return retval;
 }
 
+static void genCustomFsoType(QString typeName)
+{
+    qDebug() << "Generating type " << typeName << " from file " << inputFile;
+
+    // Read XML spec file
+    QFile file(inputFile);
+    if (!file.open(QFile::ReadOnly | QFile::Text))
+    {
+        qCritical() << "cannot read file " + inputFile + ": " + file.errorString();
+        return;
+    }
+
+    QString errorStr;
+    int errorLine;
+    int errorColumn;
+
+    QDomDocument doc(inputFile);
+    bool ok = doc.setContent(&file, true, &errorStr, &errorLine, &errorColumn);
+    file.close();
+    if(!ok)
+    {
+        qCritical() << "failed to read XML for type " + typeName + " from " + inputFile + " line " << errorLine << " column " << errorColumn << errorStr;
+        exit(1);
+    }
+
+    QDomElement root = doc.documentElement();
+
+    // Search for struct XML definition
+    QDomNode structNode;
+    for(QDomNode n = root.firstChild(); !n.isNull(); n = n.nextSibling())
+    {
+        //qDebug() << "nodename=" << n.nodeName();
+        if(n.nodeName() != "fso:struct")
+        {
+            continue;
+        }
+        QString xmlType = n.attributes().namedItem("name").toAttr().value();
+        //qDebug() << "xml type=" << xmlType;
+
+        int lastDot = xmlType.lastIndexOf(".");
+        if(lastDot > 0)
+        {
+            xmlType = xmlType.mid(lastDot + 1);
+        }
+        xmlType = "QFso" + xmlType;
+        if(xmlType == typeName)
+        {
+            structNode = n;
+            break;
+        }
+    }
+
+    if(structNode.isNull())
+    {
+        qCritical() << "Couldnt find type definition for " + typeName;
+        return;
+    }
+
+    // Generated filenames
+    QString headerName = header(typeName).toLower();
+    QByteArray headerData;
+    QTextStream hs(&headerData);
+
+    QString cppName = cpp(typeName).toLower();
+    QByteArray cppData;
+    QTextStream cs(&cppData);
+
+
+    // Header and class definition
+    QString hIfDef = typeName.toUpper() + "_H";
+    hs
+            << "#ifndef " << hIfDef << endl
+            << "#define " << hIfDef << endl
+            << "#include <QtDBus>" << endl
+            << endl
+            << "class " << typeName << endl
+            << "{" << endl
+            << "public:" << endl
+            << "    explicit " << typeName << "();" << endl;
+
+    for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
+    {
+        if(n.nodeName() != "fso:field")
+        {
+            continue;
+        }
+        QString fieldName = n.attributes().namedItem("name").toAttr().value();
+        QString fieldSignature = n.attributes().namedItem("type").toAttr().value();
+        int type = QDBusMetaType::signatureToType(fieldSignature.toLatin1());
+        if (type == QVariant::Invalid) {
+            qCritical() << "Unsupported type for field " << fieldName << " with signature " << fieldSignature;
+            exit(1);
+        }
+        QString fieldType = QVariant::typeToName(QVariant::Type(type));
+        hs << "    " << fieldType << " " << fieldName << ";" << endl;
+    }
+
+    hs
+            << "    friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
+            << "    friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
+            << "    static void registerMetaType();" << endl
+            << "};" << endl
+            << endl
+            << "Q_DECLARE_METATYPE(" << typeName << ")" << endl
+            << endl
+            << "#endif // " << hIfDef
+            << endl
+            << endl;
+
+    // Cpp file
+    cs
+            << "#include \"" << headerName << "\"" << endl
+            << endl
+            << typeName << "::" << typeName << "()" << endl
+            << "{" << endl
+            << "}" << endl
+            << endl
+            << "void " << typeName << "::registerMetaType()" << endl
+            << "{" << endl
+            << "    qRegisterMetaType<" << typeName << ">(\"" << typeName << "\");" << endl
+            << "    qDBusRegisterMetaType<" << typeName << ">();" << endl
+            << "}" << endl
+            << endl
+            << "QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value)" << endl
+            << "{" << endl
+            << "    argument.beginStructure();" << endl;
+    for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
+    {
+        if(n.nodeName() != "fso:field")
+        {
+            continue;
+        }
+        QString fieldName = n.attributes().namedItem("name").toAttr().value();
+        cs << "    argument << value." << fieldName << ";" << endl;
+    }
+    cs
+            << "    argument.endStructure();" << endl
+            << "    return argument;" << endl
+            << "}" << endl
+            << endl
+            << "const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value)" << endl
+            << "{" << endl
+            << "    argument.beginStructure();" << endl;
+
+    for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
+    {
+        if(n.nodeName() != "fso:field")
+        {
+            continue;
+        }
+        QString fieldName = n.attributes().namedItem("name").toAttr().value();
+        cs << "    argument >> value." << fieldName << ";" << endl;
+    }
+
+    cs
+            << "    argument.endStructure();" << endl
+            << "    return argument;" << endl
+            << "}" << endl
+            << endl;
+
+    hs.flush();
+    cs.flush();
+
+    qDebug() << headerName;
+    qDebug() << cppName;
+
+    QFile cppFile(cppName);
+    if (!cppFile.open(QFile::WriteOnly | QFile::Text))
+    {
+        qCritical() << "failed to open " + cppName + ": " + cppFile.errorString();
+        return;
+    }
+    cppFile.write(cppData);
+    cppFile.close();
+
+    QFile hFile(headerName);
+    if (!hFile.open(QFile::WriteOnly | QFile::Text))
+    {
+        qCritical() << "failed to open " + headerName + ": " + hFile.errorString();
+        return;
+    }
+    hFile.write(headerData);
+    hFile.close();
+}
+
 static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection::Annotations &annotations, int paramId = -1, const char *direction = "Out")
 {
     int type = QDBusMetaType::signatureToType(signature.toLatin1());
     if (type == QVariant::Invalid) {
+
+        // No need to add QVariantMap to custom types - it's alredy known to
+        // QT dbus type system
+        if(signature == "a{sv}")
+            return "QVariantMap";
+
         QString annotationName = QString::fromLatin1("com.trolltech.QtDBus.QtTypeName");
         if (paramId >= 0)
             annotationName += QString::fromLatin1(".%1%2").arg(QLatin1String(direction)).arg(paramId);
         QString qttype = annotations.value(annotationName);
-        if (!qttype.isEmpty())
+
+        // Generate FSO custom type
+        if(qttype.startsWith("QFso"))
+        {
+            genCustomFsoType(qttype);
+        }
+
+        if (qttype.isEmpty())
+        {
+            if(signature == "a{ss}")
+                qttype = "QFsoStringMap";
+
+            if(signature == "a{si}")
+                qttype = "QFsoIntMap";
+
+            if(signature == "aa{sv}")
+                qttype = "QFsoVariantMapList";
+        }
+        if(!qttype.isEmpty())
+        {
+            if(!customTypes.contains(qttype))
+                customTypes.append(qttype);
             return qttype.toLatin1();
+        }
 
         fprintf(stderr, "Got unknown type `%s'\n", qPrintable(signature));
         fprintf(stderr, "You should add <annotation name=\"%s\" value=\"<type>\"/> to the XML description\n",
@@ -579,15 +794,6 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << endl
            << "    ~" << className << "();" << endl
            << endl;
-        cs << className << "::" << className << "(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)" << endl
-           << "    : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
-           << "{" << endl
-           << "}" << endl
-           << endl
-           << className << "::~" << className << "()" << endl
-           << "{" << endl
-           << "}" << endl
-           << endl;
 
         // properties:
         foreach (const QDBusIntrospection::Property &property, interface->properties) {
@@ -743,6 +949,24 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
         // close the class:
         hs << "};" << endl
            << endl;
+
+        // constructor/destructor for the cpp
+        cs << className << "::" << className << "(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)" << endl
+           << "    : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
+           << "{" << endl;
+
+        foreach (const QString customType, customTypes)
+            cs << "    " << customType << "::registerMetaType();" << endl;
+
+        cs << "}" << endl
+           << endl
+           << className << "::~" << className << "()" << endl
+           << "{" << endl
+           << "}" << endl
+           << endl;
+
+        customTypes.clear();
+
     }
 
     if (!skipNamespaces) {
