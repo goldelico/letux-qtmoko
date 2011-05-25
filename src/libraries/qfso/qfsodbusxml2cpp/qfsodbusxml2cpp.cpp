@@ -512,7 +512,14 @@ static QString genCustomFsoType(QString typeName)
             << "void " << typeName << "::registerMetaType()" << endl
             << "{" << endl
             << "    qRegisterMetaType<" << typeName << ">(\"" << typeName << "\");" << endl
-            << "    qDBusRegisterMetaType<" << typeName << ">();" << endl
+            << "    qDBusRegisterMetaType<" << typeName << ">();" << endl;
+
+    if(isList)
+        cs
+            << "    qRegisterMetaType<" << typeName << "List>(\"" << typeName << "List\");" << endl
+            << "    qDBusRegisterMetaType<" << typeName << "List>();" << endl;
+
+        cs
             << "}" << endl
             << endl
             << "QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value)" << endl
