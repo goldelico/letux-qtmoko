@@ -4,14 +4,6 @@ QFsoNetworkProvider::QFsoNetworkProvider()
 {
 }
 
-void QFsoNetworkProvider::registerMetaType()
-{
-    qRegisterMetaType<QFsoNetworkProvider>("QFsoNetworkProvider");
-    qDBusRegisterMetaType<QFsoNetworkProvider>();
-    qRegisterMetaType<QFsoNetworkProviderList>("QFsoNetworkProviderList");
-    qDBusRegisterMetaType<QFsoNetworkProviderList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoNetworkProvider & value)
 {
     argument.beginStructure();

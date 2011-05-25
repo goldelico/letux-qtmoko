@@ -4,14 +4,6 @@ QFsoWakeupAlarm::QFsoWakeupAlarm()
 {
 }
 
-void QFsoWakeupAlarm::registerMetaType()
-{
-    qRegisterMetaType<QFsoWakeupAlarm>("QFsoWakeupAlarm");
-    qDBusRegisterMetaType<QFsoWakeupAlarm>();
-    qRegisterMetaType<QFsoWakeupAlarmList>("QFsoWakeupAlarmList");
-    qDBusRegisterMetaType<QFsoWakeupAlarmList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWakeupAlarm & value)
 {
     argument.beginStructure();

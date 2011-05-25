@@ -4,14 +4,6 @@ QFsoSIMEntry::QFsoSIMEntry()
 {
 }
 
-void QFsoSIMEntry::registerMetaType()
-{
-    qRegisterMetaType<QFsoSIMEntry>("QFsoSIMEntry");
-    qDBusRegisterMetaType<QFsoSIMEntry>();
-    qRegisterMetaType<QFsoSIMEntryList>("QFsoSIMEntryList");
-    qDBusRegisterMetaType<QFsoSIMEntryList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoSIMEntry & value)
 {
     argument.beginStructure();

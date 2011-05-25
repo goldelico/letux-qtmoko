@@ -4,14 +4,6 @@ QFsoWorldConnectivityAccessPoint::QFsoWorldConnectivityAccessPoint()
 {
 }
 
-void QFsoWorldConnectivityAccessPoint::registerMetaType()
-{
-    qRegisterMetaType<QFsoWorldConnectivityAccessPoint>("QFsoWorldConnectivityAccessPoint");
-    qDBusRegisterMetaType<QFsoWorldConnectivityAccessPoint>();
-    qRegisterMetaType<QFsoWorldConnectivityAccessPointList>("QFsoWorldConnectivityAccessPointList");
-    qDBusRegisterMetaType<QFsoWorldConnectivityAccessPointList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldConnectivityAccessPoint & value)
 {
     argument.beginStructure();

@@ -14,7 +14,6 @@ public:
     QString dns2;
     friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldConnectivityAccessPoint & value);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoWorldConnectivityAccessPoint & value);
-    static void registerMetaType();
 };
 
 Q_DECLARE_METATYPE(QFsoWorldConnectivityAccessPoint)

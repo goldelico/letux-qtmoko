@@ -10,7 +10,6 @@ public:
     int timestamp;
     friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWakeupAlarm & value);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoWakeupAlarm & value);
-    static void registerMetaType();
 };
 
 Q_DECLARE_METATYPE(QFsoWakeupAlarm)

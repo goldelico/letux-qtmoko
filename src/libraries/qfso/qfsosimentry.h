@@ -11,7 +11,6 @@ public:
     QString number;
     friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoSIMEntry & value);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoSIMEntry & value);
-    static void registerMetaType();
 };
 
 Q_DECLARE_METATYPE(QFsoSIMEntry)

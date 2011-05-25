@@ -14,7 +14,6 @@ public:
     QVariantMap properties;
     friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoSIMMessage & value);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoSIMMessage & value);
-    static void registerMetaType();
 };
 
 Q_DECLARE_METATYPE(QFsoSIMMessage)

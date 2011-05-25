@@ -4,14 +4,6 @@ QFsoSIMMessage::QFsoSIMMessage()
 {
 }
 
-void QFsoSIMMessage::registerMetaType()
-{
-    qRegisterMetaType<QFsoSIMMessage>("QFsoSIMMessage");
-    qDBusRegisterMetaType<QFsoSIMMessage>();
-    qRegisterMetaType<QFsoSIMMessageList>("QFsoSIMMessageList");
-    qDBusRegisterMetaType<QFsoSIMMessageList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoSIMMessage & value)
 {
     argument.beginStructure();

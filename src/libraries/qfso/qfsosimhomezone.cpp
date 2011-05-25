@@ -4,14 +4,6 @@ QFsoSIMHomeZone::QFsoSIMHomeZone()
 {
 }
 
-void QFsoSIMHomeZone::registerMetaType()
-{
-    qRegisterMetaType<QFsoSIMHomeZone>("QFsoSIMHomeZone");
-    qDBusRegisterMetaType<QFsoSIMHomeZone>();
-    qRegisterMetaType<QFsoSIMHomeZoneList>("QFsoSIMHomeZoneList");
-    qDBusRegisterMetaType<QFsoSIMHomeZoneList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoSIMHomeZone & value)
 {
     argument.beginStructure();

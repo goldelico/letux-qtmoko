@@ -18,9 +18,16 @@
 QFsoDataWorld::QFsoDataWorld(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
-    QFsoWorldCountry::registerMetaType();
-    QFsoWorldConnectivityAccessPoint::registerMetaType();
-    QFsoStringMap::registerMetaType();
+    qRegisterMetaType<QFsoWorldCountry>("QFsoWorldCountry");
+    qDBusRegisterMetaType<QFsoWorldCountry>();
+    qRegisterMetaType<QFsoWorldConnectivityAccessPoint>("QFsoWorldConnectivityAccessPoint");
+    qDBusRegisterMetaType<QFsoWorldConnectivityAccessPoint>();
+    qRegisterMetaType<QFsoStringMap>("QFsoStringMap");
+    qDBusRegisterMetaType<QFsoStringMap>();
+    qRegisterMetaType<QFsoWorldCountryList>("QFsoWorldCountryList");
+    qDBusRegisterMetaType<QFsoWorldCountryList>();
+    qRegisterMetaType<QFsoWorldConnectivityAccessPointList>("QFsoWorldConnectivityAccessPointList");
+    qDBusRegisterMetaType<QFsoWorldConnectivityAccessPointList>();
 }
 
 QFsoDataWorld::~QFsoDataWorld()

@@ -4,14 +4,6 @@ QFsoCallDetail::QFsoCallDetail()
 {
 }
 
-void QFsoCallDetail::registerMetaType()
-{
-    qRegisterMetaType<QFsoCallDetail>("QFsoCallDetail");
-    qDBusRegisterMetaType<QFsoCallDetail>();
-    qRegisterMetaType<QFsoCallDetailList>("QFsoCallDetailList");
-    qDBusRegisterMetaType<QFsoCallDetailList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoCallDetail & value)
 {
     argument.beginStructure();

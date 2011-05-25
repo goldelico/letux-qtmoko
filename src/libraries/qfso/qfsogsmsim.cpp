@@ -18,8 +18,14 @@
 QFsoGSMSIM::QFsoGSMSIM(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
-    QFsoSIMHomeZone::registerMetaType();
-    QFsoSIMEntry::registerMetaType();
+    qRegisterMetaType<QFsoSIMHomeZone>("QFsoSIMHomeZone");
+    qDBusRegisterMetaType<QFsoSIMHomeZone>();
+    qRegisterMetaType<QFsoSIMEntry>("QFsoSIMEntry");
+    qDBusRegisterMetaType<QFsoSIMEntry>();
+    qRegisterMetaType<QFsoSIMHomeZoneList>("QFsoSIMHomeZoneList");
+    qDBusRegisterMetaType<QFsoSIMHomeZoneList>();
+    qRegisterMetaType<QFsoSIMEntryList>("QFsoSIMEntryList");
+    qDBusRegisterMetaType<QFsoSIMEntryList>();
 }
 
 QFsoGSMSIM::~QFsoGSMSIM()

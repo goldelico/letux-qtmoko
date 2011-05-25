@@ -18,7 +18,10 @@
 QFsoGSMNetwork::QFsoGSMNetwork(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
-    QFsoNetworkProvider::registerMetaType();
+    qRegisterMetaType<QFsoNetworkProvider>("QFsoNetworkProvider");
+    qDBusRegisterMetaType<QFsoNetworkProvider>();
+    qRegisterMetaType<QFsoNetworkProviderList>("QFsoNetworkProviderList");
+    qDBusRegisterMetaType<QFsoNetworkProviderList>();
 }
 
 QFsoGSMNetwork::~QFsoGSMNetwork()

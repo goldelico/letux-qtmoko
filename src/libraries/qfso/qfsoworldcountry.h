@@ -10,7 +10,6 @@ public:
     QString name;
     friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldCountry & value);
     friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoWorldCountry & value);
-    static void registerMetaType();
 };
 
 Q_DECLARE_METATYPE(QFsoWorldCountry)

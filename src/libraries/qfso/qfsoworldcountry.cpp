@@ -4,14 +4,6 @@ QFsoWorldCountry::QFsoWorldCountry()
 {
 }
 
-void QFsoWorldCountry::registerMetaType()
-{
-    qRegisterMetaType<QFsoWorldCountry>("QFsoWorldCountry");
-    qDBusRegisterMetaType<QFsoWorldCountry>();
-    qRegisterMetaType<QFsoWorldCountryList>("QFsoWorldCountryList");
-    qDBusRegisterMetaType<QFsoWorldCountryList>();
-}
-
 QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldCountry & value)
 {
     argument.beginStructure();

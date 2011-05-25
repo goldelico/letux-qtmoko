@@ -18,7 +18,10 @@
 QFsoGSMSMS::QFsoGSMSMS(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
-    QFsoSIMMessage::registerMetaType();
+    qRegisterMetaType<QFsoSIMMessage>("QFsoSIMMessage");
+    qDBusRegisterMetaType<QFsoSIMMessage>();
+    qRegisterMetaType<QFsoSIMMessageList>("QFsoSIMMessageList");
+    qDBusRegisterMetaType<QFsoSIMMessageList>();
 }
 
 QFsoGSMSMS::~QFsoGSMSMS()
