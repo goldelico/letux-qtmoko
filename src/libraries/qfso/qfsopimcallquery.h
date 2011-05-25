@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMCALLQUERY_H_1306329414
-#define QFSOPIMCALLQUERY_H_1306329414
+#ifndef QFSOPIMCALLQUERY_H
+#define QFSOPIMCALLQUERY_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

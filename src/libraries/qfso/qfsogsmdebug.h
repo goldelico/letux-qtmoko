@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMDEBUG_H_1306329414
-#define QFSOGSMDEBUG_H_1306329414
+#ifndef QFSOGSMDEBUG_H
+#define QFSOGSMDEBUG_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOAPPLICATIONMANAGER_H_1306329414
-#define QFSOAPPLICATIONMANAGER_H_1306329414
+#ifndef QFSOAPPLICATIONMANAGER_H
+#define QFSOAPPLICATIONMANAGER_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

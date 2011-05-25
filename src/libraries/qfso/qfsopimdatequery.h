@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMDATEQUERY_H_1306329414
-#define QFSOPIMDATEQUERY_H_1306329414
+#ifndef QFSOPIMDATEQUERY_H
+#define QFSOPIMDATEQUERY_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

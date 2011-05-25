@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEPROXIMITY_H_1306329414
-#define QFSODEVICEPROXIMITY_H_1306329414
+#ifndef QFSODEVICEPROXIMITY_H
+#define QFSODEVICEPROXIMITY_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

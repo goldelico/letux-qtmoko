@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPREFERENCES_H_1306329414
-#define QFSOPREFERENCES_H_1306329414
+#ifndef QFSOPREFERENCES_H
+#define QFSOPREFERENCES_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

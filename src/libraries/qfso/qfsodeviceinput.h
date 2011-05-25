@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEINPUT_H_1306329414
-#define QFSODEVICEINPUT_H_1306329414
+#ifndef QFSODEVICEINPUT_H
+#define QFSODEVICEINPUT_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

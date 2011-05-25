@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMCONTACT_H_1306329414
-#define QFSOPIMCONTACT_H_1306329414
+#ifndef QFSOPIMCONTACT_H
+#define QFSOPIMCONTACT_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICELED_H_1306329414
-#define QFSODEVICELED_H_1306329414
+#ifndef QFSODEVICELED_H
+#define QFSODEVICELED_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

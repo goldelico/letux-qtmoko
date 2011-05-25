@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOAPPLICATIONSESSION_H_1306329414
-#define QFSOAPPLICATIONSESSION_H_1306329414
+#ifndef QFSOAPPLICATIONSESSION_H
+#define QFSOAPPLICATIONSESSION_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

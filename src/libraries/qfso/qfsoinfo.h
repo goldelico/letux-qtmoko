@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOINFO_H_1306329414
-#define QFSOINFO_H_1306329414
+#ifndef QFSOINFO_H
+#define QFSOINFO_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

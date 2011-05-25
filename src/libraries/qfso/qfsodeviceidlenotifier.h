@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEIDLENOTIFIER_H_1306329414
-#define QFSODEVICEIDLENOTIFIER_H_1306329414
+#ifndef QFSODEVICEIDLENOTIFIER_H
+#define QFSODEVICEIDLENOTIFIER_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

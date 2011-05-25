@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEAUDIO_H_1306329414
-#define QFSODEVICEAUDIO_H_1306329414
+#ifndef QFSODEVICEAUDIO_H
+#define QFSODEVICEAUDIO_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

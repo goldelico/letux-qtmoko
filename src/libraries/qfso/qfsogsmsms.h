@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMSMS_H_1306329414
-#define QFSOGSMSMS_H_1306329414
+#ifndef QFSOGSMSMS_H
+#define QFSOGSMSMS_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

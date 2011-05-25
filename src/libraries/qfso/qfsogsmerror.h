@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMERROR_H_1306329414
-#define QFSOGSMERROR_H_1306329414
+#ifndef QFSOGSMERROR_H
+#define QFSOGSMERROR_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

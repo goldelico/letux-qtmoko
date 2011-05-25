@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMTYPES_H_1306329414
-#define QFSOPIMTYPES_H_1306329414
+#ifndef QFSOPIMTYPES_H
+#define QFSOPIMTYPES_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

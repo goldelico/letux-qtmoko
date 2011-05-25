@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEPOWERCONTROL_H_1306329414
-#define QFSODEVICEPOWERCONTROL_H_1306329414
+#ifndef QFSODEVICEPOWERCONTROL_H
+#define QFSODEVICEPOWERCONTROL_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

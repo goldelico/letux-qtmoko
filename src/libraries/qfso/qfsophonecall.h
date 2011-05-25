@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPHONECALL_H_1306329414
-#define QFSOPHONECALL_H_1306329414
+#ifndef QFSOPHONECALL_H
+#define QFSOPHONECALL_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

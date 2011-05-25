@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOUSAGE_H_1306329414
-#define QFSOUSAGE_H_1306329414
+#ifndef QFSOUSAGE_H
+#define QFSOUSAGE_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

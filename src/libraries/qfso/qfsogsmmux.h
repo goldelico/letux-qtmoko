@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMMUX_H_1306329414
-#define QFSOGSMMUX_H_1306329414
+#ifndef QFSOGSMMUX_H
+#define QFSOGSMMUX_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

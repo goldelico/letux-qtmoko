@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEORIENTATION_H_1306329414
-#define QFSODEVICEORIENTATION_H_1306329414
+#ifndef QFSODEVICEORIENTATION_H
+#define QFSODEVICEORIENTATION_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

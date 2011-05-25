@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMNOTEQUERY_H_1306329414
-#define QFSOPIMNOTEQUERY_H_1306329414
+#ifndef QFSOPIMNOTEQUERY_H
+#define QFSOPIMNOTEQUERY_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

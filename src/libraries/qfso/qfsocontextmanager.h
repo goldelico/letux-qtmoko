@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOCONTEXTMANAGER_H_1306329414
-#define QFSOCONTEXTMANAGER_H_1306329414
+#ifndef QFSOCONTEXTMANAGER_H
+#define QFSOCONTEXTMANAGER_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

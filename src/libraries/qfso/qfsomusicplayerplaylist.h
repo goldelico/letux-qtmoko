@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOMUSICPLAYERPLAYLIST_H_1306329414
-#define QFSOMUSICPLAYERPLAYLIST_H_1306329414
+#ifndef QFSOMUSICPLAYERPLAYLIST_H
+#define QFSOMUSICPLAYERPLAYLIST_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

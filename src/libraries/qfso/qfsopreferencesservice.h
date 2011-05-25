@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPREFERENCESSERVICE_H_1306329414
-#define QFSOPREFERENCESSERVICE_H_1306329414
+#ifndef QFSOPREFERENCESSERVICE_H
+#define QFSOPREFERENCESSERVICE_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

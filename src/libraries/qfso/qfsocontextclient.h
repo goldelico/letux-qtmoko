@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOCONTEXTCLIENT_H_1306329414
-#define QFSOCONTEXTCLIENT_H_1306329414
+#ifndef QFSOCONTEXTCLIENT_H
+#define QFSOCONTEXTCLIENT_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

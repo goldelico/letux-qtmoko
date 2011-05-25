@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMVOICEMAIL_H_1306329414
-#define QFSOGSMVOICEMAIL_H_1306329414
+#ifndef QFSOGSMVOICEMAIL_H
+#define QFSOGSMVOICEMAIL_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

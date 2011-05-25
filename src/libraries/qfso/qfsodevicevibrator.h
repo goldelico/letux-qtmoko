@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSODEVICEVIBRATOR_H_1306329414
-#define QFSODEVICEVIBRATOR_H_1306329414
+#ifndef QFSODEVICEVIBRATOR_H
+#define QFSODEVICEVIBRATOR_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMNOTE_H_1306329414
-#define QFSOPIMNOTE_H_1306329414
+#ifndef QFSOPIMNOTE_H
+#define QFSOPIMNOTE_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

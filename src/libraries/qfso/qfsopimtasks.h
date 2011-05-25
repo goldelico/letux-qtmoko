@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMTASKS_H_1306329414
-#define QFSOPIMTASKS_H_1306329414
+#ifndef QFSOPIMTASKS_H
+#define QFSOPIMTASKS_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

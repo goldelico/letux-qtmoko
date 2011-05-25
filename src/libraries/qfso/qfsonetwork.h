@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSONETWORK_H_1306329414
-#define QFSONETWORK_H_1306329414
+#ifndef QFSONETWORK_H
+#define QFSONETWORK_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOGSMMONITOR_H_1306329414
-#define QFSOGSMMONITOR_H_1306329414
+#ifndef QFSOGSMMONITOR_H
+#define QFSOGSMMONITOR_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

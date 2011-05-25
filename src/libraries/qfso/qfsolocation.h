@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOLOCATION_H_1306329414
-#define QFSOLOCATION_H_1306329414
+#ifndef QFSOLOCATION_H
+#define QFSOLOCATION_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

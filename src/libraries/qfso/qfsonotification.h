@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSONOTIFICATION_H_1306329414
-#define QFSONOTIFICATION_H_1306329414
+#ifndef QFSONOTIFICATION_H
+#define QFSONOTIFICATION_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

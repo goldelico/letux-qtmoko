@@ -8,8 +8,8 @@
  * Do not edit! All changes made to it will be lost.
  */
 
-#ifndef QFSOPIMMESSAGES_H_1306329414
-#define QFSOPIMMESSAGES_H_1306329414
+#ifndef QFSOPIMMESSAGES_H
+#define QFSOPIMMESSAGES_H
 
 #include <QtCore/QObject>
 #include <QtCore/QByteArray>

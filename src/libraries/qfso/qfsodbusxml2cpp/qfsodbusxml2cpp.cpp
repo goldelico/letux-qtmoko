@@ -793,9 +793,8 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
     } else {
         includeGuard = QLatin1String("QDBUSXML2CPP_PROXY");
     }
-    includeGuard = QString(QLatin1String("%1_%2"))
-                   .arg(includeGuard)
-                   .arg(QDateTime::currentDateTime().toTime_t());
+    includeGuard = QString(QLatin1String("%1"))
+                   .arg(includeGuard);
     is << "#ifndef " << includeGuard << endl
        << "#define " << includeGuard << endl
        << endl;
