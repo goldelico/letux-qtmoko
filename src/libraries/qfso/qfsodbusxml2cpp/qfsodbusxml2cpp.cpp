@@ -80,6 +80,7 @@ static QString commandLine;
 static QStringList includes;
 static QStringList wantedInterfaces;
 static QStringList customTypes;
+static QStringList customIncludes;
 
 static const char help[] =
     "Usage: " PROGRAMNAME " [options...] [xml-or-xml-file] [interfaces...]\n"
@@ -354,9 +355,18 @@ bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
     }
     fieldName = n.attributes().namedItem("name").toAttr().value();
     QString fieldSignature = n.attributes().namedItem("type").toAttr().value();
+
+    // TODO: handle enums properly
+    QString fsoType = n.attributes().namedItemNS("http://www.freesmartphone.org/schemas/DBusSpecExtension", "type").toAttr().value();
+    if(fsoType.length() > 0)
+    {
+        fieldSignature = "s";
+    }
+
     int type = QDBusMetaType::signatureToType(fieldSignature.toLatin1());
     if (type != QVariant::Invalid) {
         fieldType = QVariant::typeToName(QVariant::Type(type));
+        //qDebug() << "fieldName=" << fieldName << "fieldSignature=" << fieldSignature << ", fieldType=" << fieldType;
         return true;
     }
     if(fieldSignature == "a{sv}")
@@ -369,7 +379,7 @@ bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
     return false;
 }
 
-static void genCustomFsoType(QString typeName)
+static QString genCustomFsoType(QString typeName)
 {
     qDebug() << "Generating type " << typeName << " from file " << inputFile;
 
@@ -389,7 +399,7 @@ static void genCustomFsoType(QString typeName)
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
         qCritical() << "cannot read file " + specFile + ": " + file.errorString();
-        return;
+        exit(1);
     }
 
     QString errorStr;
@@ -435,7 +445,7 @@ static void genCustomFsoType(QString typeName)
     if(structNode.isNull())
     {
         qCritical() << "Couldnt find type definition for " + typeName;
-        return;
+        exit(1);
     }
 
     // Generated filenames
@@ -483,6 +493,7 @@ static void genCustomFsoType(QString typeName)
     {
         hs
                 << "typedef QList<" << typeName << "> " << typeName << "List;" << endl
+                << "Q_DECLARE_METATYPE(" << typeName << "List)" << endl
                 << endl;
     }
     hs
@@ -548,7 +559,7 @@ static void genCustomFsoType(QString typeName)
     if (!cppFile.open(QFile::WriteOnly | QFile::Text))
     {
         qCritical() << "failed to open " + cppName + ": " + cppFile.errorString();
-        return;
+        exit(1);
     }
     cppFile.write(cppData);
     cppFile.close();
@@ -557,10 +568,12 @@ static void genCustomFsoType(QString typeName)
     if (!hFile.open(QFile::WriteOnly | QFile::Text))
     {
         qCritical() << "failed to open " + headerName + ": " + hFile.errorString();
-        return;
+        exit(1);
     }
     hFile.write(headerData);
     hFile.close();
+
+    return typeName;
 }
 
 static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection::Annotations &annotations, int paramId = -1, const char *direction = "Out")
@@ -581,7 +594,7 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
         // Generate FSO custom type
         if(qttype.startsWith("QFso"))
         {
-            genCustomFsoType(qttype);
+            qttype = genCustomFsoType(qttype);
         }
 
         if (qttype.isEmpty())
@@ -750,15 +763,16 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
 {
     // open the file
     QString headerName = header(filename);
-    QByteArray headerData;
-    QTextStream hs(&headerData);
 
     QString cppName = cpp(filename);
     QByteArray cppData;
     QTextStream cs(&cppData);
 
+    QByteArray includeData;
+    QTextStream is(&includeData);
+
     // write the header:
-    writeHeader(hs, true);
+    writeHeader(is, true);
     if (cppName != headerName)
         writeHeader(cs, false);
 
@@ -775,20 +789,23 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
     includeGuard = QString(QLatin1String("%1_%2"))
                    .arg(includeGuard)
                    .arg(QDateTime::currentDateTime().toTime_t());
-    hs << "#ifndef " << includeGuard << endl
+    is << "#ifndef " << includeGuard << endl
        << "#define " << includeGuard << endl
        << endl;
 
     // include our stuff:
-    hs << "#include <QtCore/QObject>" << endl
+    is << "#include <QtCore/QObject>" << endl
        << includeList
        << "#include <QtDBus/QtDBus>" << endl;
 
     foreach (QString include, includes) {
-        hs << "#include \"" << include << "\"" << endl;
+        is << "#include \"" << include << "\"" << endl;
         if (headerName.isEmpty())
             cs << "#include \"" << include << "\"" << endl;
     }
+
+    QByteArray headerData;
+    QTextStream hs(&headerData);
 
     hs << endl;
 
@@ -997,6 +1014,8 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << "}" << endl
            << endl;
 
+        foreach(QString ct, customTypes)
+            customIncludes.append("#include \"" + ct.toLower() + ".h\"");
         customTypes.clear();
 
     }
@@ -1048,11 +1067,19 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
         cs << endl
            << "#include \"" << mocName << "\"" << endl;
 
+    // Include custom types
+    foreach(QString ci, customIncludes)
+        is << ci << endl;
+    customIncludes.clear();
+
+
+    is.flush();
     cs.flush();
     hs.flush();
 
     QFile file;
     openFile(headerName, file);
+    file.write(includeData);
     file.write(headerData);
 
     if (headerName == cppName) {
