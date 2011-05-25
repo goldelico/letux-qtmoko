@@ -8,19 +8,18 @@
 # We also expect that you have built fso xml specs in specs
 # subdir
 
-export LD_LIBRARY_PATH=../../../../build/qtopiacore/host/lib/
+QDBUSXML2CPP=qfsodbusxml2cpp/qfsodbusxml2cpp
+XMLPATH=specs/xml
 
-echo "Generating org.freesmartphone.Device.LED.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -p orgfreesmartphonedeviceled specs/xml/org.freesmartphone.Device.LED.xml
+for FILE in $XMLPATH/*freesmartphone*.xml; do
+    CLASS=Q`basename $FILE | sed -e' s/.xml// ; s/org.//g ; s/freesmartphone\./Fso/ ; s/\.//g'`
+    CPPFILE=`echo $CLASS | sed -e 's/\(.*\)/\L\1/'` 
+    echo "Generating class $CLASS from $FILE to $CPPFILE.h/.cpp"
+    $QDBUSXML2CPP -p $CPPFILE -c $CLASS $FILE || FAILED="$FAILED $FILE\n"
 
-echo "Generating org.freesmartphone.GSM.Device.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -p orgfreesmartphonegsmdevice specs/xml/org.freesmartphone.GSM.Device.xml
+    #echo -e "\n\n#include \"$CPPFILE.moc\"" >> $CPPFILE.cpp
+done
 
-echo "Generating org.freesmartphone.GSM.Network.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmnetworkproviderlist.h -p orgfreesmartphonegsmnetwork specs/xml/org.freesmartphone.GSM.Network.xml
+FAILED=`echo $FAILED | sed -e '/^ /d'`
+echo -e "\nFollowing files could not be processed due to errors:\n\n $FAILED"
 
-echo "Generating org.freesmartphone.GSM.Call.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmcalldetaillist.h -p orgfreesmartphonegsmcall specs/xml/org.freesmartphone.GSM.Call.xml
-
-echo "Generating org.freesmartphone.GSM.SMS.xml"
-../../../../build/qtopiacore/host/bin/qdbusxml2cpp -i orgfreesmartphonegsmtextmessagelist.h -p orgfreesmartphonegsmsms specs/xml/org.freesmartphone.GSM.SMS.xml
