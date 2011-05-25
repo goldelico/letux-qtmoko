@@ -346,15 +346,49 @@ static QString classNameForInterface(const QString &interface, ClassType classTy
     return retval;
 }
 
+bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
+{
+    if(n.nodeName() != "fso:field")
+    {
+        return false;
+    }
+    fieldName = n.attributes().namedItem("name").toAttr().value();
+    QString fieldSignature = n.attributes().namedItem("type").toAttr().value();
+    int type = QDBusMetaType::signatureToType(fieldSignature.toLatin1());
+    if (type != QVariant::Invalid) {
+        fieldType = QVariant::typeToName(QVariant::Type(type));
+        return true;
+    }
+    if(fieldSignature == "a{sv}")
+    {
+        fieldType = "QVariantMap";
+        return true;
+    }
+    qCritical() << "Unsupported type for field " << fieldName << " with signature " << fieldSignature;
+    exit(1);
+    return false;
+}
+
 static void genCustomFsoType(QString typeName)
 {
     qDebug() << "Generating type " << typeName << " from file " << inputFile;
 
+    bool isList = typeName.endsWith("List");
+    if(isList)
+    {
+        typeName = typeName.left(typeName.length() - 4);
+    }
+
     // Read XML spec file
-    QFile file(inputFile);
+    QString specFile = inputFile;
+
+    // HACK for types defined in other file
+    specFile = specFile.replace("GSM.SMS.xml", "GSM.SIM.xml");
+
+    QFile file(specFile);
     if (!file.open(QFile::ReadOnly | QFile::Text))
     {
-        qCritical() << "cannot read file " + inputFile + ": " + file.errorString();
+        qCritical() << "cannot read file " + specFile + ": " + file.errorString();
         return;
     }
 
@@ -428,18 +462,11 @@ static void genCustomFsoType(QString typeName)
 
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
-        if(n.nodeName() != "fso:field")
+        QString fieldName, fieldType;
+        if(!readFsoField(n, fieldName, fieldType))
         {
             continue;
         }
-        QString fieldName = n.attributes().namedItem("name").toAttr().value();
-        QString fieldSignature = n.attributes().namedItem("type").toAttr().value();
-        int type = QDBusMetaType::signatureToType(fieldSignature.toLatin1());
-        if (type == QVariant::Invalid) {
-            qCritical() << "Unsupported type for field " << fieldName << " with signature " << fieldSignature;
-            exit(1);
-        }
-        QString fieldType = QVariant::typeToName(QVariant::Type(type));
         hs << "    " << fieldType << " " << fieldName << ";" << endl;
     }
 
@@ -450,7 +477,15 @@ static void genCustomFsoType(QString typeName)
             << "};" << endl
             << endl
             << "Q_DECLARE_METATYPE(" << typeName << ")" << endl
-            << endl
+            << endl;
+
+    if(isList)
+    {
+        hs
+                << "typedef QList<" << typeName << "> " << typeName << "List;" << endl
+                << endl;
+    }
+    hs
             << "#endif // " << hIfDef
             << endl
             << endl;
@@ -474,11 +509,11 @@ static void genCustomFsoType(QString typeName)
             << "    argument.beginStructure();" << endl;
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
-        if(n.nodeName() != "fso:field")
+        QString fieldName, fieldType;
+        if(!readFsoField(n, fieldName, fieldType))
         {
             continue;
         }
-        QString fieldName = n.attributes().namedItem("name").toAttr().value();
         cs << "    argument << value." << fieldName << ";" << endl;
     }
     cs
@@ -492,11 +527,11 @@ static void genCustomFsoType(QString typeName)
 
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
-        if(n.nodeName() != "fso:field")
+        QString fieldName, fieldType;
+        if(!readFsoField(n, fieldName, fieldType))
         {
             continue;
         }
-        QString fieldName = n.attributes().namedItem("name").toAttr().value();
         cs << "    argument >> value." << fieldName << ";" << endl;
     }
 
@@ -508,9 +543,6 @@ static void genCustomFsoType(QString typeName)
 
     hs.flush();
     cs.flush();
-
-    qDebug() << headerName;
-    qDebug() << cppName;
 
     QFile cppFile(cppName);
     if (!cppFile.open(QFile::WriteOnly | QFile::Text))
