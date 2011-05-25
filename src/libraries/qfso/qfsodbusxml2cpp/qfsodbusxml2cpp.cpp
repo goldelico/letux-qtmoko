@@ -80,6 +80,7 @@ static QString commandLine;
 static QStringList includes;
 static QStringList wantedInterfaces;
 static QStringList customTypes;
+static QStringList customListTypes;
 static QStringList customIncludes;
 
 static const char help[] =
@@ -483,7 +484,6 @@ static QString genCustomFsoType(QString typeName)
     hs
             << "    friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
             << "    friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
-            << "    static void registerMetaType();" << endl
             << "};" << endl
             << endl
             << "Q_DECLARE_METATYPE(" << typeName << ")" << endl
@@ -507,19 +507,6 @@ static QString genCustomFsoType(QString typeName)
             << endl
             << typeName << "::" << typeName << "()" << endl
             << "{" << endl
-            << "}" << endl
-            << endl
-            << "void " << typeName << "::registerMetaType()" << endl
-            << "{" << endl
-            << "    qRegisterMetaType<" << typeName << ">(\"" << typeName << "\");" << endl
-            << "    qDBusRegisterMetaType<" << typeName << ">();" << endl;
-
-    if(isList)
-        cs
-            << "    qRegisterMetaType<" << typeName << "List>(\"" << typeName << "List\");" << endl
-            << "    qDBusRegisterMetaType<" << typeName << "List>();" << endl;
-
-        cs
             << "}" << endl
             << endl
             << "QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value)" << endl
@@ -599,8 +586,10 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
         QString qttype = annotations.value(annotationName);
 
         // Generate FSO custom type
+        bool isCustomList = false;
         if(qttype.startsWith("QFso"))
         {
+            isCustomList = qttype.endsWith("List");
             qttype = genCustomFsoType(qttype);
         }
 
@@ -619,6 +608,8 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
         {
             if(!customTypes.contains(qttype))
                 customTypes.append(qttype);
+            if(isCustomList && !customListTypes.contains(qttype))
+                customListTypes.append(qttype);
             return qttype.toLatin1();
         }
 
@@ -1011,7 +1002,18 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << "{" << endl;
 
         foreach (const QString customType, customTypes)
-            cs << "    " << customType << "::registerMetaType();" << endl;
+        {
+            cs
+                    << "    qRegisterMetaType<" << customType << ">(\"" << customType << "\");" << endl
+                    << "    qDBusRegisterMetaType<" << customType << ">();" << endl;
+        }
+
+        foreach (const QString customType, customListTypes)
+        {
+            cs
+                    << "    qRegisterMetaType<" << customType << "List>(\"" << customType << "List\");" << endl
+                    << "    qDBusRegisterMetaType<" << customType << "List>();" << endl;
+        }
 
         cs << "}" << endl
            << endl
