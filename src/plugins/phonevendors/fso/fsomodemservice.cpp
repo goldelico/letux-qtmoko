@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 #include "fsomodemservice.h"
+#include "fsonetworkregistration.h"
 
 FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
@@ -31,7 +32,10 @@ FsoModemService::~FsoModemService()
 
 void FsoModemService::initialize()
 {
-    // Create our Fso-specific overrides for the service interfaces.
+    // Create our Fso-specific overrides for the service interfaces
+    if ( !supports<QNetworkRegistration>() )
+        addInterface( new FsoNetworkRegistration( service(), this ) );
+
 /*    if ( !supports<QSimInfo>() )
         addInterface( new FsoSimInfo( this ) );
 
