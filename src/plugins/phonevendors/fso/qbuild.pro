@@ -18,10 +18,12 @@ pkg [
 HEADERS=\
     fsoplugin.h\
     fsomodemservice.h\
-    fsonetworkregistration.h
+    fsonetworkregistration.h\
+    fsoservicechecker.h
 
 SOURCES=\
     fsoplugin.cpp\
     fsomodemservice.cpp\
-    fsonetworkregistration.cpp
+    fsonetworkregistration.cpp\
+    fsoservicechecker.cpp
 

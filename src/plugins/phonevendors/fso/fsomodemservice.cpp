@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 #include "fsomodemservice.h"
+#include "fsoservicechecker.h"
 #include "fsonetworkregistration.h"
 
 FsoModemService::FsoModemService
@@ -33,6 +34,12 @@ FsoModemService::~FsoModemService()
 void FsoModemService::initialize()
 {
     // Create our Fso-specific overrides for the service interfaces
+ 
+     // If the modem does not exist, then tell clients via QServiceChecker.
+    if ( !supports<QServiceChecker>() ) {
+        addInterface( new FsoServiceChecker( service(), this ) );
+    }
+ 
     if ( !supports<QNetworkRegistration>() )
         addInterface( new FsoNetworkRegistration( service(), this ) );
 
