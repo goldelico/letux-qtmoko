@@ -318,3 +318,15 @@ void MainWindow::on_bSend_clicked()
                                  ", timestamp=" + reply.argumentAt(1).toString());
     }
 }
+
+void MainWindow::on_bGetFunctionality_clicked()
+{
+    QDBusPendingReply<QString, bool, QString> reply = gsmDev.GetFunctionality();
+    if(checkReply(reply, "GetFunctionality", false, true))
+    {
+        QMessageBox::information(this, "GetFunctionality",
+                                 "level=" + reply.argumentAt(0).toString() +
+                                 ", autoregister=" + reply.argumentAt(1).toString() +
+                                 ", pin=" + reply.argumentAt(2).toString());
+    }
+}
