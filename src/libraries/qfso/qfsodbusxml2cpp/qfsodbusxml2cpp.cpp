@@ -811,6 +811,13 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
             cs << "#include \"" << headerName << "\"" << endl << endl;
     }
 
+    hs << "#if defined(QFSO_LIBRARY)" << endl <<
+          "    #define QFSO_EXPORT Q_DECL_EXPORT" << endl <<
+          "#else" << endl <<
+          "    #define QFSO_EXPORT Q_DECL_IMPORT" << endl <<
+          "#endif" << endl << endl;
+
+
     foreach (const QDBusIntrospection::Interface *interface, interfaces) {
         QString className = classNameForInterface(interface->name, Proxy);
 
@@ -824,7 +831,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << endl;
 
         // class header:
-        hs << "class " << className << ": public QDBusAbstractInterface" << endl
+        hs << "class QFSO_EXPORT " << className << ": public QDBusAbstractInterface" << endl
            << "{" << endl
            << "    Q_OBJECT" << endl;
 
