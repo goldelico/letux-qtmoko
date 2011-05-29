@@ -6,6 +6,7 @@ PLUGIN_TYPE=phonevendors
 
 CONFIG+=qtopia singleexec
 QTOPIA+=phonemodem
+MODULES*=qfso
 
 pkg [
     name=fso-phonevendor

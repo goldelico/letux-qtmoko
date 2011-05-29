@@ -21,6 +21,7 @@
 #define FSONETWORKREGISTRATION_H
 
 #include <qnetworkregistration.h>
+#include <qfsonetwork.h>
 
 class FsoNetworkRegistration : public QNetworkRegistrationServer
 {
