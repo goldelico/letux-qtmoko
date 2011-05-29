@@ -7,6 +7,8 @@ CONFIG+=qtopia hide_symbols singleexec
 
 QT+=dbus
 
+DEFINES+=QFSO_LIBRARY
+
 pkg [
     name=qfso
     desc="Freesmartphone.org bindings for QtMoko."

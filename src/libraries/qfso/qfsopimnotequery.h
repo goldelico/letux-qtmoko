@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsovariantmaplist.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.PIM.NoteQuery
  */
-class QFsoPIMNoteQuery: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMNoteQuery: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

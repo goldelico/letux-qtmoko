@@ -20,10 +20,16 @@
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.GSM.HZ
  */
-class QFsoGSMHZ: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMHZ: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

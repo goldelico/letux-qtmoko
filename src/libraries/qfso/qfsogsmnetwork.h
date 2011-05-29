@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsonetworkprovider.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.GSM.Network
  */
-class QFsoGSMNetwork: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMNetwork: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsowakeupalarm.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.Time.Alarm
  */
-class QFsoTimeAlarm: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoTimeAlarm: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

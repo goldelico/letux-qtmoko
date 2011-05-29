@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsostringmap.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.GSM.Debug
  */
-class QFsoGSMDebug: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMDebug: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

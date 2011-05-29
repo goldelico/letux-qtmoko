@@ -20,10 +20,16 @@
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.Events
  */
-class QFsoEvents: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoEvents: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

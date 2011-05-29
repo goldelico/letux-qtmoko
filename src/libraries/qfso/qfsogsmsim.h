@@ -22,10 +22,16 @@
 #include "qfsosimhomezone.h"
 #include "qfsosimentry.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.GSM.SIM
  */
-class QFsoGSMSIM: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMSIM: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

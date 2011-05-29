@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsocalldetail.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.GSM.Call
  */
-class QFsoGSMCall: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMCall: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

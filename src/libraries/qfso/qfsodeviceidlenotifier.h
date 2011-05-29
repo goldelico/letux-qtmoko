@@ -21,10 +21,16 @@
 #include <QtDBus/QtDBus>
 #include "qfsointmap.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.Device.IdleNotifier
  */
-class QFsoDeviceIdleNotifier: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceIdleNotifier: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:

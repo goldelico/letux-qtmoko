@@ -23,10 +23,16 @@
 #include "qfsoworldconnectivityaccesspoint.h"
 #include "qfsostringmap.h"
 
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
 /*
  * Proxy class for interface org.freesmartphone.Data.World
  */
-class QFsoDataWorld: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDataWorld: public QDBusAbstractInterface
 {
     Q_OBJECT
 public:
