@@ -22,11 +22,23 @@
 FsoNetworkRegistration::FsoNetworkRegistration
         ( const QString& service, QObject *parent )
     : QNetworkRegistrationServer( service, parent )
+    , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
+    QTimer::singleShot( 10000, this, SLOT(initDone()) );
 }
 
 FsoNetworkRegistration::~FsoNetworkRegistration()
 {
+}
+
+void FsoNetworkRegistration::initDone()
+{
+    qWarning() << "1";
+    updateInitialized( true );
+    updateRegistrationState(QTelephony::RegistrationHome);
+    updateCurrentOperator( QTelephony::OperatorModeAutomatic,
+                           "Telephone", "Telephone", "GSM" );    // No tr
+    qWarning() << "2";
 }
 
 void FsoNetworkRegistration::setCurrentOperator

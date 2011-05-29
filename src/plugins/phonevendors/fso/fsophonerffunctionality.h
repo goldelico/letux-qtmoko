@@ -17,29 +17,26 @@
 **
 ****************************************************************************/
 
-#ifndef FSONETWORKREGISTRATION_H
-#define FSONETWORKREGISTRATION_H
+#ifndef FSOPHONERFFUNCTIONALITY_H
+#define FSOPHONERFFUNCTIONALITY_H
 
-#include <QTimer>
-#include <qnetworkregistration.h>
-#include <qfsogsmnetwork.h>
+#include <QDebug>
+#include <qphonerffunctionality.h>
+#include <qfsogsmdevice.h>
+#include <fsoutil.h>
 
-class FsoNetworkRegistration : public QNetworkRegistrationServer
+class FsoRfFunctionality : public QPhoneRfFunctionality
 {
     Q_OBJECT
 public:
-    FsoNetworkRegistration( const QString& service, QObject *parent );
-    ~FsoNetworkRegistration();
-    
-    QFsoGSMNetwork gsmNet;
+    FsoRfFunctionality( const QString& service, QObject *parent );
+    ~FsoRfFunctionality();
+
+    QFsoGSMDevice gsmDev;
 
 public slots:
-    void setCurrentOperator( QTelephony::OperatorMode mode,
-                             const QString& id, const QString& technology );
-    void requestAvailableOperators();
-    
-private slots:
-    void initDone();
+    void forceLevelRequest();
+    void setLevel( QPhoneRfFunctionality::Level level );
 };
 
 #endif

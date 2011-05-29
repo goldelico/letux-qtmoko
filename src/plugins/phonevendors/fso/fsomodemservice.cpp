@@ -18,6 +18,7 @@
 ****************************************************************************/
 #include "fsomodemservice.h"
 #include "fsoservicechecker.h"
+#include "fsophonerffunctionality.h"
 #include "fsonetworkregistration.h"
 
 FsoModemService::FsoModemService
@@ -36,9 +37,11 @@ void FsoModemService::initialize()
     // Create our Fso-specific overrides for the service interfaces
  
      // If the modem does not exist, then tell clients via QServiceChecker.
-    if ( !supports<QServiceChecker>() ) {
+    if ( !supports<QServiceChecker>() )
         addInterface( new FsoServiceChecker( service(), this ) );
-    }
+ 
+    if ( !supports<QPhoneRfFunctionality>() )
+        addInterface( new FsoRfFunctionality( service(), this ) );
  
     if ( !supports<QNetworkRegistration>() )
         addInterface( new FsoNetworkRegistration( service(), this ) );
@@ -51,9 +54,6 @@ void FsoModemService::initialize()
 
     if ( !supports<QPhoneBook>() )
         addInterface( new FsoPhoneBook( this ) );
-
-    if ( !supports<QPhoneRfFunctionality>() )
-        addInterface( new FsoRfFunctionality( this ) );
 
     if ( !supports<QTelephonyConfiguration>() )
         addInterface( new FsoConfiguration( this ) );

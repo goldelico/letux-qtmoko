@@ -17,30 +17,33 @@
 **
 ****************************************************************************/
 
-#ifndef FSONETWORKREGISTRATION_H
-#define FSONETWORKREGISTRATION_H
+#ifndef FSOUTIL_H
+#define FSOUTIL_H
 
-#include <QTimer>
-#include <qnetworkregistration.h>
-#include <qfsogsmnetwork.h>
+#include <QDebug>
+#include <QtDBus>
 
-class FsoNetworkRegistration : public QNetworkRegistrationServer
+template <class T, class T2, class T3>
+        int checkReply(QDBusPendingReply<T, T2, T3> & reply,
+                   const QString & fn,
+                   bool waitForFinished)
 {
-    Q_OBJECT
-public:
-    FsoNetworkRegistration( const QString& service, QObject *parent );
-    ~FsoNetworkRegistration();
-    
-    QFsoGSMNetwork gsmNet;
-
-public slots:
-    void setCurrentOperator( QTelephony::OperatorMode mode,
-                             const QString& id, const QString& technology );
-    void requestAvailableOperators();
-    
-private slots:
-    void initDone();
-};
+    if(waitForFinished)
+    {
+        reply.waitForFinished();
+    }
+    if(!reply.isFinished())
+    {
+        return -1;
+    }
+    if(reply.isValid())
+    {
+        return 1;
+    }
+    QString err = reply.error().message();
+    qWarning() << "Error in " << fn << err;
+    return 0;
+}
 
 #endif
 
