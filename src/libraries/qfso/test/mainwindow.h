@@ -40,6 +40,7 @@ private:
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;
     QDBusPendingReply<uint> gsmMessageSizeReply;
+
     void checkIface(QDBusAbstractInterface *iface);
     template <class T, class T2, class T3>
             bool checkReply(QDBusPendingReply<T,T2,T3> & reply,
@@ -87,39 +88,39 @@ template <class T, class T2, class T3>
     {
         reply.waitForFinished();
     }
-    if(reply.isFinished())
+
+    qWarning() << "reply.isFinished()=" << reply.isFinished() <<
+            ", reply.isValid()=" << reply.isValid() <<
+            ", reply.isError()=" << reply.isError() <<
+            ", fn=" << fn;
+
+    if(reply.isError())
     {
-        if(reply.isValid())
+        QString err = reply.error().message();
+        qWarning() << "Error in " << fn << err;
+        if(label != NULL)
         {
-            if(okBox)
-            {
-                QMessageBox::information(this, fn, fn + " ok");
-            }
-            return true;
+            label->setText(fn + ": " + err);
         }
         else
         {
-            QString err = reply.error().message();
-            qWarning() << "Error in " << fn << err;
-            if(label != NULL)
-            {
-                label->setText(fn + ": " + err);
-            }
-            else
-            {
-                QMessageBox::critical(this, fn, fn + " failed: " + err);
-            }
-            return false;
-        }
-    }
-    else
-    {
-        if(label != NULL)
-        {
-            label->setText(label->text() + ".");
+            QMessageBox::critical(this, fn, fn + " failed: " + err);
         }
         return false;
     }
+    if(reply.isFinished() && reply.isValid())
+    {
+        if(okBox)
+        {
+            QMessageBox::information(this, fn, fn + " ok");
+        }
+        return true;
+    }
+    if(label != NULL)
+    {
+        label->setText(label->text() + ".");
+    }
+    return false;
 }
 
 #endif // MAINWINDOW_H

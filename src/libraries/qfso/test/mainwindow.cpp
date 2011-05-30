@@ -10,7 +10,10 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
-        gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+        gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmStatusReply(),
+        gsmSignalReply(),
+        gsmMessageSizeReply()
 {
     ui->setupUi(this);
 
@@ -104,7 +107,7 @@ void MainWindow::refresh()
         {
             ui->lGsmStatus->setText("GSM status: " + gsmStatusReply.value());
         }
-        if(gsmStatusReply.isFinished())
+        if(gsmStatusReply.isFinished() || gsmStatusReply.isError())
         {
             gsmStatusReply = gsmDev.GetDeviceStatus();
         }
@@ -114,7 +117,7 @@ void MainWindow::refresh()
         {
             ui->lSignalStrength->setText(QString("Signal strength: %1").arg(gsmSignalReply.value()));
         }
-        if(gsmSignalReply.isFinished())
+        if(gsmSignalReply.isFinished() || gsmSignalReply.isError())
         {
             gsmSignalReply = gsmNet.GetSignalStrength();
         }
@@ -127,7 +130,7 @@ void MainWindow::refresh()
         {
             ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(gsmMessageSizeReply.value()));
         }
-        if(gsmMessageSizeReply.isFinished())
+        if(gsmMessageSizeReply.isFinished() || gsmMessageSizeReply.isError())
         {
             gsmMessageSizeReply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
         }
