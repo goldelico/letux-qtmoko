@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.PDP
  */
-class QFSO_EXPORT QFsoGSMPDP: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMPDP: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,19 +46,19 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<> ActivateContext()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("ActivateContext"), argumentList);
+        return fsoAsyncCall(QLatin1String("ActivateContext"), argumentList);
     }
 
     inline QDBusPendingReply<> DeactivateContext()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("DeactivateContext"), argumentList);
+        return fsoAsyncCall(QLatin1String("DeactivateContext"), argumentList);
     }
 
     inline QDBusPendingReply<QString, QVariantMap> GetContextStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetContextStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetContextStatus"), argumentList);
     }
     inline QDBusReply<QString> GetContextStatus(QVariantMap &properties)
     {
@@ -72,7 +73,7 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString, QString, QString> GetCredentials()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetCredentials"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCredentials"), argumentList);
     }
     inline QDBusReply<QString> GetCredentials(QString &username, QString &password)
     {
@@ -89,14 +90,14 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status) << qVariantFromValue(properties);
-        return asyncCallWithArgumentList(QLatin1String("InternalStatusUpdate"), argumentList);
+        return fsoAsyncCall(QLatin1String("InternalStatusUpdate"), argumentList);
     }
 
     inline QDBusPendingReply<> SetCredentials(const QString &apn, const QString &username, const QString &password)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(apn) << qVariantFromValue(username) << qVariantFromValue(password);
-        return asyncCallWithArgumentList(QLatin1String("SetCredentials"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetCredentials"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

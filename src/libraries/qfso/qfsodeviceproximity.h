@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.Proximity
  */
-class QFSO_EXPORT QFsoDeviceProximity: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceProximity: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,7 +46,7 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<int, int> GetProximity()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetProximity"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetProximity"), argumentList);
     }
     inline QDBusReply<int> GetProximity(int &epoch)
     {

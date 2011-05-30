@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.MessageFolder
  */
-class QFSO_EXPORT QFsoPIMMessageFolder: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMMessageFolder: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,14 +46,14 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<int> GetMessageCount()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetMessageCount"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMessageCount"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetMessagePaths(int first, int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(first) << qVariantFromValue(count);
-        return asyncCallWithArgumentList(QLatin1String("GetMessagePaths"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMessagePaths"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

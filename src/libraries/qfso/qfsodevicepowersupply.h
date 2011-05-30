@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.PowerSupply
  */
-class QFSO_EXPORT QFsoDevicePowerSupply: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDevicePowerSupply: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,13 +46,13 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<int> GetCapacity()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetCapacity"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCapacity"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetPowerStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetPowerStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPowerStatus"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

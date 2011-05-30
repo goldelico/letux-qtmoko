@@ -97,7 +97,8 @@ SOURCES += main.cpp \
     ../qfsosimmessage.cpp \
     ../qfsopimmessagefolder.cpp \
     ../qfsodevicevibrator.cpp \
-    ../qfsopimcall.cpp
+    ../qfsopimcall.cpp \
+    ../qfsodbusabstractinterface.cpp
 
 HEADERS += mainwindow.h \
     ../qfsodeviceidlenotifier.h \
@@ -178,7 +179,8 @@ HEADERS += mainwindow.h \
     ../qfsogsmmux.h \
     ../qfsointmap.h \
     ../qfsostringmap.h \
-    ../qfsovariantmaplist.h
+    ../qfsovariantmaplist.h \
+    ../qfsodbusabstractinterface.h
 
 FORMS += mainwindow.ui
 

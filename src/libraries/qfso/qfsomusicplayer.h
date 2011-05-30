@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.MusicPlayer
  */
-class QFSO_EXPORT QFsoMusicPlayer: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoMusicPlayer: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,135 +47,135 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(list);
-        return asyncCallWithArgumentList(QLatin1String("DeletePlaylist"), argumentList);
+        return fsoAsyncCall(QLatin1String("DeletePlaylist"), argumentList);
     }
 
     inline QDBusPendingReply<QDBusObjectPath> GetCurrentPlaylist()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetCurrentPlaylist"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCurrentPlaylist"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetInfoForFile(const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
-        return asyncCallWithArgumentList(QLatin1String("GetInfoForFile"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetInfoForFile"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetPlaying()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetPlaying"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPlaying"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetPlayingInfo()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetPlayingInfo"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPlayingInfo"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetPlaylists()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetPlaylists"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPlaylists"), argumentList);
     }
 
     inline QDBusPendingReply<int> GetVolume()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetVolume"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetVolume"), argumentList);
     }
 
     inline QDBusPendingReply<> Jump(int position)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position);
-        return asyncCallWithArgumentList(QLatin1String("Jump"), argumentList);
+        return fsoAsyncCall(QLatin1String("Jump"), argumentList);
     }
 
     inline QDBusPendingReply<QDBusObjectPath> NewPlaylist(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
-        return asyncCallWithArgumentList(QLatin1String("NewPlaylist"), argumentList);
+        return fsoAsyncCall(QLatin1String("NewPlaylist"), argumentList);
     }
 
     inline QDBusPendingReply<> Next()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Next"), argumentList);
+        return fsoAsyncCall(QLatin1String("Next"), argumentList);
     }
 
     inline QDBusPendingReply<> Pause()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Pause"), argumentList);
+        return fsoAsyncCall(QLatin1String("Pause"), argumentList);
     }
 
     inline QDBusPendingReply<> Play()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Play"), argumentList);
+        return fsoAsyncCall(QLatin1String("Play"), argumentList);
     }
 
     inline QDBusPendingReply<> PopPause()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("PopPause"), argumentList);
+        return fsoAsyncCall(QLatin1String("PopPause"), argumentList);
     }
 
     inline QDBusPendingReply<> Previous()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Previous"), argumentList);
+        return fsoAsyncCall(QLatin1String("Previous"), argumentList);
     }
 
     inline QDBusPendingReply<> PushPause()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("PushPause"), argumentList);
+        return fsoAsyncCall(QLatin1String("PushPause"), argumentList);
     }
 
     inline QDBusPendingReply<> SeekBackward(int step)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(step);
-        return asyncCallWithArgumentList(QLatin1String("SeekBackward"), argumentList);
+        return fsoAsyncCall(QLatin1String("SeekBackward"), argumentList);
     }
 
     inline QDBusPendingReply<> SeekForward(int step)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(step);
-        return asyncCallWithArgumentList(QLatin1String("SeekForward"), argumentList);
+        return fsoAsyncCall(QLatin1String("SeekForward"), argumentList);
     }
 
     inline QDBusPendingReply<> SetCurrentPlaylist(const QDBusObjectPath &list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(list);
-        return asyncCallWithArgumentList(QLatin1String("SetCurrentPlaylist"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetCurrentPlaylist"), argumentList);
     }
 
     inline QDBusPendingReply<> SetPlaying(const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
-        return asyncCallWithArgumentList(QLatin1String("SetPlaying"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetPlaying"), argumentList);
     }
 
     inline QDBusPendingReply<> SetVolume(int volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(volume);
-        return asyncCallWithArgumentList(QLatin1String("SetVolume"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetVolume"), argumentList);
     }
 
     inline QDBusPendingReply<> Stop()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Stop"), argumentList);
+        return fsoAsyncCall(QLatin1String("Stop"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

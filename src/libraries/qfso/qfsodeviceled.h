@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.LED
  */
-class QFSO_EXPORT QFsoDeviceLED: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceLED: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,28 +47,28 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(seconds) << qVariantFromValue(on_duration) << qVariantFromValue(off_duration);
-        return asyncCallWithArgumentList(QLatin1String("BlinkSeconds"), argumentList);
+        return fsoAsyncCall(QLatin1String("BlinkSeconds"), argumentList);
     }
 
     inline QDBusPendingReply<> SetBlinking(int on_duration, int off_duration)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(on_duration) << qVariantFromValue(off_duration);
-        return asyncCallWithArgumentList(QLatin1String("SetBlinking"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetBlinking"), argumentList);
     }
 
     inline QDBusPendingReply<> SetBrightness(int brightness)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(brightness);
-        return asyncCallWithArgumentList(QLatin1String("SetBrightness"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetBrightness"), argumentList);
     }
 
     inline QDBusPendingReply<> SetNetworking(const QString &interface, const QString &mode)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface) << qVariantFromValue(mode);
-        return asyncCallWithArgumentList(QLatin1String("SetNetworking"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetNetworking"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

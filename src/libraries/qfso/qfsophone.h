@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Phone
  */
-class QFSO_EXPORT QFsoPhone: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPhone: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,13 +47,13 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number) << qVariantFromValue(protocol) << qVariantFromValue(force);
-        return asyncCallWithArgumentList(QLatin1String("CreateCall"), argumentList);
+        return fsoAsyncCall(QLatin1String("CreateCall"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> InitProtocols()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("InitProtocols"), argumentList);
+        return fsoAsyncCall(QLatin1String("InitProtocols"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

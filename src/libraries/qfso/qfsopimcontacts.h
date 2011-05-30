@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.Contacts
  */
-class QFSO_EXPORT QFsoPIMContacts: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMContacts: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,21 +47,21 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(contact_data);
-        return asyncCallWithArgumentList(QLatin1String("Add"), argumentList);
+        return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query) << qVariantFromValue(field);
-        return asyncCallWithArgumentList(QLatin1String("GetSingleEntrySingleField"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetSingleEntrySingleField"), argumentList);
     }
 
     inline QDBusPendingReply<QString> Query(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);
-        return asyncCallWithArgumentList(QLatin1String("Query"), argumentList);
+        return fsoAsyncCall(QLatin1String("Query"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

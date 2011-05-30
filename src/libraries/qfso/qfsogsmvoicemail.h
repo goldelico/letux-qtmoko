@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.VoiceMail
  */
-class QFSO_EXPORT QFsoGSMVoiceMail: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMVoiceMail: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,20 +46,20 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QStringList> GetStoredVoiceMails()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetStoredVoiceMails"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetStoredVoiceMails"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetVoiceMailboxNumber()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetVoiceMailboxNumber"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetVoiceMailboxNumber"), argumentList);
     }
 
     inline QDBusPendingReply<> SetVoiceMailboxNumber(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);
-        return asyncCallWithArgumentList(QLatin1String("SetVoiceMailboxNumber"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetVoiceMailboxNumber"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

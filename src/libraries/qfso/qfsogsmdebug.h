@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsostringmap.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.Debug
  */
-class QFSO_EXPORT QFsoGSMDebug: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMDebug: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -47,20 +48,20 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command) << qVariantFromValue(channel);
-        return asyncCallWithArgumentList(QLatin1String("DebugCommand"), argumentList);
+        return fsoAsyncCall(QLatin1String("DebugCommand"), argumentList);
     }
 
     inline QDBusPendingReply<> DebugInjectResponse(const QString &response, const QString &channel)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(response) << qVariantFromValue(channel);
-        return asyncCallWithArgumentList(QLatin1String("DebugInjectResponse"), argumentList);
+        return fsoAsyncCall(QLatin1String("DebugInjectResponse"), argumentList);
     }
 
     inline QDBusPendingReply<> DebugPing()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("DebugPing"), argumentList);
+        return fsoAsyncCall(QLatin1String("DebugPing"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

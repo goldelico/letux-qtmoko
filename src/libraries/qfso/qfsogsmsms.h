@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsosimmessage.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.SMS
  */
-class QFSO_EXPORT QFsoGSMSMS: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMSMS: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -47,20 +48,20 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(contents);
-        return asyncCallWithArgumentList(QLatin1String("GetSizeForTextMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetSizeForTextMessage"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoSIMMessage> RetrieveTextMessages()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("RetrieveTextMessages"), argumentList);
+        return fsoAsyncCall(QLatin1String("RetrieveTextMessages"), argumentList);
     }
 
     inline QDBusPendingReply<int, QString> SendTextMessage(const QString &recipient_number, const QString &contents, bool report)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(recipient_number) << qVariantFromValue(contents) << qVariantFromValue(report);
-        return asyncCallWithArgumentList(QLatin1String("SendTextMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("SendTextMessage"), argumentList);
     }
     inline QDBusReply<int> SendTextMessage(const QString &recipient_number, const QString &contents, bool report, QString &timestamp)
     {

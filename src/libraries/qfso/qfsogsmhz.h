@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.HZ
  */
-class QFSO_EXPORT QFsoGSMHZ: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMHZ: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,13 +46,13 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetHomeZoneStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetHomeZoneStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetHomeZoneStatus"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetKnownHomeZones()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetKnownHomeZones"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetKnownHomeZones"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.Messages
  */
-class QFSO_EXPORT QFsoPIMMessages: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMMessages: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,41 +47,41 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(message_data);
-        return asyncCallWithArgumentList(QLatin1String("Add"), argumentList);
+        return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
     inline QDBusPendingReply<QString> AddIncoming(const QVariantMap &message_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(message_data);
-        return asyncCallWithArgumentList(QLatin1String("AddIncoming"), argumentList);
+        return fsoAsyncCall(QLatin1String("AddIncoming"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query) << qVariantFromValue(field);
-        return asyncCallWithArgumentList(QLatin1String("GetSingleEntrySingleField"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetSingleEntrySingleField"), argumentList);
     }
 
     inline QDBusPendingReply<int> GetUnreadMessages()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetUnreadMessages"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetUnreadMessages"), argumentList);
     }
 
     inline QDBusPendingReply<QString> Query(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);
-        return asyncCallWithArgumentList(QLatin1String("Query"), argumentList);
+        return fsoAsyncCall(QLatin1String("Query"), argumentList);
     }
 
     inline QDBusPendingReply<QString> QueryThreads(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);
-        return asyncCallWithArgumentList(QLatin1String("QueryThreads"), argumentList);
+        return fsoAsyncCall(QLatin1String("QueryThreads"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

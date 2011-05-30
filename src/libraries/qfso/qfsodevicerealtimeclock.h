@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.RealtimeClock
  */
-class QFSO_EXPORT QFsoDeviceRealtimeClock: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceRealtimeClock: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,27 +46,27 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<int> GetCurrentTime()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetCurrentTime"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCurrentTime"), argumentList);
     }
 
     inline QDBusPendingReply<int> GetWakeupTime()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetWakeupTime"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetWakeupTime"), argumentList);
     }
 
     inline QDBusPendingReply<> SetCurrentTime(int time)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(time);
-        return asyncCallWithArgumentList(QLatin1String("SetCurrentTime"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetCurrentTime"), argumentList);
     }
 
     inline QDBusPendingReply<> SetWakeupTime(int time)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(time);
-        return asyncCallWithArgumentList(QLatin1String("SetWakeupTime"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetWakeupTime"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

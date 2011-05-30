@@ -89,10 +89,10 @@ template <class T, class T2, class T3>
         reply.waitForFinished();
     }
 
-    qWarning() << "reply.isFinished()=" << reply.isFinished() <<
-            ", reply.isValid()=" << reply.isValid() <<
-            ", reply.isError()=" << reply.isError() <<
-            ", fn=" << fn;
+//    qWarning() << "reply.isFinished()=" << reply.isFinished() <<
+//            ", reply.isValid()=" << reply.isValid() <<
+//            ", reply.isError()=" << reply.isError() <<
+//            ", fn=" << fn;
 
     if(reply.isError())
     {

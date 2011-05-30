@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsovariantmaplist.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.TaskQuery
  */
-class QFSO_EXPORT QFsoPIMTaskQuery: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMTaskQuery: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,45 +47,45 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<> Dispose()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Dispose"), argumentList);
+        return fsoAsyncCall(QLatin1String("Dispose"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoVariantMapList> GetMultipleResults(int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(count);
-        return asyncCallWithArgumentList(QLatin1String("GetMultipleResults"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMultipleResults"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetResult()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetResult"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetResult"), argumentList);
     }
 
     inline QDBusPendingReply<int> GetResultCount()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetResultCount"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetResultCount"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetTaskPath()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetTaskPath"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetTaskPath"), argumentList);
     }
 
     inline QDBusPendingReply<> Rewind()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Rewind"), argumentList);
+        return fsoAsyncCall(QLatin1String("Rewind"), argumentList);
     }
 
     inline QDBusPendingReply<> Skip(int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(count);
-        return asyncCallWithArgumentList(QLatin1String("Skip"), argumentList);
+        return fsoAsyncCall(QLatin1String("Skip"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

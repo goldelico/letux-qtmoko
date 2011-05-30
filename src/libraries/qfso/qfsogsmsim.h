@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsosimhomezone.h"
 #include "qfsosimentry.h"
 
@@ -31,7 +32,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.SIM
  */
-class QFSO_EXPORT QFsoGSMSIM: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMSIM: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -48,46 +49,46 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(old_pin) << qVariantFromValue(new_pin);
-        return asyncCallWithArgumentList(QLatin1String("ChangeAuthCode"), argumentList);
+        return fsoAsyncCall(QLatin1String("ChangeAuthCode"), argumentList);
     }
 
     inline QDBusPendingReply<> DeleteEntry(const QString &category, int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(index);
-        return asyncCallWithArgumentList(QLatin1String("DeleteEntry"), argumentList);
+        return fsoAsyncCall(QLatin1String("DeleteEntry"), argumentList);
     }
 
     inline QDBusPendingReply<> DeleteMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
-        return asyncCallWithArgumentList(QLatin1String("DeleteMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("DeleteMessage"), argumentList);
     }
 
     inline QDBusPendingReply<bool> GetAuthCodeRequired()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetAuthCodeRequired"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetAuthCodeRequired"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetAuthStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetAuthStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetAuthStatus"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoSIMHomeZone> GetHomeZoneParameters()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetHomeZoneParameters"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetHomeZoneParameters"), argumentList);
     }
 
     inline QDBusPendingReply<int, int, int> GetPhonebookInfo(const QString &category)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category);
-        return asyncCallWithArgumentList(QLatin1String("GetPhonebookInfo"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPhonebookInfo"), argumentList);
     }
     inline QDBusReply<int> GetPhonebookInfo(const QString &category, int &numberlength, int &namelength)
     {
@@ -104,26 +105,26 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetServiceCenterNumber()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetServiceCenterNumber"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetServiceCenterNumber"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetSimInfo()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetSimInfo"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetSimInfo"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetUnlockCounters()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetUnlockCounters"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetUnlockCounters"), argumentList);
     }
 
     inline QDBusPendingReply<QString, QString, QString, QVariantMap> RetrieveMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
-        return asyncCallWithArgumentList(QLatin1String("RetrieveMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("RetrieveMessage"), argumentList);
     }
     inline QDBusReply<QString> RetrieveMessage(int index, QString &sender_number, QString &contents, QVariantMap &properties)
     {
@@ -142,35 +143,35 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(mindex) << qVariantFromValue(maxdex);
-        return asyncCallWithArgumentList(QLatin1String("RetrievePhonebook"), argumentList);
+        return fsoAsyncCall(QLatin1String("RetrievePhonebook"), argumentList);
     }
 
     inline QDBusPendingReply<> SendAuthCode(const QString &pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(pin);
-        return asyncCallWithArgumentList(QLatin1String("SendAuthCode"), argumentList);
+        return fsoAsyncCall(QLatin1String("SendAuthCode"), argumentList);
     }
 
     inline QDBusPendingReply<QString> SendGenericSimCommand(const QString &command)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command);
-        return asyncCallWithArgumentList(QLatin1String("SendGenericSimCommand"), argumentList);
+        return fsoAsyncCall(QLatin1String("SendGenericSimCommand"), argumentList);
     }
 
     inline QDBusPendingReply<QString> SendRestrictedSimCommand(int command, int fileid, int p1, int p2, int p3, const QString &data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command) << qVariantFromValue(fileid) << qVariantFromValue(p1) << qVariantFromValue(p2) << qVariantFromValue(p3) << qVariantFromValue(data);
-        return asyncCallWithArgumentList(QLatin1String("SendRestrictedSimCommand"), argumentList);
+        return fsoAsyncCall(QLatin1String("SendRestrictedSimCommand"), argumentList);
     }
 
     inline QDBusPendingReply<int, QString> SendStoredMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
-        return asyncCallWithArgumentList(QLatin1String("SendStoredMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("SendStoredMessage"), argumentList);
     }
     inline QDBusReply<int> SendStoredMessage(int index, QString &timestamp)
     {
@@ -187,35 +188,35 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(check) << qVariantFromValue(pin);
-        return asyncCallWithArgumentList(QLatin1String("SetAuthCodeRequired"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetAuthCodeRequired"), argumentList);
     }
 
     inline QDBusPendingReply<> SetServiceCenterNumber(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);
-        return asyncCallWithArgumentList(QLatin1String("SetServiceCenterNumber"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetServiceCenterNumber"), argumentList);
     }
 
     inline QDBusPendingReply<> StoreEntry(const QString &category, int index, const QString &name, const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(index) << qVariantFromValue(name) << qVariantFromValue(number);
-        return asyncCallWithArgumentList(QLatin1String("StoreEntry"), argumentList);
+        return fsoAsyncCall(QLatin1String("StoreEntry"), argumentList);
     }
 
     inline QDBusPendingReply<int> StoreMessage(const QString &recipient_number, const QString &contents, const QVariantMap &properties)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(recipient_number) << qVariantFromValue(contents) << qVariantFromValue(properties);
-        return asyncCallWithArgumentList(QLatin1String("StoreMessage"), argumentList);
+        return fsoAsyncCall(QLatin1String("StoreMessage"), argumentList);
     }
 
     inline QDBusPendingReply<> Unlock(const QString &puk, const QString &new_pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(puk) << qVariantFromValue(new_pin);
-        return asyncCallWithArgumentList(QLatin1String("Unlock"), argumentList);
+        return fsoAsyncCall(QLatin1String("Unlock"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Resource
  */
-class QFSO_EXPORT QFsoResource: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoResource: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,31 +46,31 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<> Disable()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Disable"), argumentList);
+        return fsoAsyncCall(QLatin1String("Disable"), argumentList);
     }
 
     inline QDBusPendingReply<> Enable()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Enable"), argumentList);
+        return fsoAsyncCall(QLatin1String("Enable"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetDependencies()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetDependencies"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetDependencies"), argumentList);
     }
 
     inline QDBusPendingReply<> Resume()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Resume"), argumentList);
+        return fsoAsyncCall(QLatin1String("Resume"), argumentList);
     }
 
     inline QDBusPendingReply<> Suspend()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Suspend"), argumentList);
+        return fsoAsyncCall(QLatin1String("Suspend"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

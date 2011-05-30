@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsovariantmaplist.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.Monitor
  */
-class QFSO_EXPORT QFsoGSMMonitor: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMMonitor: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,13 +47,13 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QFsoVariantMapList> GetNeighbourCellInformation()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetNeighbourCellInformation"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetNeighbourCellInformation"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetServingCellInformation()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetServingCellInformation"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetServingCellInformation"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

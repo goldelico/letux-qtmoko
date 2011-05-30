@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Phone.Call
  */
-class QFSO_EXPORT QFsoPhoneCall: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPhoneCall: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,37 +46,37 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> Activate()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Activate"), argumentList);
+        return fsoAsyncCall(QLatin1String("Activate"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetPeer()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetPeer"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetPeer"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetStatus"), argumentList);
     }
 
     inline QDBusPendingReply<QString> Initiate()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Initiate"), argumentList);
+        return fsoAsyncCall(QLatin1String("Initiate"), argumentList);
     }
 
     inline QDBusPendingReply<QString> Release()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Release"), argumentList);
+        return fsoAsyncCall(QLatin1String("Release"), argumentList);
     }
 
     inline QDBusPendingReply<> Remove()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Remove"), argumentList);
+        return fsoAsyncCall(QLatin1String("Remove"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsowakeupalarm.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Time.Alarm
  */
-class QFSO_EXPORT QFsoTimeAlarm: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoTimeAlarm: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -47,27 +48,27 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname) << qVariantFromValue(timestamp);
-        return asyncCallWithArgumentList(QLatin1String("AddAlarm"), argumentList);
+        return fsoAsyncCall(QLatin1String("AddAlarm"), argumentList);
     }
 
     inline QDBusPendingReply<> ClearAlarms(const QString &busname)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname);
-        return asyncCallWithArgumentList(QLatin1String("ClearAlarms"), argumentList);
+        return fsoAsyncCall(QLatin1String("ClearAlarms"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoWakeupAlarm> ListAlarms()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("ListAlarms"), argumentList);
+        return fsoAsyncCall(QLatin1String("ListAlarms"), argumentList);
     }
 
     inline QDBusPendingReply<> RemoveAlarm(const QString &busname, int timestamp)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname) << qVariantFromValue(timestamp);
-        return asyncCallWithArgumentList(QLatin1String("RemoveAlarm"), argumentList);
+        return fsoAsyncCall(QLatin1String("RemoveAlarm"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

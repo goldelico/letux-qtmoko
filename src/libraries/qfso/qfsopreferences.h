@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Preferences
  */
-class QFSO_EXPORT QFsoPreferences: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPreferences: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,33 +46,33 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetProfile()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetProfile"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetProfile"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetProfiles()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetProfiles"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetProfiles"), argumentList);
     }
 
     inline QDBusPendingReply<QDBusObjectPath> GetService(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
-        return asyncCallWithArgumentList(QLatin1String("GetService"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetService"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetServices()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetServices"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetServices"), argumentList);
     }
 
     inline QDBusPendingReply<> SetProfile(const QString &profile)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(profile);
-        return asyncCallWithArgumentList(QLatin1String("SetProfile"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetProfile"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.CB
  */
-class QFSO_EXPORT QFsoGSMCB: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMCB: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,14 +46,14 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetCellBroadcastSubscriptions()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetCellBroadcastSubscriptions"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCellBroadcastSubscriptions"), argumentList);
     }
 
     inline QDBusPendingReply<> SetCellBroadcastSubscriptions(const QString &channels)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(channels);
-        return asyncCallWithArgumentList(QLatin1String("SetCellBroadcastSubscriptions"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetCellBroadcastSubscriptions"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

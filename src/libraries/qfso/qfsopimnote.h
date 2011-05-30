@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.Note
  */
-class QFSO_EXPORT QFsoPIMNote: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMNote: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,33 +46,33 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<> Delete()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("Delete"), argumentList);
+        return fsoAsyncCall(QLatin1String("Delete"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetContent()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetContent"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetContent"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetMultipleFields(const QString &field_list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(field_list);
-        return asyncCallWithArgumentList(QLatin1String("GetMultipleFields"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMultipleFields"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetUsedBackends()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetUsedBackends"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetUsedBackends"), argumentList);
     }
 
     inline QDBusPendingReply<> Update(const QVariantMap &note_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(note_data);
-        return asyncCallWithArgumentList(QLatin1String("Update"), argumentList);
+        return fsoAsyncCall(QLatin1String("Update"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

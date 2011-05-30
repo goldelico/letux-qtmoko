@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsoworldcountry.h"
 #include "qfsoworldconnectivityaccesspoint.h"
 #include "qfsostringmap.h"
@@ -32,7 +33,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Data.World
  */
-class QFSO_EXPORT QFsoDataWorld: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDataWorld: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -48,28 +49,28 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QFsoWorldCountry> GetAllCountries()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetAllCountries"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetAllCountries"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoWorldConnectivityAccessPoint> GetApnsForMccMnc(const QString &mcc_mnc)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mcc_mnc);
-        return asyncCallWithArgumentList(QLatin1String("GetApnsForMccMnc"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetApnsForMccMnc"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetCountryCodeForMccMnc(const QString &mcc_mnc)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mcc_mnc);
-        return asyncCallWithArgumentList(QLatin1String("GetCountryCodeForMccMnc"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetCountryCodeForMccMnc"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoStringMap> GetTimezonesForCountryCode(const QString &country_code)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(country_code);
-        return asyncCallWithArgumentList(QLatin1String("GetTimezonesForCountryCode"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetTimezonesForCountryCode"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.MUX
  */
-class QFSO_EXPORT QFsoGSMMUX: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMMUX: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,7 +47,7 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(origin) << qVariantFromValue(channel);
-        return asyncCallWithArgumentList(QLatin1String("AllocChannel"), argumentList);
+        return fsoAsyncCall(QLatin1String("AllocChannel"), argumentList);
     }
     inline QDBusReply<QString> AllocChannel(const QString &origin, int channel, int &allocated_channel)
     {
@@ -62,28 +63,28 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<> CloseSession()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("CloseSession"), argumentList);
+        return fsoAsyncCall(QLatin1String("CloseSession"), argumentList);
     }
 
     inline QDBusPendingReply<> OpenSession(bool advanced, int framesize, const QString &portname, int portspeed)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(advanced) << qVariantFromValue(framesize) << qVariantFromValue(portname) << qVariantFromValue(portspeed);
-        return asyncCallWithArgumentList(QLatin1String("OpenSession"), argumentList);
+        return fsoAsyncCall(QLatin1String("OpenSession"), argumentList);
     }
 
     inline QDBusPendingReply<> ReleaseChannel(const QString &origin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(origin);
-        return asyncCallWithArgumentList(QLatin1String("ReleaseChannel"), argumentList);
+        return fsoAsyncCall(QLatin1String("ReleaseChannel"), argumentList);
     }
 
     inline QDBusPendingReply<> SetStatus(int channel, const QString &status)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(channel) << qVariantFromValue(status);
-        return asyncCallWithArgumentList(QLatin1String("SetStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetStatus"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

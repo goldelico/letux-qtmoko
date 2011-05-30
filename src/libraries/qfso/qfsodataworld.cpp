@@ -16,7 +16,7 @@
  */
 
 QFsoDataWorld::QFsoDataWorld(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
-    : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
+    : QFsoDbusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
     qRegisterMetaType<QFsoWorldCountry>("QFsoWorldCountry");
     qDBusRegisterMetaType<QFsoWorldCountry>();

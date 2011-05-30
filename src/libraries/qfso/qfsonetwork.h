@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Network
  */
-class QFSO_EXPORT QFsoNetwork: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoNetwork: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,21 +47,21 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(technology) << qVariantFromValue(interface) << qVariantFromValue(ipv4address) << qVariantFromValue(ipv4mask) << qVariantFromValue(ipv4gateway) << qVariantFromValue(dns1) << qVariantFromValue(dns2);
-        return asyncCallWithArgumentList(QLatin1String("OfferDefaultRoute"), argumentList);
+        return fsoAsyncCall(QLatin1String("OfferDefaultRoute"), argumentList);
     }
 
     inline QDBusPendingReply<> StartConnectionSharingWithInterface(const QString &interface)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface);
-        return asyncCallWithArgumentList(QLatin1String("StartConnectionSharingWithInterface"), argumentList);
+        return fsoAsyncCall(QLatin1String("StartConnectionSharingWithInterface"), argumentList);
     }
 
     inline QDBusPendingReply<> StopConnectionSharingWithInterface(const QString &interface)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface);
-        return asyncCallWithArgumentList(QLatin1String("StopConnectionSharingWithInterface"), argumentList);
+        return fsoAsyncCall(QLatin1String("StopConnectionSharingWithInterface"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

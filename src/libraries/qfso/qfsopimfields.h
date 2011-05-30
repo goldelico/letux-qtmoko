@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsostringmap.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.PIM.Fields
  */
-class QFSO_EXPORT QFsoPIMFields: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoPIMFields: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -47,34 +48,34 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(type);
-        return asyncCallWithArgumentList(QLatin1String("AddField"), argumentList);
+        return fsoAsyncCall(QLatin1String("AddField"), argumentList);
     }
 
     inline QDBusPendingReply<> DeleteField(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
-        return asyncCallWithArgumentList(QLatin1String("DeleteField"), argumentList);
+        return fsoAsyncCall(QLatin1String("DeleteField"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetType(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
-        return asyncCallWithArgumentList(QLatin1String("GetType"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetType"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoStringMap> ListFields()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("ListFields"), argumentList);
+        return fsoAsyncCall(QLatin1String("ListFields"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> ListFieldsWithType(const QString &type)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(type);
-        return asyncCallWithArgumentList(QLatin1String("ListFieldsWithType"), argumentList);
+        return fsoAsyncCall(QLatin1String("ListFieldsWithType"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

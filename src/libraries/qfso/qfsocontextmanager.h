@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Context.Manager
  */
-class QFSO_EXPORT QFsoContextManager: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoContextManager: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,13 +47,13 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(desired_accuracy);
-        return asyncCallWithArgumentList(QLatin1String("SubscribeLocationUpdates"), argumentList);
+        return fsoAsyncCall(QLatin1String("SubscribeLocationUpdates"), argumentList);
     }
 
     inline QDBusPendingReply<> UnsubscribeLocationUpdates()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("UnsubscribeLocationUpdates"), argumentList);
+        return fsoAsyncCall(QLatin1String("UnsubscribeLocationUpdates"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

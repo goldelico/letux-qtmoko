@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.Orientation
  */
-class QFSO_EXPORT QFsoDeviceOrientation: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceOrientation: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,7 +46,7 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetOrientation()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetOrientation"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetOrientation"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

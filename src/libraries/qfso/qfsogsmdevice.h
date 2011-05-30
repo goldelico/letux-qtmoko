@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.GSM.Device
  */
-class QFSO_EXPORT QFsoGSMDevice: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoGSMDevice: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -45,19 +46,19 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetDeviceStatus()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetDeviceStatus"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetDeviceStatus"), argumentList);
     }
 
     inline QDBusPendingReply<QVariantMap> GetFeatures()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetFeatures"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetFeatures"), argumentList);
     }
 
     inline QDBusPendingReply<QString, bool, QString> GetFunctionality()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetFunctionality"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetFunctionality"), argumentList);
     }
     inline QDBusReply<QString> GetFunctionality(bool &autoregister, QString &pin)
     {
@@ -73,34 +74,34 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<bool> GetMicrophoneMuted()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetMicrophoneMuted"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMicrophoneMuted"), argumentList);
     }
 
     inline QDBusPendingReply<int> GetSpeakerVolume()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetSpeakerVolume"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetSpeakerVolume"), argumentList);
     }
 
     inline QDBusPendingReply<> SetFunctionality(const QString &level, bool autoregister, const QString &pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(level) << qVariantFromValue(autoregister) << qVariantFromValue(pin);
-        return asyncCallWithArgumentList(QLatin1String("SetFunctionality"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetFunctionality"), argumentList);
     }
 
     inline QDBusPendingReply<> SetMicrophoneMuted(bool muted)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(muted);
-        return asyncCallWithArgumentList(QLatin1String("SetMicrophoneMuted"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetMicrophoneMuted"), argumentList);
     }
 
     inline QDBusPendingReply<> SetSpeakerVolume(int volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(volume);
-        return asyncCallWithArgumentList(QLatin1String("SetSpeakerVolume"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetSpeakerVolume"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

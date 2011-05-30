@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.MusicPlayer.Playlist
  */
-class QFSO_EXPORT QFsoMusicPlayerPlaylist: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoMusicPlayerPlaylist: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,81 +47,81 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
-        return asyncCallWithArgumentList(QLatin1String("Add"), argumentList);
+        return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
     inline QDBusPendingReply<> ChangeName(const QString &new_name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(new_name);
-        return asyncCallWithArgumentList(QLatin1String("ChangeName"), argumentList);
+        return fsoAsyncCall(QLatin1String("ChangeName"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetAtPosition(int position)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position);
-        return asyncCallWithArgumentList(QLatin1String("GetAtPosition"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetAtPosition"), argumentList);
     }
 
     inline QDBusPendingReply<QStringList> GetFiles()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetFiles"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetFiles"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetMode()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetMode"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetMode"), argumentList);
     }
 
     inline QDBusPendingReply<QString> GetName()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetName"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetName"), argumentList);
     }
 
     inline QDBusPendingReply<> Insert(int position, const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position) << qVariantFromValue(file);
-        return asyncCallWithArgumentList(QLatin1String("Insert"), argumentList);
+        return fsoAsyncCall(QLatin1String("Insert"), argumentList);
     }
 
     inline QDBusPendingReply<> InsertDir(int position, const QString &file, bool recursive)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position) << qVariantFromValue(file) << qVariantFromValue(recursive);
-        return asyncCallWithArgumentList(QLatin1String("InsertDir"), argumentList);
+        return fsoAsyncCall(QLatin1String("InsertDir"), argumentList);
     }
 
     inline QDBusPendingReply<> JumpTo(int position)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position);
-        return asyncCallWithArgumentList(QLatin1String("JumpTo"), argumentList);
+        return fsoAsyncCall(QLatin1String("JumpTo"), argumentList);
     }
 
     inline QDBusPendingReply<> LoadFromUri(const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
-        return asyncCallWithArgumentList(QLatin1String("LoadFromUri"), argumentList);
+        return fsoAsyncCall(QLatin1String("LoadFromUri"), argumentList);
     }
 
     inline QDBusPendingReply<> Remove(int position)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position);
-        return asyncCallWithArgumentList(QLatin1String("Remove"), argumentList);
+        return fsoAsyncCall(QLatin1String("Remove"), argumentList);
     }
 
     inline QDBusPendingReply<> SetMode(const QString &mode)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mode);
-        return asyncCallWithArgumentList(QLatin1String("SetMode"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetMode"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

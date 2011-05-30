@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 #include "qfsointmap.h"
 
 #if defined(QFSO_LIBRARY)
@@ -30,7 +31,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Device.IdleNotifier
  */
-class QFSO_EXPORT QFsoDeviceIdleNotifier: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoDeviceIdleNotifier: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,27 +47,27 @@ public Q_SLOTS: // METHODS
     inline QDBusPendingReply<QString> GetState()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetState"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetState"), argumentList);
     }
 
     inline QDBusPendingReply<QFsoIntMap> GetTimeouts()
     {
         QList<QVariant> argumentList;
-        return asyncCallWithArgumentList(QLatin1String("GetTimeouts"), argumentList);
+        return fsoAsyncCall(QLatin1String("GetTimeouts"), argumentList);
     }
 
     inline QDBusPendingReply<> SetState(const QString &status)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status);
-        return asyncCallWithArgumentList(QLatin1String("SetState"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetState"), argumentList);
     }
 
     inline QDBusPendingReply<> SetTimeout(const QString &status, int timeout)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status) << qVariantFromValue(timeout);
-        return asyncCallWithArgumentList(QLatin1String("SetTimeout"), argumentList);
+        return fsoAsyncCall(QLatin1String("SetTimeout"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Error0
  */
-class QFSO_EXPORT QFsoError: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoError: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:

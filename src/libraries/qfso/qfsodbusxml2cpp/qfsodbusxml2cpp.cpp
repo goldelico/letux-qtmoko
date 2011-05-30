@@ -793,7 +793,8 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
     // include our stuff:
     is << "#include <QtCore/QObject>" << endl
        << includeList
-       << "#include <QtDBus/QtDBus>" << endl;
+       << "#include <QtDBus/QtDBus>" << endl
+       << "#include <qfsodbusabstractinterface.h>" << endl;
 
     foreach (QString include, includes) {
         is << "#include \"" << include << "\"" << endl;
@@ -831,7 +832,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << endl;
 
         // class header:
-        hs << "class QFSO_EXPORT " << className << ": public QDBusAbstractInterface" << endl
+        hs << "class QFSO_EXPORT " << className << ": public QFsoDbusAbstractInterface" << endl
            << "{" << endl
            << "    Q_OBJECT" << endl;
 
@@ -935,7 +936,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
                 hs << "        callWithArgumentList(QDBus::NoBlock, "
                    <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
             else
-                hs << "        return asyncCallWithArgumentList(QLatin1String(\""
+                hs << "        return fsoAsyncCall(QLatin1String(\""
                    << method.name << "\"), argumentList);" << endl;
 
             // close the function:
@@ -1005,7 +1006,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
 
         // constructor/destructor for the cpp
         cs << className << "::" << className << "(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)" << endl
-           << "    : QDBusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
+           << "    : QFsoDbusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
            << "{" << endl;
 
         foreach (const QString customType, customTypes)

@@ -19,6 +19,7 @@
 #include <QtCore/QStringList>
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
+#include <qfsodbusabstractinterface.h>
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -29,7 +30,7 @@
 /*
  * Proxy class for interface org.freesmartphone.Events
  */
-class QFSO_EXPORT QFsoEvents: public QDBusAbstractInterface
+class QFSO_EXPORT QFsoEvents: public QFsoDbusAbstractInterface
 {
     Q_OBJECT
 public:
@@ -46,21 +47,21 @@ public Q_SLOTS: // METHODS
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(rule);
-        return asyncCallWithArgumentList(QLatin1String("AddRule"), argumentList);
+        return fsoAsyncCall(QLatin1String("AddRule"), argumentList);
     }
 
     inline QDBusPendingReply<> RemoveRule(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
-        return asyncCallWithArgumentList(QLatin1String("RemoveRule"), argumentList);
+        return fsoAsyncCall(QLatin1String("RemoveRule"), argumentList);
     }
 
     inline QDBusPendingReply<> TriggerTest(const QString &name, bool value)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(value);
-        return asyncCallWithArgumentList(QLatin1String("TriggerTest"), argumentList);
+        return fsoAsyncCall(QLatin1String("TriggerTest"), argumentList);
     }
 
 Q_SIGNALS: // SIGNALS
