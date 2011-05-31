@@ -66,10 +66,23 @@ static QTelephony::OperatorMode fsoOpModeToQt(QString mode)
     return QTelephony::OperatorModeAutomatic;
 }
 
+static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
+{
+    if(status == "available")
+        return QTelephony::OperatorAvailable;
+    if(status == "current")
+        return QTelephony::OperatorCurrent;
+    if(status == "forbidden")
+        return QTelephony::OperatorForbidden;
+
+    qWarning() << "unknown FSO operator status " << status;
+    return QTelephony::OperatorUnavailable;
+}
+
 
 void FsoNetworkRegistration::timer()
 {
-    int ret = checkReply(getStatusReply, "GsmStatus", 0, 10000, 50);
+    int ret = checkReply(getStatusReply, "GsmStatus", false, 0, 10000, 50);
     if(ret > 0)
     {
         QTimer::singleShot(ret, this, SLOT(timer()));
@@ -88,19 +101,32 @@ void FsoNetworkRegistration::timer()
 }
 
 void FsoNetworkRegistration::setCurrentOperator
-        ( QTelephony::OperatorMode, const QString&, const QString&)
+        ( QTelephony::OperatorMode, const QString & id, const QString &)
 {
-    emit setCurrentOperatorResult( QTelephony::OK );
+    QDBusPendingReply<> reply = gsmNet.RegisterWithProvider(id);
+    int ret = checkReply(reply, "RegisterWithProvider", true, QTelephony::OK, QTelephony::Error);
+    emit setCurrentOperatorResult((QTelephony::Result)(ret));
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
 {
+    QDBusPendingReply<QFsoNetworkProviderList> reply = gsmNet.ListProviders();
+    if(!checkReply(reply, "ListProviders"))
+    {
+        return;
+    }
+    QFsoNetworkProviderList list = reply.value();
     QList<QNetworkRegistration::AvailableOperator> opers;
-    QNetworkRegistration::AvailableOperator oper;
-    oper.availability = QTelephony::OperatorAvailable;
-    oper.name = "test";       // No tr
-    oper.id = "test";        // No tr
-    oper.technology = "GSM";       // No tr
-    opers.append( oper );
-    emit availableOperators( opers );
+    for(int i = 0; i < list.count(); i++)
+    {
+        QFsoNetworkProvider provider = list.at(i);
+        QNetworkRegistration::AvailableOperator oper;
+        
+        oper.availability = fsoOpStatusToQt(provider.status);
+        oper.name = provider.longname;
+        oper.id = provider.shortname;
+        oper.technology = provider.act;
+        opers.append(oper);
+    }    
+    emit availableOperators(opers);
 }

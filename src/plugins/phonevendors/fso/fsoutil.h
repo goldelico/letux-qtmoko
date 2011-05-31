@@ -26,10 +26,10 @@
 template <class T, class T2, class T3>
         int checkReply(QDBusPendingReply<T, T2, T3> & reply,
                    const QString & fn,
-                   int ok = 0,
-                   int err = -1,
-                   int unfinished = 1,
-                   bool waitForFinished = false)
+                   bool waitForFinished = true,
+                   int ok = 1,
+                   int err = 0,
+                   int unfinished = 0)
 {
     if(waitForFinished)
     {
