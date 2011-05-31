@@ -2,7 +2,13 @@
 #define QFSOWORLDCONNECTIVITYACCESSPOINT_H
 #include <QtDBus>
 
-class QFsoWorldConnectivityAccessPoint
+#if defined(QFSO_LIBRARY)
+    #define QFSO_EXPORT Q_DECL_EXPORT
+#else
+    #define QFSO_EXPORT Q_DECL_IMPORT
+#endif
+
+class QFSO_EXPORT QFsoWorldConnectivityAccessPoint
 {
 public:
     explicit QFsoWorldConnectivityAccessPoint();
@@ -12,8 +18,8 @@ public:
     QString password;
     QString dns1;
     QString dns2;
-    friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldConnectivityAccessPoint & value);
-    friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoWorldConnectivityAccessPoint & value);
+    QFSO_EXPORT friend QDBusArgument &operator<<(QDBusArgument &argument, const QFsoWorldConnectivityAccessPoint & value);
+    QFSO_EXPORT friend const QDBusArgument &operator>>(const QDBusArgument &argument, QFsoWorldConnectivityAccessPoint & value);
 };
 
 Q_DECLARE_METATYPE(QFsoWorldConnectivityAccessPoint)
