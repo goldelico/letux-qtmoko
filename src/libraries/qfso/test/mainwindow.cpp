@@ -189,16 +189,16 @@ void MainWindow::on_bListProviders_clicked()
     if(checkReply(reply, "ListProviders", false, true))
     {
         QString str;
-//        QFsoNetworkProviderList list = reply.value();
-//        for(int i = 0; i < list.count(); i++)
-//        {
-//            QFsoNetworkProvider provider = list.at(i);
-//            str += "shortname=" + provider.shortname +
-//                   ", longname=" + provider.longname +
-//                   ", mccmnc=" + provider.mccmnc +
-//                   ", act=" + provider.act +
-//                   ", status=" + provider.status + "\n";
-//        }
+        QFsoNetworkProviderList list = reply.value();
+        for(int i = 0; i < list.count(); i++)
+        {
+            QFsoNetworkProvider provider = list.at(i);
+            str += "shortname=" + provider.shortname +
+                   ", longname=" + provider.longname +
+                   ", mccmnc=" + provider.mccmnc +
+                   ", act=" + provider.act +
+                   ", status=" + provider.status + "\n";
+        }
         QMessageBox::information(this, "Network providers", str);
     }
 }
