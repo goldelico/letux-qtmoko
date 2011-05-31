@@ -466,7 +466,12 @@ static QString genCustomFsoType(QString typeName)
             << "#define " << hIfDef << endl
             << "#include <QtDBus>" << endl
             << endl
-            << "class " << typeName << endl
+            << "#if defined(QFSO_LIBRARY)" << endl
+            << "    #define QFSO_EXPORT Q_DECL_EXPORT" << endl
+            << "#else" << endl
+            << "    #define QFSO_EXPORT Q_DECL_IMPORT" << endl
+            << "#endif" << endl << endl
+            << "class QFSO_EXPORT " << typeName << endl
             << "{" << endl
             << "public:" << endl
             << "    explicit " << typeName << "();" << endl;
@@ -482,8 +487,8 @@ static QString genCustomFsoType(QString typeName)
     }
 
     hs
-            << "    friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
-            << "    friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
+            << "    QFSO_EXPORT friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
+            << "    QFSO_EXPORT friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
             << "};" << endl
             << endl
             << "Q_DECLARE_METATYPE(" << typeName << ")" << endl
