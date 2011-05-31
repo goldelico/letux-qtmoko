@@ -42,6 +42,8 @@ private:
     QDBusPendingReply<uint> gsmMessageSizeReply;
 
     void checkIface(QDBusAbstractInterface *iface);
+    void showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption);
+
     template <class T, class T2, class T3>
             bool checkReply(QDBusPendingReply<T,T2,T3> & reply,
                             const QString & fn,
@@ -50,6 +52,7 @@ private:
                             QLabel * label = NULL);
 
 private slots:
+    void on_bGetStatus_clicked();
     void on_bGetFunctionality_clicked();
     void on_bSend_clicked();
     void on_bTransfer_clicked();

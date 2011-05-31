@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -58,11 +58,11 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabGsm">
+      <widget class="QWidget" name="tabGsmDev">
        <attribute name="title">
-        <string>GSM</string>
+        <string>GSM device</string>
        </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_6">
         <item>
          <widget class="QLabel" name="lGsmStatus">
           <property name="text">
@@ -73,6 +73,27 @@
           </property>
          </widget>
         </item>
+        <item>
+         <widget class="QPushButton" name="bGetFunctionality">
+          <property name="text">
+           <string>Get functionality</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bGsmFeatures">
+          <property name="text">
+           <string>GSM features</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
+      <widget class="QWidget" name="tabGsmNet">
+       <attribute name="title">
+        <string>GSM net</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout">
         <item>
          <widget class="QLabel" name="lSignalStrength">
           <property name="text">
@@ -99,6 +120,13 @@
          </layout>
         </item>
         <item>
+         <widget class="QPushButton" name="bGetStatus">
+          <property name="text">
+           <string>Get status</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QPushButton" name="bListProviders">
           <property name="text">
            <string>List providers</string>
@@ -116,20 +144,6 @@
          <widget class="QPushButton" name="bRegister">
           <property name="text">
            <string>Register to network</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGetFunctionality">
-          <property name="text">
-           <string>Get functionality</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGsmFeatures">
-          <property name="text">
-           <string>GSM features</string>
           </property>
          </widget>
         </item>

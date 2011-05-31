@@ -8,6 +8,7 @@ CONFIG+=qtopia hide_symbols singleexec
 QT+=dbus
 
 DEFINES+=QFSO_LIBRARY
+DEFINES+=QTMOKO
 
 pkg [
     name=qfso

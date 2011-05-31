@@ -63,6 +63,18 @@ void MainWindow::checkIface(QDBusAbstractInterface *iface)
     ui->tbInit->append(status + " " + iface->service() + " " + iface->path());
 }
 
+void MainWindow::showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption)
+{
+    QVariantMap map = reply.value();
+    QString str;
+    for(int i = 0; i < map.count(); i++)
+    {
+        QString key = map.keys().at(i);
+        str += key + ": " + map.value(key).toString() + "\n";
+    }
+    QMessageBox::information(this, caption, str);
+}
+
 void toggleLed(QFsoDeviceLED *led, int state)
 {
     int brightness = (state == Qt::Checked ? 255 : 0);
@@ -100,7 +112,7 @@ void MainWindow::refresh()
     }
 
     // GSM device & network
-    if(ui->tabGsm->isVisible())
+    if(ui->tabGsmDev->isVisible())
     {
         // Device status
         if(checkReply(gsmStatusReply, "GSM status", false, false, ui->lGsmStatus))
@@ -111,7 +123,9 @@ void MainWindow::refresh()
         {
             gsmStatusReply = gsmDev.GetDeviceStatus();
         }
-
+    }
+    if(ui->tabGsmNet->isVisible())
+    {
         // Signal strength
         if(checkReply(gsmSignalReply, "Signal strength", false, false, ui->lSignalStrength))
         {
@@ -165,14 +179,7 @@ void MainWindow::on_bGsmFeatures_clicked()
     QDBusPendingReply<QVariantMap> reply = gsmDev.GetFeatures();
     if(checkReply(reply, "GetFeatures", false, true))
     {
-        QVariantMap map = reply.value();
-        QString str;
-        for(int i = 0; i < map.count(); i++)
-        {
-            QString key = map.keys().at(i);
-            str += key + ": " + map.value(key).toString() + "\n";
-        }
-        QMessageBox::information(this, "Modem features", str);
+        showVariantMapResult(reply, "Modem features");
     }
 }
 
@@ -331,5 +338,14 @@ void MainWindow::on_bGetFunctionality_clicked()
                                  "level=" + reply.argumentAt(0).toString() +
                                  ", autoregister=" + reply.argumentAt(1).toString() +
                                  ", pin=" + reply.argumentAt(2).toString());
+    }
+}
+
+void MainWindow::on_bGetStatus_clicked()
+{
+    QDBusPendingReply<QVariantMap> reply = gsmNet.GetStatus();
+    if(checkReply(reply, "GetStatus", false, true))
+    {
+        showVariantMapResult(reply, "Network status");
     }
 }
