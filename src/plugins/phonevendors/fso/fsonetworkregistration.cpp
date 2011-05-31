@@ -24,21 +24,67 @@ FsoNetworkRegistration::FsoNetworkRegistration
     : QNetworkRegistrationServer( service, parent )
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
-    QTimer::singleShot( 10000, this, SLOT(initDone()) );
+    getStatusReply = gsmNet.GetStatus();
+    QTimer::singleShot(10, this, SLOT(timer()));
 }
 
 FsoNetworkRegistration::~FsoNetworkRegistration()
 {
 }
 
-void FsoNetworkRegistration::initDone()
+static QTelephony::RegistrationState fsoRegStateToQt(QString state)
 {
-    qWarning() << "1";
-    updateInitialized( true );
-    updateRegistrationState(QTelephony::RegistrationHome);
-    updateCurrentOperator( QTelephony::OperatorModeAutomatic,
-                           "Telephone", "Telephone", "GSM" );    // No tr
-    qWarning() << "2";
+    if(state == "home")             // registered to home network
+        return QTelephony::RegistrationHome;
+    if(state == "unregistered")     // not registered, not trying
+        return QTelephony::RegistrationNone;
+    if(state == "busy")             // not registered, but currently trying
+        return QTelephony::RegistrationSearching;
+    if(state == "denied")           // no permitted network available
+        return QTelephony::RegistrationDenied;
+    if(state == "unknown")         // no idea
+        return QTelephony::RegistrationUnknown;
+    if(state == "roaming")         // registered to foreign network
+        return QTelephony::RegistrationRoaming;
+
+    qWarning() << "unknown FSO registration state" << state;
+    return QTelephony::RegistrationNone;
+}
+
+static QTelephony::OperatorMode fsoOpModeToQt(QString mode)
+{
+    if(mode == "automatic")             // automatic selection
+        return QTelephony::OperatorModeAutomatic;
+    if(mode == "manual")                // manual selection
+        return QTelephony::OperatorModeManual;
+    if(mode == "manual;automatic")      // manual first, then automatic,
+        return QTelephony::OperatorModeManualAutomatic;
+    if(mode == "unregister")            // manual unregister
+        return QTelephony::OperatorModeDeregister;
+
+    qWarning() << "unknown FSO operator mode " << mode;
+    return QTelephony::OperatorModeAutomatic;
+}
+
+
+void FsoNetworkRegistration::timer()
+{
+    int ret = checkReply(getStatusReply, "GsmStatus", 0, 10000, 50);
+    if(ret > 0)
+    {
+        QTimer::singleShot(ret, this, SLOT(timer()));
+        return;
+    }
+    QVariantMap map = getStatusReply.value();
+    QString registration = map.value("registration").toString();
+    QString mode = map.value("mode").toString();
+    QString provider = map.value("provider").toString();
+    QString display = map.value("display").toString();
+    QString act = map.value("act").toString();
+    
+    updateInitialized(true);
+    updateRegistrationState(fsoRegStateToQt(registration));
+    updateCurrentOperator(fsoOpModeToQt(mode), provider, display, act);
 }
 
 void FsoNetworkRegistration::setCurrentOperator

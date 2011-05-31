@@ -26,23 +26,26 @@
 template <class T, class T2, class T3>
         int checkReply(QDBusPendingReply<T, T2, T3> & reply,
                    const QString & fn,
-                   bool waitForFinished)
+                   int ok = 0,
+                   int err = -1,
+                   int unfinished = 1,
+                   bool waitForFinished = false)
 {
     if(waitForFinished)
     {
         reply.waitForFinished();
     }
-    if(!reply.isFinished())
+    if(reply.isError())
     {
-        return -1;
+        QString errorStr = reply.error().message();
+        qWarning() << "Error in " << fn << errorStr;
+        return err;
     }
-    if(reply.isValid())
+    if(reply.isFinished() && reply.isValid())
     {
-        return 1;
+        return ok;
     }
-    QString err = reply.error().message();
-    qWarning() << "Error in " << fn << err;
-    return 0;
+    return unfinished;
 }
 
 #endif

@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <qnetworkregistration.h>
 #include <qfsogsmnetwork.h>
+#include "fsoutil.h"
 
 class FsoNetworkRegistration : public QNetworkRegistrationServer
 {
@@ -32,6 +33,7 @@ public:
     ~FsoNetworkRegistration();
     
     QFsoGSMNetwork gsmNet;
+    QDBusPendingReply<QVariantMap> getStatusReply;
 
 public slots:
     void setCurrentOperator( QTelephony::OperatorMode mode,
@@ -39,7 +41,7 @@ public slots:
     void requestAvailableOperators();
     
 private slots:
-    void initDone();
+    void timer();
 };
 
 #endif
