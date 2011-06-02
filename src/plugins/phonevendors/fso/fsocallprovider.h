@@ -38,6 +38,9 @@ public:
     
     QFsoGSMCall gsmCall;
 
+    void dial(FsoPhoneCall *call, const QDialOptions& options);
+    void hangup(FsoPhoneCall *call, QPhoneCall::Scope scope);
+    
 protected:
     QModemCallProvider::AtdBehavior atdBehavior() const;
     void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );

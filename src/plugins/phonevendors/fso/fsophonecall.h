@@ -30,7 +30,7 @@ class FsoPhoneCall : public QPhoneCallImpl
     Q_OBJECT
 public:
     FsoPhoneCall( FsoCallProvider *provider, const QString& identifier,
-                  const QString& callType, int callNo );
+                  const QString& callType, int id );
     virtual ~FsoPhoneCall();
 
     void dial( const QDialOptions& options );
@@ -42,8 +42,8 @@ public:
     void transfer( const QString& number );
 
 public:
-    QPhoneCallProvider *provider;
-    int callNo;
+    FsoCallProvider *provider;
+    int id;
 };
 
 #endif
