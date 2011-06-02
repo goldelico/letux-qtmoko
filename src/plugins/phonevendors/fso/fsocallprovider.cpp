@@ -30,6 +30,13 @@ FsoCallProvider::~FsoCallProvider()
 {
 }
 
+QPhoneCallImpl *FsoCallProvider::create
+        ( const QString& identifier, const QString& callType )
+{
+    //return new FsoPhoneCall( this, identifier, callType, -1 );
+	return NULL;
+}
+
 QModemCallProvider::AtdBehavior FsoCallProvider::atdBehavior() const
 {
     return AtdOkIsConnect;

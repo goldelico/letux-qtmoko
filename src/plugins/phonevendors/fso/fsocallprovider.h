@@ -21,9 +21,12 @@
 #define FSOCALLPROVIDER_H
 
 #include <QTimer>
+#include <QDebug>
+#include <qtopialog.h>
 #include <qmodemcallprovider.h>
 #include <qfsogsmcall.h>
 #include "fsomodemservice.h"
+#include "fsophonecall.h"
 #include "fsoutil.h"
 
 class FsoCallProvider : public QModemCallProvider
@@ -48,6 +51,8 @@ protected:
     QString activateHeldCallsCommand() const;
     QString joinCallsCommand( bool detachSubscriber ) const;
     QString deflectCallCommand( const QString& number ) const;
+    QPhoneCallImpl *create
+        ( const QString& identifier, const QString& callType );
 
 protected slots:
     void resetModem();
