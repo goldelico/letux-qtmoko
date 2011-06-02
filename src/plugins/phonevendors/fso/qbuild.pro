@@ -22,6 +22,7 @@ HEADERS=\
     fsonetworkregistration.h\
     fsoservicechecker.h\
     fsophonerffunctionality.h\
+    fsocallprovider.h\
     fsoutil.h
 
 SOURCES=\
@@ -29,5 +30,6 @@ SOURCES=\
     fsomodemservice.cpp\
     fsonetworkregistration.cpp\
     fsoservicechecker.cpp\
-    fsophonerffunctionality.cpp
+    fsophonerffunctionality.cpp\
+    fsocallprovider.cpp
 

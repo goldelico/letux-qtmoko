@@ -20,6 +20,7 @@
 #include "fsoservicechecker.h"
 #include "fsophonerffunctionality.h"
 #include "fsonetworkregistration.h"
+#include "fsocallprovider.h"
 
 FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
@@ -57,10 +58,11 @@ void FsoModemService::initialize()
 
     if ( !supports<QTelephonyConfiguration>() )
         addInterface( new FsoConfiguration( this ) );
+	*/
 
     if ( !callProvider() )
         setCallProvider( new FsoCallProvider( this ) );
 
     // Call QModemService to create other interfaces that we didn't override.
-    QModemService::initialize();*/
+    QModemService::initialize();
 }
