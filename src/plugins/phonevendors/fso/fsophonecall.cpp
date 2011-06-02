@@ -18,9 +18,10 @@
 ****************************************************************************/
 
 #include "fsophonecall.h"
+#include "fsocallprovider.h"
 
 FsoPhoneCall::FsoPhoneCall
-        ( QPhoneCallProvider *provider, const QString& identifier,
+        ( FsoCallProvider *provider, const QString& identifier,
           const QString& callType, int callNo )
     : QPhoneCallImpl( provider, identifier, callType )
 {

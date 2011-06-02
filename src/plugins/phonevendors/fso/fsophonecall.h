@@ -29,7 +29,7 @@ class FsoPhoneCall : public QPhoneCallImpl
 {
     Q_OBJECT
 public:
-    FsoPhoneCall( QPhoneCallProvider *provider, const QString& identifier,
+    FsoPhoneCall( FsoCallProvider *provider, const QString& identifier,
                   const QString& callType, int callNo );
     virtual ~FsoPhoneCall();
 

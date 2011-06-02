@@ -32,6 +32,6 @@ SOURCES=\
     fsonetworkregistration.cpp\
     fsoservicechecker.cpp\
     fsophonerffunctionality.cpp\
-    fsocallprovider.cpp\
-    fsophonecall.cpp\
+    fsocallprovider.cpp \
+    fsophonecall.cpp
 

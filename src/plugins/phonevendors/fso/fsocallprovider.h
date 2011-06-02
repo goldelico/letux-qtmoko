@@ -26,8 +26,8 @@
 #include <qmodemcallprovider.h>
 #include <qfsogsmcall.h>
 #include "fsomodemservice.h"
-#include "fsophonecall.h"
 #include "fsoutil.h"
+#include "fsophonecall.h"
 
 class FsoCallProvider : public QModemCallProvider
 {
