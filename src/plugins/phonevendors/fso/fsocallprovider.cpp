@@ -33,8 +33,7 @@ FsoCallProvider::~FsoCallProvider()
 QPhoneCallImpl *FsoCallProvider::create
         ( const QString& identifier, const QString& callType )
 {
-    //return new FsoPhoneCall( this, identifier, callType, -1 );
-	return NULL;
+    return new FsoPhoneCall( this, identifier, callType, -1 );
 }
 
 QModemCallProvider::AtdBehavior FsoCallProvider::atdBehavior() const
@@ -95,4 +94,34 @@ QString FsoCallProvider::deflectCallCommand( const QString& number ) const
 
 void FsoCallProvider::resetModem()
 {
+}
+
+void FsoCallProvider::dial(FsoPhoneCall *call, const QDialOptions& options)
+{
+    QDBusPendingReply<int> reply = gsmCall.Initiate(options.number(), "voice");
+    if(checkReply(reply, "Initiate"))
+    {
+        call->id = reply.value();
+    }   
+}
+
+void FsoCallProvider::hangup(FsoPhoneCall *call, QPhoneCall::Scope scope)
+{
+    if(scope == QPhoneCall::CallOnly)
+    {
+        QDBusPendingReply<> reply = gsmCall.Release(call->id);
+        if(checkReply(reply, "Release"))
+        {
+            call->id = -1;
+        }
+    }
+    else
+    {
+        // TODO: not sure if this is ok
+        QDBusPendingReply<> reply = gsmCall.ReleaseAll();
+        if(checkReply(reply, "ReleaseAll"))
+        {
+            call->id = -1;
+        }
+    }
 }

@@ -26,8 +26,8 @@
 #include <qmodemcallprovider.h>
 #include <qfsogsmcall.h>
 #include "fsomodemservice.h"
-#include "fsophonecall.h"
 #include "fsoutil.h"
+#include "fsophonecall.h"
 
 class FsoCallProvider : public QModemCallProvider
 {
@@ -38,6 +38,9 @@ public:
     
     QFsoGSMCall gsmCall;
 
+    void dial(FsoPhoneCall *call, const QDialOptions& options);
+    void hangup(FsoPhoneCall *call, QPhoneCall::Scope scope);
+    
 protected:
     QModemCallProvider::AtdBehavior atdBehavior() const;
     void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );

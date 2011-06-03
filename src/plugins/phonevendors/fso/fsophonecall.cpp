@@ -18,14 +18,15 @@
 ****************************************************************************/
 
 #include "fsophonecall.h"
+#include "fsocallprovider.h"
 
 FsoPhoneCall::FsoPhoneCall
-        ( QPhoneCallProvider *provider, const QString& identifier,
-          const QString& callType, int callNo )
+        ( FsoCallProvider *provider, const QString& identifier,
+          const QString& callType, int id )
     : QPhoneCallImpl( provider, identifier, callType )
 {
     this->provider = provider;
-    this->callNo = callNo;
+    this->id = id;
 }
 
 FsoPhoneCall::~FsoPhoneCall()
@@ -35,11 +36,13 @@ FsoPhoneCall::~FsoPhoneCall()
 void FsoPhoneCall::dial( const QDialOptions& options )
 {
     qLog(Modem) << "FsoPhoneCall::dial(" << options.number() << ")";
+    provider->dial(this, options);
 }
 
-void FsoPhoneCall::hangup( QPhoneCall::Scope )
+void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 {
     qLog(Modem) << "FsoPhoneCall::hangup()";
+    provider->hangup(this, scope);
 }
 
 void FsoPhoneCall::accept()

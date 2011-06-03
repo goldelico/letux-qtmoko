@@ -43,6 +43,7 @@ template <class T, class T2, class T3>
     }
     if(reply.isFinished() && reply.isValid())
     {
+        qDebug() << "    dbus call " + fn + "() ok";
         return ok;
     }
     return unfinished;
