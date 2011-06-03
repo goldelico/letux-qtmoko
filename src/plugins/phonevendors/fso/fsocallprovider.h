@@ -23,17 +23,17 @@
 #include <QTimer>
 #include <QDebug>
 #include <qtopialog.h>
-#include <qmodemcallprovider.h>
+#include <qphonecallprovider.h>
 #include <qfsogsmcall.h>
 #include "fsomodemservice.h"
 #include "fsoutil.h"
 #include "fsophonecall.h"
 
-class FsoCallProvider : public QModemCallProvider
+class FsoCallProvider : public QPhoneCallProvider
 {
     Q_OBJECT
 public:
-    FsoCallProvider( FsoModemService * service );
+    FsoCallProvider( const QString & service, QObject * parent );
     ~FsoCallProvider();
     
     QFsoGSMCall gsmCall;
@@ -42,26 +42,8 @@ public:
     void hangup(FsoPhoneCall *call, QPhoneCall::Scope scope);
     
 protected:
-    QModemCallProvider::AtdBehavior atdBehavior() const;
-    void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );
-    QString releaseCallCommand( uint modemIdentifier ) const;
-    QString releaseActiveCallsCommand() const;
-    QString releaseHeldCallsCommand() const;
-    QString putOnHoldCommand() const;
-    QString setBusyCommand() const;
-    QString activateCallCommand
-	( uint modemIdentifier, bool otherActiveCalls ) const;
-    QString activateHeldCallsCommand() const;
-    QString joinCallsCommand( bool detachSubscriber ) const;
-    QString deflectCallCommand( const QString& number ) const;
     QPhoneCallImpl *create
         ( const QString& identifier, const QString& callType );
-
-protected slots:
-    void resetModem();
-
-private:
-    FsoModemService *service;
 };
 
 #endif

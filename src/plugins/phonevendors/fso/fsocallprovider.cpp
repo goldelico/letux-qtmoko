@@ -19,11 +19,11 @@
 
 #include "fsocallprovider.h"
 
-FsoCallProvider::FsoCallProvider( FsoModemService *service )
-    : QModemCallProvider( service )
+FsoCallProvider::FsoCallProvider( const QString & service, QObject * parent )
+    : QPhoneCallProvider( service, parent )
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
-    this->service = service;
+    setCallTypes(QStringList() << "Voice");
 }
 
 FsoCallProvider::~FsoCallProvider()
@@ -33,67 +33,8 @@ FsoCallProvider::~FsoCallProvider()
 QPhoneCallImpl *FsoCallProvider::create
         ( const QString& identifier, const QString& callType )
 {
+	qDebug() << "FsoCallProvider::create";
     return new FsoPhoneCall( this, identifier, callType, -1 );
-}
-
-QModemCallProvider::AtdBehavior FsoCallProvider::atdBehavior() const
-{
-    return AtdOkIsConnect;
-}
-
-void FsoCallProvider::abortDial
-	( uint modemIdentifier, QPhoneCall::Scope scope )
-{
-}
-
-QString FsoCallProvider::releaseCallCommand( uint modemIdentifier ) const
-{
-    return "";
-}
-
-QString FsoCallProvider::releaseActiveCallsCommand() const
-{
-    return "";
-}
-
-QString FsoCallProvider::releaseHeldCallsCommand() const
-{
-    return "";
-}
-
-QString FsoCallProvider::putOnHoldCommand() const
-{
-    return "";
-}
-
-QString FsoCallProvider::setBusyCommand() const
-{
-    return "";
-}
-
-QString FsoCallProvider::activateCallCommand
-	( uint modemIdentifier, bool otherActiveCalls ) const
-{
-    return "";
-}
-
-QString FsoCallProvider::activateHeldCallsCommand() const
-{
-    return "";
-}
-
-QString FsoCallProvider::joinCallsCommand( bool detachSubscriber ) const
-{
-    return "";
-}
-
-QString FsoCallProvider::deflectCallCommand( const QString& number ) const
-{
-    return "";
-}
-
-void FsoCallProvider::resetModem()
-{
 }
 
 void FsoCallProvider::dial(FsoPhoneCall *call, const QDialOptions& options)

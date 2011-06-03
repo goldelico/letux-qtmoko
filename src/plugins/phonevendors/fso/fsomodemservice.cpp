@@ -61,7 +61,7 @@ void FsoModemService::initialize()
 	*/
 
     if ( !callProvider() )
-        setCallProvider( new FsoCallProvider( this ) );
+        setCallProvider( new FsoCallProvider( service(), this ) );
 
     // Call QModemService to create other interfaces that we didn't override.
     //QModemService::initialize();
