@@ -46,7 +46,7 @@ do_start()
 do_stop()
 {
     rm -f /tmp/restart-qtopia
-    killall -q qpe atd quicklauncher mediaserver mediaplayer sipagent
+    killall -q qpe atd quicklauncher mediaserver mediaplayer sipagent telepathyagent
     return 0
 }
 
