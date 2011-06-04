@@ -39,7 +39,7 @@ private:
 
     QDBusPendingReply<QString> gsmStatusReply;
     QDBusPendingReply<int> gsmSignalReply;
-    QDBusPendingReply<uint> gsmMessageSizeReply;
+    QDBusPendingCallWatcher gsmMessageSizeWatcher;
 
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption);
@@ -51,7 +51,13 @@ private:
                             bool waitForFinished,
                             QLabel * label = NULL);
 
+    template <class T, class T2, class T3>
+            void watchCall(QDBusPendingReply<T,T2,T3> & reply,
+                           QDBusPendingCallWatcher *watcher,
+                           const char * finishedMethod);
+
 private slots:
+    void on_tbSmsContent_textChanged();
     void on_bGetStatus_clicked();
     void on_bGetFunctionality_clicked();
     void on_bSend_clicked();
@@ -78,6 +84,7 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
+    void gsmMessageSizeFinished(QDBusPendingCallWatcher *call);
 };
 
 template <class T, class T2, class T3>
@@ -92,10 +99,10 @@ template <class T, class T2, class T3>
         reply.waitForFinished();
     }
 
-//    qWarning() << "reply.isFinished()=" << reply.isFinished() <<
-//            ", reply.isValid()=" << reply.isValid() <<
-//            ", reply.isError()=" << reply.isError() <<
-//            ", fn=" << fn;
+    //    qWarning() << "reply.isFinished()=" << reply.isFinished() <<
+    //            ", reply.isValid()=" << reply.isValid() <<
+    //            ", reply.isError()=" << reply.isError() <<
+    //            ", fn=" << fn;
 
     if(reply.isError())
     {
@@ -124,6 +131,17 @@ template <class T, class T2, class T3>
         label->setText(label->text() + ".");
     }
     return false;
+}
+
+template <class T, class T2, class T3>
+        void MainWindow::watchCall(QDBusPendingReply<T,T2,T3> & reply,
+                                   QDBusPendingCallWatcher *watcher,
+                                   const char * finishedMethod)
+{
+    watcher->~QDBusPendingCallWatcher();
+    watcher = new (watcher)QDBusPendingCallWatcher(reply, this);
+    QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                     this, finishedMethod);
 }
 
 #endif // MAINWINDOW_H

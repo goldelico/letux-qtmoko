@@ -13,7 +13,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmStatusReply(),
         gsmSignalReply(),
-        gsmMessageSizeReply()
+        gsmMessageSizeWatcher(QDBusPendingReply<uint>(), this)
 {
     ui->setupUi(this);
 
@@ -134,19 +134,6 @@ void MainWindow::refresh()
         if(gsmSignalReply.isFinished() || gsmSignalReply.isError())
         {
             gsmSignalReply = gsmNet.GetSignalStrength();
-        }
-    }
-
-    // SMS
-    if(ui->tabGsmSms->isVisible())
-    {
-        if(checkReply(gsmMessageSizeReply, "Message size", false, false, ui->lSmsSplit))
-        {
-            ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(gsmMessageSizeReply.value()));
-        }
-        if(gsmMessageSizeReply.isFinished() || gsmMessageSizeReply.isError())
-        {
-            gsmMessageSizeReply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
         }
     }
 
@@ -347,5 +334,23 @@ void MainWindow::on_bGetStatus_clicked()
     if(checkReply(reply, "GetStatus", false, true))
     {
         showVariantMapResult(reply, "Network status");
+    }
+}
+
+void MainWindow::on_tbSmsContent_textChanged()
+{
+    QDBusPendingReply<uint> reply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
+    watchCall(
+            reply,
+            &gsmMessageSizeWatcher,
+            SLOT(gsmMessageSizeFinished(QDBusPendingCallWatcher*)));
+}
+
+void MainWindow::gsmMessageSizeFinished(QDBusPendingCallWatcher * watcher)
+{
+    QDBusPendingReply<uint> reply = *watcher;
+    if(checkReply(reply, "Message size", false, false))
+    {
+        ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(reply.value()));
     }
 }
