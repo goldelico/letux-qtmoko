@@ -24,13 +24,36 @@ FsoPhoneCall::FsoPhoneCall
         ( FsoCallProvider *provider, const QString& identifier,
           const QString& callType, int id )
     : QPhoneCallImpl( provider, identifier, callType )
+    , provider(provider)
+    , id(id)
+    , hangupLocal(false)
 {
-    this->provider = provider;
-    this->id = id;
 }
 
 FsoPhoneCall::~FsoPhoneCall()
 {
+}
+
+static QPhoneCall::State fsoStatusToQt(QString fsoStatus, bool hangupLocal)
+{
+    if(fsoStatus == "INCOMING")     // The call is incoming (but not yet accepted)
+        return QPhoneCall::Incoming;
+    if(fsoStatus == "OUTGOING")     // The call is outgoing (but not yet established)
+        return QPhoneCall::Dialing;
+    if(fsoStatus == "ACTIVE")       // The call is the active call (you can talk),
+        return QPhoneCall::Connected;
+    if(fsoStatus == "HELD")         // The call is being held
+        return QPhoneCall::Hold;
+    if(fsoStatus == "RELEASE")      // The call has been released
+        return hangupLocal ? QPhoneCall::HangupLocal : QPhoneCall::HangupRemote;
+    
+    qWarning() << "fsoStatusToQt: unknown status " << fsoStatus;
+    return QPhoneCall::OtherFailure;
+}
+
+void FsoPhoneCall::setFsoStatus(QString fsoStatus)
+{
+    setState(fsoStatusToQt(fsoStatus, hangupLocal));
 }
 
 void FsoPhoneCall::dial( const QDialOptions& options )
@@ -42,6 +65,7 @@ void FsoPhoneCall::dial( const QDialOptions& options )
 void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 {
     qLog(Modem) << "FsoPhoneCall::hangup()";
+    hangupLocal = true;
     provider->hangup(this, scope);
 }
 

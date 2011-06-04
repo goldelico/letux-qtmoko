@@ -33,6 +33,9 @@ public:
                   const QString& callType, int id );
     virtual ~FsoPhoneCall();
 
+    FsoCallProvider *provider;
+    int id;
+    
     void dial( const QDialOptions& options );
     void hangup( QPhoneCall::Scope scope );
     void accept();
@@ -40,10 +43,11 @@ public:
     void activate( QPhoneCall::Scope scope );
     void tone( const QString& tones );
     void transfer( const QString& number );
-
-public:
-    FsoCallProvider *provider;
-    int id;
+    
+    void setFsoStatus(QString fsoStatus);
+    
+private:
+    bool hangupLocal;
 };
 
 #endif

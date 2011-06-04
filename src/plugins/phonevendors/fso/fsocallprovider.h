@@ -44,6 +44,10 @@ public:
 protected:
     QPhoneCallImpl *create
         ( const QString& identifier, const QString& callType );
+
+private slots:
+    void callStatusChange(int id, const QString &status, const QVariantMap &properties);
+        
 };
 
 #endif
