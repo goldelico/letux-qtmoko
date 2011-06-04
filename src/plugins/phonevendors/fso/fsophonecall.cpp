@@ -59,11 +59,23 @@ void FsoPhoneCall::setFsoStatus(QString fsoStatus)
 
 void FsoPhoneCall::dial( const QDialOptions& options )
 {
-    qLog(Modem) << "FsoPhoneCall::dial(" << options.number() << ")";
- 
-    QDBusPendingReply<int> reply = provider->gsmCall.Initiate(options.number(), "voice");
-    setState(QPhoneCall::Dialing);
+    QString number = options.number();
+    setNumber( number );
+    
+    qLog(Modem) << "FsoPhoneCall::dial(" << number << ")";
+
+    // If the number starts with '*' or '#', then this is a request
+    // for a supplementary service, not an actual phone call.
+    // So we dial and then immediately hang up, allowing the network
+    // to send us the SS/USSD response when it is ready.
+    if ( number.startsWith("*") || number.startsWith("#") ) {
+        setState( QPhoneCall::ServiceHangup );
+        return;
+    }
+    
+    QDBusPendingReply<int> reply = provider->gsmCall.Initiate(number, "voice");
     watchCall(reply, &watcher, this, SLOT(initiateFinished(QDBusPendingCallWatcher*)));
+    setState(QPhoneCall::Dialing);
 }
 
 void FsoPhoneCall::initiateFinished(QDBusPendingCallWatcher * watcher)
