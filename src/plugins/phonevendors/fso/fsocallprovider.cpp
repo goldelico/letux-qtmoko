@@ -42,16 +42,6 @@ QPhoneCallImpl *FsoCallProvider::create
     return new FsoPhoneCall( this, identifier, callType, -1 );
 }
 
-void FsoCallProvider::dial(FsoPhoneCall *call, const QDialOptions& options)
-{
-    QDBusPendingReply<int> reply = gsmCall.Initiate(options.number(), "voice");
-    call->setState(QPhoneCall::Dialing);
-    if(checkReply(reply, "Initiate"))
-    {
-        call->id = reply.value();
-    }   
-}
-
 void FsoCallProvider::hangup(FsoPhoneCall *call, QPhoneCall::Scope scope)
 {
     if(scope == QPhoneCall::CallOnly)

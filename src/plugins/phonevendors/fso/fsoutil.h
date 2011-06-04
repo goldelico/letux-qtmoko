@@ -49,5 +49,18 @@ template <class T, class T2, class T3>
     return unfinished;
 }
 
+
+template <class T, class T2, class T3>
+void watchCall(QDBusPendingReply<T,T2,T3> & reply,
+               QDBusPendingCallWatcher *watcher,
+               QObject * receiver,
+               const char * finishedMethod)
+{
+    watcher->~QDBusPendingCallWatcher();
+    watcher = new (watcher)QDBusPendingCallWatcher(reply, receiver);
+    QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
+                     receiver, finishedMethod);
+}
+
 #endif
 

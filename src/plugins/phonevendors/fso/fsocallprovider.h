@@ -37,8 +37,7 @@ public:
     ~FsoCallProvider();
     
     QFsoGSMCall gsmCall;
-
-    void dial(FsoPhoneCall *call, const QDialOptions& options);
+    
     void hangup(FsoPhoneCall *call, QPhoneCall::Scope scope);
     
 protected:

@@ -27,6 +27,7 @@ FsoPhoneCall::FsoPhoneCall
     , provider(provider)
     , id(id)
     , hangupLocal(false)
+    , watcher(QDBusPendingReply<>(), this)
 {
 }
 
@@ -59,8 +60,21 @@ void FsoPhoneCall::setFsoStatus(QString fsoStatus)
 void FsoPhoneCall::dial( const QDialOptions& options )
 {
     qLog(Modem) << "FsoPhoneCall::dial(" << options.number() << ")";
-    provider->dial(this, options);
+ 
+    QDBusPendingReply<int> reply = provider->gsmCall.Initiate(options.number(), "voice");
+    setState(QPhoneCall::Dialing);
+    watchCall(reply, &watcher, this, SLOT(initiateFinished(QDBusPendingCallWatcher*)));
 }
+
+void FsoPhoneCall::initiateFinished(QDBusPendingCallWatcher * watcher)
+{
+    QDBusPendingReply<int> reply = *watcher;
+    if(checkReply(reply, "Initiate"))
+    {
+        id = reply.value();
+    }   
+}
+
 
 void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 {

@@ -20,6 +20,7 @@
 #ifndef FSOPHONECALL_H
 #define FSOPHONECALL_H
 
+#include <QtDBus>
 #include <qphonecallprovider.h>
 #include <qtopialog.h>
 
@@ -35,6 +36,8 @@ public:
 
     FsoCallProvider *provider;
     int id;
+    bool hangupLocal;
+    QDBusPendingCallWatcher watcher;
     
     void dial( const QDialOptions& options );
     void hangup( QPhoneCall::Scope scope );
@@ -45,9 +48,9 @@ public:
     void transfer( const QString& number );
     
     void setFsoStatus(QString fsoStatus);
-    
-private:
-    bool hangupLocal;
+
+public slots:
+    void initiateFinished(QDBusPendingCallWatcher * watcher);
 };
 
 #endif
