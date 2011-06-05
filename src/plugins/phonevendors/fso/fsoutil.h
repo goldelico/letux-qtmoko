@@ -56,6 +56,10 @@ void watchCall(QDBusPendingReply<T,T2,T3> & reply,
                QObject * receiver,
                const char * finishedMethod)
 {
+    // Make sure that previous call is finished
+    watcher->waitForFinished();
+
+    // Cleanup from previous call and recycle the watcher via placed new
     watcher->~QDBusPendingCallWatcher();
     watcher = new (watcher)QDBusPendingCallWatcher(reply, receiver);
     QObject::connect(watcher, SIGNAL(finished(QDBusPendingCallWatcher*)),
