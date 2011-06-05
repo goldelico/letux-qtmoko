@@ -17,7 +17,7 @@
 **
 ****************************************************************************/
 
-#include "fsophonerffunctionality.h"
+#include "fsorffunctionality.h"
 #include "fsomodemservice.h"
 #include "fsoutil.h"
 

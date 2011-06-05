@@ -18,7 +18,7 @@
 ****************************************************************************/
 #include "fsomodemservice.h"
 #include "fsoservicechecker.h"
-#include "fsophonerffunctionality.h"
+#include "fsorffunctionality.h"
 #include "fsonetworkregistration.h"
 #include "fsocallprovider.h"
 #include "fsophonecall.h"

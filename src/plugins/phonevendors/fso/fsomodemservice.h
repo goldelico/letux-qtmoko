@@ -32,7 +32,7 @@
 #include "fsocallprovider.h"
 #include "fsonetworkregistration.h"
 #include "fsoservicechecker.h"
-#include "fsophonerffunctionality.h"
+#include "fsorffunctionality.h"
 
 class FsoCallProvider;
 
