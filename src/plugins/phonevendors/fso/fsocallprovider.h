@@ -33,11 +33,11 @@ class FsoCallProvider : public QPhoneCallProvider
 {
     Q_OBJECT
 public:
-    FsoCallProvider( const QString & service, QObject * parent );
+    FsoCallProvider( FsoModemService * service );
     ~FsoCallProvider();
-    
-    QFsoGSMCall gsmCall;
-    
+
+    FsoModemService *service;
+
 protected:
     QPhoneCallImpl *create
         ( const QString& identifier, const QString& callType );

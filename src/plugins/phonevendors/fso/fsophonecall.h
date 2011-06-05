@@ -23,6 +23,7 @@
 #include <QtDBus>
 #include <qphonecallprovider.h>
 #include <qtopialog.h>
+#include "fsomodemservice.h"
 
 class FsoCallProvider;
 
@@ -30,11 +31,12 @@ class FsoPhoneCall : public QPhoneCallImpl
 {
     Q_OBJECT
 public:
-    FsoPhoneCall( FsoCallProvider *provider, const QString& identifier,
-                  const QString& callType, int id );
+    FsoPhoneCall( FsoCallProvider *provider, FsoModemService *service,
+                  const QString& identifier, const QString& callType, int id );
     virtual ~FsoPhoneCall();
 
     FsoCallProvider *provider;
+    FsoModemService *service;
     int id;
     QDBusPendingCallWatcher watcher;
 

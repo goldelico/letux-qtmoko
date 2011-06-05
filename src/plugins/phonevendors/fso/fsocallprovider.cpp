@@ -19,11 +19,11 @@
 
 #include "fsocallprovider.h"
 
-FsoCallProvider::FsoCallProvider( const QString & service, QObject * parent )
-    : QPhoneCallProvider( service, parent )
-    , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+FsoCallProvider::FsoCallProvider( FsoModemService * service )
+    : QPhoneCallProvider( service->service(), service )
+    , service(service)
 {
-    connect(&gsmCall,
+    connect(&service->gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
             SLOT(callStatusChange(int, const QString &, const QVariantMap &)));
@@ -39,7 +39,7 @@ QPhoneCallImpl *FsoCallProvider::create
         ( const QString& identifier, const QString& callType )
 {
     qDebug() << "FsoCallProvider::create callType=" << callType;
-    return new FsoPhoneCall( this, identifier, callType, -1 );
+    return new FsoPhoneCall( this, service, identifier, callType, -1 );
 }
 
 void FsoCallProvider::callStatusChange(int id, const QString &status, const QVariantMap &properties)
@@ -55,7 +55,7 @@ void FsoCallProvider::callStatusChange(int id, const QString &status, const QVar
     if(status == "INCOMING")
     {
         // Incoming calls have to be created here
-        FsoPhoneCall *call = new FsoPhoneCall( this, NULL, "Voice", id );
+        FsoPhoneCall *call = new FsoPhoneCall( this, service, NULL, "Voice", id );
         call->setNumber(properties.value("peer").toString());
         call->setFsoStatus(status);
         return;

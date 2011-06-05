@@ -26,6 +26,7 @@ FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
           QObject *parent )
     : QModemService( service, mux, parent )
+    , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
 {
 }
 
@@ -61,7 +62,7 @@ void FsoModemService::initialize()
 	*/
 
     if ( !callProvider() )
-        setCallProvider( new FsoCallProvider( service(), this ) );
+        setCallProvider( new FsoCallProvider( this ) );
 
     // Call QModemService to create other interfaces that we didn't override.
     //QModemService::initialize();

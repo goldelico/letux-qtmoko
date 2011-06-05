@@ -21,10 +21,11 @@
 #include "fsocallprovider.h"
 
 FsoPhoneCall::FsoPhoneCall
-        ( FsoCallProvider *provider, const QString& identifier,
-          const QString& callType, int id )
+        ( FsoCallProvider *provider, FsoModemService *service,
+          const QString& identifier, const QString& callType, int id )
     : QPhoneCallImpl( provider, identifier, callType )
     , provider(provider)
+    , service(service)
     , id(id)
     , watcher(QDBusPendingReply<>(), this)
 {
@@ -75,7 +76,7 @@ void FsoPhoneCall::dial( const QDialOptions& options )
         return;
     }
     
-    QDBusPendingReply<int> reply = provider->gsmCall.Initiate(number, "voice");
+    QDBusPendingReply<int> reply = service->gsmCall.Initiate(number, "voice");
     watchCall(reply, &watcher, this, SLOT(initiateFinished(QDBusPendingCallWatcher*)));
     setState(QPhoneCall::Dialing);
 }
@@ -95,13 +96,13 @@ void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 
     if(scope == QPhoneCall::CallOnly)
     {
-        QDBusPendingReply<> reply = provider->gsmCall.Release(id);
+        QDBusPendingReply<> reply = service->gsmCall.Release(id);
         checkReply(reply, "Release");
     }
     else
     {
         // TODO: not sure if ReleaseAll() is ok
-        QDBusPendingReply<> reply = provider->gsmCall.ReleaseAll();
+        QDBusPendingReply<> reply = service->gsmCall.ReleaseAll();
         checkReply(reply, "ReleaseAll");
     }
     id = -1;
