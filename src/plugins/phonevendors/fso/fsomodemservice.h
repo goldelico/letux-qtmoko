@@ -27,9 +27,12 @@
 #include <qbandselection.h>
 #include <qfsogsmnetwork.h>
 #include <qfsogsmcall.h>
+#include <qfsogsmdevice.h>
 
 #include "fsocallprovider.h"
 #include "fsonetworkregistration.h"
+#include "fsoservicechecker.h"
+#include "fsophonerffunctionality.h"
 
 class FsoCallProvider;
 
@@ -42,9 +45,12 @@ public:
           QObject *parent = 0 );
     ~FsoModemService();
 
+    QFsoGSMDevice gsmDev;
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
 
+    FsoServiceChecker service_checker;
+    FsoRfFunctionality rf_functionality;
     FsoNetworkRegistration network_registration;
     FsoCallProvider call_provider;
 

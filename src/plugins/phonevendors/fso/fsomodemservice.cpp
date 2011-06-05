@@ -27,8 +27,11 @@ FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
           QObject *parent )
     : QModemService( service, mux, parent )
+    , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , service_checker(this)
+    , rf_functionality(this)
     , network_registration(this)
     , call_provider(this)
 {
@@ -48,10 +51,10 @@ void FsoModemService::initialize()
  
      // If the modem does not exist, then tell clients via QServiceChecker.
     if ( !supports<QServiceChecker>() )
-        addInterface( new FsoServiceChecker( service(), this ) );
+        addInterface( &service_checker );
  
     if ( !supports<QPhoneRfFunctionality>() )
-        addInterface( new FsoRfFunctionality( service(), this ) );
+        addInterface( &rf_functionality );
  
     if ( !supports<QNetworkRegistration>() )
         addInterface( &network_registration );

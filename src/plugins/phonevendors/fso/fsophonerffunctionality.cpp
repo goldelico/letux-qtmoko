@@ -18,11 +18,13 @@
 ****************************************************************************/
 
 #include "fsophonerffunctionality.h"
+#include "fsomodemservice.h"
+#include "fsoutil.h"
 
 FsoRfFunctionality::FsoRfFunctionality
-        ( const QString& service, QObject *parent )
-    : QPhoneRfFunctionality( service, parent, QCommInterface::Server )
-    , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+        ( FsoModemService *service )
+    : QPhoneRfFunctionality( service->service(), service, QCommInterface::Server )
+    , service(service)
 {
 }
 
@@ -65,7 +67,7 @@ void FsoRfFunctionality::forceLevelRequest()
 {
     qWarning() << "forceLevelRequest";
     
-    QDBusPendingReply<QString, bool, QString> reply = gsmDev.GetFunctionality();
+    QDBusPendingReply<QString, bool, QString> reply = service->gsmDev.GetFunctionality();
     if(!checkReply(reply, "GetFunctionality", true))
     {
         return;
@@ -80,7 +82,7 @@ void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
     qWarning() << "setLevel level=" << level;
 
     // Retrieve autoregister and pin values
-    QDBusPendingReply<QString, bool, QString> reply = gsmDev.GetFunctionality();
+    QDBusPendingReply<QString, bool, QString> reply = service->gsmDev.GetFunctionality();
     if(!checkReply(reply, "GetFunctionality", true))
     {
         emit setLevelResult(QTelephony::Error);
@@ -91,7 +93,7 @@ void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
     QString fsoLevel = qtLevelToFso(level);
 
     // Set actual value
-    QDBusPendingReply<> reply2 = gsmDev.SetFunctionality(fsoLevel, autoregister, pin);
+    QDBusPendingReply<> reply2 = service->gsmDev.SetFunctionality(fsoLevel, autoregister, pin);
     if(!checkReply(reply2, "SetFunctionality", true))
     {
         emit setLevelResult(QTelephony::Error);

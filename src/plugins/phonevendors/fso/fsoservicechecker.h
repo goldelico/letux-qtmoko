@@ -22,11 +22,13 @@
 
 #include <qservicechecker.h>
 
+class FsoModemService;
+
 class FsoServiceChecker : public QServiceChecker
 {
     Q_OBJECT
 public:
-    FsoServiceChecker( const QString& service, QObject *parent = 0 );
+    FsoServiceChecker( FsoModemService *service );
     ~FsoServiceChecker();
 };
 

@@ -22,18 +22,18 @@
 
 #include <QDebug>
 #include <qphonerffunctionality.h>
-#include <qfsogsmdevice.h>
-#include <fsoutil.h>
+
+class FsoModemService;
 
 class FsoRfFunctionality : public QPhoneRfFunctionality
 {
     Q_OBJECT
 public:
-    FsoRfFunctionality( const QString& service, QObject *parent );
+    FsoRfFunctionality( FsoModemService *service );
     ~FsoRfFunctionality();
 
-    QFsoGSMDevice gsmDev;
-
+    FsoModemService *service;
+    
 public slots:
     void forceLevelRequest();
     void setLevel( QPhoneRfFunctionality::Level level );
