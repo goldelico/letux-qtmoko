@@ -38,8 +38,6 @@ public:
     
     QFsoGSMCall gsmCall;
     
-    void hangup(FsoPhoneCall *call, QPhoneCall::Scope scope);
-    
 protected:
     QPhoneCallImpl *create
         ( const QString& identifier, const QString& callType );

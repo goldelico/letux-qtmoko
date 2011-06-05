@@ -26,7 +26,6 @@ FsoPhoneCall::FsoPhoneCall
     : QPhoneCallImpl( provider, identifier, callType )
     , provider(provider)
     , id(id)
-    , hangupLocal(false)
     , watcher(QDBusPendingReply<>(), this)
 {
 }
@@ -35,7 +34,7 @@ FsoPhoneCall::~FsoPhoneCall()
 {
 }
 
-static QPhoneCall::State fsoStatusToQt(QString fsoStatus, bool hangupLocal)
+static QPhoneCall::State fsoStatusToQt(QString fsoStatus, bool hangupLocal, int & id)
 {
     if(fsoStatus == "INCOMING")     // The call is incoming (but not yet accepted)
         return QPhoneCall::Incoming;
@@ -46,7 +45,10 @@ static QPhoneCall::State fsoStatusToQt(QString fsoStatus, bool hangupLocal)
     if(fsoStatus == "HELD")         // The call is being held
         return QPhoneCall::Hold;
     if(fsoStatus == "RELEASE")      // The call has been released
+    {
+        id = 0;
         return hangupLocal ? QPhoneCall::HangupLocal : QPhoneCall::HangupRemote;
+    }
     
     qWarning() << "fsoStatusToQt: unknown status " << fsoStatus;
     return QPhoneCall::OtherFailure;
@@ -54,7 +56,7 @@ static QPhoneCall::State fsoStatusToQt(QString fsoStatus, bool hangupLocal)
 
 void FsoPhoneCall::setFsoStatus(QString fsoStatus)
 {
-    setState(fsoStatusToQt(fsoStatus, hangupLocal));
+    setState(fsoStatusToQt(fsoStatus, false, id));
 }
 
 void FsoPhoneCall::dial( const QDialOptions& options )
@@ -87,12 +89,23 @@ void FsoPhoneCall::initiateFinished(QDBusPendingCallWatcher * watcher)
     }   
 }
 
-
 void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 {
     qLog(Modem) << "FsoPhoneCall::hangup()";
-    hangupLocal = true;
-    provider->hangup(this, scope);
+
+    if(scope == QPhoneCall::CallOnly)
+    {
+        QDBusPendingReply<> reply = provider->gsmCall.Release(id);
+        checkReply(reply, "Release");
+    }
+    else
+    {
+        // TODO: not sure if ReleaseAll() is ok
+        QDBusPendingReply<> reply = provider->gsmCall.ReleaseAll();
+        checkReply(reply, "ReleaseAll");
+    }
+    id = -1;
+    setState(QPhoneCall::HangupLocal);
 }
 
 void FsoPhoneCall::accept()

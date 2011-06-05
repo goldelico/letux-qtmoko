@@ -36,9 +36,8 @@ public:
 
     FsoCallProvider *provider;
     int id;
-    bool hangupLocal;
     QDBusPendingCallWatcher watcher;
-    
+
     void dial( const QDialOptions& options );
     void hangup( QPhoneCall::Scope scope );
     void accept();

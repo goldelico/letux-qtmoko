@@ -42,28 +42,6 @@ QPhoneCallImpl *FsoCallProvider::create
     return new FsoPhoneCall( this, identifier, callType, -1 );
 }
 
-void FsoCallProvider::hangup(FsoPhoneCall *call, QPhoneCall::Scope scope)
-{
-    if(scope == QPhoneCall::CallOnly)
-    {
-        QDBusPendingReply<> reply = gsmCall.Release(call->id);
-        if(checkReply(reply, "Release"))
-        {
-            call->id = -1;
-        }
-    }
-    else
-    {
-        // TODO: not sure if this is ok
-        QDBusPendingReply<> reply = gsmCall.ReleaseAll();
-        if(checkReply(reply, "ReleaseAll"))
-        {
-            call->id = -1;
-        }
-    }
-    call->setState(QPhoneCall::HangupLocal);
-}
-
 void FsoCallProvider::callStatusChange(int id, const QString &status, const QVariantMap &properties)
 {
     QString str = QString("id=%1, status=%2").arg(id).arg(status);
@@ -74,6 +52,15 @@ void FsoCallProvider::callStatusChange(int id, const QString &status, const QVar
     }
     qDebug() << "CallStatusChange" << str;
 
+    if(status == "INCOMING")
+    {
+        // Incoming calls have to be created here
+        FsoPhoneCall *call = new FsoPhoneCall( this, NULL, "Voice", id );
+        call->setNumber(properties.value("peer").toString());
+        call->setFsoStatus(status);
+        return;
+    }
+    
     // Check if it is an existing call
     QList<QPhoneCallImpl *> list = calls();
     for(int i = 0; i < list.count(); i++)
@@ -87,14 +74,10 @@ void FsoCallProvider::callStatusChange(int id, const QString &status, const QVar
         }
     }
 
-    if(status != "INCOMING")
+    if(status == "RELEASE")
     {
-        qWarning() << "callStatusChange: unhandled status for new call" << status;
-        return;
+        return;     // Released call can have id -1, it was not found in the loop but that's ok
     }
 
-    // Incoming calls have to be created here
-    FsoPhoneCall *call = new FsoPhoneCall( this, NULL, "Voice", id );
-    call->setNumber(properties.value("peer").toString());
-    call->setFsoStatus(status);
+    qWarning() << "callStatusChange: unhandled status for new call" << status;
 }
