@@ -19,12 +19,11 @@
 
 #include "fsonetworkregistration.h"
 
-FsoNetworkRegistration::FsoNetworkRegistration
-        ( const QString& service, QObject *parent )
-    : QNetworkRegistrationServer( service, parent )
-    , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+FsoNetworkRegistration::FsoNetworkRegistration(FsoModemService *service)
+    : QNetworkRegistrationServer( service->service(), service )
+    , service(service)
 {
-    getStatusReply = gsmNet.GetStatus();
+    getStatusReply = service->gsmNet.GetStatus();
     QTimer::singleShot(10, this, SLOT(timer()));
 }
 
@@ -103,14 +102,14 @@ void FsoNetworkRegistration::timer()
 void FsoNetworkRegistration::setCurrentOperator
         ( QTelephony::OperatorMode, const QString & id, const QString &)
 {
-    QDBusPendingReply<> reply = gsmNet.RegisterWithProvider(id);
+    QDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
     int ret = checkReply(reply, "RegisterWithProvider", true, QTelephony::OK, QTelephony::Error);
     emit setCurrentOperatorResult((QTelephony::Result)(ret));
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
 {
-    QDBusPendingReply<QFsoNetworkProviderList> reply = gsmNet.ListProviders();
+    QDBusPendingReply<QFsoNetworkProviderList> reply = service->gsmNet.ListProviders();
     if(!checkReply(reply, "ListProviders"))
     {
         return;

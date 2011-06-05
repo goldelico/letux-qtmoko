@@ -25,6 +25,7 @@
 #include <qmodemcallprovider.h>
 #include <qmodemsimtoolkit.h>
 #include <qbandselection.h>
+#include <qfsogsmnetwork.h>
 #include <qfsogsmcall.h>
 
 class FsoModemService : public QModemService
@@ -36,6 +37,7 @@ public:
           QObject *parent = 0 );
     ~FsoModemService();
 
+    QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     
     void initialize();
