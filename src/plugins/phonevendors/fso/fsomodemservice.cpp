@@ -21,6 +21,7 @@
 #include "fsophonerffunctionality.h"
 #include "fsonetworkregistration.h"
 #include "fsocallprovider.h"
+#include "fsophonecall.h"
 
 FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
@@ -28,7 +29,12 @@ FsoModemService::FsoModemService
     : QModemService( service, mux, parent )
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , call_provider(this)
 {
+    connect(&gsmCall,
+            SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
+            this,
+            SLOT(callStatusChange(int, const QString &, const QVariantMap &)));    
 }
 
 FsoModemService::~FsoModemService()
@@ -63,8 +69,48 @@ void FsoModemService::initialize()
 	*/
 
     if ( !callProvider() )
-        setCallProvider( new FsoCallProvider( this ) );
+        setCallProvider( &call_provider );
 
     // Call QModemService to create other interfaces that we didn't override.
     //QModemService::initialize();
+}
+
+void FsoModemService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
+{
+    QString str = QString("id=%1, status=%2").arg(id).arg(status);
+    for(int i = 0; i < properties.count(); i++)
+    {
+        QString key = properties.keys().at(i);
+        str += ", " + key + "=" + properties.value(key).toString();
+    }
+    qDebug() << "CallStatusChange" << str;
+
+    if(status == "INCOMING")
+    {
+        // Incoming calls have to be created here
+        FsoPhoneCall *call = new FsoPhoneCall( this, NULL, "Voice", id );
+        call->setNumber(properties.value("peer").toString());
+        call->setFsoStatus(status);
+        return;
+    }
+    
+    // Check if it is an existing call
+    QList<QPhoneCallImpl *> list = call_provider.calls();
+    for(int i = 0; i < list.count(); i++)
+    {
+        FsoPhoneCall *call = static_cast<FsoPhoneCall*>(list.at(i));
+        qDebug() << "call identifier=" << call->identifier() << ", call id=" << call->id;
+        if(call->id == id)
+        {
+            call->setFsoStatus(status);
+            return;
+        }
+    }
+
+    if(status == "RELEASE")
+    {
+        return;     // Released call can have id -1, it was not found in the loop but that's ok
+    }
+
+    qWarning() << "callStatusChange: unhandled status for new call" << status;
 }

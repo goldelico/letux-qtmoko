@@ -28,6 +28,10 @@
 #include <qfsogsmnetwork.h>
 #include <qfsogsmcall.h>
 
+#include "fsocallprovider.h"
+
+class FsoCallProvider;
+
 class FsoModemService : public QModemService
 {
     Q_OBJECT
@@ -39,8 +43,13 @@ public:
 
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
-    
+
+    FsoCallProvider call_provider;
+
     void initialize();
+    
+private slots:
+    void callStatusChange(int id, const QString &status, const QVariantMap &properties);
 };
 
 #endif

@@ -18,13 +18,14 @@
 ****************************************************************************/
 
 #include "fsophonecall.h"
+#include "fsomodemservice.h"
 #include "fsocallprovider.h"
+#include "fsoutil.h"
 
 FsoPhoneCall::FsoPhoneCall
-        ( FsoCallProvider *provider, FsoModemService *service,
-          const QString& identifier, const QString& callType, int id )
-    : QPhoneCallImpl( provider, identifier, callType )
-    , provider(provider)
+        ( FsoModemService *service, const QString& identifier,
+          const QString& callType, int id )
+    : QPhoneCallImpl( &service->call_provider, identifier, callType )
     , service(service)
     , id(id)
     , watcher(QDBusPendingReply<>(), this)

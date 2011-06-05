@@ -24,10 +24,8 @@
 #include <QDebug>
 #include <qtopialog.h>
 #include <qphonecallprovider.h>
-#include <qfsogsmcall.h>
-#include "fsomodemservice.h"
-#include "fsoutil.h"
-#include "fsophonecall.h"
+
+class FsoModemService;
 
 class FsoCallProvider : public QPhoneCallProvider
 {
@@ -41,9 +39,6 @@ public:
 protected:
     QPhoneCallImpl *create
         ( const QString& identifier, const QString& callType );
-
-private slots:
-    void callStatusChange(int id, const QString &status, const QVariantMap &properties);
         
 };
 
