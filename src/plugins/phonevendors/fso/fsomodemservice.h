@@ -29,6 +29,7 @@
 #include <qfsogsmcall.h>
 
 #include "fsocallprovider.h"
+#include "fsonetworkregistration.h"
 
 class FsoCallProvider;
 
@@ -44,6 +45,7 @@ public:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
 
+    FsoNetworkRegistration network_registration;
     FsoCallProvider call_provider;
 
     void initialize();

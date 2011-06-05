@@ -23,8 +23,8 @@
 #include <QTimer>
 #include <qnetworkregistration.h>
 #include <qfsogsmnetwork.h>
-#include "fsoutil.h"
-#include "fsomodemservice.h"
+
+class FsoModemService;
 
 class FsoNetworkRegistration : public QNetworkRegistrationServer
 {

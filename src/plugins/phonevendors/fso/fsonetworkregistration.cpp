@@ -18,6 +18,8 @@
 ****************************************************************************/
 
 #include "fsonetworkregistration.h"
+#include "fsomodemservice.h"
+#include "fsoutil.h"
 
 FsoNetworkRegistration::FsoNetworkRegistration(FsoModemService *service)
     : QNetworkRegistrationServer( service->service(), service )

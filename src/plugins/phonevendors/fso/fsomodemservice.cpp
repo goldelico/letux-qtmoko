@@ -29,6 +29,7 @@ FsoModemService::FsoModemService
     : QModemService( service, mux, parent )
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , network_registration(this)
     , call_provider(this)
 {
     connect(&gsmCall,
@@ -53,7 +54,7 @@ void FsoModemService::initialize()
         addInterface( new FsoRfFunctionality( service(), this ) );
  
     if ( !supports<QNetworkRegistration>() )
-        addInterface( new FsoNetworkRegistration( this ) );
+        addInterface( &network_registration );
 
 /*    if ( !supports<QSimInfo>() )
         addInterface( new FsoSimInfo( this ) );
