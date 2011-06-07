@@ -464,7 +464,9 @@ void QBluetoothLocalDevice_Private::lazyInit()
 
     args << m_initString;
     
-    iface.btcall("FindAdapter", reply, args);
+    if (!iface.btcall("FindAdapter", reply, args)) {
+        return;
+    }
     m_initString.clear();
 
     if (!reply.isValid()) {
