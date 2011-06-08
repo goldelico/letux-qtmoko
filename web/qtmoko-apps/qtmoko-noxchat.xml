@@ -3,7 +3,7 @@
       version="32-1"
       title="Noxchat"
       summary="IRC client"
-      category="utility"
+      category="communication"
       >
           <tag>irc</tag>
           <tag>chat</tag>
