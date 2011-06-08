@@ -20,6 +20,7 @@ HEADERS=\
     fsoplugin.h\
     fsomodemservice.h\
     fsonetworkregistration.h\
+    fsosupplementaryservices.h\
     fsoservicechecker.h\
     fsorffunctionality.h\
     fsocallprovider.h\
@@ -30,6 +31,7 @@ SOURCES=\
     fsoplugin.cpp\
     fsomodemservice.cpp\
     fsonetworkregistration.cpp\
+    fsosupplementaryservices.cpp\
     fsoservicechecker.cpp\
     fsorffunctionality.cpp\
     fsocallprovider.cpp \

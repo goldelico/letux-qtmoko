@@ -29,8 +29,10 @@
 #include <qfsogsmcall.h>
 #include <qfsogsmdevice.h>
 
+#include "fsophonecall.h"
 #include "fsocallprovider.h"
 #include "fsonetworkregistration.h"
+#include "fsosupplementaryservices.h"
 #include "fsoservicechecker.h"
 #include "fsorffunctionality.h"
 
@@ -52,6 +54,7 @@ public:
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
     FsoNetworkRegistration network_registration;
+    FsoSupplementaryServices suppl_services;
     FsoCallProvider call_provider;
 
     void initialize();

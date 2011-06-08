@@ -17,11 +17,6 @@
 **
 ****************************************************************************/
 #include "fsomodemservice.h"
-#include "fsoservicechecker.h"
-#include "fsorffunctionality.h"
-#include "fsonetworkregistration.h"
-#include "fsocallprovider.h"
-#include "fsophonecall.h"
 
 FsoModemService::FsoModemService
         ( const QString& service, QSerialIODeviceMultiplexer *mux,
@@ -33,6 +28,7 @@ FsoModemService::FsoModemService
     , service_checker(this)
     , rf_functionality(this)
     , network_registration(this)
+    , suppl_services(this)
     , call_provider(this)
 {
     connect(&gsmCall,
@@ -58,6 +54,9 @@ void FsoModemService::initialize()
  
     if ( !supports<QNetworkRegistration>() )
         addInterface( &network_registration );
+    
+    if ( !supports<QSupplementaryServices>() )
+        addInterface( &suppl_services );
 
 /*    if ( !supports<QSimInfo>() )
         addInterface( new FsoSimInfo( this ) );
