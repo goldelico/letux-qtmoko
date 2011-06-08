@@ -34,7 +34,12 @@ FsoModemService::FsoModemService
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
-            SLOT(callStatusChange(int, const QString &, const QVariantMap &)));    
+            SLOT(callStatusChange(int, const QString &, const QVariantMap &)));
+
+    connect(&gsmNet,
+            SIGNAL(IncomingUssd(const QString &, const QString &)),
+            this,
+            SLOT(incomingUssd(const QString &, const QString &)));            
 }
 
 FsoModemService::~FsoModemService()
@@ -116,4 +121,10 @@ void FsoModemService::callStatusChange(int id, const QString &status, const QVar
     }
 
     qWarning() << "callStatusChange: unhandled status for new call" << status;
+}
+
+void FsoModemService::incomingUssd(const QString &mode, const QString &message)
+{
+    qDebug() << "Incomming ussd", "mode=" + mode + ", message=" + message;
+    suppl_services.onIncomingUssd(mode, message);
 }

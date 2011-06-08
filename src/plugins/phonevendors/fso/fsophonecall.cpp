@@ -73,6 +73,7 @@ void FsoPhoneCall::dial( const QDialOptions& options )
     // So we dial and then immediately hang up, allowing the network
     // to send us the SS/USSD response when it is ready.
     if ( number.startsWith("*") || number.startsWith("#") ) {
+        service->suppl_services.sendSupplementaryServiceData(number);
         setState( QPhoneCall::ServiceHangup );
         return;
     }

@@ -61,6 +61,7 @@ public:
     
 private slots:
     void callStatusChange(int id, const QString &status, const QVariantMap &properties);
+    void incomingUssd(const QString &mode, const QString &message);
 };
 
 #endif

@@ -21,6 +21,7 @@
 #define FSOSUPPLEMENTARYSERVICES_H
 
 #include <QTimer>
+#include <QtDBus>
 #include <qsupplementaryservices.h>
 
 class FsoModemService;
@@ -33,11 +34,17 @@ public:
     ~FsoSupplementaryServices();
 
     FsoModemService * service;
+    QDBusPendingCallWatcher watcher;
+    
+    void onIncomingUssd(const QString &mode, const QString &message);
 
 public slots:
     void cancelUnstructuredSession();
     void sendUnstructuredData( const QString& data );
     void sendSupplementaryServiceData( const QString& data );
+
+private slots:
+    void sendUssdRequestFinished(QDBusPendingCallWatcher * watcher);
 };
 
 #endif
