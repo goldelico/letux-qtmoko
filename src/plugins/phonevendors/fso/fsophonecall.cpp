@@ -66,7 +66,7 @@ void FsoPhoneCall::dial( const QDialOptions& options )
     QString number = options.number();
     setNumber( number );
     
-    qLog(Modem) << "FsoPhoneCall::dial(" << number << ")";
+    qDebug() << "FsoPhoneCall::dial(" << number << ")";
 
     // If the number starts with '*' or '#', then this is a request
     // for a supplementary service, not an actual phone call.
@@ -94,7 +94,7 @@ void FsoPhoneCall::initiateFinished(QDBusPendingCallWatcher * watcher)
 
 void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 {
-    qLog(Modem) << "FsoPhoneCall::hangup()";
+    qDebug() << "FsoPhoneCall::hangup()";
 
     if(scope == QPhoneCall::CallOnly)
     {
@@ -113,25 +113,31 @@ void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 
 void FsoPhoneCall::accept()
 {
-    qLog(Modem) << "FsoPhoneCall::accept()";
+    qDebug() << "FsoPhoneCall::accept()";
+    QDBusPendingReply<> reply = service->gsmCall.Activate(id);
+    checkReply(reply, "Activate");
 }
 
 void FsoPhoneCall::hold()
 {
-    qLog(Modem) << "FsoPhoneCall::hold()";
+    qDebug() << "FsoPhoneCall::hold()";
+    QDBusPendingReply<> reply = service->gsmCall.HoldActive();
+    checkReply(reply, "HoldActive");
 }
 
 void FsoPhoneCall::activate( QPhoneCall::Scope )
 {
-    qLog(Modem) << "FsoPhoneCall::activate()";
+    qDebug() << "FsoPhoneCall::activate()";
+    QDBusPendingReply<> reply = service->gsmCall.Activate(id);
+    checkReply(reply, "Activate");
 }
 
 void FsoPhoneCall::tone( const QString& tones )
 {
-    qLog(Modem) << "FsoPhoneCall::tone(" << tones << ")";
+    qDebug() << "FsoPhoneCall::tone(" << tones << ")";
 }
 
 void FsoPhoneCall::transfer( const QString& number )
 {
-    qLog(Modem) << "FsoPhoneCall::transfer(" << number << ")";
+    qDebug() << "FsoPhoneCall::transfer(" << number << ")";
 }
