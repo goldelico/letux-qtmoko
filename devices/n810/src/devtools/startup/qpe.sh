@@ -10,7 +10,7 @@ export QTDIR=$QPEDIR
 export LD_LIBRARY_PATH=$QTDIR/lib
 export PATH=$QPEDIR/bin:$PATH
 
-export QTOPIA_PHONE_DUMMY=1
+export QTOPIA_PHONE=Dummy
 export SXE_DISCOVERY_MODE=1
 
 export QWS_MOUSE_PROTO="tslib:/dev/input/event3"

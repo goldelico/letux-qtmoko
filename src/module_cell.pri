@@ -4,8 +4,9 @@
 include(module_telephony.pri)
 
 SERVER_PROJECTS*=\
-    server/phone/telephony/phoneserver/atmodemservice \ #starts modem based telephony
-    server/phone/telephony/phoneserver/dummyservice \   #support for QTOPIA_PHONE_DUMMY
+    server/phone/telephony/phoneserver/atmodemservice \ #support for QTOPIA_PHONE=AT
+    server/phone/telephony/phoneserver/dummyservice \   #support for QTOPIA_PHONE=Dummy
+    server/phone/telephony/phoneserver/fsoservice \     #support for QTOPIA_PHONE=Fso
     server/phone/telephony/callpolicymanager/cell \     #cell modem manager
     server/phone/telephony/simcallhistory \             #populate call history from SIM
     server/phone/telephony/cell/cellbroadcast \         #cellbroadcast management

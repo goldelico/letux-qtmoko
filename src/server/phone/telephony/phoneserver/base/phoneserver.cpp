@@ -81,13 +81,13 @@ PhoneServer::PhoneServer( QObject* parent )
 
     status = new QValueSpaceObject("/Telephony", this);
 
-    // Create the AT-based modem service.  If QTOPIA_PHONE_DUMMY is set,
-    // we create a dummy handler for testing purposes.
-    char *env = getenv( "QTOPIA_PHONE_DUMMY" );
+    // Create the AT-based modem service. If QTOPIA_PHONE is set we create a
+    // handler for it. Possible case sensitive values are:
+    // QTOPIA_PHONE=Dummy, QTOPIA_PHONE=AT, QTOPIA_PHONE=Fso
+    char *env = getenv( "QTOPIA_PHONE" );
     QTelephonyService *service = 0;
-    QByteArray target("ATModemService");
-    if ( env && *env == '1' )
-        target = "DummyModemService";
+    QByteArray target(env ? env : "AT");
+    target += "ModemService";
 
     QList<TelephonyServiceFactory *> providers = ::qtopiaTasks<TelephonyServiceFactory>();
     foreach( TelephonyServiceFactory* factory, providers )

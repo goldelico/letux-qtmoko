@@ -3,7 +3,7 @@
 export QWS_MOUSE_PROTO="c3200mousehandler"
 export QWS_KEYBOARD="c3200kbdhandler"
 export QWS_SIZE="240x320"
-export QTOPIA_PHONE_DUMMY=1
+export QTOPIA_PHONE=Dummy
 
 KILLPROGS="qpe quicklauncher qss mediaplayer"
 
@@ -17,9 +17,9 @@ while [ -e /tmp/restart-qtopia ]; do
     eval `startupflags.sh`
 
     if [ "$PHONEDUMMY_FLAG" = 1 ]; then
-        export QTOPIA_PHONE_DUMMY=1
+        export QTOPIA_PHONE=Dummy
     else
-        export QTOPIA_PHONE_DUMMY=0
+        export QTOPIA_PHONE=AT
     fi
 
     if [ "$PHONEDEVICE_FLAG" != "" ]; then
@@ -37,7 +37,7 @@ while [ -e /tmp/restart-qtopia ]; do
         phonebounce $QTOPIA_PHONE_DEVICE 12345 &
         #modem_keep_alive.sh &
 
-        export QTOPIA_PHONE_DUMMY=1
+        export QTOPIA_PHONE=Dummy
     fi
 
     if [ "`cat $HOME/.helix/HelixSDK_10_0|grep -c volume`" = 0 ] ; then

@@ -32,9 +32,9 @@ if [ "$RESTOREDEFAULTS_FLAG" = 1 ]; then
 fi
 
 if [ "$PHONEDUMMY_FLAG" = 1 ]; then
-    export QTOPIA_PHONE_DUMMY=1
+    export QTOPIA_PHONE=Dummy
 else
-    export QTOPIA_PHONE_DUMMY=0
+    export QTOPIA_PHONE=AT
 fi
 
 if [ "$PHONEDEVICE_FLAG" != "" ]; then
@@ -49,7 +49,7 @@ if [ "$PHONEBOUNCE_FLAG" = 1 ] ; then
     phonebounce $QTOPIA_PHONE_DEVICE 12345 &
     modem_keep_alive.sh &
 
-    export QTOPIA_PHONE_DUMMY=1
+    export QTOPIA_PHONE=Dummy
 fi
     
 if [ "$PERFTEST_FLAG" = 1 ] && [ "$QTOPIA_PERFTEST" != 1 ]; then
