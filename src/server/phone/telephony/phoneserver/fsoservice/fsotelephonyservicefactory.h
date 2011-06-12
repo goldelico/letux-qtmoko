@@ -2,7 +2,7 @@
 **
 ** This file is part of the Qt Extended Opensource Package.
 **
-** Copyright (C) 2011 Radek Polak.
+** Copyright (C) 2011 Radek Polak
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -16,26 +16,19 @@
 **
 **
 ****************************************************************************/
-#include "fsoplugin.h"
-#include "fsomodemservice.h"
 
-QTOPIA_EXPORT_PLUGIN( FsoPluginImpl )
+#ifndef FSOTELEPHONYSERVICEFACTORY_H
+#define FSOTELEPHONYSERVICEFACTORY_H
 
-FsoPluginImpl::FsoPluginImpl()
+#include "phoneserver.h"
+
+class FsoTelephonyServiceFactory : public TelephonyServiceFactory
 {
-}
+    Q_OBJECT
+public: 
+    FsoTelephonyServiceFactory( QObject *parent = 0 );
+    QTelephonyService* service();
+    QByteArray serviceName() const;
+};
 
-FsoPluginImpl::~FsoPluginImpl()
-{
-}
-
-bool FsoPluginImpl::supports( const QString& manufacturer )
-{
-    return manufacturer.contains( "FSO" );
-}
-
-QModemService *FsoPluginImpl::create
-    ( const QString& service, QSerialIODeviceMultiplexer *mux, QObject *parent )
-{
-    return new FsoModemService( service, mux, parent );
-}
+#endif
