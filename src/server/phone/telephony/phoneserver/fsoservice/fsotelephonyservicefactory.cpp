@@ -22,6 +22,7 @@
 #include <QSignalSourceProvider>
 #include <qtimer.h>
 #include "phoneserver.h"
+#include "fsomodemservice.h"
 
 FsoTelephonyServiceFactory::FsoTelephonyServiceFactory(QObject *parent)
 {
@@ -30,7 +31,7 @@ FsoTelephonyServiceFactory::FsoTelephonyServiceFactory(QObject *parent)
 
 QTelephonyService* FsoTelephonyServiceFactory::service()
 {
-    return NULL;
+    return new FsoModemService("FsoModemService", NULL);
 }
 
 QByteArray FsoTelephonyServiceFactory::serviceName() const 

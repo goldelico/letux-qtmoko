@@ -18,10 +18,8 @@
 ****************************************************************************/
 #include "fsomodemservice.h"
 
-FsoModemService::FsoModemService
-        ( const QString& service, QSerialIODeviceMultiplexer *mux,
-          QObject *parent )
-    : QModemService( service, mux, parent )
+FsoModemService::FsoModemService(const QString& service, QObject *parent)
+    : QTelephonyService( service, parent )
     , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
