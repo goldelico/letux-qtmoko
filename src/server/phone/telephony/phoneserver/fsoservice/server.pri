@@ -8,7 +8,7 @@ SERVER_DEPS*=\
 
 HEADERS+=\
         fsoutil.h\
-        fsomodemservice.h\
+        fsotelephonyservice.h\
         fsotelephonyservicefactory.h\
         fsonetworkregistration.h\
         fsosupplementaryservices.h\
@@ -19,7 +19,7 @@ HEADERS+=\
 
 SOURCES+=\
         fsotelephonyservicefactory.cpp\
-        fsomodemservice.cpp\
+        fsotelephonyservice.cpp\
         fsonetworkregistration.cpp\
         fsosupplementaryservices.cpp\
         fsoservicechecker.cpp\

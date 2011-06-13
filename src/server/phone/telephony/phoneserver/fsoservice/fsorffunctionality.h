@@ -23,16 +23,16 @@
 #include <QDebug>
 #include <qphonerffunctionality.h>
 
-class FsoModemService;
+class FsoTelephonyService;
 
 class FsoRfFunctionality : public QPhoneRfFunctionality
 {
     Q_OBJECT
 public:
-    FsoRfFunctionality( FsoModemService *service );
+    FsoRfFunctionality( FsoTelephonyService *service );
     ~FsoRfFunctionality();
 
-    FsoModemService *service;
+    FsoTelephonyService *service;
     
 public slots:
     void forceLevelRequest();

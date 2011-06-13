@@ -24,16 +24,16 @@
 #include <QtDBus>
 #include <qsupplementaryservices.h>
 
-class FsoModemService;
+class FsoTelephonyService;
 
 class FsoSupplementaryServices : public QSupplementaryServices
 {
     Q_OBJECT
 public:
-    FsoSupplementaryServices( FsoModemService * service );
+    FsoSupplementaryServices( FsoTelephonyService * service );
     ~FsoSupplementaryServices();
 
-    FsoModemService * service;
+    FsoTelephonyService * service;
     QDBusPendingCallWatcher watcher;
     
     void onIncomingUssd(const QString &mode, const QString &message);

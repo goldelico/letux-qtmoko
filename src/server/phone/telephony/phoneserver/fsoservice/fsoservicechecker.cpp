@@ -18,13 +18,13 @@
 ****************************************************************************/
 
 #include "fsoservicechecker.h"
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 
 /*!
     Construct a server-side service checker for FSO services.
 */
 FsoServiceChecker::FsoServiceChecker
-        ( FsoModemService *service )
+        ( FsoTelephonyService *service )
     : QServiceChecker( service->service(), service, Server )
 {
     setValid( true );

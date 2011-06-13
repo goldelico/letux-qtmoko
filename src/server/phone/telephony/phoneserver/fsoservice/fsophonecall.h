@@ -24,17 +24,17 @@
 #include <qphonecallprovider.h>
 #include <qtopialog.h>
 
-class FsoModemService;
+class FsoTelephonyService;
 
 class FsoPhoneCall : public QPhoneCallImpl
 {
     Q_OBJECT
 public:
-    FsoPhoneCall( FsoModemService *service, const QString& identifier,
+    FsoPhoneCall( FsoTelephonyService *service, const QString& identifier,
                   const QString& callType, int id );
     virtual ~FsoPhoneCall();
 
-    FsoModemService *service;
+    FsoTelephonyService *service;
     int id;
     QDBusPendingCallWatcher watcher;
 

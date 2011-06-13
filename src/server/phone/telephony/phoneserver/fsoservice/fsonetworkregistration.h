@@ -24,16 +24,16 @@
 #include <qnetworkregistration.h>
 #include <qfsogsmnetwork.h>
 
-class FsoModemService;
+class FsoTelephonyService;
 
 class FsoNetworkRegistration : public QNetworkRegistrationServer
 {
     Q_OBJECT
 public:
-    FsoNetworkRegistration( FsoModemService * service );
+    FsoNetworkRegistration( FsoTelephonyService * service );
     ~FsoNetworkRegistration();
 
-    FsoModemService * service;
+    FsoTelephonyService * service;
     QDBusPendingReply<QVariantMap> getStatusReply;
 
 public slots:

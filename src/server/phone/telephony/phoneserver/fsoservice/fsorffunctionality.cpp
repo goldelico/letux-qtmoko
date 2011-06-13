@@ -18,11 +18,11 @@
 ****************************************************************************/
 
 #include "fsorffunctionality.h"
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 #include "fsoutil.h"
 
 FsoRfFunctionality::FsoRfFunctionality
-        ( FsoModemService *service )
+        ( FsoTelephonyService *service )
     : QPhoneRfFunctionality( service->service(), service, QCommInterface::Server )
     , service(service)
 {

@@ -25,16 +25,16 @@
 #include <qtopialog.h>
 #include <qphonecallprovider.h>
 
-class FsoModemService;
+class FsoTelephonyService;
 
 class FsoCallProvider : public QPhoneCallProvider
 {
     Q_OBJECT
 public:
-    FsoCallProvider( FsoModemService * service );
+    FsoCallProvider( FsoTelephonyService * service );
     ~FsoCallProvider();
 
-    FsoModemService *service;
+    FsoTelephonyService *service;
 
 protected:
     QPhoneCallImpl *create

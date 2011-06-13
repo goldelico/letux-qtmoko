@@ -38,13 +38,13 @@
 
 class FsoCallProvider;
 
-class FsoModemService : public QTelephonyService
+class FsoTelephonyService : public QTelephonyService
 {
     Q_OBJECT
 public:
-    FsoModemService
+    FsoTelephonyService
         ( const QString& service, QObject *parent = 0 );
-    ~FsoModemService();
+    ~FsoTelephonyService();
 
     QFsoGSMDevice gsmDev;
     QFsoGSMNetwork gsmNet;

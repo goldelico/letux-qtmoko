@@ -18,12 +18,12 @@
 ****************************************************************************/
 
 #include "fsophonecall.h"
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 #include "fsocallprovider.h"
 #include "fsoutil.h"
 
 FsoPhoneCall::FsoPhoneCall
-        ( FsoModemService *service, const QString& identifier,
+        ( FsoTelephonyService *service, const QString& identifier,
           const QString& callType, int id )
     : QPhoneCallImpl( &service->call_provider, identifier, callType )
     , service(service)

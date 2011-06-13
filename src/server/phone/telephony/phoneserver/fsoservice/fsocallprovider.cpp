@@ -18,10 +18,10 @@
 ****************************************************************************/
 
 #include "fsocallprovider.h"
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 #include "fsophonecall.h"
 
-FsoCallProvider::FsoCallProvider( FsoModemService * service )
+FsoCallProvider::FsoCallProvider( FsoTelephonyService * service )
     : QPhoneCallProvider( service->service(), service )
     , service(service)
 {

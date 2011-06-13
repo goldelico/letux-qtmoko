@@ -18,10 +18,10 @@
 ****************************************************************************/
 
 #include "fsosupplementaryservices.h"
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 #include "fsoutil.h"
 
-FsoSupplementaryServices::FsoSupplementaryServices(FsoModemService *service)
+FsoSupplementaryServices::FsoSupplementaryServices(FsoTelephonyService *service)
     : QSupplementaryServices( service->service(), service, QCommInterface::Server )
     , service(service)
     , watcher(QDBusPendingReply<>(), this)

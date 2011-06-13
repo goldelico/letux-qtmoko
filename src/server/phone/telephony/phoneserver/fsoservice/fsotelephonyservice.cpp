@@ -16,9 +16,9 @@
 **
 **
 ****************************************************************************/
-#include "fsomodemservice.h"
+#include "fsotelephonyservice.h"
 
-FsoModemService::FsoModemService(const QString& service, QObject *parent)
+FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent)
     : QTelephonyService( service, parent )
     , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
@@ -40,11 +40,11 @@ FsoModemService::FsoModemService(const QString& service, QObject *parent)
             SLOT(incomingUssd(const QString &, const QString &)));            
 }
 
-FsoModemService::~FsoModemService()
+FsoTelephonyService::~FsoTelephonyService()
 {
 }
 
-void FsoModemService::initialize()
+void FsoTelephonyService::initialize()
 {
     // Create our Fso-specific overrides for the service interfaces
  
@@ -81,7 +81,7 @@ void FsoModemService::initialize()
     //QModemService::initialize();
 }
 
-void FsoModemService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
+void FsoTelephonyService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
 {
     QString str = QString("id=%1, status=%2").arg(id).arg(status);
     for(int i = 0; i < properties.count(); i++)
@@ -121,7 +121,7 @@ void FsoModemService::callStatusChange(int id, const QString &status, const QVar
     qWarning() << "callStatusChange: unhandled status for new call" << status;
 }
 
-void FsoModemService::incomingUssd(const QString &mode, const QString &message)
+void FsoTelephonyService::incomingUssd(const QString &mode, const QString &message)
 {
     qDebug() << "Incomming ussd", "mode=" + mode + ", message=" + message;
     suppl_services.onIncomingUssd(mode, message);
