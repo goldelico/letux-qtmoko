@@ -76,8 +76,9 @@ PhoneServer::PhoneServer( QObject* parent )
 {
     // Launch the third-party telephony agents.
     int serviceCount = executeTelephony( "Telephony::start()" );       // No tr
-    if (!serviceCount)
+    if (!serviceCount) {
         qLog(VoIP) << "No third-party telephony agents found to send \"Telephony::start()\" to";
+    }
 
     status = new QValueSpaceObject("/Telephony", this);
 
