@@ -31,7 +31,7 @@ FsoTelephonyServiceFactory::FsoTelephonyServiceFactory(QObject *parent)
 
 QTelephonyService* FsoTelephonyServiceFactory::service()
 {
-    return new FsoModemService("FsoModemService", NULL);
+    return new FsoModemService("modem", NULL);
 }
 
 QByteArray FsoTelephonyServiceFactory::serviceName() const 
