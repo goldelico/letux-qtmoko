@@ -37,7 +37,7 @@ QTelephonyService* FsoTelephonyServiceFactory::service()
 QByteArray FsoTelephonyServiceFactory::serviceName() const 
 {
     //synchronize with phoneserver.cpp 
-    return QByteArray("FsoModemService");    
+    return QByteArray("Fso");    
 }
 
 QTOPIA_TASK(FsoTelephonyServiceFactory, FsoTelephonyServiceFactory);

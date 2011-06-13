@@ -407,7 +407,7 @@ public:
     QByteArray serviceName() const 
     {
         //synchronize with phoneserver.cpp 
-        return QByteArray("DummyModemService");    
+        return QByteArray("Dummy");    
     }
 };
 #include "phoneserverdummymodem.moc"

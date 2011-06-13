@@ -43,7 +43,7 @@ QTelephonyService* ModemTelephonyServiceFactory::service()
 QByteArray ModemTelephonyServiceFactory::serviceName() const
 {
     //synchronize with phoneserver.cpp 
-    return QByteArray("ATModemService");
+    return QByteArray("AT");
 }
 
 QTOPIA_TASK(ModemTelephonyServiceFactory, ModemTelephonyServiceFactory );

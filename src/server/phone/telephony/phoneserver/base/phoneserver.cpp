@@ -87,7 +87,6 @@ PhoneServer::PhoneServer( QObject* parent )
     char *env = getenv( "QTOPIA_PHONE" );
     QTelephonyService *service = 0;
     QByteArray target(env ? env : "AT");
-    target += "ModemService";
 
     QList<TelephonyServiceFactory *> providers = ::qtopiaTasks<TelephonyServiceFactory>();
     foreach( TelephonyServiceFactory* factory, providers )
