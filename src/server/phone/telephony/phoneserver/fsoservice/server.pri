@@ -15,7 +15,8 @@ HEADERS+=\
         fsoservicechecker.h\
         fsorffunctionality.h\
         fsocallprovider.h\
-        fsophonecall.h
+        fsophonecall.h\
+        fsosmssender.h
 
 SOURCES+=\
         fsotelephonyservicefactory.cpp\
@@ -25,5 +26,6 @@ SOURCES+=\
         fsoservicechecker.cpp\
         fsorffunctionality.cpp\
         fsocallprovider.cpp\
-        fsophonecall.cpp
+        fsophonecall.cpp\
+        fsosmssender.cpp
 

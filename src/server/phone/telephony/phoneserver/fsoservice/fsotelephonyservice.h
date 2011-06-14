@@ -28,6 +28,7 @@
 #include <qfsogsmnetwork.h>
 #include <qfsogsmcall.h>
 #include <qfsogsmdevice.h>
+#include <qfsogsmsms.h>
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -35,6 +36,7 @@
 #include "fsosupplementaryservices.h"
 #include "fsoservicechecker.h"
 #include "fsorffunctionality.h"
+#include "fsosmssender.h"
 
 class FsoCallProvider;
 
@@ -49,12 +51,14 @@ public:
     QFsoGSMDevice gsmDev;
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
+    QFsoGSMSMS gsmSms;
 
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
     FsoNetworkRegistration network_registration;
     FsoSupplementaryServices suppl_services;
     FsoCallProvider call_provider;
+    FsoSMSSender sms_sender;
 
     void initialize();
     

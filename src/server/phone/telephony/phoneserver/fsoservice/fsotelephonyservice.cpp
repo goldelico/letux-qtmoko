@@ -23,11 +23,13 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , service_checker(this)
     , rf_functionality(this)
     , network_registration(this)
     , suppl_services(this)
     , call_provider(this)
+    , sms_sender(this)
 {
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
@@ -60,6 +62,9 @@ void FsoTelephonyService::initialize()
     
     if ( !supports<QSupplementaryServices>() )
         addInterface( &suppl_services );
+    
+    if ( !supports<QSMSSender>() )
+        addInterface( &sms_sender );
 
 /*    if ( !supports<QSimInfo>() )
         addInterface( new FsoSimInfo( this ) );
