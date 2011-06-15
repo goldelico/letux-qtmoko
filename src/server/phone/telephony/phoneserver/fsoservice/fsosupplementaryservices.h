@@ -44,7 +44,7 @@ public slots:
     void sendSupplementaryServiceData( const QString& data );
 
 private slots:
-    void sendUssdRequestFinished(QDBusPendingCallWatcher * watcher);
+    void sendUssdRequestFinished(QDBusPendingReply<> & reply);
 };
 
 #endif

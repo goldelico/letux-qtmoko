@@ -45,11 +45,11 @@ private:
     void showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption);
 
     template <class T, class T2, class T3>
-            bool checkReply(QDBusPendingReply<T,T2,T3> & reply,
-                            const QString & fn,
-                            bool okBox,
-                            bool waitForFinished,
-                            QLabel * label = NULL);
+            bool checkReply2(QDBusPendingReply<T,T2,T3> & reply,
+                             const QString & fn,
+                             bool okBox,
+                             bool waitForFinished,
+                             QLabel * label = NULL);
 
     template <class T, class T2, class T3>
             void watchCallWatcher(QDBusPendingReply<T,T2,T3> & reply,
@@ -87,15 +87,15 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void gsmMessageSizeFinished(QDBusPendingReply<> * r);
+    void gsmMessageSizeFinished(QDBusPendingReply<> & r);
 };
 
 template <class T, class T2, class T3>
-        bool MainWindow::checkReply(QDBusPendingReply<T, T2, T3> & reply,
-                                    const QString & fn,
-                                    bool okBox,
-                                    bool waitForFinished,
-                                    QLabel * label)
+        bool MainWindow::checkReply2(QDBusPendingReply<T, T2, T3> & reply,
+                                     const QString & fn,
+                                     bool okBox,
+                                     bool waitForFinished,
+                                     QLabel * label)
 {
     if(waitForFinished)
     {

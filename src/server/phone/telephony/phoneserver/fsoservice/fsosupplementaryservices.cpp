@@ -47,12 +47,11 @@ void FsoSupplementaryServices::sendSupplementaryServiceData
 {
     qDebug() << "FsoSupplementaryServices::sendSupplementaryServiceData data=" << data;
     QDBusPendingReply<> reply = service->gsmNet.SendUssdRequest(data);
-    watchCall(reply, &watcher, this, SLOT(sendUssdRequestFinished(QDBusPendingCallWatcher*)));
+    watchCall(reply, this, SLOT(sendUssdRequestFinished(QDBusPendingReply<> &)));
 }
 
-void FsoSupplementaryServices::sendUssdRequestFinished(QDBusPendingCallWatcher * watcher)
+void FsoSupplementaryServices::sendUssdRequestFinished(QDBusPendingReply<> & reply)
 {
-    QDBusPendingReply<> reply = *watcher;
     bool ok = checkReply(reply, "SendUssdRequest");
     emit supplementaryServiceResult(ok ? QTelephony::OK : QTelephony::Error);
 }

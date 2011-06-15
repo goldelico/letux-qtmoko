@@ -19,6 +19,7 @@ HEADERS+=\
         fsosmssender.h
 
 SOURCES+=\
+        fsoutil.cpp\
         fsotelephonyservicefactory.cpp\
         fsotelephonyservice.cpp\
         fsonetworkregistration.cpp\

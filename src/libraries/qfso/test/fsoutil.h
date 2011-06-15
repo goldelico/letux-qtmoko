@@ -8,7 +8,7 @@
 #include <QLabel>
 
 template <class T, class T2, class T3>
-        int checkReply2(QDBusPendingReply<T, T2, T3> & reply,
+        int checkReply(QDBusPendingReply<T, T2, T3> & reply,
                        const QString & fn,
                        bool waitForFinished = true,
                        int ok = 1,
@@ -33,6 +33,9 @@ template <class T, class T2, class T3>
     return unfinished;
 }
 
+// This class is used to implement watchCall mechanism which allows us to
+// call callback method when dbus call is finished. It's similar to
+// QDBusPendingCallWatcher, which for some reason sometimes does not work.
 class FsoUtil : public QObject {
     Q_OBJECT
 public:
@@ -40,10 +43,10 @@ public:
     ~FsoUtil();
 
 public:
-    QDBusPendingReply<> pendingReply;
-    bool pendingNotified;
-    const QObject * pendingReceiver;
-    int checkInterval;
+    QDBusPendingReply<> pendingReply;           // reply for current call, we can have just one pending call at a time
+    bool pendingNotified;                       // true if we already signalled finish
+    const QObject * pendingReceiver;            // object to receive finish signal
+    int checkInterval;                          // we start checking with small intervals and then make them longer
 
     static FsoUtil instance;
 
@@ -53,7 +56,7 @@ public:
                            const char * finishedMethod);
 
 Q_SIGNALS:
-    void finished(QDBusPendingReply<> *reply);
+    void finished(QDBusPendingReply<> & reply);
 
 private slots:
     void pendingCheck();
@@ -67,22 +70,29 @@ template <class T, class T2, class T3>
     if(!pendingNotified)
     {
         pendingReply.waitForFinished();
-        emit finished(&pendingReply);
+        emit finished(pendingReply);
     }
+
+    if(receiver != pendingReceiver)
+    {
+        disconnect();
+        QObject::connect(this, SIGNAL(finished(QDBusPendingReply<> &)),
+                     receiver, finishedMethod);
+
+        pendingReceiver = receiver;
+    }
+
     pendingNotified = false;
     pendingReply = reply;
     checkInterval = 10;
-
-    QObject::connect(this, SIGNAL(finished(QDBusPendingReply<> *)),
-                     receiver, finishedMethod);
 
     QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
 }
 
 template <class T, class T2, class T3>
         void watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                                const QObject * receiver,
-                                const char * finishedMethod)
+                       const QObject * receiver,
+                       const char * finishedMethod)
 {
     FsoUtil::instance.watchCall(reply, receiver, finishedMethod);
 }

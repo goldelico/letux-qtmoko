@@ -79,13 +79,13 @@ void FsoPhoneCall::dial( const QDialOptions& options )
     }
     
     QDBusPendingReply<int> reply = service->gsmCall.Initiate(number, "voice");
-    watchCall(reply, &watcher, this, SLOT(initiateFinished(QDBusPendingCallWatcher*)));
+    watchCall(reply, this, SLOT(initiateFinished(QDBusPendingReply<> &)));
     setState(QPhoneCall::Dialing);
 }
 
-void FsoPhoneCall::initiateFinished(QDBusPendingCallWatcher * watcher)
+void FsoPhoneCall::initiateFinished(QDBusPendingReply<> & r)
 {
-    QDBusPendingReply<int> reply = *watcher;
+    QDBusPendingReply<int> reply = r;
     if(checkReply(reply, "Initiate"))
     {
         id = reply.value();

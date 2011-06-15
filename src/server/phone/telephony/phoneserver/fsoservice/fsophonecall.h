@@ -49,7 +49,7 @@ public:
     void setFsoStatus(QString fsoStatus);
 
 public slots:
-    void initiateFinished(QDBusPendingCallWatcher * watcher);
+    void initiateFinished(QDBusPendingReply<> & reply);
 };
 
 #endif
