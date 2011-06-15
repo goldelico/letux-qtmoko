@@ -83,7 +83,8 @@ SOURCES += main.cpp \
     ../qfsopimmessagefolder.cpp \
     ../qfsodevicevibrator.cpp \
     ../qfsopimcall.cpp \
-    ../qfsodbusabstractinterface.cpp
+    ../qfsodbusabstractinterface.cpp \
+    fsoutil.cpp
 HEADERS += mainwindow.h \
     ../qfsodeviceidlenotifier.h \
     ../qfsodeviceled.h \
@@ -164,5 +165,6 @@ HEADERS += mainwindow.h \
     ../qfsointmap.h \
     ../qfsostringmap.h \
     ../qfsovariantmaplist.h \
-    ../qfsodbusabstractinterface.h
+    ../qfsodbusabstractinterface.h \
+    fsoutil.h
 FORMS += mainwindow.ui

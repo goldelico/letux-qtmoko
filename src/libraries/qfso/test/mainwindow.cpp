@@ -1,5 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "fsoutil.h"
 
 MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         QMainWindow(parent),
@@ -340,15 +341,12 @@ void MainWindow::on_bGetStatus_clicked()
 void MainWindow::on_tbSmsContent_textChanged()
 {
     QDBusPendingReply<uint> reply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
-    watchCall(
-            reply,
-            &gsmMessageSizeWatcher,
-            SLOT(gsmMessageSizeFinished(QDBusPendingCallWatcher*)));
+    watchCall(reply, this, SLOT(gsmMessageSizeFinished(QDBusPendingReply<>*)));
 }
 
-void MainWindow::gsmMessageSizeFinished(QDBusPendingCallWatcher * watcher)
+void MainWindow::gsmMessageSizeFinished(QDBusPendingReply<> * r)
 {
-    QDBusPendingReply<uint> reply = *watcher;
+    QDBusPendingReply<uint> reply = *r;
     if(checkReply(reply, "Message size", false, false))
     {
         ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(reply.value()));

@@ -22,6 +22,7 @@ pkg [
 # Input files
 SOURCES += main.cpp \
     mainwindow.cpp \
+    fsoutil.cpp \
     ../qfsopreferencesservice.cpp \
     ../qfsopimnote.cpp \
     ../qfsomusicplayer.cpp \
@@ -101,6 +102,7 @@ SOURCES += main.cpp \
     ../qfsodbusabstractinterface.cpp
 
 HEADERS += mainwindow.h \
+    fsoutil.h \
     ../qfsodeviceidlenotifier.h \
     ../qfsodeviceled.h \
     ../qfsosimhomezone.h \

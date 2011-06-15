@@ -52,9 +52,12 @@ private:
                             QLabel * label = NULL);
 
     template <class T, class T2, class T3>
-            void watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                           QDBusPendingCallWatcher *watcher,
-                           const char * finishedMethod);
+            void watchCallWatcher(QDBusPendingReply<T,T2,T3> & reply,
+                                  QDBusPendingCallWatcher *watcher,
+                                  const char * finishedMethod);
+
+Q_SIGNALS:
+    void finished(QDBusPendingReply<> *reply);
 
 private slots:
     void on_tbSmsContent_textChanged();
@@ -84,7 +87,7 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void gsmMessageSizeFinished(QDBusPendingCallWatcher *call);
+    void gsmMessageSizeFinished(QDBusPendingReply<> * r);
 };
 
 template <class T, class T2, class T3>
@@ -134,9 +137,9 @@ template <class T, class T2, class T3>
 }
 
 template <class T, class T2, class T3>
-        void MainWindow::watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                                   QDBusPendingCallWatcher *watcher,
-                                   const char * finishedMethod)
+        void MainWindow::watchCallWatcher(QDBusPendingReply<T,T2,T3> & reply,
+                                          QDBusPendingCallWatcher *watcher,
+                                          const char * finishedMethod)
 {
     watcher->~QDBusPendingCallWatcher();
     watcher = new (watcher)QDBusPendingCallWatcher(reply, this);
