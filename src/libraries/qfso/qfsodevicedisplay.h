@@ -43,26 +43,26 @@ public:
     ~QFsoDeviceDisplay();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<bool> GetBacklightPower()
+    inline QFsoDBusPendingReply<bool> GetBacklightPower()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetBacklightPower"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetBrightness()
+    inline QFsoDBusPendingReply<int> GetBrightness()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetBrightness"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetBacklightPower(bool power)
+    inline QFsoDBusPendingReply<> SetBacklightPower(bool power)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(power);
         return fsoAsyncCall(QLatin1String("SetBacklightPower"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetBrightness(int brightness)
+    inline QFsoDBusPendingReply<> SetBrightness(int brightness)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(brightness);

@@ -64,7 +64,7 @@ void MainWindow::checkIface(QDBusAbstractInterface *iface)
     ui->tbInit->append(status + " " + iface->service() + " " + iface->path());
 }
 
-void MainWindow::showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption)
+void MainWindow::showVariantMapResult(QFsoDBusPendingReply<QVariantMap> reply, QString caption)
 {
     QVariantMap map = reply.value();
     QString str;
@@ -143,19 +143,19 @@ void MainWindow::refresh()
 
 void MainWindow::on_bRegister_clicked()
 {
-    QDBusPendingReply<void> reply = gsmNet.Register();
+    QFsoDBusPendingReply<void> reply = gsmNet.Register();
     checkReply2(reply, "Register", true, true);
 }
 
 void MainWindow::on_bUnregister_clicked()
 {
-    QDBusPendingReply<void> reply = gsmNet.Unregister();
+    QFsoDBusPendingReply<void> reply = gsmNet.Unregister();
     checkReply2(reply, "Unregister", true, true);
 }
 
 void MainWindow::on_bCall_clicked()
 {
-    QDBusPendingReply<int> reply = gsmCall.Initiate(ui->tbCallNum->text(), "voice");
+    QFsoDBusPendingReply<int> reply = gsmCall.Initiate(ui->tbCallNum->text(), "voice");
     if(checkReply2(reply, "Initiate", false, true))
     {
         ui->tbCallId->setText(QString::number(reply.value()));
@@ -164,7 +164,7 @@ void MainWindow::on_bCall_clicked()
 
 void MainWindow::on_bGsmFeatures_clicked()
 {
-    QDBusPendingReply<QVariantMap> reply = gsmDev.GetFeatures();
+    QFsoDBusPendingReply<QVariantMap> reply = gsmDev.GetFeatures();
     if(checkReply2(reply, "GetFeatures", false, true))
     {
         showVariantMapResult(reply, "Modem features");
@@ -173,7 +173,7 @@ void MainWindow::on_bGsmFeatures_clicked()
 
 void MainWindow::on_bListProviders_clicked()
 {
-    QDBusPendingReply<QFsoNetworkProviderList> reply = gsmNet.ListProviders();
+    QFsoDBusPendingReply<QFsoNetworkProviderList> reply = gsmNet.ListProviders();
     if(checkReply2(reply, "ListProviders", false, true))
     {
         QString str;
@@ -193,7 +193,7 @@ void MainWindow::on_bListProviders_clicked()
 
 void MainWindow::on_bListCalls_clicked()
 {
-    QDBusPendingReply<QFsoCallDetailList> reply = gsmCall.ListCalls();
+    QFsoDBusPendingReply<QFsoCallDetailList> reply = gsmCall.ListCalls();
     if(checkReply2(reply, "ListCalls", false, true))
     {
         QString str;
@@ -235,55 +235,55 @@ void MainWindow::incomingUssd(const QString &mode, const QString &message)
 
 void MainWindow::on_bUssdReq_clicked()
 {
-    QDBusPendingReply<> reply = gsmNet.SendUssdRequest(ui->tbUssdReq->text());
+    QFsoDBusPendingReply<> reply = gsmNet.SendUssdRequest(ui->tbUssdReq->text());
     checkReply2(reply, "SendUssdRequest", true, true);
 }
 
 void MainWindow::on_bActivateCall_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.Activate(ui->tbCallId->text().toInt());
+    QFsoDBusPendingReply<> reply = gsmCall.Activate(ui->tbCallId->text().toInt());
     checkReply2(reply, "Activate", true, true);
 }
 
 void MainWindow::on_bActivateConference_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.ActivateConference(ui->tbCallId->text().toInt());
+    QFsoDBusPendingReply<> reply = gsmCall.ActivateConference(ui->tbCallId->text().toInt());
     checkReply2(reply, "ActivateConference", true, true);
 }
 
 void MainWindow::on_bRelease_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.Release(ui->tbCallId->text().toInt());
+    QFsoDBusPendingReply<> reply = gsmCall.Release(ui->tbCallId->text().toInt());
     checkReply2(reply, "Release", true, true);
 }
 
 void MainWindow::on_bHoldActive_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.HoldActive();
+    QFsoDBusPendingReply<> reply = gsmCall.HoldActive();
     checkReply2(reply, "HoldActive", true, true);
 }
 
 void MainWindow::on_bJoin_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.Join();
+    QFsoDBusPendingReply<> reply = gsmCall.Join();
     checkReply2(reply, "Join", true, true);
 }
 
 void MainWindow::on_bReleaseHeld_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.ReleaseHeld();
+    QFsoDBusPendingReply<> reply = gsmCall.ReleaseHeld();
     checkReply2(reply, "ReleaseHeld", true, true);
 }
 
 void MainWindow::on_bReleaseAll_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.ReleaseAll();
+    QFsoDBusPendingReply<> reply = gsmCall.ReleaseAll();
     checkReply2(reply, "ReleaseAll", true, true);
 }
 
 void MainWindow::on_bTransfer_clicked()
 {
-    QDBusPendingReply<> reply = gsmCall.Transfer(ui->tbTransferNumber->text());
+    QFsoDBusPendingReply<> reply = gsmCall.Transfer(ui->tbTransferNumber->text());
     checkReply2(reply, "Transfer", true, true);
 }
 
@@ -306,7 +306,7 @@ void MainWindow::incomingMessageReport(int reference, const QString &status, con
 
 void MainWindow::on_bSend_clicked()
 {
-    QDBusPendingReply<int, QString> reply = gsmSms.SendTextMessage(ui->tbSmsPhoneNumber->text(),
+    QFsoDBusPendingReply<int, QString> reply = gsmSms.SendTextMessage(ui->tbSmsPhoneNumber->text(),
                                                                    ui->tbSmsContent->toPlainText(),
                                                                    ui->cbReport->checkState() == Qt::Checked);
     if(checkReply2(reply, "SendTextMessage", true, true))
@@ -319,7 +319,7 @@ void MainWindow::on_bSend_clicked()
 
 void MainWindow::on_bGetFunctionality_clicked()
 {
-    QDBusPendingReply<QString, bool, QString> reply = gsmDev.GetFunctionality();
+    QFsoDBusPendingReply<QString, bool, QString> reply = gsmDev.GetFunctionality();
     if(checkReply2(reply, "GetFunctionality", false, true))
     {
         QMessageBox::information(this, "GetFunctionality",
@@ -331,7 +331,7 @@ void MainWindow::on_bGetFunctionality_clicked()
 
 void MainWindow::on_bGetStatus_clicked()
 {
-    QDBusPendingReply<QVariantMap> reply = gsmNet.GetStatus();
+    QFsoDBusPendingReply<QVariantMap> reply = gsmNet.GetStatus();
     if(checkReply2(reply, "GetStatus", false, true))
     {
         showVariantMapResult(reply, "Network status");
@@ -340,13 +340,16 @@ void MainWindow::on_bGetStatus_clicked()
 
 void MainWindow::on_tbSmsContent_textChanged()
 {
-    QDBusPendingCall call = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
-    watchCall(call, this, SLOT(gsmMessageSizeFinished(QDBusPendingCall &)));
+    QFsoDBusPendingCall call = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
+    qWarning() << "call.debug=" << call.debug;
+    watchCall(call, this, SLOT(gsmMessageSizeFinished(QFsoDBusPendingCall &)));
 }
 
-void MainWindow::gsmMessageSizeFinished(QDBusPendingCall & call)
+void MainWindow::gsmMessageSizeFinished(QFsoDBusPendingCall & call)
 {
-    QDBusPendingReply<uint> reply = call;
+    QFsoDBusPendingReply<uint> reply = call;
+    qWarning() << "call.debug=" << call.debug;
+    qWarning() << "reply.debug=" << reply.debug;
     if(checkReply2(reply, "Message size", false, false))
     {
         ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(reply.value()));

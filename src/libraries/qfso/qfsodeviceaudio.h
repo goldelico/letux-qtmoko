@@ -43,72 +43,72 @@ public:
     ~QFsoDeviceAudio();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QStringList> GetAvailableScenarios()
+    inline QFsoDBusPendingReply<QStringList> GetAvailableScenarios()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAvailableScenarios"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetScenario()
+    inline QFsoDBusPendingReply<QString> GetScenario()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetScenario"), argumentList);
     }
 
-    inline QDBusPendingReply<uchar> GetVolume()
+    inline QFsoDBusPendingReply<uchar> GetVolume()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<> PlaySound(const QString &name, int loop, int length)
+    inline QFsoDBusPendingReply<> PlaySound(const QString &name, int loop, int length)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(loop) << qVariantFromValue(length);
         return fsoAsyncCall(QLatin1String("PlaySound"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> PullScenario()
+    inline QFsoDBusPendingReply<QString> PullScenario()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("PullScenario"), argumentList);
     }
 
-    inline QDBusPendingReply<> PushScenario(const QString &scenario)
+    inline QFsoDBusPendingReply<> PushScenario(const QString &scenario)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(scenario);
         return fsoAsyncCall(QLatin1String("PushScenario"), argumentList);
     }
 
-    inline QDBusPendingReply<> SaveScenario(const QString &scenario)
+    inline QFsoDBusPendingReply<> SaveScenario(const QString &scenario)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(scenario);
         return fsoAsyncCall(QLatin1String("SaveScenario"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetScenario(const QString &scenario)
+    inline QFsoDBusPendingReply<> SetScenario(const QString &scenario)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(scenario);
         return fsoAsyncCall(QLatin1String("SetScenario"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetVolume(uchar volume)
+    inline QFsoDBusPendingReply<> SetVolume(uchar volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(volume);
         return fsoAsyncCall(QLatin1String("SetVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<> StopAllSounds()
+    inline QFsoDBusPendingReply<> StopAllSounds()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("StopAllSounds"), argumentList);
     }
 
-    inline QDBusPendingReply<> StopSound(const QString &name)
+    inline QFsoDBusPendingReply<> StopSound(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);

@@ -3,6 +3,7 @@
 
 #include <QtDBus/QtDBus>
 #include "qfsodbuspendingcall.h"
+#include "qfsodbuspendingreply.h"
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT

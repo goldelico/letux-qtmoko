@@ -43,32 +43,32 @@ public:
     ~QFsoPIMCall();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Delete()
+    inline QFsoDBusPendingReply<> Delete()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Delete"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetContent()
+    inline QFsoDBusPendingReply<QVariantMap> GetContent()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetContent"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetMultipleFields(const QString &field_list)
+    inline QFsoDBusPendingReply<QVariantMap> GetMultipleFields(const QString &field_list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(field_list);
         return fsoAsyncCall(QLatin1String("GetMultipleFields"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetUsedBackends()
+    inline QFsoDBusPendingReply<QStringList> GetUsedBackends()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetUsedBackends"), argumentList);
     }
 
-    inline QDBusPendingReply<> Update(const QVariantMap &call_data)
+    inline QFsoDBusPendingReply<> Update(const QVariantMap &call_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(call_data);

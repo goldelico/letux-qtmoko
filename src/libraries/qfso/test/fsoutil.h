@@ -6,6 +6,8 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QLabel>
+#include "qfsodbuspendingcall.h"
+#include "qfsodbuspendingreply.h"
 
 template <class T, class T2, class T3>
         int checkReply(QDBusPendingReply<T, T2, T3> & reply,
@@ -43,25 +45,25 @@ public:
     ~FsoUtil();
 
 public:
-    QDBusPendingCall pendingCall;               // current call, we can have just one pending call at a time
+    QFsoDBusPendingCall pendingCall;            // current call, we can have just one pending call at a time
     bool pendingNotified;                       // true if we already signalled finish
     const QObject * pendingReceiver;            // object to receive finish signal
     int checkInterval;                          // we start checking with small intervals and then make them longer
 
     static FsoUtil instance;
 
-    void watchCall(QDBusPendingCall & call,
+    void watchCall(QFsoDBusPendingCall & call,
                    const QObject * receiver,
                    const char * finishedMethod);
 
 Q_SIGNALS:
-    void finished(QDBusPendingCall & call);
+    void finished(QFsoDBusPendingCall & call);
 
 private slots:
     void pendingCheck();
 };
 
-void watchCall(QDBusPendingCall & call,
+void watchCall(QFsoDBusPendingCall & call,
                const QObject * receiver,
                const char * finishedMethod);
 

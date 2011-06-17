@@ -43,7 +43,7 @@ public:
     ~QFsoDeviceOrientation();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetOrientation()
+    inline QFsoDBusPendingReply<QString> GetOrientation()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetOrientation"), argumentList);

@@ -43,7 +43,7 @@ public:
     ~QFsoGSMMUX();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString, int> AllocChannel(const QString &origin, int channel)
+    inline QFsoDBusPendingReply<QString, int> AllocChannel(const QString &origin, int channel)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(origin) << qVariantFromValue(channel);
@@ -60,27 +60,27 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<> CloseSession()
+    inline QFsoDBusPendingReply<> CloseSession()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("CloseSession"), argumentList);
     }
 
-    inline QDBusPendingReply<> OpenSession(bool advanced, int framesize, const QString &portname, int portspeed)
+    inline QFsoDBusPendingReply<> OpenSession(bool advanced, int framesize, const QString &portname, int portspeed)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(advanced) << qVariantFromValue(framesize) << qVariantFromValue(portname) << qVariantFromValue(portspeed);
         return fsoAsyncCall(QLatin1String("OpenSession"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseChannel(const QString &origin)
+    inline QFsoDBusPendingReply<> ReleaseChannel(const QString &origin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(origin);
         return fsoAsyncCall(QLatin1String("ReleaseChannel"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetStatus(int channel, const QString &status)
+    inline QFsoDBusPendingReply<> SetStatus(int channel, const QString &status)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(channel) << qVariantFromValue(status);

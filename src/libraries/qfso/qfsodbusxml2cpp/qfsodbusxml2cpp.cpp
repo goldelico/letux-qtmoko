@@ -916,7 +916,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
             if (isNoReply) {
                 hs << "Q_NOREPLY void ";
             } else {
-                hs << "QDBusPendingReply<";
+                hs << "QFsoDBusPendingReply<";
                 for (int i = 0; i < method.outputArgs.count(); ++i)
                     hs << (i > 0 ? ", " : "")
                        << templateArg(qtTypeName(method.outputArgs.at(i).type, method.annotations, i, "Out"));

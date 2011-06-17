@@ -37,15 +37,15 @@ private:
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
 
-    QDBusPendingReply<QString> gsmStatusReply;
-    QDBusPendingReply<int> gsmSignalReply;
+    QFsoDBusPendingReply<QString> gsmStatusReply;
+    QFsoDBusPendingReply<int> gsmSignalReply;
     QDBusPendingCallWatcher gsmMessageSizeWatcher;
 
     void checkIface(QDBusAbstractInterface *iface);
-    void showVariantMapResult(QDBusPendingReply<QVariantMap> reply, QString caption);
+    void showVariantMapResult(QFsoDBusPendingReply<QVariantMap> reply, QString caption);
 
     template <class T, class T2, class T3>
-            bool checkReply2(QDBusPendingReply<T,T2,T3> & reply,
+            bool checkReply2(QFsoDBusPendingReply<T,T2,T3> & reply,
                              const QString & fn,
                              bool okBox,
                              bool waitForFinished,
@@ -87,11 +87,11 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void gsmMessageSizeFinished(QDBusPendingCall & call);
+    void gsmMessageSizeFinished(QFsoDBusPendingCall & call);
 };
 
 template <class T, class T2, class T3>
-        bool MainWindow::checkReply2(QDBusPendingReply<T, T2, T3> & reply,
+        bool MainWindow::checkReply2(QFsoDBusPendingReply<T, T2, T3> & reply,
                                      const QString & fn,
                                      bool okBox,
                                      bool waitForFinished,
@@ -106,6 +106,8 @@ template <class T, class T2, class T3>
     //            ", reply.isValid()=" << reply.isValid() <<
     //            ", reply.isError()=" << reply.isError() <<
     //            ", fn=" << fn;
+
+    qWarning() << "reply.debug=" << reply.debug;
 
     if(reply.isError())
     {

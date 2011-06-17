@@ -43,14 +43,14 @@ public:
     ~QFsoApplicationManager();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> RegisterSession(const QString &appname)
+    inline QFsoDBusPendingReply<> RegisterSession(const QString &appname)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(appname);
         return fsoAsyncCall(QLatin1String("RegisterSession"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseSession()
+    inline QFsoDBusPendingReply<> ReleaseSession()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ReleaseSession"), argumentList);

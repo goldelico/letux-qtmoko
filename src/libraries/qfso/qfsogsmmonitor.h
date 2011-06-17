@@ -44,13 +44,13 @@ public:
     ~QFsoGSMMonitor();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QFsoVariantMapList> GetNeighbourCellInformation()
+    inline QFsoDBusPendingReply<QFsoVariantMapList> GetNeighbourCellInformation()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetNeighbourCellInformation"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetServingCellInformation()
+    inline QFsoDBusPendingReply<QVariantMap> GetServingCellInformation()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetServingCellInformation"), argumentList);

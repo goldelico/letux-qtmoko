@@ -44,20 +44,20 @@ public:
     ~QFsoGSMSMS();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<uint> GetSizeForTextMessage(const QString &contents)
+    inline QFsoDBusPendingReply<uint> GetSizeForTextMessage(const QString &contents)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(contents);
         return fsoAsyncCall(QLatin1String("GetSizeForTextMessage"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoSIMMessageList> RetrieveTextMessages()
+    inline QFsoDBusPendingReply<QFsoSIMMessageList> RetrieveTextMessages()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("RetrieveTextMessages"), argumentList);
     }
 
-    inline QDBusPendingReply<int, QString> SendTextMessage(const QString &recipient_number, const QString &contents, bool report)
+    inline QFsoDBusPendingReply<int, QString> SendTextMessage(const QString &recipient_number, const QString &contents, bool report)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(recipient_number) << qVariantFromValue(contents) << qVariantFromValue(report);

@@ -44,26 +44,26 @@ public:
     ~QFsoDeviceIdleNotifier();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetState()
+    inline QFsoDBusPendingReply<QString> GetState()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetState"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoIntMap> GetTimeouts()
+    inline QFsoDBusPendingReply<QFsoIntMap> GetTimeouts()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetTimeouts"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetState(const QString &status)
+    inline QFsoDBusPendingReply<> SetState(const QString &status)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status);
         return fsoAsyncCall(QLatin1String("SetState"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetTimeout(const QString &status, int timeout)
+    inline QFsoDBusPendingReply<> SetTimeout(const QString &status, int timeout)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status) << qVariantFromValue(timeout);

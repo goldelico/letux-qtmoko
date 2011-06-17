@@ -44,27 +44,27 @@ public:
     ~QFsoTimeAlarm();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> AddAlarm(const QString &busname, int timestamp)
+    inline QFsoDBusPendingReply<> AddAlarm(const QString &busname, int timestamp)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname) << qVariantFromValue(timestamp);
         return fsoAsyncCall(QLatin1String("AddAlarm"), argumentList);
     }
 
-    inline QDBusPendingReply<> ClearAlarms(const QString &busname)
+    inline QFsoDBusPendingReply<> ClearAlarms(const QString &busname)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname);
         return fsoAsyncCall(QLatin1String("ClearAlarms"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoWakeupAlarmList> ListAlarms()
+    inline QFsoDBusPendingReply<QFsoWakeupAlarmList> ListAlarms()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListAlarms"), argumentList);
     }
 
-    inline QDBusPendingReply<> RemoveAlarm(const QString &busname, int timestamp)
+    inline QFsoDBusPendingReply<> RemoveAlarm(const QString &busname, int timestamp)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(busname) << qVariantFromValue(timestamp);

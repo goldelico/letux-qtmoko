@@ -43,13 +43,13 @@ public:
     ~QFsoDevicePowerControl();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<bool> GetPower()
+    inline QFsoDBusPendingReply<bool> GetPower()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPower"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetPower(bool on)
+    inline QFsoDBusPendingReply<> SetPower(bool on)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(on);

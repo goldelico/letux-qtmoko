@@ -43,7 +43,7 @@ public:
     ~QFsoDeviceProximity();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<int, int> GetProximity()
+    inline QFsoDBusPendingReply<int, int> GetProximity()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetProximity"), argumentList);

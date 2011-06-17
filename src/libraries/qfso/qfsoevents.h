@@ -43,21 +43,21 @@ public:
     ~QFsoEvents();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> AddRule(const QString &rule)
+    inline QFsoDBusPendingReply<> AddRule(const QString &rule)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(rule);
         return fsoAsyncCall(QLatin1String("AddRule"), argumentList);
     }
 
-    inline QDBusPendingReply<> RemoveRule(const QString &name)
+    inline QFsoDBusPendingReply<> RemoveRule(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("RemoveRule"), argumentList);
     }
 
-    inline QDBusPendingReply<> TriggerTest(const QString &name, bool value)
+    inline QFsoDBusPendingReply<> TriggerTest(const QString &name, bool value)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(value);

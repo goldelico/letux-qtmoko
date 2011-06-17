@@ -43,32 +43,32 @@ public:
     ~QFsoPreferences();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetProfile()
+    inline QFsoDBusPendingReply<QString> GetProfile()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetProfile"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetProfiles()
+    inline QFsoDBusPendingReply<QStringList> GetProfiles()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetProfiles"), argumentList);
     }
 
-    inline QDBusPendingReply<QDBusObjectPath> GetService(const QString &name)
+    inline QFsoDBusPendingReply<QDBusObjectPath> GetService(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("GetService"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetServices()
+    inline QFsoDBusPendingReply<QStringList> GetServices()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetServices"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetProfile(const QString &profile)
+    inline QFsoDBusPendingReply<> SetProfile(const QString &profile)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(profile);

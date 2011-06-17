@@ -1,7 +1,7 @@
 #include "fsoutil.h"
 
 FsoUtil::FsoUtil(QObject *parent) : QObject(parent)
-        , pendingCall(QDBusPendingCall::fromError(QDBusError()))
+        , pendingCall(QDBusPendingReply<>())
         , pendingNotified(true)
         , pendingReceiver(NULL)
         , checkInterval(10)
@@ -29,7 +29,7 @@ void FsoUtil::pendingCheck()
     }
 }
 
-void FsoUtil::watchCall(QDBusPendingCall & call,
+void FsoUtil::watchCall(QFsoDBusPendingCall & call,
                         const QObject * receiver,
                         const char * finishedMethod)
 {
@@ -37,13 +37,13 @@ void FsoUtil::watchCall(QDBusPendingCall & call,
     {
         QDBusPendingReply<> pendingReply = pendingCall;
         pendingReply.waitForFinished();
-        emit finished(pendingReply);
+        emit finished(pendingCall);
     }
 
     if(receiver != pendingReceiver)
     {
         disconnect();
-        QObject::connect(this, SIGNAL(finished(QDBusPendingCall &)),
+        QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
                      receiver, finishedMethod);
 
         pendingReceiver = receiver;
@@ -56,7 +56,7 @@ void FsoUtil::watchCall(QDBusPendingCall & call,
     QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
 }
 
-void watchCall(QDBusPendingCall & call,
+void watchCall(QFsoDBusPendingCall & call,
                const QObject * receiver,
                const char * finishedMethod)
 {

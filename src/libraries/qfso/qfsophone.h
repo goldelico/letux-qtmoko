@@ -43,14 +43,14 @@ public:
     ~QFsoPhone();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QDBusObjectPath> CreateCall(const QString &number, const QString &protocol, bool force)
+    inline QFsoDBusPendingReply<QDBusObjectPath> CreateCall(const QString &number, const QString &protocol, bool force)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number) << qVariantFromValue(protocol) << qVariantFromValue(force);
         return fsoAsyncCall(QLatin1String("CreateCall"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> InitProtocols()
+    inline QFsoDBusPendingReply<QStringList> InitProtocols()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("InitProtocols"), argumentList);

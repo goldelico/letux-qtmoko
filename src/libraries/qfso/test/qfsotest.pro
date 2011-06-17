@@ -168,5 +168,6 @@ HEADERS += mainwindow.h \
     ../qfsovariantmaplist.h \
     ../qfsodbusabstractinterface.h \
     fsoutil.h \
-    ../qfsodbuspendingcall.h
+    ../qfsodbuspendingcall.h \
+    ../qfsodbuspendingreply.h
 FORMS += mainwindow.ui

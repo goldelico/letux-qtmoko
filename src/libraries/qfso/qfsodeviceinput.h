@@ -43,13 +43,13 @@ public:
     ~QFsoDeviceInput();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetCapabilities()
+    inline QFsoDBusPendingReply<QString> GetCapabilities()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCapabilities"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetId()
+    inline QFsoDBusPendingReply<QString> GetId()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetId"), argumentList);

@@ -43,27 +43,27 @@ public:
     ~QFsoPIMCalls();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> Add(const QVariantMap &call_data)
+    inline QFsoDBusPendingReply<QString> Add(const QVariantMap &call_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(call_data);
         return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetNewMissedCalls()
+    inline QFsoDBusPendingReply<int> GetNewMissedCalls()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetNewMissedCalls"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
+    inline QFsoDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query) << qVariantFromValue(field);
         return fsoAsyncCall(QLatin1String("GetSingleEntrySingleField"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Query(const QVariantMap &query)
+    inline QFsoDBusPendingReply<QString> Query(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);

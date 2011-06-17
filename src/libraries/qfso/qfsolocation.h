@@ -43,7 +43,7 @@ public:
     ~QFsoLocation();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QVariantMap> GetLocation()
+    inline QFsoDBusPendingReply<QVariantMap> GetLocation()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetLocation"), argumentList);

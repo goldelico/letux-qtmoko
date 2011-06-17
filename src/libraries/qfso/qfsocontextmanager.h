@@ -43,14 +43,14 @@ public:
     ~QFsoContextManager();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> SubscribeLocationUpdates(const QString &desired_accuracy)
+    inline QFsoDBusPendingReply<> SubscribeLocationUpdates(const QString &desired_accuracy)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(desired_accuracy);
         return fsoAsyncCall(QLatin1String("SubscribeLocationUpdates"), argumentList);
     }
 
-    inline QDBusPendingReply<> UnsubscribeLocationUpdates()
+    inline QFsoDBusPendingReply<> UnsubscribeLocationUpdates()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("UnsubscribeLocationUpdates"), argumentList);

@@ -43,136 +43,136 @@ public:
     ~QFsoMusicPlayer();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> DeletePlaylist(const QDBusObjectPath &list)
+    inline QFsoDBusPendingReply<> DeletePlaylist(const QDBusObjectPath &list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(list);
         return fsoAsyncCall(QLatin1String("DeletePlaylist"), argumentList);
     }
 
-    inline QDBusPendingReply<QDBusObjectPath> GetCurrentPlaylist()
+    inline QFsoDBusPendingReply<QDBusObjectPath> GetCurrentPlaylist()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCurrentPlaylist"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetInfoForFile(const QString &file)
+    inline QFsoDBusPendingReply<QVariantMap> GetInfoForFile(const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
         return fsoAsyncCall(QLatin1String("GetInfoForFile"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetPlaying()
+    inline QFsoDBusPendingReply<QString> GetPlaying()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPlaying"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetPlayingInfo()
+    inline QFsoDBusPendingReply<QVariantMap> GetPlayingInfo()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPlayingInfo"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetPlaylists()
+    inline QFsoDBusPendingReply<QStringList> GetPlaylists()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPlaylists"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetVolume()
+    inline QFsoDBusPendingReply<int> GetVolume()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<> Jump(int position)
+    inline QFsoDBusPendingReply<> Jump(int position)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(position);
         return fsoAsyncCall(QLatin1String("Jump"), argumentList);
     }
 
-    inline QDBusPendingReply<QDBusObjectPath> NewPlaylist(const QString &name)
+    inline QFsoDBusPendingReply<QDBusObjectPath> NewPlaylist(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("NewPlaylist"), argumentList);
     }
 
-    inline QDBusPendingReply<> Next()
+    inline QFsoDBusPendingReply<> Next()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Next"), argumentList);
     }
 
-    inline QDBusPendingReply<> Pause()
+    inline QFsoDBusPendingReply<> Pause()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Pause"), argumentList);
     }
 
-    inline QDBusPendingReply<> Play()
+    inline QFsoDBusPendingReply<> Play()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Play"), argumentList);
     }
 
-    inline QDBusPendingReply<> PopPause()
+    inline QFsoDBusPendingReply<> PopPause()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("PopPause"), argumentList);
     }
 
-    inline QDBusPendingReply<> Previous()
+    inline QFsoDBusPendingReply<> Previous()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Previous"), argumentList);
     }
 
-    inline QDBusPendingReply<> PushPause()
+    inline QFsoDBusPendingReply<> PushPause()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("PushPause"), argumentList);
     }
 
-    inline QDBusPendingReply<> SeekBackward(int step)
+    inline QFsoDBusPendingReply<> SeekBackward(int step)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(step);
         return fsoAsyncCall(QLatin1String("SeekBackward"), argumentList);
     }
 
-    inline QDBusPendingReply<> SeekForward(int step)
+    inline QFsoDBusPendingReply<> SeekForward(int step)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(step);
         return fsoAsyncCall(QLatin1String("SeekForward"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetCurrentPlaylist(const QDBusObjectPath &list)
+    inline QFsoDBusPendingReply<> SetCurrentPlaylist(const QDBusObjectPath &list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(list);
         return fsoAsyncCall(QLatin1String("SetCurrentPlaylist"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetPlaying(const QString &file)
+    inline QFsoDBusPendingReply<> SetPlaying(const QString &file)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(file);
         return fsoAsyncCall(QLatin1String("SetPlaying"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetVolume(int volume)
+    inline QFsoDBusPendingReply<> SetVolume(int volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(volume);
         return fsoAsyncCall(QLatin1String("SetVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<> Stop()
+    inline QFsoDBusPendingReply<> Stop()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Stop"), argumentList);

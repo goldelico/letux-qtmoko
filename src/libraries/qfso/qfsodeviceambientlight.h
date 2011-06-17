@@ -43,7 +43,7 @@ public:
     ~QFsoDeviceAmbientLight();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<int, int> GetAmbientLightBrightness()
+    inline QFsoDBusPendingReply<int, int> GetAmbientLightBrightness()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAmbientLightBrightness"), argumentList);

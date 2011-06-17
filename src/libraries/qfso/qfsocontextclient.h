@@ -43,7 +43,7 @@ public:
     ~QFsoContextClient();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> LocationUpdate(const QVariantMap &from, const QVariantMap &to)
+    inline QFsoDBusPendingReply<> LocationUpdate(const QVariantMap &from, const QVariantMap &to)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(from) << qVariantFromValue(to);

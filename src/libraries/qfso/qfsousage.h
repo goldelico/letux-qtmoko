@@ -43,87 +43,87 @@ public:
     ~QFsoUsage();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetResourcePolicy(const QString &name)
+    inline QFsoDBusPendingReply<QString> GetResourcePolicy(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("GetResourcePolicy"), argumentList);
     }
 
-    inline QDBusPendingReply<bool> GetResourceState(const QString &name)
+    inline QFsoDBusPendingReply<bool> GetResourceState(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("GetResourceState"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetResourceUsers(const QString &name)
+    inline QFsoDBusPendingReply<QStringList> GetResourceUsers(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("GetResourceUsers"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> ListResources()
+    inline QFsoDBusPendingReply<QStringList> ListResources()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListResources"), argumentList);
     }
 
-    inline QDBusPendingReply<> Reboot()
+    inline QFsoDBusPendingReply<> Reboot()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Reboot"), argumentList);
     }
 
-    inline QDBusPendingReply<> RegisterResource(const QString &name, const QDBusObjectPath &path)
+    inline QFsoDBusPendingReply<> RegisterResource(const QString &name, const QDBusObjectPath &path)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(path);
         return fsoAsyncCall(QLatin1String("RegisterResource"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseResource(const QString &name)
+    inline QFsoDBusPendingReply<> ReleaseResource(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("ReleaseResource"), argumentList);
     }
 
-    inline QDBusPendingReply<> RequestResource(const QString &name)
+    inline QFsoDBusPendingReply<> RequestResource(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("RequestResource"), argumentList);
     }
 
-    inline QDBusPendingReply<> Resume(const QString &source, const QString &reason)
+    inline QFsoDBusPendingReply<> Resume(const QString &source, const QString &reason)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(source) << qVariantFromValue(reason);
         return fsoAsyncCall(QLatin1String("Resume"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetResourcePolicy(const QString &name, const QString &policy)
+    inline QFsoDBusPendingReply<> SetResourcePolicy(const QString &name, const QString &policy)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(policy);
         return fsoAsyncCall(QLatin1String("SetResourcePolicy"), argumentList);
     }
 
-    inline QDBusPendingReply<> Shutdown()
+    inline QFsoDBusPendingReply<> Shutdown()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Shutdown"), argumentList);
     }
 
-    inline QDBusPendingReply<> Suspend()
+    inline QFsoDBusPendingReply<> Suspend()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Suspend"), argumentList);
     }
 
-    inline QDBusPendingReply<> UnregisterResource(const QString &name)
+    inline QFsoDBusPendingReply<> UnregisterResource(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);

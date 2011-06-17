@@ -43,28 +43,28 @@ public:
     ~QFsoDeviceLED();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> BlinkSeconds(int seconds, int on_duration, int off_duration)
+    inline QFsoDBusPendingReply<> BlinkSeconds(int seconds, int on_duration, int off_duration)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(seconds) << qVariantFromValue(on_duration) << qVariantFromValue(off_duration);
         return fsoAsyncCall(QLatin1String("BlinkSeconds"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetBlinking(int on_duration, int off_duration)
+    inline QFsoDBusPendingReply<> SetBlinking(int on_duration, int off_duration)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(on_duration) << qVariantFromValue(off_duration);
         return fsoAsyncCall(QLatin1String("SetBlinking"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetBrightness(int brightness)
+    inline QFsoDBusPendingReply<> SetBrightness(int brightness)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(brightness);
         return fsoAsyncCall(QLatin1String("SetBrightness"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetNetworking(const QString &interface, const QString &mode)
+    inline QFsoDBusPendingReply<> SetNetworking(const QString &interface, const QString &mode)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface) << qVariantFromValue(mode);

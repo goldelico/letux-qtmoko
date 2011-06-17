@@ -43,88 +43,88 @@ public:
     ~QFsoAudioManager();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QStringList> GetAvailableDevices(const QString &mode)
+    inline QFsoDBusPendingReply<QStringList> GetAvailableDevices(const QString &mode)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mode);
         return fsoAsyncCall(QLatin1String("GetAvailableDevices"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetDevice()
+    inline QFsoDBusPendingReply<QString> GetDevice()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetDevice"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetMode()
+    inline QFsoDBusPendingReply<QString> GetMode()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetMode"), argumentList);
     }
 
-    inline QDBusPendingReply<bool> GetMute(const QString &control)
+    inline QFsoDBusPendingReply<bool> GetMute(const QString &control)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(control);
         return fsoAsyncCall(QLatin1String("GetMute"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetVolume(const QString &control)
+    inline QFsoDBusPendingReply<int> GetVolume(const QString &control)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(control);
         return fsoAsyncCall(QLatin1String("GetVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> PullDevice()
+    inline QFsoDBusPendingReply<QString> PullDevice()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("PullDevice"), argumentList);
     }
 
-    inline QDBusPendingReply<> PushDevice(const QString &device)
+    inline QFsoDBusPendingReply<> PushDevice(const QString &device)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(device);
         return fsoAsyncCall(QLatin1String("PushDevice"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> RegisterSession(const QString &stream)
+    inline QFsoDBusPendingReply<QString> RegisterSession(const QString &stream)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(stream);
         return fsoAsyncCall(QLatin1String("RegisterSession"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseSession(const QString &token)
+    inline QFsoDBusPendingReply<> ReleaseSession(const QString &token)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(token);
         return fsoAsyncCall(QLatin1String("ReleaseSession"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetDevice(const QString &name)
+    inline QFsoDBusPendingReply<> SetDevice(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("SetDevice"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetMode(const QString &mode)
+    inline QFsoDBusPendingReply<> SetMode(const QString &mode)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mode);
         return fsoAsyncCall(QLatin1String("SetMode"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetMute(const QString &control, bool mute)
+    inline QFsoDBusPendingReply<> SetMute(const QString &control, bool mute)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(control) << qVariantFromValue(mute);
         return fsoAsyncCall(QLatin1String("SetMute"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetVolume(const QString &control, int volume)
+    inline QFsoDBusPendingReply<> SetVolume(const QString &control, int volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(control) << qVariantFromValue(volume);

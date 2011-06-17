@@ -43,19 +43,19 @@ public:
     ~QFsoGSMVoiceMail();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QStringList> GetStoredVoiceMails()
+    inline QFsoDBusPendingReply<QStringList> GetStoredVoiceMails()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetStoredVoiceMails"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetVoiceMailboxNumber()
+    inline QFsoDBusPendingReply<QString> GetVoiceMailboxNumber()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetVoiceMailboxNumber"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetVoiceMailboxNumber(const QString &number)
+    inline QFsoDBusPendingReply<> SetVoiceMailboxNumber(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);

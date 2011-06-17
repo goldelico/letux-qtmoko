@@ -43,26 +43,26 @@ public:
     ~QFsoDeviceRealtimeClock();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<int> GetCurrentTime()
+    inline QFsoDBusPendingReply<int> GetCurrentTime()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCurrentTime"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetWakeupTime()
+    inline QFsoDBusPendingReply<int> GetWakeupTime()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetWakeupTime"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetCurrentTime(int time)
+    inline QFsoDBusPendingReply<> SetCurrentTime(int time)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(time);
         return fsoAsyncCall(QLatin1String("SetCurrentTime"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetWakeupTime(int time)
+    inline QFsoDBusPendingReply<> SetWakeupTime(int time)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(time);

@@ -7,6 +7,7 @@ TARGET = qfso
 TEMPLATE = lib
 DEFINES += QFSO_LIBRARY
 SOURCES += \
+    qfsodbuspendingcall.cpp \
     qfsopreferencesservice.cpp \
     qfsopimnote.cpp \
     qfsomusicplayer.cpp \
@@ -86,6 +87,8 @@ SOURCES += \
     qfsodbusabstractinterface.cpp
 
 HEADERS += \
+    qfsodbuspendingcall.h \
+    qfsodbuspendingreply.h \
     qfsodeviceidlenotifier.h \
     qfsodeviceled.h \
     qfsosimhomezone.h \

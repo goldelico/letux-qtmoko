@@ -44,44 +44,44 @@ public:
     ~QFsoPIMDateQuery();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Dispose()
+    inline QFsoDBusPendingReply<> Dispose()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Dispose"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetDatePath()
+    inline QFsoDBusPendingReply<QString> GetDatePath()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetDatePath"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoVariantMapList> GetMultipleResults(int count)
+    inline QFsoDBusPendingReply<QFsoVariantMapList> GetMultipleResults(int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(count);
         return fsoAsyncCall(QLatin1String("GetMultipleResults"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetResult()
+    inline QFsoDBusPendingReply<QVariantMap> GetResult()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetResult"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetResultCount()
+    inline QFsoDBusPendingReply<int> GetResultCount()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetResultCount"), argumentList);
     }
 
-    inline QDBusPendingReply<> Rewind()
+    inline QFsoDBusPendingReply<> Rewind()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Rewind"), argumentList);
     }
 
-    inline QDBusPendingReply<> Skip(int count)
+    inline QFsoDBusPendingReply<> Skip(int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(count);

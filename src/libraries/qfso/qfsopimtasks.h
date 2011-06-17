@@ -43,21 +43,21 @@ public:
     ~QFsoPIMTasks();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> Add(const QVariantMap &task_data)
+    inline QFsoDBusPendingReply<QString> Add(const QVariantMap &task_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(task_data);
         return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetSingleTaskSingleField(const QVariantMap &query, const QString &field)
+    inline QFsoDBusPendingReply<QString> GetSingleTaskSingleField(const QVariantMap &query, const QString &field)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query) << qVariantFromValue(field);
         return fsoAsyncCall(QLatin1String("GetSingleTaskSingleField"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Query(const QVariantMap &query)
+    inline QFsoDBusPendingReply<QString> Query(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);

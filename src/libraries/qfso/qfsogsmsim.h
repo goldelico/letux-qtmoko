@@ -45,46 +45,46 @@ public:
     ~QFsoGSMSIM();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> ChangeAuthCode(const QString &old_pin, const QString &new_pin)
+    inline QFsoDBusPendingReply<> ChangeAuthCode(const QString &old_pin, const QString &new_pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(old_pin) << qVariantFromValue(new_pin);
         return fsoAsyncCall(QLatin1String("ChangeAuthCode"), argumentList);
     }
 
-    inline QDBusPendingReply<> DeleteEntry(const QString &category, int index)
+    inline QFsoDBusPendingReply<> DeleteEntry(const QString &category, int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(index);
         return fsoAsyncCall(QLatin1String("DeleteEntry"), argumentList);
     }
 
-    inline QDBusPendingReply<> DeleteMessage(int index)
+    inline QFsoDBusPendingReply<> DeleteMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
         return fsoAsyncCall(QLatin1String("DeleteMessage"), argumentList);
     }
 
-    inline QDBusPendingReply<bool> GetAuthCodeRequired()
+    inline QFsoDBusPendingReply<bool> GetAuthCodeRequired()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAuthCodeRequired"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetAuthStatus()
+    inline QFsoDBusPendingReply<QString> GetAuthStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAuthStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoSIMHomeZoneList> GetHomeZoneParameters()
+    inline QFsoDBusPendingReply<QFsoSIMHomeZoneList> GetHomeZoneParameters()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetHomeZoneParameters"), argumentList);
     }
 
-    inline QDBusPendingReply<int, int, int> GetPhonebookInfo(const QString &category)
+    inline QFsoDBusPendingReply<int, int, int> GetPhonebookInfo(const QString &category)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category);
@@ -102,25 +102,25 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QString> GetServiceCenterNumber()
+    inline QFsoDBusPendingReply<QString> GetServiceCenterNumber()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetServiceCenterNumber"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetSimInfo()
+    inline QFsoDBusPendingReply<QVariantMap> GetSimInfo()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetSimInfo"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetUnlockCounters()
+    inline QFsoDBusPendingReply<QVariantMap> GetUnlockCounters()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetUnlockCounters"), argumentList);
     }
 
-    inline QDBusPendingReply<QString, QString, QString, QVariantMap> RetrieveMessage(int index)
+    inline QFsoDBusPendingReply<QString, QString, QString, QVariantMap> RetrieveMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
@@ -139,35 +139,35 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QFsoSIMEntryList> RetrievePhonebook(const QString &category, int mindex, int maxdex)
+    inline QFsoDBusPendingReply<QFsoSIMEntryList> RetrievePhonebook(const QString &category, int mindex, int maxdex)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(mindex) << qVariantFromValue(maxdex);
         return fsoAsyncCall(QLatin1String("RetrievePhonebook"), argumentList);
     }
 
-    inline QDBusPendingReply<> SendAuthCode(const QString &pin)
+    inline QFsoDBusPendingReply<> SendAuthCode(const QString &pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(pin);
         return fsoAsyncCall(QLatin1String("SendAuthCode"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> SendGenericSimCommand(const QString &command)
+    inline QFsoDBusPendingReply<QString> SendGenericSimCommand(const QString &command)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command);
         return fsoAsyncCall(QLatin1String("SendGenericSimCommand"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> SendRestrictedSimCommand(int command, int fileid, int p1, int p2, int p3, const QString &data)
+    inline QFsoDBusPendingReply<QString> SendRestrictedSimCommand(int command, int fileid, int p1, int p2, int p3, const QString &data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command) << qVariantFromValue(fileid) << qVariantFromValue(p1) << qVariantFromValue(p2) << qVariantFromValue(p3) << qVariantFromValue(data);
         return fsoAsyncCall(QLatin1String("SendRestrictedSimCommand"), argumentList);
     }
 
-    inline QDBusPendingReply<int, QString> SendStoredMessage(int index)
+    inline QFsoDBusPendingReply<int, QString> SendStoredMessage(int index)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(index);
@@ -184,35 +184,35 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<> SetAuthCodeRequired(bool check, const QString &pin)
+    inline QFsoDBusPendingReply<> SetAuthCodeRequired(bool check, const QString &pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(check) << qVariantFromValue(pin);
         return fsoAsyncCall(QLatin1String("SetAuthCodeRequired"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetServiceCenterNumber(const QString &number)
+    inline QFsoDBusPendingReply<> SetServiceCenterNumber(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);
         return fsoAsyncCall(QLatin1String("SetServiceCenterNumber"), argumentList);
     }
 
-    inline QDBusPendingReply<> StoreEntry(const QString &category, int index, const QString &name, const QString &number)
+    inline QFsoDBusPendingReply<> StoreEntry(const QString &category, int index, const QString &name, const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(index) << qVariantFromValue(name) << qVariantFromValue(number);
         return fsoAsyncCall(QLatin1String("StoreEntry"), argumentList);
     }
 
-    inline QDBusPendingReply<int> StoreMessage(const QString &recipient_number, const QString &contents, const QVariantMap &properties)
+    inline QFsoDBusPendingReply<int> StoreMessage(const QString &recipient_number, const QString &contents, const QVariantMap &properties)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(recipient_number) << qVariantFromValue(contents) << qVariantFromValue(properties);
         return fsoAsyncCall(QLatin1String("StoreMessage"), argumentList);
     }
 
-    inline QDBusPendingReply<> Unlock(const QString &puk, const QString &new_pin)
+    inline QFsoDBusPendingReply<> Unlock(const QString &puk, const QString &new_pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(puk) << qVariantFromValue(new_pin);

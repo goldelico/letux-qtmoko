@@ -43,7 +43,7 @@ public:
     ~QFsoPIMTypes();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QStringList> List()
+    inline QFsoDBusPendingReply<QStringList> List()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("List"), argumentList);

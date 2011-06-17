@@ -43,31 +43,31 @@ public:
     ~QFsoResource();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Disable()
+    inline QFsoDBusPendingReply<> Disable()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Disable"), argumentList);
     }
 
-    inline QDBusPendingReply<> Enable()
+    inline QFsoDBusPendingReply<> Enable()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Enable"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetDependencies()
+    inline QFsoDBusPendingReply<QVariantMap> GetDependencies()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetDependencies"), argumentList);
     }
 
-    inline QDBusPendingReply<> Resume()
+    inline QFsoDBusPendingReply<> Resume()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Resume"), argumentList);
     }
 
-    inline QDBusPendingReply<> Suspend()
+    inline QFsoDBusPendingReply<> Suspend()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Suspend"), argumentList);

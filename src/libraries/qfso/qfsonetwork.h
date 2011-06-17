@@ -43,21 +43,21 @@ public:
     ~QFsoNetwork();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> OfferDefaultRoute(const QString &technology, const QString &interface, const QString &ipv4address, const QString &ipv4mask, const QString &ipv4gateway, const QString &dns1, const QString &dns2)
+    inline QFsoDBusPendingReply<> OfferDefaultRoute(const QString &technology, const QString &interface, const QString &ipv4address, const QString &ipv4mask, const QString &ipv4gateway, const QString &dns1, const QString &dns2)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(technology) << qVariantFromValue(interface) << qVariantFromValue(ipv4address) << qVariantFromValue(ipv4mask) << qVariantFromValue(ipv4gateway) << qVariantFromValue(dns1) << qVariantFromValue(dns2);
         return fsoAsyncCall(QLatin1String("OfferDefaultRoute"), argumentList);
     }
 
-    inline QDBusPendingReply<> StartConnectionSharingWithInterface(const QString &interface)
+    inline QFsoDBusPendingReply<> StartConnectionSharingWithInterface(const QString &interface)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface);
         return fsoAsyncCall(QLatin1String("StartConnectionSharingWithInterface"), argumentList);
     }
 
-    inline QDBusPendingReply<> StopConnectionSharingWithInterface(const QString &interface)
+    inline QFsoDBusPendingReply<> StopConnectionSharingWithInterface(const QString &interface)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(interface);

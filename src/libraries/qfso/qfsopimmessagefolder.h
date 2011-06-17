@@ -43,13 +43,13 @@ public:
     ~QFsoPIMMessageFolder();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<int> GetMessageCount()
+    inline QFsoDBusPendingReply<int> GetMessageCount()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetMessageCount"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetMessagePaths(int first, int count)
+    inline QFsoDBusPendingReply<QStringList> GetMessagePaths(int first, int count)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(first) << qVariantFromValue(count);

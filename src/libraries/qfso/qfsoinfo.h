@@ -43,7 +43,7 @@ public:
     ~QFsoInfo();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QVariantMap> GetInfo()
+    inline QFsoDBusPendingReply<QVariantMap> GetInfo()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetInfo"), argumentList);

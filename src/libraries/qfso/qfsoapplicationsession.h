@@ -43,7 +43,7 @@ public:
     ~QFsoApplicationSession();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> HandleEvent(const QString &event)
+    inline QFsoDBusPendingReply<> HandleEvent(const QString &event)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(event);

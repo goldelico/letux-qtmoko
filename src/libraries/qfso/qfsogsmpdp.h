@@ -43,19 +43,19 @@ public:
     ~QFsoGSMPDP();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> ActivateContext()
+    inline QFsoDBusPendingReply<> ActivateContext()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ActivateContext"), argumentList);
     }
 
-    inline QDBusPendingReply<> DeactivateContext()
+    inline QFsoDBusPendingReply<> DeactivateContext()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("DeactivateContext"), argumentList);
     }
 
-    inline QDBusPendingReply<QString, QVariantMap> GetContextStatus()
+    inline QFsoDBusPendingReply<QString, QVariantMap> GetContextStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetContextStatus"), argumentList);
@@ -70,7 +70,7 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QString, QString, QString> GetCredentials()
+    inline QFsoDBusPendingReply<QString, QString, QString> GetCredentials()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCredentials"), argumentList);
@@ -86,14 +86,14 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<> InternalStatusUpdate(const QString &status, const QVariantMap &properties)
+    inline QFsoDBusPendingReply<> InternalStatusUpdate(const QString &status, const QVariantMap &properties)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status) << qVariantFromValue(properties);
         return fsoAsyncCall(QLatin1String("InternalStatusUpdate"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetCredentials(const QString &apn, const QString &username, const QString &password)
+    inline QFsoDBusPendingReply<> SetCredentials(const QString &apn, const QString &username, const QString &password)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(apn) << qVariantFromValue(username) << qVariantFromValue(password);

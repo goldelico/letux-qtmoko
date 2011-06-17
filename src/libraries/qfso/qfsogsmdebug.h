@@ -44,21 +44,21 @@ public:
     ~QFsoGSMDebug();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> DebugCommand(const QString &command, const QString &channel)
+    inline QFsoDBusPendingReply<QString> DebugCommand(const QString &command, const QString &channel)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(command) << qVariantFromValue(channel);
         return fsoAsyncCall(QLatin1String("DebugCommand"), argumentList);
     }
 
-    inline QDBusPendingReply<> DebugInjectResponse(const QString &response, const QString &channel)
+    inline QFsoDBusPendingReply<> DebugInjectResponse(const QString &response, const QString &channel)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(response) << qVariantFromValue(channel);
         return fsoAsyncCall(QLatin1String("DebugInjectResponse"), argumentList);
     }
 
-    inline QDBusPendingReply<> DebugPing()
+    inline QFsoDBusPendingReply<> DebugPing()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("DebugPing"), argumentList);

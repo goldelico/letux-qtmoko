@@ -43,41 +43,41 @@ public:
     ~QFsoPIMMessages();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> Add(const QVariantMap &message_data)
+    inline QFsoDBusPendingReply<QString> Add(const QVariantMap &message_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(message_data);
         return fsoAsyncCall(QLatin1String("Add"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> AddIncoming(const QVariantMap &message_data)
+    inline QFsoDBusPendingReply<QString> AddIncoming(const QVariantMap &message_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(message_data);
         return fsoAsyncCall(QLatin1String("AddIncoming"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
+    inline QFsoDBusPendingReply<QString> GetSingleEntrySingleField(const QVariantMap &query, const QString &field)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query) << qVariantFromValue(field);
         return fsoAsyncCall(QLatin1String("GetSingleEntrySingleField"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetUnreadMessages()
+    inline QFsoDBusPendingReply<int> GetUnreadMessages()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetUnreadMessages"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Query(const QVariantMap &query)
+    inline QFsoDBusPendingReply<QString> Query(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);
         return fsoAsyncCall(QLatin1String("Query"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> QueryThreads(const QVariantMap &query)
+    inline QFsoDBusPendingReply<QString> QueryThreads(const QVariantMap &query)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(query);

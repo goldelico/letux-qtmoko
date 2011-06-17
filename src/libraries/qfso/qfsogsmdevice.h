@@ -43,19 +43,19 @@ public:
     ~QFsoGSMDevice();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetDeviceStatus()
+    inline QFsoDBusPendingReply<QString> GetDeviceStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetDeviceStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetFeatures()
+    inline QFsoDBusPendingReply<QVariantMap> GetFeatures()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetFeatures"), argumentList);
     }
 
-    inline QDBusPendingReply<QString, bool, QString> GetFunctionality()
+    inline QFsoDBusPendingReply<QString, bool, QString> GetFunctionality()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetFunctionality"), argumentList);
@@ -71,33 +71,33 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<bool> GetMicrophoneMuted()
+    inline QFsoDBusPendingReply<bool> GetMicrophoneMuted()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetMicrophoneMuted"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetSpeakerVolume()
+    inline QFsoDBusPendingReply<int> GetSpeakerVolume()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetSpeakerVolume"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetFunctionality(const QString &level, bool autoregister, const QString &pin)
+    inline QFsoDBusPendingReply<> SetFunctionality(const QString &level, bool autoregister, const QString &pin)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(level) << qVariantFromValue(autoregister) << qVariantFromValue(pin);
         return fsoAsyncCall(QLatin1String("SetFunctionality"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetMicrophoneMuted(bool muted)
+    inline QFsoDBusPendingReply<> SetMicrophoneMuted(bool muted)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(muted);
         return fsoAsyncCall(QLatin1String("SetMicrophoneMuted"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetSpeakerVolume(int volume)
+    inline QFsoDBusPendingReply<> SetSpeakerVolume(int volume)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(volume);

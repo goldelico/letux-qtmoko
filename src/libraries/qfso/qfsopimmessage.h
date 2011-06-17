@@ -43,33 +43,33 @@ public:
     ~QFsoPIMMessage();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Delete()
+    inline QFsoDBusPendingReply<> Delete()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Delete"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetContent()
+    inline QFsoDBusPendingReply<QVariantMap> GetContent()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetContent"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetMultipleFields(const QString &field_list)
+    inline QFsoDBusPendingReply<QVariantMap> GetMultipleFields(const QString &field_list)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(field_list);
         return fsoAsyncCall(QLatin1String("GetMultipleFields"), argumentList);
     }
 
-    inline QDBusPendingReply<> MoveToFolder(const QString &folder_name)
+    inline QFsoDBusPendingReply<> MoveToFolder(const QString &folder_name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(folder_name);
         return fsoAsyncCall(QLatin1String("MoveToFolder"), argumentList);
     }
 
-    inline QDBusPendingReply<> Update(const QVariantMap &message_data)
+    inline QFsoDBusPendingReply<> Update(const QVariantMap &message_data)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(message_data);

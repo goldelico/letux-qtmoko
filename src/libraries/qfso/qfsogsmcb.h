@@ -43,13 +43,13 @@ public:
     ~QFsoGSMCB();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetCellBroadcastSubscriptions()
+    inline QFsoDBusPendingReply<QString> GetCellBroadcastSubscriptions()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCellBroadcastSubscriptions"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetCellBroadcastSubscriptions(const QString &channels)
+    inline QFsoDBusPendingReply<> SetCellBroadcastSubscriptions(const QString &channels)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(channels);

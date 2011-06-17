@@ -44,79 +44,79 @@ public:
     ~QFsoGSMCall();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Activate(int id)
+    inline QFsoDBusPendingReply<> Activate(int id)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(id);
         return fsoAsyncCall(QLatin1String("Activate"), argumentList);
     }
 
-    inline QDBusPendingReply<> ActivateConference(int id)
+    inline QFsoDBusPendingReply<> ActivateConference(int id)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(id);
         return fsoAsyncCall(QLatin1String("ActivateConference"), argumentList);
     }
 
-    inline QDBusPendingReply<> Emergency(const QString &number)
+    inline QFsoDBusPendingReply<> Emergency(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);
         return fsoAsyncCall(QLatin1String("Emergency"), argumentList);
     }
 
-    inline QDBusPendingReply<> HoldActive()
+    inline QFsoDBusPendingReply<> HoldActive()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("HoldActive"), argumentList);
     }
 
-    inline QDBusPendingReply<int> Initiate(const QString &number, const QString &type)
+    inline QFsoDBusPendingReply<int> Initiate(const QString &number, const QString &type)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number) << qVariantFromValue(type);
         return fsoAsyncCall(QLatin1String("Initiate"), argumentList);
     }
 
-    inline QDBusPendingReply<> Join()
+    inline QFsoDBusPendingReply<> Join()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Join"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoCallDetailList> ListCalls()
+    inline QFsoDBusPendingReply<QFsoCallDetailList> ListCalls()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListCalls"), argumentList);
     }
 
-    inline QDBusPendingReply<> Release(int id)
+    inline QFsoDBusPendingReply<> Release(int id)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(id);
         return fsoAsyncCall(QLatin1String("Release"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseAll()
+    inline QFsoDBusPendingReply<> ReleaseAll()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ReleaseAll"), argumentList);
     }
 
-    inline QDBusPendingReply<> ReleaseHeld()
+    inline QFsoDBusPendingReply<> ReleaseHeld()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ReleaseHeld"), argumentList);
     }
 
-    inline QDBusPendingReply<> SendDtmf(const QString &tones)
+    inline QFsoDBusPendingReply<> SendDtmf(const QString &tones)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(tones);
         return fsoAsyncCall(QLatin1String("SendDtmf"), argumentList);
     }
 
-    inline QDBusPendingReply<> Transfer(const QString &number)
+    inline QFsoDBusPendingReply<> Transfer(const QString &number)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(number);

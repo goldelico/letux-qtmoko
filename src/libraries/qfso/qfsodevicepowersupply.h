@@ -43,13 +43,13 @@ public:
     ~QFsoDevicePowerSupply();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<int> GetCapacity()
+    inline QFsoDBusPendingReply<int> GetCapacity()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCapacity"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetPowerStatus()
+    inline QFsoDBusPendingReply<QString> GetPowerStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPowerStatus"), argumentList);

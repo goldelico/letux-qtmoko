@@ -46,27 +46,27 @@ public:
     ~QFsoDataWorld();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QFsoWorldCountryList> GetAllCountries()
+    inline QFsoDBusPendingReply<QFsoWorldCountryList> GetAllCountries()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAllCountries"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoWorldConnectivityAccessPointList> GetApnsForMccMnc(const QString &mcc_mnc)
+    inline QFsoDBusPendingReply<QFsoWorldConnectivityAccessPointList> GetApnsForMccMnc(const QString &mcc_mnc)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mcc_mnc);
         return fsoAsyncCall(QLatin1String("GetApnsForMccMnc"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetCountryCodeForMccMnc(const QString &mcc_mnc)
+    inline QFsoDBusPendingReply<QString> GetCountryCodeForMccMnc(const QString &mcc_mnc)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mcc_mnc);
         return fsoAsyncCall(QLatin1String("GetCountryCodeForMccMnc"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoStringMap> GetTimezonesForCountryCode(const QString &country_code)
+    inline QFsoDBusPendingReply<QFsoStringMap> GetTimezonesForCountryCode(const QString &country_code)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(country_code);

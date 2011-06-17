@@ -43,20 +43,20 @@ public:
     ~QFsoDeviceVibrator();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Stop()
+    inline QFsoDBusPendingReply<> Stop()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Stop"), argumentList);
     }
 
-    inline QDBusPendingReply<> Vibrate(int duration_ms, int strength_percentage)
+    inline QFsoDBusPendingReply<> Vibrate(int duration_ms, int strength_percentage)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(duration_ms) << qVariantFromValue(strength_percentage);
         return fsoAsyncCall(QLatin1String("Vibrate"), argumentList);
     }
 
-    inline QDBusPendingReply<> VibratePattern(int pulses, int on_duration_ms, int off_duration_ms, int strength_percentage)
+    inline QFsoDBusPendingReply<> VibratePattern(int pulses, int on_duration_ms, int off_duration_ms, int strength_percentage)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(pulses) << qVariantFromValue(on_duration_ms) << qVariantFromValue(off_duration_ms) << qVariantFromValue(strength_percentage);

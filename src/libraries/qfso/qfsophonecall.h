@@ -43,37 +43,37 @@ public:
     ~QFsoPhoneCall();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> Activate()
+    inline QFsoDBusPendingReply<QString> Activate()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Activate"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetPeer()
+    inline QFsoDBusPendingReply<QString> GetPeer()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetPeer"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetStatus()
+    inline QFsoDBusPendingReply<QString> GetStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Initiate()
+    inline QFsoDBusPendingReply<QString> Initiate()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Initiate"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> Release()
+    inline QFsoDBusPendingReply<QString> Release()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Release"), argumentList);
     }
 
-    inline QDBusPendingReply<> Remove()
+    inline QFsoDBusPendingReply<> Remove()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Remove"), argumentList);

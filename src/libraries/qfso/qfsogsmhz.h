@@ -43,13 +43,13 @@ public:
     ~QFsoGSMHZ();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QString> GetHomeZoneStatus()
+    inline QFsoDBusPendingReply<QString> GetHomeZoneStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetHomeZoneStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> GetKnownHomeZones()
+    inline QFsoDBusPendingReply<QStringList> GetKnownHomeZones()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetKnownHomeZones"), argumentList);

@@ -23,6 +23,7 @@ pkg [
 SOURCES += main.cpp \
     mainwindow.cpp \
     fsoutil.cpp \
+    ../qfsodbuspendingcall.cpp \
     ../qfsopreferencesservice.cpp \
     ../qfsopimnote.cpp \
     ../qfsomusicplayer.cpp \
@@ -103,6 +104,8 @@ SOURCES += main.cpp \
 
 HEADERS += mainwindow.h \
     fsoutil.h \
+    ../qfsodbuspendingcall.h \
+    ../qfsodbuspendingreply.h \
     ../qfsodeviceidlenotifier.h \
     ../qfsodeviceled.h \
     ../qfsosimhomezone.h \

@@ -44,46 +44,46 @@ public:
     ~QFsoGSMNetwork();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> DisableCallForwarding(const QString &reason, const QString &call_class)
+    inline QFsoDBusPendingReply<> DisableCallForwarding(const QString &reason, const QString &call_class)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(reason) << qVariantFromValue(call_class);
         return fsoAsyncCall(QLatin1String("DisableCallForwarding"), argumentList);
     }
 
-    inline QDBusPendingReply<> EnableCallForwarding(const QString &reason, const QString &call_class, const QString &number, int timeout)
+    inline QFsoDBusPendingReply<> EnableCallForwarding(const QString &reason, const QString &call_class, const QString &number, int timeout)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(reason) << qVariantFromValue(call_class) << qVariantFromValue(number) << qVariantFromValue(timeout);
         return fsoAsyncCall(QLatin1String("EnableCallForwarding"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetCallForwarding(const QString &reason)
+    inline QFsoDBusPendingReply<QVariantMap> GetCallForwarding(const QString &reason)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(reason);
         return fsoAsyncCall(QLatin1String("GetCallForwarding"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetCallingIdentification()
+    inline QFsoDBusPendingReply<QString> GetCallingIdentification()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCallingIdentification"), argumentList);
     }
 
-    inline QDBusPendingReply<int> GetSignalStrength()
+    inline QFsoDBusPendingReply<int> GetSignalStrength()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetSignalStrength"), argumentList);
     }
 
-    inline QDBusPendingReply<QVariantMap> GetStatus()
+    inline QFsoDBusPendingReply<QVariantMap> GetStatus()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<int, int, int, int> GetTimeReport()
+    inline QFsoDBusPendingReply<int, int, int, int> GetTimeReport()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetTimeReport"), argumentList);
@@ -100,40 +100,40 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QFsoNetworkProviderList> ListProviders()
+    inline QFsoDBusPendingReply<QFsoNetworkProviderList> ListProviders()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListProviders"), argumentList);
     }
 
-    inline QDBusPendingReply<> Register()
+    inline QFsoDBusPendingReply<> Register()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Register"), argumentList);
     }
 
-    inline QDBusPendingReply<> RegisterWithProvider(const QString &operator_code)
+    inline QFsoDBusPendingReply<> RegisterWithProvider(const QString &operator_code)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(operator_code);
         return fsoAsyncCall(QLatin1String("RegisterWithProvider"), argumentList);
     }
 
-    inline QDBusPendingReply<> SendUssdRequest(const QString &request)
+    inline QFsoDBusPendingReply<> SendUssdRequest(const QString &request)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(request);
         return fsoAsyncCall(QLatin1String("SendUssdRequest"), argumentList);
     }
 
-    inline QDBusPendingReply<> SetCallingIdentification(const QString &status)
+    inline QFsoDBusPendingReply<> SetCallingIdentification(const QString &status)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(status);
         return fsoAsyncCall(QLatin1String("SetCallingIdentification"), argumentList);
     }
 
-    inline QDBusPendingReply<> Unregister()
+    inline QFsoDBusPendingReply<> Unregister()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Unregister"), argumentList);

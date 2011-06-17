@@ -43,7 +43,7 @@ public:
     ~QFsoNotification();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> Alarm()
+    inline QFsoDBusPendingReply<> Alarm()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("Alarm"), argumentList);

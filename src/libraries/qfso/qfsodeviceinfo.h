@@ -43,7 +43,7 @@ public:
     ~QFsoDeviceInfo();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QVariantMap> GetCpuInfo()
+    inline QFsoDBusPendingReply<QVariantMap> GetCpuInfo()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetCpuInfo"), argumentList);

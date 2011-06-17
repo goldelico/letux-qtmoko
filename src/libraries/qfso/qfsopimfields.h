@@ -44,34 +44,34 @@ public:
     ~QFsoPIMFields();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<> AddField(const QString &name, const QString &type)
+    inline QFsoDBusPendingReply<> AddField(const QString &name, const QString &type)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name) << qVariantFromValue(type);
         return fsoAsyncCall(QLatin1String("AddField"), argumentList);
     }
 
-    inline QDBusPendingReply<> DeleteField(const QString &name)
+    inline QFsoDBusPendingReply<> DeleteField(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("DeleteField"), argumentList);
     }
 
-    inline QDBusPendingReply<QString> GetType(const QString &name)
+    inline QFsoDBusPendingReply<QString> GetType(const QString &name)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(name);
         return fsoAsyncCall(QLatin1String("GetType"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoStringMap> ListFields()
+    inline QFsoDBusPendingReply<QFsoStringMap> ListFields()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListFields"), argumentList);
     }
 
-    inline QDBusPendingReply<QStringList> ListFieldsWithType(const QString &type)
+    inline QFsoDBusPendingReply<QStringList> ListFieldsWithType(const QString &type)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(type);
