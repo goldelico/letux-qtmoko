@@ -340,13 +340,13 @@ void MainWindow::on_bGetStatus_clicked()
 
 void MainWindow::on_tbSmsContent_textChanged()
 {
-    QDBusPendingReply<uint> reply = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
-    watchCall(reply, this, SLOT(gsmMessageSizeFinished(QDBusPendingReply<> &)));
+    QDBusPendingCall call = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
+    watchCall(call, this, SLOT(gsmMessageSizeFinished(QDBusPendingCall &)));
 }
 
-void MainWindow::gsmMessageSizeFinished(QDBusPendingReply<> & r)
+void MainWindow::gsmMessageSizeFinished(QDBusPendingCall & call)
 {
-    QDBusPendingReply<uint> reply = r;
+    QDBusPendingReply<uint> reply = call;
     if(checkReply2(reply, "Message size", false, false))
     {
         ui->lSmsSplit->setText(QString("The message will be splitted in %1 parts").arg(reply.value()));

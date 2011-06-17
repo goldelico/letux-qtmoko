@@ -87,7 +87,7 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void gsmMessageSizeFinished(QDBusPendingReply<> & r);
+    void gsmMessageSizeFinished(QDBusPendingCall & call);
 };
 
 template <class T, class T2, class T3>
