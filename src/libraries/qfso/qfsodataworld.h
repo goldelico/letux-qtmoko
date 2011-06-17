@@ -46,13 +46,13 @@ public:
     ~QFsoDataWorld();
 
 public Q_SLOTS: // METHODS
-    inline QDBusPendingReply<QFsoWorldCountry> GetAllCountries()
+    inline QDBusPendingReply<QFsoWorldCountryList> GetAllCountries()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetAllCountries"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoWorldConnectivityAccessPoint> GetApnsForMccMnc(const QString &mcc_mnc)
+    inline QDBusPendingReply<QFsoWorldConnectivityAccessPointList> GetApnsForMccMnc(const QString &mcc_mnc)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(mcc_mnc);

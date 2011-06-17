@@ -100,7 +100,7 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QFsoNetworkProvider> ListProviders()
+    inline QDBusPendingReply<QFsoNetworkProviderList> ListProviders()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListProviders"), argumentList);

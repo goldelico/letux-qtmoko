@@ -78,7 +78,7 @@ public Q_SLOTS: // METHODS
         return fsoAsyncCall(QLatin1String("GetAuthStatus"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoSIMHomeZone> GetHomeZoneParameters()
+    inline QDBusPendingReply<QFsoSIMHomeZoneList> GetHomeZoneParameters()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("GetHomeZoneParameters"), argumentList);
@@ -139,7 +139,7 @@ public Q_SLOTS: // METHODS
         return reply;
     }
 
-    inline QDBusPendingReply<QFsoSIMEntry> RetrievePhonebook(const QString &category, int mindex, int maxdex)
+    inline QDBusPendingReply<QFsoSIMEntryList> RetrievePhonebook(const QString &category, int mindex, int maxdex)
     {
         QList<QVariant> argumentList;
         argumentList << qVariantFromValue(category) << qVariantFromValue(mindex) << qVariantFromValue(maxdex);

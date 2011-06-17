@@ -58,7 +58,7 @@ public Q_SLOTS: // METHODS
         return fsoAsyncCall(QLatin1String("ClearAlarms"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoWakeupAlarm> ListAlarms()
+    inline QDBusPendingReply<QFsoWakeupAlarmList> ListAlarms()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListAlarms"), argumentList);

@@ -615,6 +615,8 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
                 customTypes.append(qttype);
             if(isCustomList && !customListTypes.contains(qttype))
                 customListTypes.append(qttype);
+            if(isCustomList)
+                return qttype.toLatin1() + "List";
             return qttype.toLatin1();
         }
 

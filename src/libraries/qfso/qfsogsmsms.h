@@ -51,7 +51,7 @@ public Q_SLOTS: // METHODS
         return fsoAsyncCall(QLatin1String("GetSizeForTextMessage"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoSIMMessage> RetrieveTextMessages()
+    inline QDBusPendingReply<QFsoSIMMessageList> RetrieveTextMessages()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("RetrieveTextMessages"), argumentList);

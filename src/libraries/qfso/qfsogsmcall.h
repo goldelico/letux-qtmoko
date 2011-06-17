@@ -84,7 +84,7 @@ public Q_SLOTS: // METHODS
         return fsoAsyncCall(QLatin1String("Join"), argumentList);
     }
 
-    inline QDBusPendingReply<QFsoCallDetail> ListCalls()
+    inline QDBusPendingReply<QFsoCallDetailList> ListCalls()
     {
         QList<QVariant> argumentList;
         return fsoAsyncCall(QLatin1String("ListCalls"), argumentList);
