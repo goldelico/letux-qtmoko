@@ -10,7 +10,7 @@ QFsoDbusAbstractInterface::~QFsoDbusAbstractInterface()
 {
 }
 
-QDBusPendingCall QFsoDbusAbstractInterface::fsoAsyncCall(const QString &method, const QList<QVariant> &args)
+QFsoDBusPendingCall QFsoDbusAbstractInterface::fsoAsyncCall(const QString &method, const QList<QVariant> &args)
 {
     QString methodStr(path() + "->" + method + "(");
     for(int i = 0; i < args.count(); i++)
@@ -32,5 +32,7 @@ QDBusPendingCall QFsoDbusAbstractInterface::fsoAsyncCall(const QString &method, 
     methodStr += ")";
     qDebug() << "calling " << methodStr;
 
-    return asyncCallWithArgumentList(method, args);
+    QFsoDBusPendingCall res = asyncCallWithArgumentList(method, args);
+    res.debug = methodStr;
+    return res;
 }

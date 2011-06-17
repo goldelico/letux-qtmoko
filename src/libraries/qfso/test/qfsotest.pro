@@ -84,7 +84,8 @@ SOURCES += main.cpp \
     ../qfsodevicevibrator.cpp \
     ../qfsopimcall.cpp \
     ../qfsodbusabstractinterface.cpp \
-    fsoutil.cpp
+    fsoutil.cpp \
+    ../qfsodbuspendingcall.cpp
 HEADERS += mainwindow.h \
     ../qfsodeviceidlenotifier.h \
     ../qfsodeviceled.h \
@@ -166,5 +167,6 @@ HEADERS += mainwindow.h \
     ../qfsostringmap.h \
     ../qfsovariantmaplist.h \
     ../qfsodbusabstractinterface.h \
-    fsoutil.h
+    fsoutil.h \
+    ../qfsodbuspendingcall.h
 FORMS += mainwindow.ui

@@ -2,6 +2,7 @@
 #define QFSODBUSABSTRACTINTERFACE_H
 
 #include <QtDBus/QtDBus>
+#include "qfsodbuspendingcall.h"
 
 #if defined(QFSO_LIBRARY)
     #define QFSO_EXPORT Q_DECL_EXPORT
@@ -23,7 +24,7 @@ public:
 
     ~QFsoDbusAbstractInterface();
 
-    QDBusPendingCall fsoAsyncCall(const QString &method, const QList<QVariant> &args);
+    QFsoDBusPendingCall fsoAsyncCall(const QString &method, const QList<QVariant> &args);
 
 };
 
