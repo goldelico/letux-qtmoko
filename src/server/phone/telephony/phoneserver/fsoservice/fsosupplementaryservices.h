@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <QtDBus>
 #include <qsupplementaryservices.h>
+#include "fsoutil.h"
 
 class FsoTelephonyService;
 
@@ -34,7 +35,6 @@ public:
     ~FsoSupplementaryServices();
 
     FsoTelephonyService * service;
-    QDBusPendingCallWatcher watcher;
     
     void onIncomingUssd(const QString &mode, const QString &message);
 
@@ -44,7 +44,7 @@ public slots:
     void sendSupplementaryServiceData( const QString& data );
 
 private slots:
-    void sendUssdRequestFinished(QDBusPendingReply<> & reply);
+    void sendUssdRequestFinished(QFsoDBusPendingCall &);
 };
 
 #endif

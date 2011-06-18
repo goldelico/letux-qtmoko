@@ -1,7 +1,7 @@
 #include "fsoutil.h"
 
 FsoUtil::FsoUtil(QObject *parent) : QObject(parent)
-        , pendingReply()
+        , pendingCall(QDBusPendingReply<>())
         , pendingNotified(true)
         , pendingReceiver(NULL)
         , checkInterval(10)
@@ -16,7 +16,8 @@ FsoUtil FsoUtil::instance;
 
 void FsoUtil::pendingCheck()
 {
-    if(!pendingReply.isFinished())
+    QDBusPendingReply<> reply = pendingCall;
+    if(!reply.isFinished())
     {
         checkInterval += 10;
         QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
@@ -24,6 +25,40 @@ void FsoUtil::pendingCheck()
     else
     {
         pendingNotified = true;
-        emit finished(pendingReply);
+        emit finished(pendingCall);
     }
+}
+
+void FsoUtil::watchCall(QFsoDBusPendingCall & call,
+                        const QObject * receiver,
+                        const char * finishedMethod)
+{
+    if(!pendingNotified)
+    {
+        QDBusPendingReply<> pendingReply = pendingCall;
+        pendingReply.waitForFinished();
+        emit finished(pendingCall);
+    }
+
+    if(receiver != pendingReceiver)
+    {
+        disconnect();
+        QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
+                     receiver, finishedMethod);
+
+        pendingReceiver = receiver;
+    }
+
+    pendingNotified = false;
+    pendingCall = call;
+    checkInterval = 10;
+
+    QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
+}
+
+void watchCall(QFsoDBusPendingCall & call,
+               const QObject * receiver,
+               const char * finishedMethod)
+{
+    FsoUtil::instance.watchCall(call, receiver, finishedMethod);
 }

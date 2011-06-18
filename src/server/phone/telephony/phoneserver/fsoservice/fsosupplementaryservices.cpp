@@ -19,12 +19,10 @@
 
 #include "fsosupplementaryservices.h"
 #include "fsotelephonyservice.h"
-#include "fsoutil.h"
 
 FsoSupplementaryServices::FsoSupplementaryServices(FsoTelephonyService *service)
     : QSupplementaryServices( service->service(), service, QCommInterface::Server )
     , service(service)
-    , watcher(QDBusPendingReply<>(), this)
 {
 }
 
@@ -46,12 +44,13 @@ void FsoSupplementaryServices::sendSupplementaryServiceData
         ( const QString& data )
 {
     qDebug() << "FsoSupplementaryServices::sendSupplementaryServiceData data=" << data;
-    QDBusPendingReply<> reply = service->gsmNet.SendUssdRequest(data);
-    watchCall(reply, this, SLOT(sendUssdRequestFinished(QDBusPendingReply<> &)));
+    QFsoDBusPendingCall call = service->gsmNet.SendUssdRequest(data);
+    watchCall(call, this, SLOT(sendUssdRequestFinished(QFsoDBusPendingCall &)));
 }
 
-void FsoSupplementaryServices::sendUssdRequestFinished(QDBusPendingReply<> & reply)
+void FsoSupplementaryServices::sendUssdRequestFinished(QFsoDBusPendingCall & call)
 {
+    QFsoDBusPendingReply<> reply = call;
     bool ok = checkReply(reply, "SendUssdRequest");
     emit supplementaryServiceResult(ok ? QTelephony::OK : QTelephony::Error);
 }

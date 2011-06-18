@@ -22,16 +22,9 @@
 
 #include <QtDBus>
 #include <qsmssender.h>
+#include "fsoutil.h"
 
 class FsoTelephonyService;
-
-class FsoSmsCallWacher : public QDBusPendingCallWatcher
-{
-public:
-    FsoSmsCallWacher(const QDBusPendingCall & call, const QString & smsId, QObject * parent = 0);
-    ~FsoSmsCallWacher();
-    const QString smsId;
-};
 
 class FsoSMSSender : public QSMSSender
 {
@@ -41,12 +34,13 @@ public:
     ~FsoSMSSender();
 
     FsoTelephonyService * service;
+    QString smsId;                          // we can have just one pending call if we use watchCall() so this works
     
 public slots:
     void send( const QString& id, const QSMSMessage& msg );
 
 private slots:
-    void sendTextMessageFinished(QDBusPendingCallWatcher * watcher);
+    void sendTextMessageFinished(QFsoDBusPendingCall &);
 };
 
 #endif

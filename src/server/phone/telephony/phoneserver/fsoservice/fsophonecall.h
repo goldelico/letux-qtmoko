@@ -23,6 +23,7 @@
 #include <QtDBus>
 #include <qphonecallprovider.h>
 #include <qtopialog.h>
+#include "fsoutil.h"
 
 class FsoTelephonyService;
 
@@ -36,7 +37,6 @@ public:
 
     FsoTelephonyService *service;
     int id;
-    QDBusPendingCallWatcher watcher;
 
     void dial( const QDialOptions& options );
     void hangup( QPhoneCall::Scope scope );
@@ -49,7 +49,7 @@ public:
     void setFsoStatus(QString fsoStatus);
 
 public slots:
-    void initiateFinished(QDBusPendingReply<> & reply);
+    void initiateFinished(QFsoDBusPendingCall & call);
 };
 
 #endif

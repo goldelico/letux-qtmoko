@@ -10,8 +10,8 @@
 #include "qfsodbuspendingreply.h"
 
 template <class T, class T2, class T3>
-        int checkReply(QDBusPendingReply<T, T2, T3> & reply,
-                       const QString & fn,
+        int checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
+                       const QString & fn = QString(),
                        bool waitForFinished = true,
                        int ok = 1,
                        int err = 0,

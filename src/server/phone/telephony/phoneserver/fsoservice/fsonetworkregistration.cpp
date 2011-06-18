@@ -25,8 +25,8 @@ FsoNetworkRegistration::FsoNetworkRegistration(FsoTelephonyService *service)
     : QNetworkRegistrationServer( service->service(), service )
     , service(service)
 {
-    getStatusReply = service->gsmNet.GetStatus();
-    QTimer::singleShot(10, this, SLOT(timer()));
+    QFsoDBusPendingCall call = service->gsmNet.GetStatus();
+    watchCall(call, this, SLOT(getStatusFinished(QFsoDBusPendingCall &)));
 }
 
 FsoNetworkRegistration::~FsoNetworkRegistration()
@@ -80,16 +80,14 @@ static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
     return QTelephony::OperatorUnavailable;
 }
 
-
-void FsoNetworkRegistration::timer()
+void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
 {
-    int ret = checkReply(getStatusReply, "GsmStatus", false, 0, 10000, 50);
-    if(ret > 0)
+    QFsoDBusPendingReply<QVariantMap> reply = call;
+    if(!checkReply(reply, "GsmStatus"))
     {
-        QTimer::singleShot(ret, this, SLOT(timer()));
         return;
     }
-    QVariantMap map = getStatusReply.value();
+    QVariantMap map = reply.value();
     QString registration = map.value("registration").toString();
     QString mode = map.value("mode").toString();
     QString provider = map.value("provider").toString();
@@ -104,14 +102,14 @@ void FsoNetworkRegistration::timer()
 void FsoNetworkRegistration::setCurrentOperator
         ( QTelephony::OperatorMode, const QString & id, const QString &)
 {
-    QDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
-    int ret = checkReply(reply, "RegisterWithProvider", true, QTelephony::OK, QTelephony::Error);
-    emit setCurrentOperatorResult((QTelephony::Result)(ret));
+    QFsoDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
+    bool ok = checkReply(reply, "RegisterWithProvider");
+    emit setCurrentOperatorResult(ok ? QTelephony::OK : QTelephony::Error);
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
 {
-    QDBusPendingReply<QFsoNetworkProviderList> reply = service->gsmNet.ListProviders();
+    QFsoDBusPendingReply<QFsoNetworkProviderList> reply = service->gsmNet.ListProviders();
     if(!checkReply(reply, "ListProviders"))
     {
         return;

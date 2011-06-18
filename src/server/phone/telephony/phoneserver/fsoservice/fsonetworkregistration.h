@@ -34,15 +34,12 @@ public:
     ~FsoNetworkRegistration();
 
     FsoTelephonyService * service;
-    QDBusPendingReply<QVariantMap> getStatusReply;
 
 public slots:
     void setCurrentOperator( QTelephony::OperatorMode mode,
                              const QString& id, const QString& technology );
     void requestAvailableOperators();
-    
-private slots:
-    void timer();
+    void getStatusFinished(QFsoDBusPendingCall &);
 };
 
 #endif

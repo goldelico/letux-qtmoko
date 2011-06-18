@@ -20,7 +20,6 @@
 #include "fsophonecall.h"
 #include "fsotelephonyservice.h"
 #include "fsocallprovider.h"
-#include "fsoutil.h"
 
 FsoPhoneCall::FsoPhoneCall
         ( FsoTelephonyService *service, const QString& identifier,
@@ -28,7 +27,6 @@ FsoPhoneCall::FsoPhoneCall
     : QPhoneCallImpl( &service->call_provider, identifier, callType )
     , service(service)
     , id(id)
-    , watcher(QDBusPendingReply<>(), this)
 {
 }
 
@@ -78,14 +76,14 @@ void FsoPhoneCall::dial( const QDialOptions& options )
         return;
     }
     
-    QDBusPendingReply<int> reply = service->gsmCall.Initiate(number, "voice");
-    watchCall(reply, this, SLOT(initiateFinished(QDBusPendingReply<> &)));
+    QFsoDBusPendingCall call = service->gsmCall.Initiate(number, "voice");
+    watchCall(call, this, SLOT(initiateFinished(QFsoDBusPendingCall &)));
     setState(QPhoneCall::Dialing);
 }
 
-void FsoPhoneCall::initiateFinished(QDBusPendingReply<> & r)
+void FsoPhoneCall::initiateFinished(QFsoDBusPendingCall & call)
 {
-    QDBusPendingReply<int> reply = r;
+    QFsoDBusPendingReply<int> reply = call;
     if(checkReply(reply, "Initiate"))
     {
         id = reply.value();
@@ -98,13 +96,13 @@ void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 
     if(scope == QPhoneCall::CallOnly)
     {
-        QDBusPendingReply<> reply = service->gsmCall.Release(id);
+        QFsoDBusPendingReply<> reply = service->gsmCall.Release(id);
         checkReply(reply, "Release");
     }
     else
     {
         // TODO: not sure if ReleaseAll() is ok
-        QDBusPendingReply<> reply = service->gsmCall.ReleaseAll();
+        QFsoDBusPendingReply<> reply = service->gsmCall.ReleaseAll();
         checkReply(reply, "ReleaseAll");
     }
     id = -1;
@@ -114,21 +112,21 @@ void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
 void FsoPhoneCall::accept()
 {
     qDebug() << "FsoPhoneCall::accept()";
-    QDBusPendingReply<> reply = service->gsmCall.Activate(id);
+    QFsoDBusPendingReply<> reply = service->gsmCall.Activate(id);
     checkReply(reply, "Activate");
 }
 
 void FsoPhoneCall::hold()
 {
     qDebug() << "FsoPhoneCall::hold()";
-    QDBusPendingReply<> reply = service->gsmCall.HoldActive();
+    QFsoDBusPendingReply<> reply = service->gsmCall.HoldActive();
     checkReply(reply, "HoldActive");
 }
 
 void FsoPhoneCall::activate( QPhoneCall::Scope )
 {
     qDebug() << "FsoPhoneCall::activate()";
-    QDBusPendingReply<> reply = service->gsmCall.Activate(id);
+    QFsoDBusPendingReply<> reply = service->gsmCall.Activate(id);
     checkReply(reply, "Activate");
 }
 

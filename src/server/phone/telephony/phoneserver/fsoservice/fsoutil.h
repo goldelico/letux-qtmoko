@@ -6,10 +6,12 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QLabel>
+#include "qfsodbuspendingcall.h"
+#include "qfsodbuspendingreply.h"
 
 template <class T, class T2, class T3>
-        int checkReply(QDBusPendingReply<T, T2, T3> & reply,
-                       const QString & fn,
+        int checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
+                       const QString & fn = QString(),
                        bool waitForFinished = true,
                        int ok = 1,
                        int err = 0,
@@ -43,58 +45,26 @@ public:
     ~FsoUtil();
 
 public:
-    QDBusPendingReply<> pendingReply;           // reply for current call, we can have just one pending call at a time
+    QFsoDBusPendingCall pendingCall;            // current call, we can have just one pending call at a time
     bool pendingNotified;                       // true if we already signalled finish
     const QObject * pendingReceiver;            // object to receive finish signal
     int checkInterval;                          // we start checking with small intervals and then make them longer
 
     static FsoUtil instance;
 
-    template <class T, class T2, class T3>
-            void watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                           const QObject * receiver,
-                           const char * finishedMethod);
+    void watchCall(QFsoDBusPendingCall & call,
+                   const QObject * receiver,
+                   const char * finishedMethod);
 
 Q_SIGNALS:
-    void finished(QDBusPendingReply<> & reply);
+    void finished(QFsoDBusPendingCall & call);
 
 private slots:
     void pendingCheck();
 };
 
-template <class T, class T2, class T3>
-        void FsoUtil::watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                                const QObject * receiver,
-                                const char * finishedMethod)
-{
-    if(!pendingNotified)
-    {
-        pendingReply.waitForFinished();
-        emit finished(pendingReply);
-    }
-
-    if(receiver != pendingReceiver)
-    {
-        disconnect();
-        QObject::connect(this, SIGNAL(finished(QDBusPendingReply<> &)),
-                     receiver, finishedMethod);
-
-        pendingReceiver = receiver;
-    }
-
-    pendingNotified = false;
-    pendingReply = reply;
-    checkInterval = 10;
-
-    QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
-}
-
-template <class T, class T2, class T3>
-        void watchCall(QDBusPendingReply<T,T2,T3> & reply,
-                       const QObject * receiver,
-                       const char * finishedMethod)
-{
-    FsoUtil::instance.watchCall(reply, receiver, finishedMethod);
-}
+void watchCall(QFsoDBusPendingCall & call,
+               const QObject * receiver,
+               const char * finishedMethod);
 
 #endif // FSOUTIL_H
