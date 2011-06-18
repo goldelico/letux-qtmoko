@@ -97,13 +97,13 @@ void FsoPhoneCall::hangup( QPhoneCall::Scope scope)
     if(scope == QPhoneCall::CallOnly)
     {
         QFsoDBusPendingReply<> reply = service->gsmCall.Release(id);
-        checkReply(reply, "Release");
+        checkReply(reply);
     }
     else
     {
         // TODO: not sure if ReleaseAll() is ok
         QFsoDBusPendingReply<> reply = service->gsmCall.ReleaseAll();
-        checkReply(reply, "ReleaseAll");
+        checkReply(reply);
     }
     id = -1;
     setState(QPhoneCall::HangupLocal);
@@ -113,21 +113,21 @@ void FsoPhoneCall::accept()
 {
     qDebug() << "FsoPhoneCall::accept()";
     QFsoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply, "Activate");
+    checkReply(reply);
 }
 
 void FsoPhoneCall::hold()
 {
     qDebug() << "FsoPhoneCall::hold()";
     QFsoDBusPendingReply<> reply = service->gsmCall.HoldActive();
-    checkReply(reply, "HoldActive");
+    checkReply(reply);
 }
 
 void FsoPhoneCall::activate( QPhoneCall::Scope )
 {
     qDebug() << "FsoPhoneCall::activate()";
     QFsoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply, "Activate");
+    checkReply(reply);
 }
 
 void FsoPhoneCall::tone( const QString& tones )

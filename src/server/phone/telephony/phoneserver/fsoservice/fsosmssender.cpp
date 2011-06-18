@@ -46,7 +46,7 @@ void FsoSMSSender::sendTextMessageFinished(QFsoDBusPendingCall & call)
 {
     qDebug() << "sendTextMessageFinished";
     QFsoDBusPendingReply<int, QString> reply = call;
-    if(checkReply(reply, "SendTextMessage"))
+    if(checkReply(reply))
     {
         emit finished(smsId, QTelephony::OK);
     }

@@ -83,7 +83,7 @@ static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
 void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QVariantMap> reply = call;
-    if(!checkReply(reply, "GsmStatus"))
+    if(!checkReply(reply))
     {
         return;
     }
@@ -103,14 +103,14 @@ void FsoNetworkRegistration::setCurrentOperator
         ( QTelephony::OperatorMode, const QString & id, const QString &)
 {
     QFsoDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
-    bool ok = checkReply(reply, "RegisterWithProvider");
+    bool ok = checkReply(reply);
     emit setCurrentOperatorResult(ok ? QTelephony::OK : QTelephony::Error);
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
 {
     QFsoDBusPendingReply<QFsoNetworkProviderList> reply = service->gsmNet.ListProviders();
-    if(!checkReply(reply, "ListProviders"))
+    if(!checkReply(reply))
     {
         return;
     }
