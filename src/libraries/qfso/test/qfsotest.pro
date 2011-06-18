@@ -169,5 +169,6 @@ HEADERS += mainwindow.h \
     ../qfsodbusabstractinterface.h \
     fsoutil.h \
     ../qfsodbuspendingcall.h \
-    ../qfsodbuspendingreply.h
+    ../qfsodbuspendingreply.h \
+    qtelephonynamespace.h
 FORMS += mainwindow.ui

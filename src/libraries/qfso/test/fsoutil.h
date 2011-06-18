@@ -6,13 +6,14 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QLabel>
+#include <qtelephonynamespace.h>
 #include "qfsodbuspendingcall.h"
 #include "qfsodbuspendingreply.h"
 
 template <class T, class T2, class T3>
         int checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
-                       const QString & fn = QString(),
                        bool waitForFinished = true,
+                       QTelephony::Result result = QTelephony::OK,
                        int ok = 1,
                        int err = 0,
                        int unfinished = 0)
@@ -24,14 +25,17 @@ template <class T, class T2, class T3>
     if(reply.isError())
     {
         QString errorStr = reply.error().message();
-        qWarning() << "Error in " << fn << errorStr;
+        qWarning() << "Error in " << reply.debug << errorStr;
+        result = QTelephony::Error;
         return err;
     }
     if(reply.isFinished() && reply.isValid())
     {
-        qDebug() << "    dbus call " + fn + "() ok";
+        qDebug() << "    dbus call " + reply.debug + "() ok";
+        result = QTelephony::OK;
         return ok;
     }
+    result = QTelephony::OK;
     return unfinished;
 }
 

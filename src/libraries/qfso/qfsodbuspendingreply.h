@@ -15,7 +15,6 @@ template<typename T1 = void, typename T2 = void, typename T3 = void, typename T4
 class QFSO_EXPORT QFsoDBusPendingReply : public QFsoDBusPendingCall
 {
 public:
-    QString debug;
     QDBusPendingReply<T1,T2,T3,T4,T5,T6,T7,T8> reply;
 
     inline QFsoDBusPendingReply()
@@ -27,7 +26,8 @@ public:
         : QFsoDBusPendingCall(call)
     {
         reply = call;
-        debug = call.debug;
+        this->method = call.method;
+        this->methodCall = call.methodCall;
     }
 
     inline T1 value()

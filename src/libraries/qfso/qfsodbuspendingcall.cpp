@@ -2,6 +2,7 @@
 
 QFsoDBusPendingCall::QFsoDBusPendingCall(const QDBusPendingCall &other)
     : QDBusPendingCall(other)
-    , debug()
+    , method()
+    , methodCall()
 {
 }

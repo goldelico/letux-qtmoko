@@ -8,6 +8,7 @@
 #include <QMessageBox>
 #include <QLabel>
 
+#include "fsoutil.h"
 #include "qfsodeviceled.h"
 #include "qfsogsmdevice.h"
 #include "qfsogsmnetwork.h"
@@ -46,7 +47,6 @@ private:
 
     template <class T, class T2, class T3>
             bool checkReply2(QFsoDBusPendingReply<T,T2,T3> & reply,
-                             const QString & fn,
                              bool okBox,
                              bool waitForFinished,
                              QLabel * label = NULL);
@@ -92,7 +92,6 @@ private slots:
 
 template <class T, class T2, class T3>
         bool MainWindow::checkReply2(QFsoDBusPendingReply<T, T2, T3> & reply,
-                                     const QString & fn,
                                      bool okBox,
                                      bool waitForFinished,
                                      QLabel * label)
@@ -107,19 +106,17 @@ template <class T, class T2, class T3>
     //            ", reply.isError()=" << reply.isError() <<
     //            ", fn=" << fn;
 
-    qWarning() << "reply.debug=" << reply.debug;
-
     if(reply.isError())
     {
         QString err = reply.error().message();
-        qWarning() << "Error in " << fn << err;
+        qWarning() << "Error in " << reply.methodCall << err;
         if(label != NULL)
         {
-            label->setText(fn + ": " + err);
+            label->setText(reply.method + ": " + err);
         }
         else
         {
-            QMessageBox::critical(this, fn, fn + " failed: " + err);
+            QMessageBox::critical(this, reply.method, reply.method + " failed: " + err);
         }
         return false;
     }
@@ -127,7 +124,7 @@ template <class T, class T2, class T3>
     {
         if(okBox)
         {
-            QMessageBox::information(this, fn, fn + " ok");
+            QMessageBox::information(this, reply.method, reply.method + " ok");
         }
         return true;
     }

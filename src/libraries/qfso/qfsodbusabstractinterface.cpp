@@ -34,6 +34,7 @@ QFsoDBusPendingCall QFsoDbusAbstractInterface::fsoAsyncCall(const QString &metho
 
     QDBusPendingCall call = asyncCallWithArgumentList(method, args);
     QFsoDBusPendingCall res(call);
-    res.debug = methodStr;
+    res.methodCall = methodStr;
+    res.method = method;
     return res;
 }

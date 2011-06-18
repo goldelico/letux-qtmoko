@@ -14,7 +14,9 @@ class QFSO_EXPORT QFsoDBusPendingCall : public QDBusPendingCall
 public:
     QFsoDBusPendingCall(const QDBusPendingCall &other);
 
-    QString debug;      // debug info - method call as string
+    // Useful for debugging
+    QString method;
+    QString methodCall;
 };
 
 #endif // QFSODBUSPENDINGCALL_H
