@@ -1,4 +1,5 @@
 #include "qfsodbusabstractinterface.h"
+#include "qfsoutil.h"
 
 QFsoDbusAbstractInterface::QFsoDbusAbstractInterface(const QString &service, const QString &path, const char *interface,
                                                      const QDBusConnection &connection, QObject *parent)
@@ -30,6 +31,10 @@ QFsoDBusPendingCall QFsoDbusAbstractInterface::fsoAsyncCall(const QString &metho
         methodStr += argStr;
     }
     methodStr += ")";
+
+    // Wait for pending calls to finish, otherwise we have problems e.g.
+    // two calls of SendTextMessage() hang up the fso daemon.
+    QFsoUtil::waitForFinished();
     qDebug() << "calling " << methodStr;
 
     QDBusPendingCall call = asyncCallWithArgumentList(method, args);

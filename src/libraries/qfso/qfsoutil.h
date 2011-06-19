@@ -67,7 +67,7 @@ public:
                    const QObject * receiver,
                    const char * finishedMethod);
 
-    void waitForFinished();                     // wait for current pending call to be finished
+    static void waitForFinished();              // wait for current pending call to be finished
 
 Q_SIGNALS:
     void finished(QFsoDBusPendingCall & call);

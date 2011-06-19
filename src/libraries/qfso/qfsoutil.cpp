@@ -58,6 +58,11 @@ void QFsoUtil::watchCall(QFsoDBusPendingCall & call,
     QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
 }
 
+void QFsoUtil::waitForFinished()
+{
+    instance.pendingCall.waitForFinished();
+}
+
 void watchFsoCall(QFsoDBusPendingCall & call,
                   const QObject * receiver,
                   const char * finishedMethod)
