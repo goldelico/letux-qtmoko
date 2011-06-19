@@ -77,7 +77,7 @@ void FsoPhoneCall::dial( const QDialOptions& options )
     }
     
     QFsoDBusPendingCall call = service->gsmCall.Initiate(number, "voice");
-    watchCall(call, this, SLOT(initiateFinished(QFsoDBusPendingCall &)));
+    watchFsoCall(call, this, SLOT(initiateFinished(QFsoDBusPendingCall &)));
     setState(QPhoneCall::Dialing);
 }
 

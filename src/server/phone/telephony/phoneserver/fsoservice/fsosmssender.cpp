@@ -38,7 +38,7 @@ void FsoSMSSender::send( const QString& id, const QSMSMessage& msg )
     QFsoDBusPendingCall call = service->gsmSms.SendTextMessage(
         msg.recipient(), msg.text(), msg.statusReportRequested());
 
-    watchCall(call, this, SLOT(sendTextMessageFinished(QFsoDBusPendingCall &)));
+    watchFsoCall(call, this, SLOT(sendTextMessageFinished(QFsoDBusPendingCall &)));
     smsId = id;
 }
 

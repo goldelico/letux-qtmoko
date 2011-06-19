@@ -85,7 +85,8 @@ SOURCES += main.cpp \
     ../qfsopimcall.cpp \
     ../qfsodbusabstractinterface.cpp \
     fsoutil.cpp \
-    ../qfsodbuspendingcall.cpp
+    ../qfsodbuspendingcall.cpp \
+    ../qfsoutil.cpp
 HEADERS += mainwindow.h \
     ../qfsodeviceidlenotifier.h \
     ../qfsodeviceled.h \
@@ -170,5 +171,6 @@ HEADERS += mainwindow.h \
     fsoutil.h \
     ../qfsodbuspendingcall.h \
     ../qfsodbuspendingreply.h \
-    qtelephonynamespace.h
+    qtelephonynamespace.h \
+    ../qfsoutil.h
 FORMS += mainwindow.ui

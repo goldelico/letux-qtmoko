@@ -19,6 +19,7 @@ pkg [
 ]
 
 SOURCES += \
+    qfsoutil.cpp \
     qfsodbuspendingcall.cpp \
     qfsopreferencesservice.cpp \
     qfsopimnote.cpp \
@@ -99,6 +100,7 @@ SOURCES += \
     qfsodbusabstractinterface.cpp
 
 HEADERS += \
+    qfsoutil.h \
     qfsodbuspendingcall.h \
     qfsodbuspendingreply.h \
     qfsodeviceidlenotifier.h \

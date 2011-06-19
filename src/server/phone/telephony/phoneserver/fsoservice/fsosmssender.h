@@ -34,7 +34,7 @@ public:
     ~FsoSMSSender();
 
     FsoTelephonyService * service;
-    QString smsId;                          // we can have just one pending call if we use watchCall() so this works
+    QString smsId;                          // we can have just one pending call if we use watchFsoCall() so this works
     
 public slots:
     void send( const QString& id, const QSMSMessage& msg );

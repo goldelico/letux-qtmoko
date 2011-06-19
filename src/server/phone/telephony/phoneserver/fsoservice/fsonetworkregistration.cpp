@@ -26,7 +26,7 @@ FsoNetworkRegistration::FsoNetworkRegistration(FsoTelephonyService *service)
     , service(service)
 {
     QFsoDBusPendingCall call = service->gsmNet.GetStatus();
-    watchCall(call, this, SLOT(getStatusFinished(QFsoDBusPendingCall &)));
+    watchFsoCall(call, this, SLOT(getStatusFinished(QFsoDBusPendingCall &)));
 }
 
 FsoNetworkRegistration::~FsoNetworkRegistration()

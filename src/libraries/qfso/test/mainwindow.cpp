@@ -341,7 +341,7 @@ void MainWindow::on_bGetStatus_clicked()
 void MainWindow::on_tbSmsContent_textChanged()
 {
     QFsoDBusPendingCall call = gsmSms.GetSizeForTextMessage(ui->tbSmsContent->toPlainText());
-    watchCall(call, this, SLOT(gsmMessageSizeFinished(QFsoDBusPendingCall &)));
+    watchFsoCall(call, this, SLOT(gsmMessageSizeFinished(QFsoDBusPendingCall &)));
 }
 
 void MainWindow::gsmMessageSizeFinished(QFsoDBusPendingCall & call)

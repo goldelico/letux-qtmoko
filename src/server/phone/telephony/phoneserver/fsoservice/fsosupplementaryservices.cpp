@@ -45,7 +45,7 @@ void FsoSupplementaryServices::sendSupplementaryServiceData
 {
     qDebug() << "FsoSupplementaryServices::sendSupplementaryServiceData data=" << data;
     QFsoDBusPendingCall call = service->gsmNet.SendUssdRequest(data);
-    watchCall(call, this, SLOT(sendUssdRequestFinished(QFsoDBusPendingCall &)));
+    watchFsoCall(call, this, SLOT(sendUssdRequestFinished(QFsoDBusPendingCall &)));
 }
 
 void FsoSupplementaryServices::sendUssdRequestFinished(QFsoDBusPendingCall & call)
