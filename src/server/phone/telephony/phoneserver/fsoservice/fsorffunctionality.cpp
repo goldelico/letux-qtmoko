@@ -82,9 +82,9 @@ void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
     qWarning() << "setLevel level=" << level;
 
     // Retrieve autoregister and pin values
-    QTelephony::Result res;
     QFsoDBusPendingReply<QString, bool, QString> reply = service->gsmDev.GetFunctionality();
-    if(!checkReply(reply, true, res))
+    QTelephony::Result res = checkResult(reply);
+    if(res != QTelephony::OK)
     {
         emit setLevelResult(res);
         return;
@@ -95,6 +95,5 @@ void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
 
     // Set actual value
     QFsoDBusPendingReply<> reply2 = service->gsmDev.SetFunctionality(fsoLevel, autoregister, pin);
-    checkReply(reply2, true, res);
-    emit setLevelResult(res);
+    emit setLevelResult(checkResult(reply2));
 }

@@ -51,9 +51,7 @@ void FsoSupplementaryServices::sendSupplementaryServiceData
 void FsoSupplementaryServices::sendUssdRequestFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<> reply = call;
-    QTelephony::Result res;
-    bool ok = checkReply(reply, false, res);
-    emit supplementaryServiceResult(res);
+    emit supplementaryServiceResult(checkResult(reply));
 }
 
 static QSupplementaryServices::UnstructuredAction fsoModeToQtAction(const QString &mode)

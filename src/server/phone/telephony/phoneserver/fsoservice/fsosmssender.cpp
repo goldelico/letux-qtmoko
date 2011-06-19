@@ -35,10 +35,10 @@ void FsoSMSSender::send( const QString& id, const QSMSMessage& msg )
 {
     qDebug() << "FsoSMSSender::send" << "id=" << id << "recipient=" << msg.recipient() << "text=" << msg.text();
     
-    QFsoDBusPendingReply<int, QString> reply = service->gsmSms.SendTextMessage(
+    QFsoDBusPendingCall call = service->gsmSms.SendTextMessage(
         msg.recipient(), msg.text(), msg.statusReportRequested());
 
-    watchCall(reply, this, SLOT(sendTextMessageFinished(QFsoDBusPendingCall &)));
+    watchCall(call, this, SLOT(sendTextMessageFinished(QFsoDBusPendingCall &)));
     smsId = id;
 }
 
@@ -46,12 +46,5 @@ void FsoSMSSender::sendTextMessageFinished(QFsoDBusPendingCall & call)
 {
     qDebug() << "sendTextMessageFinished";
     QFsoDBusPendingReply<int, QString> reply = call;
-    if(checkReply(reply))
-    {
-        emit finished(smsId, QTelephony::OK);
-    }
-    else
-    {
-        emit finished(smsId, QTelephony::Error);
-    }
+    emit finished(smsId, checkResult(reply));
 }

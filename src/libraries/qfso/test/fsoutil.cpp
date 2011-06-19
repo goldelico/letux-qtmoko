@@ -35,8 +35,10 @@ void FsoUtil::watchCall(QFsoDBusPendingCall & call,
 {
     if(!pendingNotified)
     {
-        QDBusPendingReply<> pendingReply = pendingCall;
+        QFsoDBusPendingReply<> pendingReply = pendingCall;
+        qDebug() << "watchCall: waiting for finish of " << pendingCall.methodCall;
         pendingReply.waitForFinished();
+        qDebug() << "watchCall: finished " << pendingCall.methodCall;
         emit finished(pendingCall);
     }
 
@@ -44,7 +46,7 @@ void FsoUtil::watchCall(QFsoDBusPendingCall & call,
     {
         disconnect();
         QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
-                     receiver, finishedMethod);
+                         receiver, finishedMethod);
 
         pendingReceiver = receiver;
     }

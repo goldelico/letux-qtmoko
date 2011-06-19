@@ -10,10 +10,13 @@
 #include "qfsodbuspendingcall.h"
 #include "qfsodbuspendingreply.h"
 
+// Check reply from fso dbus call.
+// Waits for reply to finish if waitForFinished is true.
+// Returns value specified in ok if success.
+// Returns value specified in err if error.
 template <class T, class T2, class T3>
         int checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
                        bool waitForFinished = true,
-                       QTelephony::Result result = QTelephony::OK,
                        int ok = 1,
                        int err = 0,
                        int unfinished = 0)
@@ -25,18 +28,27 @@ template <class T, class T2, class T3>
     if(reply.isError())
     {
         QString errorStr = reply.error().message();
-        qWarning() << "Error in " << reply.debug << errorStr;
-        result = QTelephony::Error;
+        qWarning() << "Error in " << reply.methodCall << errorStr;
         return err;
     }
     if(reply.isFinished() && reply.isValid())
     {
-        qDebug() << "    dbus call " + reply.debug + "() ok";
-        result = QTelephony::OK;
+        qDebug() << "    dbus call " + reply.methodCall + " ok";
         return ok;
     }
-    result = QTelephony::OK;
     return unfinished;
+}
+
+template <class T, class T2, class T3>
+        QTelephony::Result checkResult(QFsoDBusPendingReply<T, T2, T3> & reply,
+                                       bool waitForFinished = true)
+{
+    if(checkReply(reply, waitForFinished))
+    {
+        return QTelephony::OK;
+    }
+    // TODO: convert FSO exception->QTelephony::Result
+    return QTelephony::Error;
 }
 
 // This class is used to implement watchCall mechanism which allows us to
