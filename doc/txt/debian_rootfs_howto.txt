@@ -156,6 +156,40 @@ subnet 192.168.0.0 netmask 255.255.255.0 {
 }
 __END__
 
+
+Step 4.5 - make it generate SSH keys on start
+=============================================
+
+* SSH server keys are automatically generated during debootstrap. This can be
+  security problem if user does not regenerate them. So we delete old keys and
+  generate new ones during first boot.
+
+rm /media/card/etc/ssh/ssh_host_*
+
+cat > /media/card/etc/init.d/sshkeysfirstboot << __END__
+#!/bin/sh
+
+### BEGIN INIT INFO
+# Provides:             sshkeysfirstboot
+# Required-Start:       $remote_fs $syslog
+# Required-Stop:        $remote_fs $syslog
+# Default-Start:        2 3 4 5
+# Default-Stop:         0 1 6
+# Short-Description:    Generate SSH host keys on first boot
+### END INIT INFO
+
+dpkg-reconfigure openssh-server
+update-rc.d -f sshkeysfirstboot remove
+rm -f /etc/init.d/sshkeysfirstboot
+
+__END__
+
+chmod +x /media/card/etc/init.d/sshkeysfirstboot
+chroot /media/card
+update-rc.d sshkeysfirstboot defaults
+exit
+
+
 Step 4.6 - get rid of getty in inittab
 ======================================
 
