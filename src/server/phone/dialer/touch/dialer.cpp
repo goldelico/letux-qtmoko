@@ -84,6 +84,7 @@ private slots:
     void sms();
     virtual void selectCallHistory();
     void updateIcons(const QString &text);
+    void updateContact(const QString &text);
 
 protected:
     virtual void themeLoaded(const QString &theme);
@@ -92,6 +93,7 @@ protected:
     void timerEvent(QTimerEvent *e);
 
     QLineEdit *display;
+    QLineEdit *displayContact;
 
 private:
     void playDtmf(int key);
@@ -110,7 +112,7 @@ static const QString DialerChars("*+pw");
 
 Dialer::Dialer(QWidget *parent, Qt::WFlags f)
   : QThemedView(parent, f), display(0), m_actions(0), addContactMsg(0)
-    , currentChar(0)
+  , currentChar(0), displayContact(0)
 {
     setObjectName("Dialer");
     setWindowTitle(tr("Dialer"));
@@ -267,6 +269,22 @@ void Dialer::themeLoaded(const QString &)
         setFocusPolicy(Qt::StrongFocus);
     }
 
+    QThemeWidgetItem *item2 = qgraphicsitem_cast<QThemeWidgetItem*>(findItem("dialercontact"));
+    if (item2 && item2->widget()) {
+        displayContact = qobject_cast<QLineEdit *>(item2->widget());
+    } else {
+        qWarning("No input field available for dialer theme.");
+        displayContact = new QLineEdit(this);
+    }
+
+    if (displayContact) {
+        if (display)
+            connect(display, SIGNAL(textChanged(QString)), this, SLOT(updateContact(QString)));
+        displayContact->setFocusPolicy(Qt::NoFocus);
+        setFocus();
+        setFocusPolicy(Qt::StrongFocus);
+    }
+
     if (m_actions)
         delete m_actions;
     m_actions = new QActionGroup(this);
@@ -308,6 +326,12 @@ void Dialer::themeLoaded(const QString &)
     }
 }
 
+void Dialer::updateContact(const QString &text) 
+{
+    displayContact->setText(ServerContactModel::instance()->
+			    matchPhoneNumber(text).label());
+}
+
 void Dialer::updateIcons(const QString &text)
 {
 
@@ -341,10 +365,18 @@ void Dialer::selectContact()
     contactSelector.showMaximized();
     if (QtopiaApplication::execDialog(&contactSelector) && contactSelector.contactSelected()) {
         QContact cnt = contactSelector.selectedContact();
-        QPhoneTypeSelector typeSelector(cnt, QString());
-        if (QtopiaApplication::execDialog(&typeSelector))
+        QMap<QContact::PhoneType, QString> phones = cnt.phoneNumbers();
+        if (phones.size() == 0) {
+            return;
+        } else if (phones.size() == 1) {
             if (display)
-                display->setText(typeSelector.selectedNumber());
+                display->setText(phones.begin().value());
+        } else {
+            QPhoneTypeSelector typeSelector(cnt, QString());
+            if (QtopiaApplication::execDialog(&typeSelector))
+                if (display)
+                    display->setText(typeSelector.selectedNumber());
+        }
     }
 }
 
