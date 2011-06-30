@@ -87,6 +87,15 @@ echo "deb http://ftp.de.debian.org/debian squeeze contrib" >> /media/card/etc/ap
 echo "deb http://ftp.de.debian.org/debian squeeze non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
 
+Step 3.1 - use geo mirrors
+==========================
+
+* As described here
+
+http://wiki.debian.org/DebianGeoMirror#cdn.debian.net
+
+
+
 Step 4
 ======
 
