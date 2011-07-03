@@ -19,6 +19,7 @@
 // Returns value specified in err if error.
 template <class T, class T2, class T3>
         int QFSO_EXPORT checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
+                                   const QVariant & result = QVariant("ok"),
                                    bool waitForFinished = true,
                                    int ok = 1,
                                    int err = 0,
@@ -36,11 +37,17 @@ template <class T, class T2, class T3>
     }
     if(reply.isFinished() && reply.isValid())
     {
-        qDebug() << "    dbus call " + reply.methodCall + " ok";
+        qDebug() << "    dbus call " + reply.methodCall + " returned " + result.toString();
         return ok;
     }
     return unfinished;
 }
+
+int QFSO_EXPORT checkVariantMapReply(QFsoDBusPendingReply<QVariantMap> & reply,
+                                     bool waitForFinished = true,
+                                     int ok = 1,
+                                     int err = 0,
+                                     int unfinished = 0);
 
 // This class is used to implement watchCall mechanism which allows us to
 // call callback method when dbus call is finished. It's similar to
