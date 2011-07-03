@@ -198,6 +198,8 @@ CellModemManager::CellModemManager(QObject *parent)
     }
 
     d->m_netReg = new QNetworkRegistration("modem", this);
+    d->m_regState = d->m_netReg->registrationState();
+
     QObject::connect(d->m_netReg, SIGNAL(registrationStateChanged()),
                      this, SLOT(registrationStateChanged()));
     QObject::connect(d->m_netReg, SIGNAL(currentOperatorChanged()),
