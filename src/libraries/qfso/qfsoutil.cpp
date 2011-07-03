@@ -4,6 +4,7 @@ QFsoUtil::QFsoUtil(QObject *parent) : QObject(parent)
         , pendingCall(QDBusPendingReply<>())
         , pendingNotified(true)
         , pendingReceiver(NULL)
+        , pendingFinished(NULL)
         , checkInterval(10)
 {
 }
@@ -14,8 +15,23 @@ QFsoUtil::~QFsoUtil()
 
 QFsoUtil QFsoUtil::instance;
 
+void QFsoUtil::emitFinished(const QObject *receiver, const char *finishedMethod, QFsoDBusPendingCall &call)
+{
+    QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
+                     receiver, finishedMethod);
+    emit finished(call);
+    disconnect();
+}
+
 void QFsoUtil::pendingCheck()
 {
+    qDebug() << "pendingCheck() " << pendingCall.methodCall;
+
+    if(pendingNotified)
+    {
+        return;
+    }
+
     QDBusPendingReply<> reply = pendingCall;
     if(!reply.isFinished())
     {
@@ -25,7 +41,7 @@ void QFsoUtil::pendingCheck()
     else
     {
         pendingNotified = true;
-        emit finished(pendingCall);
+        emitFinished(pendingReceiver, pendingFinished, pendingCall);
     }
 }
 
@@ -33,29 +49,27 @@ void QFsoUtil::watchCall(QFsoDBusPendingCall & call,
                          const QObject * receiver,
                          const char * finishedMethod)
 {
-    if(!pendingNotified)
-    {
-        QFsoDBusPendingReply<> pendingReply = pendingCall;
-        qDebug() << "watchCall: waiting for finish of " << pendingCall.methodCall;
-        pendingReply.waitForFinished();
-        qDebug() << "watchCall: finished " << pendingCall.methodCall;
-        emit finished(pendingCall);
-    }
-
-    if(receiver != pendingReceiver)
-    {
-        disconnect();
-        QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
-                         receiver, finishedMethod);
-
-        pendingReceiver = receiver;
-    }
+    bool oldNotified = pendingNotified;
+    QFsoDBusPendingCall oldCall = pendingCall;
+    const QObject *oldReceiver = pendingReceiver;
+    const char *oldFinished = pendingFinished;
 
     pendingNotified = false;
     pendingCall = call;
-    checkInterval = 10;
+    pendingReceiver = receiver;
+    pendingFinished = finishedMethod;
 
+    checkInterval = 10;
     QTimer::singleShot(checkInterval, this, SLOT(pendingCheck()));
+
+    if(!oldNotified)
+    {
+        qDebug() << "watchCall: waiting for finish of " << oldCall.methodCall;
+        oldCall.waitForFinished();
+        qDebug() << "watchCall: finished " << oldCall.methodCall;
+        emitFinished(oldReceiver, oldFinished, oldCall);
+        qDebug() << "emited finished";
+    }
 }
 
 void QFsoUtil::waitForFinished()
