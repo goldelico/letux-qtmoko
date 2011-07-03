@@ -19,7 +19,6 @@
 // Returns value specified in err if error.
 template <class T, class T2, class T3>
         int QFSO_EXPORT checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
-                                   const QVariant & result = QVariant("ok"),
                                    bool waitForFinished = true,
                                    int ok = 1,
                                    int err = 0,
@@ -37,17 +36,40 @@ template <class T, class T2, class T3>
     }
     if(reply.isFinished() && reply.isValid())
     {
-        qDebug() << "    dbus call " + reply.methodCall + " returned " + result.toString();
+        // Dump result
+        QString resStr;
+        for(int i = 0; i < reply.count(); i++)
+        {
+            QVariant arg = reply.argumentAt(i);
+            if(arg.canConvert<QDBusArgument>())
+            {
+                QDBusArgument dbusArg = arg.value<QDBusArgument>();
+                QString signature = dbusArg.currentSignature();
+                if(signature == "a{sv}")
+                {
+                    QVariantMap map;
+                    dbusArg >> map;
+                    for(int j = 0; j < map.count(); j++)
+                    {
+                        QString key = map.keys().at(j);
+                        resStr += " " + key + "=" + map.value(key).toString();
+                    }
+                }
+                else
+                {
+                    qWarning() << "checkReply: unknown signature " << signature;
+                }
+            }
+            else
+            {
+                resStr += " " + arg.toString();
+            }
+        }
+        qDebug() << "    dbus call " + reply.methodCall + " returned" + resStr;
         return ok;
     }
     return unfinished;
 }
-
-int QFSO_EXPORT checkVariantMapReply(QFsoDBusPendingReply<QVariantMap> & reply,
-                                     bool waitForFinished = true,
-                                     int ok = 1,
-                                     int err = 0,
-                                     int unfinished = 0);
 
 // This class is used to implement watchCall mechanism which allows us to
 // call callback method when dbus call is finished. It's similar to

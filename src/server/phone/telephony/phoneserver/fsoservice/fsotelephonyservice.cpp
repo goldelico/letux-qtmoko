@@ -106,7 +106,7 @@ void FsoTelephonyService::initialize()
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QString> reply = call;
-    if(checkResult(reply, reply.value()))
+    if(checkResult(reply))
     {
     }
 }

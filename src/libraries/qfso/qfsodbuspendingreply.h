@@ -39,6 +39,11 @@ public:
     {
         return reply.argumentAt(index);
     }
+
+    inline int count()
+    {
+        return reply.count();
+    }
 };
 
 

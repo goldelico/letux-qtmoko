@@ -332,6 +332,7 @@ void MainWindow::on_bGetFunctionality_clicked()
 void MainWindow::on_bGetStatus_clicked()
 {
     QFsoDBusPendingReply<QVariantMap> reply = gsmNet.GetStatus();
+    checkReply(reply);
     if(checkReply2(reply, false, true))
     {
         showVariantMapResult(reply, "Network status");

@@ -9,10 +9,9 @@
 
 template <class T, class T2, class T3>
         QTelephony::Result checkResult(QFsoDBusPendingReply<T, T2, T3> & reply,
-                                       const QVariant & result = QVariant("ok"),
                                        bool waitForFinished = true)
 {
-    if(checkReply(reply, result, waitForFinished))
+    if(checkReply(reply, waitForFinished))
     {
         return QTelephony::OK;
     }

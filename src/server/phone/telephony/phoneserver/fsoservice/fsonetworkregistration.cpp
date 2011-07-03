@@ -83,7 +83,7 @@ static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
 void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QVariantMap> reply = call;
-    if(!checkVariantMapReply(reply))
+    if(!checkReply(reply))
     {
         return;
     }

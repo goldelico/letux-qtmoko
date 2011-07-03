@@ -1,26 +1,5 @@
 #include "qfsoutil.h"
 
-int QFSO_EXPORT checkVariantMapReply(QFsoDBusPendingReply<QVariantMap> & reply,
-                                     bool waitForFinished,
-                                     int ok,
-                                     int err,
-                                     int unfinished)
-{
-    int res = checkReply(reply, "ok:\n", waitForFinished, ok, err, unfinished);
-    if(res == ok)
-    {
-        QVariantMap map = reply.value();
-        QString str;
-        for(int i = 0; i < map.count(); i++)
-        {
-            QString key = map.keys().at(i);
-            str += key + ": " + map.value(key).toString() + "\n";
-        }
-        qDebug() << str;
-    }
-    return res;
-}
-
 QFsoUtil::QFsoUtil(QObject *parent) : QObject(parent)
         , pendingCall(QDBusPendingReply<>())
         , pendingNotified(true)
