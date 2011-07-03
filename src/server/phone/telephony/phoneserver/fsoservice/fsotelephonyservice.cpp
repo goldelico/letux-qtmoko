@@ -52,8 +52,8 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
             this,
             SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
     
-    //QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
-    //watchFsoCall(call, this, SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
+    QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
+    watchFsoCall(call, this, SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
 }
 
 FsoTelephonyService::~FsoTelephonyService()
