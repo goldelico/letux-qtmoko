@@ -30,6 +30,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , suppl_services(this)
     , call_provider(this)
     , sms_sender(this)
+    , sms_reader(this)
 {
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
@@ -39,7 +40,17 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     connect(&gsmNet,
             SIGNAL(IncomingUssd(const QString &, const QString &)),
             this,
-            SLOT(incomingUssd(const QString &, const QString &)));            
+            SLOT(incomingUssd(const QString &, const QString &)));    
+    
+    connect(&gsmSms,
+            SIGNAL(IncomingTextMessage(const QString &, const QString &, const QString &)),
+            this,
+            SLOT(incomingTextMessage(const QString &, const QString &, const QString &)));
+
+    connect(&gsmSms,
+            SIGNAL(IncomingMessageReport(int, const QString &, const QString &, const QString &)),
+            this,
+            SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
 }
 
 FsoTelephonyService::~FsoTelephonyService()
@@ -66,6 +77,9 @@ void FsoTelephonyService::initialize()
     if ( !supports<QSMSSender>() )
         addInterface( &sms_sender );
 
+    if ( !supports<QSMSReader>() )
+        addInterface( &sms_reader );
+    
 /*    if ( !supports<QSimInfo>() )
         addInterface( new FsoSimInfo( this ) );
 
@@ -130,4 +144,17 @@ void FsoTelephonyService::incomingUssd(const QString &mode, const QString &messa
 {
     qDebug() << "Incomming ussd", "mode=" + mode + ", message=" + message;
     suppl_services.onIncomingUssd(mode, message);
+}
+
+void FsoTelephonyService::incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents)
+{
+    qDebug() << "incomingTextMessage number=" << number
+             << " timestamp=" << timestamp << " contents=" << contents;
+}
+
+void FsoTelephonyService::incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents)
+{
+    qDebug() << "incomingMessageReport reference=" << reference
+             << " status=" << status << " sender_number=" << sender_number
+             << " contents=" << contents;
 }
