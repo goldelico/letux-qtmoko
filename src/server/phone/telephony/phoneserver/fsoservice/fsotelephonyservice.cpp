@@ -51,6 +51,9 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
             SIGNAL(IncomingMessageReport(int, const QString &, const QString &, const QString &)),
             this,
             SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
+    
+    QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
+    watchFsoCall(call, this, SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
 }
 
 FsoTelephonyService::~FsoTelephonyService()
@@ -98,6 +101,16 @@ void FsoTelephonyService::initialize()
 
     // Call QModemService to create other interfaces that we didn't override.
     //QModemService::initialize();
+}
+
+void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
+{
+    qDebug() << "getDeviceStatusFinished";
+    QFsoDBusPendingReply<QString> reply = call;
+    if(checkResult(reply))
+    {
+        qDebug() << "getDeviceStatus() returned " << reply.value();
+    }
 }
 
 void FsoTelephonyService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
