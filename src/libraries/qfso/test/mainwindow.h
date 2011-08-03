@@ -14,6 +14,8 @@
 #include "qfsogsmnetwork.h"
 #include "qfsogsmcall.h"
 #include "qfsogsmsms.h"
+#include "qfsopimmessages.h"
+#include "qfsopimmessagequery.h"
 
 namespace Ui {
     class MainWindow;
@@ -37,12 +39,14 @@ private:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
+    QFsoPIMMessages pimMsg;
 
     QFsoDBusPendingReply<QString> gsmStatusReply;
     QFsoDBusPendingReply<int> gsmSignalReply;
     QDBusPendingCallWatcher gsmMessageSizeWatcher;
 
     void checkIface(QDBusAbstractInterface *iface);
+    void showVariantMap(QVariantMap map, QString caption);
     void showVariantMapResult(QFsoDBusPendingReply<QVariantMap> reply, QString caption);
 
     template <class T, class T2, class T3>
@@ -60,6 +64,7 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bQueryMessages_clicked();
     void on_tbSmsContent_textChanged();
     void on_bGetStatus_clicked();
     void on_bGetFunctionality_clicked();

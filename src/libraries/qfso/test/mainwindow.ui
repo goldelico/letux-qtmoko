@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>6</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -330,6 +330,24 @@ Held</string>
          <layout class="QHBoxLayout" name="horizontalLayout_11"/>
         </item>
        </layout>
+      </widget>
+      <widget class="QWidget" name="tabPim">
+       <attribute name="title">
+        <string>Pim</string>
+       </attribute>
+       <widget class="QPushButton" name="bQueryMessages">
+        <property name="geometry">
+         <rect>
+          <x>20</x>
+          <y>90</y>
+          <width>311</width>
+          <height>26</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>Query messages</string>
+        </property>
+       </widget>
       </widget>
       <widget class="QWidget" name="tabLog">
        <attribute name="title">
