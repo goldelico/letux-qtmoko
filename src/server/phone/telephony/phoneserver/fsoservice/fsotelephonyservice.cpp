@@ -24,6 +24,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this)
     , service_checker(this)
     , rf_functionality(this)
     , network_registration(this)
@@ -108,6 +109,8 @@ void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
     QFsoDBusPendingReply<QString> reply = call;
     if(checkResult(reply))
     {
+        QString status = reply.value();
+        sms_reader.deviceStatus(status);
     }
 }
 

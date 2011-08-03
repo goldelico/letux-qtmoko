@@ -29,6 +29,8 @@
 #include <qfsogsmcall.h>
 #include <qfsogsmdevice.h>
 #include <qfsogsmsms.h>
+#include <qfsopimmessages.h>
+#include <qfsopimmessagequery.h>
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -38,6 +40,8 @@
 #include "fsorffunctionality.h"
 #include "fsosmssender.h"
 #include "fsosmsreader.h"
+#include "qfsopimmessages.h"
+#include "qfsopimmessagequery.h"
 
 class FsoCallProvider;
 
@@ -53,6 +57,7 @@ public:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
+    QFsoPIMMessages pimMsg;
 
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
