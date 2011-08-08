@@ -37,11 +37,9 @@ public:
     ~FsoSMSReader();
 
     FsoTelephonyService * service;
-    QString smsId;                          // we can have just one pending call if we use watchFsoCall() so this works
-    QFsoSIMMessageList messages;
-    QFsoVariantMapList pimMessages;
     QFsoPIMMessageQuery msgQuery;
-    int messageIndex;
+    int resultIndex;
+    int resultCount;
 
     void deviceStatus(QString status);      // called by fso telephony service to report device status
     
@@ -54,8 +52,8 @@ public slots:
     void setUnreadCount( int value );
 
 private slots:
-    void getMultipleResultsFinished(QFsoDBusPendingCall &);
-    void retrieveTextMessagesFinished(QFsoDBusPendingCall &);
+    void getResultCountFinished(QFsoDBusPendingCall &);
+    void getResultFinished(QFsoDBusPendingCall &);
 };
 
 #endif
