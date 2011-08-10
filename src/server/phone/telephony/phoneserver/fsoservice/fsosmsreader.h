@@ -23,7 +23,7 @@
 #include <QtDBus>
 #include <qsmsreader.h>
 #include "fsoutil.h"
-#include <qfsosimmessage.h>
+#include <qfsopimmessage.h>
 #include <qfsopimmessages.h>
 #include <qfsopimmessagequery.h>
 

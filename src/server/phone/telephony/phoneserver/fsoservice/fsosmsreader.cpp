@@ -102,17 +102,16 @@ static QString fillMsg(QVariantMap & map, int index, QSMSMessage & m)
     qDebug() << "fillMsg index=" << index << ", map=" << dump;
     
     QString direction = map.value("Direction").toString();
-    QString timestamp = map.value("Timestamp").toString();
-    uint secs = map.value("Timestamp").toUInt();
+    int timestamp = map.value("Timestamp").toInt();
     QString text = map.value("Content").toString();
     QByteArray textBytes = text.toLatin1();
     quint16 crc = qChecksum(textBytes.constData(), textBytes.length());
     
     m.setText(text);
     m.setSender(map.value("Peer").toString());
-    m.setTimestamp(QDateTime::fromTime_t(secs));
+    m.setTimestamp(QDateTime::fromTime_t(timestamp));
     
-    return timestamp + ":" + QString::number(crc);
+    return QString("%1:%2").arg(timestamp).arg(crc);
 }
 
 void FsoSMSReader::firstMessage()
@@ -155,9 +154,64 @@ void FsoSMSReader::nextMessage()
     }
 }
 
+static void deleteMessages(const QString & id, QFsoVariantMapList & messages, FsoSMSReader * reader)
+{
+    for(int i = 0; i < messages.count(); i++)
+    {
+        // Make sure we are deleting sms with given id
+        QVariantMap map = messages.at(i);
+        QSMSMessage m;
+        QString msgId = fillMsg(map, -1, m);
+        if(msgId != id)
+        {
+            continue;
+        }
+
+        QString path = map.value("Path").toString();
+        qDebug() << "deleting message " << path;
+        QFsoPIMMessage msg("org.freesmartphone.opimd", path, QDBusConnection::systemBus(), reader);
+        QFsoDBusPendingReply<> reply = msg.Delete();
+        checkResult(reply);
+    }
+}
+
 void FsoSMSReader::deleteMessage( const QString& id )
 {
     qDebug() << "FsoSMSReader::deleteMessage() id=" << id;
+    
+    // Parse timestamp from id
+    int timestamp = -1;
+    int index = id.indexOf(':');
+    bool ok = (index > 0);
+    if(ok)
+    {
+        QString timestampStr = id.left(index);
+        timestamp = timestampStr.toInt(&ok);
+    }
+    if(!ok)
+    {
+        qWarning() << "deleteMessage: badly formatted sms id" << id;
+        return;
+    }
+    
+    // Query messages filtered by timestamp
+    QVariantMap map;
+    map.insert("Timestamp", timestamp);
+    QFsoDBusPendingReply<QString> reply = service->pimMsg.Query(map);
+    if(!checkResult(reply))
+    {
+        return;
+    }
+    QString path = reply.value();
+    QFsoPIMMessageQuery query("org.freesmartphone.opimd", path, QDBusConnection::systemBus(), this);
+    QFsoDBusPendingReply<QFsoVariantMapList> reply2 = query.GetMultipleResults(-1);
+    if(checkResult(reply2))
+    {
+        QFsoVariantMapList messages = reply2.value();
+        deleteMessages(id, messages, this);
+    }
+    QFsoDBusPendingReply<> reply3 = query.Dispose();
+    checkResult(reply3);
 }
 
 void FsoSMSReader::setUnreadCount( int value )
