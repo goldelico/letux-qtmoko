@@ -104,10 +104,15 @@ static QString fillMsg(QVariantMap & map, int index, QSMSMessage & m)
     QString direction = map.value("Direction").toString();
     QString timestamp = map.value("Timestamp").toString();
     uint secs = map.value("Timestamp").toUInt();
-    m.setText(map.value("Content").toString());    
+    QString text = map.value("Content").toString();
+    QByteArray textBytes = text.toLatin1();
+    quint16 crc = qChecksum(textBytes.constData(), textBytes.length());
+    
+    m.setText(text);
     m.setSender(map.value("Peer").toString());
     m.setTimestamp(QDateTime::fromTime_t(secs));
-    return timestamp;
+    
+    return timestamp + ":" + QString::number(crc);
 }
 
 void FsoSMSReader::firstMessage()
