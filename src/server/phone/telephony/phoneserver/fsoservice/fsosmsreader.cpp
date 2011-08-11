@@ -64,17 +64,13 @@ void FsoSMSReader::check()
     
     qDebug() << "msgQuery.service()=" << msgQuery.service();
     
-    // Construct query for the first time
-    if(msgQuery.service().length() == 0)
+    QFsoDBusPendingReply<QString> reply = service->pimMsg.Query(QVariantMap());
+    if(!checkResult(reply))
     {
-        QFsoDBusPendingReply<QString> reply = service->pimMsg.Query(QVariantMap());
-        if(!checkResult(reply))
-        {
-            return;
-        }
-        QString path = reply.value();
-        new (&msgQuery) QFsoPIMMessageQuery("org.freesmartphone.opimd", path, QDBusConnection::systemBus(), this);
+        return;
     }
+    QString path = reply.value();
+    new (&msgQuery) QFsoPIMMessageQuery("org.freesmartphone.opimd", path, QDBusConnection::systemBus(), this);
     
     QFsoDBusPendingCall call = msgQuery.GetResultCount();
     watchFsoCall(call, this, SLOT(getResultCountFinished(QFsoDBusPendingCall &)));
@@ -217,4 +213,9 @@ void FsoSMSReader::deleteMessage( const QString& id )
 void FsoSMSReader::setUnreadCount( int value )
 {
     qDebug() << "FsoSMSReader::setUnreadCount() value=" << value;
+}
+
+void FsoSMSReader::incomingMessage(const QString & path)
+{
+    check();
 }

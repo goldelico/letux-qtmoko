@@ -52,7 +52,12 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
             SIGNAL(IncomingMessageReport(int, const QString &, const QString &, const QString &)),
             this,
             SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
-    
+
+    connect(&pimMsg,
+            SIGNAL(IncomingMessage(const QString &)),
+            this,
+            SLOT(incomingMessage(const QString &)));
+
     QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
     watchFsoCall(call, this, SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
 }
@@ -171,4 +176,10 @@ void FsoTelephonyService::incomingMessageReport(int reference, const QString &st
     qDebug() << "incomingMessageReport reference=" << reference
              << " status=" << status << " sender_number=" << sender_number
              << " contents=" << contents;
+}
+
+void FsoTelephonyService::incomingMessage(const QString &path)
+{
+    qDebug() << "incomingMessage path=" << path;
+    sms_reader.incomingMessage(path);
 }

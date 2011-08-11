@@ -41,7 +41,8 @@ public:
     int resultIndex;
     int resultCount;
 
-    void deviceStatus(QString status);      // called by fso telephony service to report device status
+    void deviceStatus(QString status);              // called by fso telephony service to report device status
+    void incomingMessage(const QString & path);
     
 public slots:
     void test();
