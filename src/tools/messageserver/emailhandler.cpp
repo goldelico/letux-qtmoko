@@ -628,6 +628,13 @@ bool EmailHandler::retrievalInProgress()
     return mRetrievalInProgress;
 }
 
+#ifndef QTOPIA_NO_SMS
+bool EmailHandler::isSimReady()
+{
+    return smsClient->isSimReady();
+}
+#endif
+
 void EmailHandler::retrieve(const QMailAccountId& accountId, bool foldersOnly, bool countEmailMessages)
 {
     if (mRetrievalInProgress) {
