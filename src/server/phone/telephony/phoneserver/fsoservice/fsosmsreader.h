@@ -33,24 +33,24 @@ class FsoSMSReader : public QSMSReader
 {
     Q_OBJECT
 public:
-    FsoSMSReader( FsoTelephonyService * service );
+    FsoSMSReader(FsoTelephonyService * service);
     ~FsoSMSReader();
 
-    FsoTelephonyService * service;
+    FsoTelephonyService *service;
     QFsoPIMMessageQuery msgQuery;
     int resultIndex;
     int resultCount;
 
-    void deviceStatus(QString status);              // called by fso telephony service to report device status
+    void deviceStatus(QString status);  // called by fso telephony service to report device status
     void incomingMessage(const QString & path);
-    
+
 public slots:
     void test();
     void check();
     void firstMessage();
     void nextMessage();
-    void deleteMessage( const QString& id );
-    void setUnreadCount( int value );
+    void deleteMessage(const QString & id);
+    void setUnreadCount(int value);
 
 private slots:
     void getResultCountFinished(QFsoDBusPendingCall &);
@@ -58,4 +58,3 @@ private slots:
 };
 
 #endif
-
