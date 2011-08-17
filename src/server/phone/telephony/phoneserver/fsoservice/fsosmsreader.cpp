@@ -47,6 +47,10 @@ void FsoSMSReader::deviceStatus(QString status)
 {
     bool oldReady = ready();
     bool newReady = status == "alive-registered";
+
+    qDebug() << "FsoSMSReader::deviceStatus oldReady=" << oldReady <<
+        ", newReady=" << newReady;
+
     if (oldReady == newReady) {
         return;
     }
@@ -60,8 +64,13 @@ void FsoSMSReader::check()
 {
     qDebug() << "FsoSMSReader::check()";
 
-    qDebug() << "msgQuery.service()=" << msgQuery.service();
+    // Destroy old query
+    if (!msgQuery.service().isEmpty()) {
+        QFsoDBusPendingReply <> reply2 = msgQuery.Dispose();
+        checkResult(reply2);
+    }
 
+    // Query for all messages
     QFsoDBusPendingReply < QString > reply =
         service->pimMsg.Query(QVariantMap());
     if (!checkResult(reply)) {
