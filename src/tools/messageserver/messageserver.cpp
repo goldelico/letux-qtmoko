@@ -242,7 +242,10 @@ MessageServer::MessageServer(QObject *parent)
         QtopiaIpcAdaptor::connect(this, SIGNAL(messageCountUpdated()),
                                   &messageCountUpdate, MESSAGE(changeValue()));
 
-        simReady(handler->isSimReady());
+        if (handler->isSimReady()) {
+            simReady(handler->isSimReady());
+            handler->synchroniseClients();
+        }
         initIntervalChecking();
     }
 }
