@@ -40,8 +40,7 @@
 #include "fsorffunctionality.h"
 #include "fsosmssender.h"
 #include "fsosmsreader.h"
-#include "qfsopimmessages.h"
-#include "qfsopimmessagequery.h"
+#include "fsophonebook.h"
 
 class FsoCallProvider;
 

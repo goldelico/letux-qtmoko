@@ -215,7 +215,7 @@ void FsoSMSReader::setUnreadCount(int value)
     qDebug() << "FsoSMSReader::setUnreadCount() value=" << value;
 }
 
-void FsoSMSReader::incomingMessage(const QString & path)
+void FsoSMSReader::incomingMessage(const QString &)
 {
     check();
 }
