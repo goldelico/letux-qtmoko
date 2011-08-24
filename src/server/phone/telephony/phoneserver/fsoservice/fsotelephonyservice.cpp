@@ -25,6 +25,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this)
+    , pimContacts("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Contacts", QDBusConnection::systemBus(), this)
     , service_checker(this)
     , rf_functionality(this)
     , network_registration(this)
@@ -32,6 +33,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , call_provider(this)
     , sms_sender(this)
     , sms_reader(this)
+    , phone_book(this)
 {
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
@@ -95,12 +97,12 @@ void FsoTelephonyService::initialize()
     if ( !supports<QSimToolkit>() )
         addInterface( new FsoSimToolkit( this ) );
 
-    if ( !supports<QPhoneBook>() )
-        addInterface( new FsoPhoneBook( this ) );
-
     if ( !supports<QTelephonyConfiguration>() )
         addInterface( new FsoConfiguration( this ) );
 	*/
+
+    if ( !supports<QPhoneBook>() )
+        addInterface( &phone_book );
 
     if ( !callProvider() )
         setCallProvider( &call_provider );

@@ -31,6 +31,10 @@
 #include <qfsogsmsms.h>
 #include <qfsopimmessages.h>
 #include <qfsopimmessagequery.h>
+#include <qfsopimcontact.h>
+#include <qfsopimcontacts.h>
+#include <qfsopimcontactquery.h>
+
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -57,6 +61,7 @@ public:
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
     QFsoPIMMessages pimMsg;
+    QFsoPIMContacts pimContacts;
 
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
@@ -65,6 +70,7 @@ public:
     FsoCallProvider call_provider;
     FsoSMSSender sms_sender;
     FsoSMSReader sms_reader;
+    FsoPhoneBook phone_book;
 
     void initialize();
     

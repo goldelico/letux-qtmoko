@@ -23,9 +23,9 @@
 #include <QtDBus>
 #include <qphonebook.h>
 #include "fsoutil.h"
-#include <qfsopimmessage.h>
-#include <qfsopimmessages.h>
-#include <qfsopimmessagequery.h>
+#include <qfsopimcontact.h>
+#include <qfsopimcontacts.h>
+#include <qfsopimcontactquery.h>
 
 class FsoTelephonyService;
 
@@ -37,10 +37,26 @@ public:
     ~FsoPhoneBook();
 
     FsoTelephonyService *service;
+    QFsoPIMContactQuery contactQuery;
 
 public slots:
+    void getEntries(const QString & store);
+    void add(const QPhoneBookEntry & entry, const QString & store, bool flush);
+    void remove(uint index, const QString & store, bool flush);
+    void update(const QPhoneBookEntry & entry, const QString & store,
+                bool flush);
+    void flush(const QString & store);
+    void setPassword(const QString & store, const QString & passwd);
+    void clearPassword(const QString & store);
+    void requestLimits(const QString & store);
+    void requestFixedDialingState();
+    void setFixedDialingState(bool enabled, const QString & pin2);
+
+private:
+     bool fixedDialingEnabled;
 
 private slots:
+     void getMultipleResultsFinished(QFsoDBusPendingCall &);
 };
 
 #endif
