@@ -830,6 +830,7 @@ int QMplayer::scanDir(QString const& path, int level, int maxLevel, int min, int
             || fileName.endsWith(".mp4", Qt::CaseInsensitive)
             || fileName.endsWith(".wav", Qt::CaseInsensitive)
             || fileName.endsWith(".flv", Qt::CaseInsensitive)
+            || fileName.endsWith(".flac", Qt::CaseInsensitive)
             || isPlaylist(fileName))
         {
             if(fileName.contains(".qmplayer."))
@@ -1285,6 +1286,10 @@ void QMplayer::newConnection()
                     else if(reqPath.endsWith(".mp3"))
                     {
                         mime = "audio/mpeg";
+                    }
+                    else if(reqPath.endsWith(".flac"))
+                    {
+                        mime = "audio/flac";
                     }
 
                     res.clear();
