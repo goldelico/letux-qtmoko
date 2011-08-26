@@ -12,6 +12,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this),
         gsmStatusReply(),
         gsmSignalReply(),
@@ -381,6 +382,9 @@ void MainWindow::on_bQueryMessages_clicked()
         QVariantMap msg = list.at(i);
         showVariantMap(msg, "Message " + QString::number(i));
     }
+
+//    QFsoDBusPendingReply<QFsoSIMEntryList> reply = gsmSim.RetrievePhonebook("contacts", 0, 65535);
+
 
 //    QFsoDBusPendingReply<int> reply2 = q.GetResultCount();
 //    if(!checkReply2(reply2, false, true))

@@ -23,7 +23,6 @@
 FsoPhoneBook::FsoPhoneBook(FsoTelephonyService * service)
 :  QPhoneBook(service->service(), service, QCommInterface::Server)
     , service(service)
-    , contactQuery("", "", QDBusConnection::systemBus(), this)
 {
 }
 
@@ -41,47 +40,37 @@ void FsoPhoneBook::getEntries(const QString & store)
         emit entries(store, list);
         return;
     }
-    // Destroy old query
-    if (!contactQuery.service().isEmpty()) {
-        QFsoDBusPendingReply <> reply2 = contactQuery.Dispose();
-        checkResult(reply2);
-    }
-    // Query for all contacts
-    QFsoDBusPendingReply < QString > reply =
-        service->pimContacts.Query(QVariantMap());
-    if (!checkResult(reply)) {
-        return;
-    }
-    QString path = reply.value();
-    new(&contactQuery) QFsoPIMContactQuery("org.freesmartphone.opimd", path,
-                                           QDBusConnection::systemBus(), this);
 
-    QFsoDBusPendingCall call = contactQuery.GetMultipleResults(-1);
+    QFsoDBusPendingCall call = service->gsmSim.RetrievePhonebook("contacts", 0, 65535);
     watchFsoCall(call, this,
-                 SLOT(getMultipleResultsFinished(QFsoDBusPendingCall &)));
+                 SLOT(retrievePhonebookFinished(QFsoDBusPendingCall &)));
 }
 
-void FsoPhoneBook::getMultipleResultsFinished(QFsoDBusPendingCall & call)
+void FsoPhoneBook::retrievePhonebookFinished(QFsoDBusPendingCall & call)
 {
-    QFsoDBusPendingReply < QFsoVariantMapList > reply = call;
-    qDebug() << "1";
+    QFsoDBusPendingReply<QFsoSIMEntryList> reply = call;
+
     if (!checkResult(reply)) {
         return;
     }
-    QFsoVariantMapList contacts = reply.value();
 
-    qDebug() << "contacts.count()=" << contacts.count();
-
-    for (int i = 0; i < contacts.count(); i++) {
-        QVariantMap contact = contacts.at(i);
-        for (int j = 0; j < contact.count(); j++) {
-            QString key = contact.keys().at(j);
-            qDebug() << "contact j=" << j << ", " << key << "=" <<
-                contact.value(key).toString();
-        }
-    }
-
+    QFsoSIMEntryList pb = reply.value();
     QList < QPhoneBookEntry > list;
+
+    qDebug() << "pb.count()=" << pb.count();
+
+    for (int i = 0; i < pb.count(); i++) {
+        QFsoSIMEntry entry = pb.at(i);
+        
+            qDebug() << "entry i=" << i << ", index=" << entry.index << ", name=" <<
+                entry.name << ", number=" << entry.number;
+                
+        QPhoneBookEntry item;
+        item.setIndex(entry.index);
+        item.setNumber(entry.number);
+        item.setText(entry.name);
+        list.append(item);
+    }
     emit entries("SM", list);
 }
 

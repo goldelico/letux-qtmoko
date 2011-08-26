@@ -24,6 +24,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this)
     , pimContacts("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Contacts", QDBusConnection::systemBus(), this)
     , service_checker(this)

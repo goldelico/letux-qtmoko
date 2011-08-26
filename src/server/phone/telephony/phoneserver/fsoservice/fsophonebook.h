@@ -37,7 +37,6 @@ public:
     ~FsoPhoneBook();
 
     FsoTelephonyService *service;
-    QFsoPIMContactQuery contactQuery;
 
 public slots:
     void getEntries(const QString & store);
@@ -56,7 +55,7 @@ private:
      bool fixedDialingEnabled;
 
 private slots:
-     void getMultipleResultsFinished(QFsoDBusPendingCall &);
+     void retrievePhonebookFinished(QFsoDBusPendingCall &);
 };
 
 #endif

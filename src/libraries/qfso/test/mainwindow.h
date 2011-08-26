@@ -16,6 +16,7 @@
 #include "qfsogsmsms.h"
 #include "qfsopimmessages.h"
 #include "qfsopimmessagequery.h"
+#include "qfsogsmsim.h"
 
 namespace Ui {
     class MainWindow;
@@ -38,6 +39,7 @@ private:
     QFsoGSMDevice gsmDev;
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
+    QFsoGSMSIM gsmSim;
     QFsoGSMSMS gsmSms;
     QFsoPIMMessages pimMsg;
 

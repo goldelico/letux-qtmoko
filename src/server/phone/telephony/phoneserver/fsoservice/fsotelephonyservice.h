@@ -34,7 +34,7 @@
 #include <qfsopimcontact.h>
 #include <qfsopimcontacts.h>
 #include <qfsopimcontactquery.h>
-
+#include <qfsogsmsim.h>
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -60,6 +60,7 @@ public:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
+    QFsoGSMSIM gsmSim;
     QFsoPIMMessages pimMsg;
     QFsoPIMContacts pimContacts;
 
