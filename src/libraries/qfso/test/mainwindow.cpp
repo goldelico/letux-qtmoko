@@ -394,3 +394,12 @@ void MainWindow::on_bQueryMessages_clicked()
 //    int count = reply2.value();
 //    QMessageBox::information(this, "Message count", QString::number(count));
 }
+
+void MainWindow::on_bSimInfo_clicked()
+{
+    QFsoDBusPendingReply<QVariantMap> reply = gsmSim.GetSimInfo();
+    if(checkReply2(reply, false, true))
+    {
+        showVariantMapResult(reply, "Sim info");
+    }
+}

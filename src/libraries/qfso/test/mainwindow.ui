@@ -331,6 +331,20 @@ Held</string>
         </item>
        </layout>
       </widget>
+      <widget class="QWidget" name="tabSim">
+       <attribute name="title">
+        <string>SIM</string>
+       </attribute>
+       <layout class="QVBoxLayout" name="verticalLayout_7">
+        <item>
+         <widget class="QPushButton" name="bSimInfo">
+          <property name="text">
+           <string>Sim info</string>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </widget>
       <widget class="QWidget" name="tabPim">
        <attribute name="title">
         <string>Pim</string>

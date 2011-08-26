@@ -35,6 +35,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , sms_sender(this)
     , sms_reader(this)
     , phone_book(this)
+    , sim_info(this)
 {
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
@@ -92,15 +93,16 @@ void FsoTelephonyService::initialize()
     if ( !supports<QSMSReader>() )
         addInterface( &sms_reader );
     
-/*    if ( !supports<QSimInfo>() )
-        addInterface( new FsoSimInfo( this ) );
+    if ( !supports<QSimInfo>() )
+        addInterface( &sim_info );
 
+    /*
     if ( !supports<QSimToolkit>() )
         addInterface( new FsoSimToolkit( this ) );
 
     if ( !supports<QTelephonyConfiguration>() )
         addInterface( new FsoConfiguration( this ) );
-	*/
+    */
 
     if ( !supports<QPhoneBook>() )
         addInterface( &phone_book );
@@ -118,6 +120,7 @@ void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
     if(checkResult(reply))
     {
         QString status = reply.value();
+        sim_info.deviceStatus(status);
         sms_reader.deviceStatus(status);
     }
 }

@@ -45,6 +45,7 @@
 #include "fsosmssender.h"
 #include "fsosmsreader.h"
 #include "fsophonebook.h"
+#include "fsosiminfo.h"
 
 class FsoCallProvider;
 
@@ -72,6 +73,7 @@ public:
     FsoSMSSender sms_sender;
     FsoSMSReader sms_reader;
     FsoPhoneBook phone_book;
+    FsoSimInfo sim_info;
 
     void initialize();
     

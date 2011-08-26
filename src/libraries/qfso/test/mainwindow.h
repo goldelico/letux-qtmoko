@@ -39,8 +39,8 @@ private:
     QFsoGSMDevice gsmDev;
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
-    QFsoGSMSIM gsmSim;
     QFsoGSMSMS gsmSms;
+    QFsoGSMSIM gsmSim;
     QFsoPIMMessages pimMsg;
 
     QFsoDBusPendingReply<QString> gsmStatusReply;
@@ -66,6 +66,7 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bSimInfo_clicked();
     void on_bQueryMessages_clicked();
     void on_tbSmsContent_textChanged();
     void on_bGetStatus_clicked();
