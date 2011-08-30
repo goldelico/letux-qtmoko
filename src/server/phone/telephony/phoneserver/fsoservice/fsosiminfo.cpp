@@ -35,17 +35,9 @@ void FsoSimInfo::deviceStatus(QString status)
     qDebug() << "FsoSimInfo::deviceStatus status=" << status;
 
     if (status == "alive-registered") {
-        QFsoDBusPendingReply < QVariantMap > reply =
-            service->gsmSim.GetSimInfo();
-        if (!checkResult(reply)) {
-            return;
-        }
-        QVariantMap info = reply.value();
-        setIdentity(info.value("imsi").toString());
-
-        //QFsoDBusPendingCall call = service->gsmSim.GetSimInfo();
-        //watchFsoCall(call, this,
-        //SLOT(getSimInfoFinished(QFsoDBusPendingCall &)));
+        QFsoDBusPendingCall call = service->gsmSim.GetSimInfo();
+        watchFsoCall(call, this,
+                     SLOT(getSimInfoFinished(QFsoDBusPendingCall &)));
     } else {
         setIdentity(QString());
     }
