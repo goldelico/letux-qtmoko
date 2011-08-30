@@ -15,12 +15,15 @@ QFsoUtil::~QFsoUtil()
 
 QFsoUtil QFsoUtil::instance;
 
-void QFsoUtil::emitFinished(const QObject *receiver, const char *finishedMethod, QFsoDBusPendingCall &call)
+void QFsoUtil::emitFinished(QObject *receiver, const char *finishedMethod, QFsoDBusPendingCall &call)
 {
     disconnect();
     QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
                      receiver, finishedMethod);
     emit finished(call);
+
+   //QMetaObject::invokeMethod(receiver, "getStatusFinished", Qt::DirectConnection,
+   //                          Q_ARG(QFsoDBusPendingCall &, call));
 }
 
 void QFsoUtil::pendingCheck()
@@ -44,12 +47,12 @@ void QFsoUtil::pendingCheck()
 }
 
 void QFsoUtil::watchCall(QFsoDBusPendingCall & call,
-                         const QObject * receiver,
+                         QObject * receiver,
                          const char * finishedMethod)
 {
     bool oldNotified = pendingNotified;
     QFsoDBusPendingCall oldCall = pendingCall;
-    const QObject *oldReceiver = pendingReceiver;
+    QObject *oldReceiver = pendingReceiver;
     const char *oldFinished = pendingFinished;
 
     pendingNotified = false;
@@ -75,7 +78,7 @@ void QFsoUtil::waitForFinished()
 }
 
 void watchFsoCall(QFsoDBusPendingCall & call,
-                  const QObject * receiver,
+                  QObject * receiver,
                   const char * finishedMethod)
 {
     QFsoUtil::instance.watchCall(call, receiver, finishedMethod);
