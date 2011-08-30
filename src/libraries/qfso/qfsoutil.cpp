@@ -17,10 +17,10 @@ QFsoUtil QFsoUtil::instance;
 
 void QFsoUtil::emitFinished(const QObject *receiver, const char *finishedMethod, QFsoDBusPendingCall &call)
 {
+    disconnect();
     QObject::connect(this, SIGNAL(finished(QFsoDBusPendingCall &)),
                      receiver, finishedMethod);
     emit finished(call);
-    disconnect();
 }
 
 void QFsoUtil::pendingCheck()
