@@ -271,6 +271,9 @@ template <class T>
 {
     if (!m_doneInit)
         lazyInit();
+    
+    if(!m_valid)
+        return false;
 
     if(async) {
         if(receiver == NULL)
@@ -443,6 +446,9 @@ void QBluetoothLocalDevice_Private::lazyInit()
     if (m_doneInit) return;
     m_doneInit = true;
 
+    if(m_initString.isEmpty())
+        return;
+    
     QDBusConnection dbc =
 #ifdef QTOPIA_TEST
         QDBusConnection::sessionBus();
