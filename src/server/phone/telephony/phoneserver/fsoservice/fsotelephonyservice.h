@@ -80,6 +80,7 @@ public:
 private slots:
     void getDeviceStatusFinished(QFsoDBusPendingCall &);
     void deviceStatusChange(const QString &status);
+    void networkStatusChange(const QVariantMap &);
     void callStatusChange(int id, const QString &status, const QVariantMap &properties);
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);

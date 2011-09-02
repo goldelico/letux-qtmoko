@@ -80,14 +80,8 @@ static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
     return QTelephony::OperatorUnavailable;
 }
 
-void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
+void FsoNetworkRegistration::networkStatusChange(const QVariantMap & map)
 {
-    QFsoDBusPendingReply<QVariantMap> reply = call;
-    if(!checkReply(reply))
-    {
-        return;
-    }
-    QVariantMap map = reply.value();
     QString registration = map.value("registration").toString();
     QString mode = map.value("mode").toString();
     QString provider = map.value("provider").toString();
@@ -97,6 +91,15 @@ void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
     updateInitialized(true);
     updateRegistrationState(fsoRegStateToQt(registration));
     updateCurrentOperator(fsoOpModeToQt(mode), provider, display, act);
+}
+
+void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply<QVariantMap> reply = call;
+    if(checkReply(reply))
+    {
+        networkStatusChange(reply.value());
+    }
 }
 
 void FsoNetworkRegistration::setCurrentOperator

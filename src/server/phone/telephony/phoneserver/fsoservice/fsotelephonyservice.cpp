@@ -41,7 +41,12 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
             SIGNAL(DeviceStatus(const QString &)),
             this,
             SLOT(deviceStatusChange(const QString &)));
-    
+
+    connect(&gsmNet,
+            SIGNAL(Status(const QVariantMap &)),
+            this,
+            SLOT(networkStatusChange(const QVariantMap &)));
+
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
@@ -132,6 +137,11 @@ void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
     {
         deviceStatusChange(reply.value());
     }
+}
+
+void FsoTelephonyService::networkStatusChange(const QVariantMap & status)
+{
+    network_registration.networkStatusChange(status);
 }
 
 void FsoTelephonyService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
