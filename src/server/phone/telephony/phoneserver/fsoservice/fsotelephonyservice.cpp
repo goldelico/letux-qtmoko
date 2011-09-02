@@ -37,6 +37,11 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , phone_book(this)
     , sim_info(this)
 {
+    connect(&gsmDev,
+            SIGNAL(DeviceStatus(const QString &)),
+            this,
+            SLOT(deviceStatusChange(const QString &)));
+    
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
@@ -114,14 +119,18 @@ void FsoTelephonyService::initialize()
     //QModemService::initialize();
 }
 
+void FsoTelephonyService::deviceStatusChange(const QString &status)
+{
+    sim_info.deviceStatus(status);
+    sms_reader.deviceStatus(status);    
+}
+
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QString> reply = call;
     if(checkResult(reply))
     {
-        QString status = reply.value();
-        sim_info.deviceStatus(status);
-        sms_reader.deviceStatus(status);
+        deviceStatusChange(reply.value());
     }
 }
 
