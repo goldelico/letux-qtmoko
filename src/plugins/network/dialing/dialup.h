@@ -31,6 +31,12 @@
 #include <qcommservicemanager.h>
 #endif
 
+#ifndef QTOPIA_NO_FSO
+#include <qfsoutil.h>
+#include <qfsogsmdevice.h>
+#include <qfsogsmpdp.h>
+#endif
+
 class DialupImpl : public QtopiaNetworkInterface
 {
     Q_OBJECT
@@ -55,8 +61,8 @@ public:
             const QtopiaNetworkProperties& properties);
 
 protected:
-    bool isAvailable() const;
-    bool isActive() const;
+    bool isAvailable();
+    bool isActive();
 
     void timerEvent( QTimerEvent* e );
 private:
@@ -75,8 +81,17 @@ private:
     int logIndex;
     int trigger;
 
+#ifndef QTOPIA_NO_FSO
+    QFsoGSMDevice gsmDev;
+    QFsoGSMPDP gsmPdp;
+    bool fsoEnabled;
+#endif
+
 private slots:
     void updateState();
+#ifndef QTOPIA_NO_FSO
+    void activateContextFinished(QFsoDBusPendingCall &);
+#endif
 #ifdef QTOPIA_CELL
     void connectNotification( const QPhoneCall&, QPhoneCall::Notification, const QString& );
     void registrationStateChanged();
