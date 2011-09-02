@@ -13,6 +13,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this),
         gsmStatusReply(),
         gsmSignalReply(),
@@ -402,4 +403,22 @@ void MainWindow::on_bSimInfo_clicked()
     {
         showVariantMapResult(reply, "Sim info");
     }
+}
+
+void MainWindow::on_bSetCredentials_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.SetCredentials(ui->tbApn->text(), ui->tbUsername->text(), ui->tbPassword->text());
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_tbActivateContext_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.ActivateContext();
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bDeactivateContext_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.DeactivateContext();
+    checkReply2(reply, true, true);
 }

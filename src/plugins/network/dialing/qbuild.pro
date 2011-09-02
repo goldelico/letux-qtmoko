@@ -12,6 +12,12 @@ STRING_LANGUAGE=en_US
 AVAILABLE_LANGUAGES=$$QTOPIA_AVAILABLE_LANGUAGES
 LANGUAGES=$$QTOPIA_LANGUAGES
 
+enable_fso {
+    MODULES*=qfso
+} else {
+    DEFINES+=QTOPIA_NO_FSO
+}
+
 pkg [
     name=dialing-network
     desc="Dialing network plugin for Qt Extended."

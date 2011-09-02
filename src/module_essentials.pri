@@ -1,7 +1,6 @@
 #This file contains projects that make up the Essentials module.
 
 PROJECTS*=\
-    libraries/qfso \
     3rdparty/applications/qmplayer \
     3rdparty/applications/qx \
     3rdparty/applications/simplefm \
