@@ -54,6 +54,7 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     layout->addWidget(lineEdit);
     layout->addWidget(chkDeepSleep);
     layout->addWidget(chkMux);
+    layout->addWidget(chkFso);
     layout->addLayout(buttonLayout);
 
     showScreen(NeoControl::ScreenInit);
@@ -151,6 +152,7 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     lineEdit->setVisible(false);
     chkDeepSleep->setVisible(scr == ScreenModem);
     chkMux->setVisible(scr == ScreenModem);
+    chkFso->setVisible(scr == ScreenModem);
     label4->setVisible(scr == ScreenMixer);
     label5->setVisible(scr == ScreenMixer);
     slider4->setVisible(scr == ScreenMixer);
