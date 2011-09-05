@@ -68,6 +68,8 @@
 /* QT */
 #include <qsocketnotifier.h>
 #include <qfile.h>
+#include <QApplication>
+#include <QDebug>
 
 /* STD */
 #include <stdlib.h>
@@ -191,7 +193,33 @@ int MyPty::run(const char* cmd, QStringList &, const char*, int)
 	    char msg[] = "WARNING: You are running this shell as root!\n";
 	    write(ttyfd, msg, sizeof(msg));
 	}
-	execl(cmd, cmd, 0);
+        if(QApplication::argc() <= 1)
+        {
+            execl(cmd, cmd, 0);
+        }
+        else
+        {
+            char *arg = QApplication::argv()[1];
+            if(strstr(arg, "-c"))
+            {
+                QByteArray args;
+                for(int i = 2; i < QApplication::argc(); i++)       // e.g. qterminal apt-get update
+                {
+                    if(i > 2)
+                    {
+                        args += " ";
+                    }
+                    args += QApplication::argv()[i];
+                }
+                qDebug() << "Running " << cmd << "-c" << args;
+                execl(cmd, cmd, "-c", args.constData(), 0);
+            }
+            else
+            {
+                qDebug() << "Running " << cmd << " " << arg;
+                execl(cmd, cmd, arg, 0);     // e.g. qterminal /path/to/my/script.sh
+            }
+        }
 
 	donePty();
 	exit(-1);
