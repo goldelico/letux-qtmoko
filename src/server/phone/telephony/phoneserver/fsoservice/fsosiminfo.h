@@ -17,44 +17,27 @@
 **
 ****************************************************************************/
 
-#ifndef FSOSMSREADER_H
-#define FSOSMSREADER_H
+#ifndef FSOSIMINFO_H
+#define FSOSIMINFO_H
 
 #include <QtDBus>
-#include <qsmsreader.h>
+#include <qsiminfo.h>
 #include "fsoutil.h"
-#include <qfsopimmessage.h>
-#include <qfsopimmessages.h>
-#include <qfsopimmessagequery.h>
 
 class FsoTelephonyService;
 
-class FsoSMSReader : public QSMSReader
+class FsoSimInfo : public QSimInfo
 {
     Q_OBJECT
 public:
-    FsoSMSReader(FsoTelephonyService * service);
-    ~FsoSMSReader();
+    FsoSimInfo(FsoTelephonyService * service);
+    ~FsoSimInfo();
 
     FsoTelephonyService *service;
-    QFsoPIMMessageQuery msgQuery;
-    int resultIndex;
-    int resultCount;
-
     void deviceStatus(QString status);  // called by fso telephony service to report device status
-    void incomingMessage(const QString & path);
-
-public slots:
-    void test();
-    void check();
-    void firstMessage();
-    void nextMessage();
-    void deleteMessage(const QString & id);
-    void setUnreadCount(int value);
 
 private slots:
-    void getResultCountFinished(QFsoDBusPendingCall &);
-    void getResultFinished(QFsoDBusPendingCall &);
+    void getSimInfoFinished(QFsoDBusPendingCall &);
 };
 
 #endif

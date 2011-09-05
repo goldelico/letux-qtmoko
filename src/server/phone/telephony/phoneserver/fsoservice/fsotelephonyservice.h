@@ -31,6 +31,10 @@
 #include <qfsogsmsms.h>
 #include <qfsopimmessages.h>
 #include <qfsopimmessagequery.h>
+#include <qfsopimcontact.h>
+#include <qfsopimcontacts.h>
+#include <qfsopimcontactquery.h>
+#include <qfsogsmsim.h>
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -40,8 +44,8 @@
 #include "fsorffunctionality.h"
 #include "fsosmssender.h"
 #include "fsosmsreader.h"
-#include "qfsopimmessages.h"
-#include "qfsopimmessagequery.h"
+#include "fsophonebook.h"
+#include "fsosiminfo.h"
 
 class FsoCallProvider;
 
@@ -57,7 +61,9 @@ public:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
+    QFsoGSMSIM gsmSim;
     QFsoPIMMessages pimMsg;
+    QFsoPIMContacts pimContacts;
 
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
@@ -66,15 +72,20 @@ public:
     FsoCallProvider call_provider;
     FsoSMSSender sms_sender;
     FsoSMSReader sms_reader;
+    FsoPhoneBook phone_book;
+    FsoSimInfo sim_info;
 
     void initialize();
     
 private slots:
     void getDeviceStatusFinished(QFsoDBusPendingCall &);
+    void deviceStatusChange(const QString &status);
+    void networkStatusChange(const QVariantMap &);
     void callStatusChange(int id, const QString &status, const QVariantMap &properties);
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
+    void incomingMessage(const QString &path);
 };
 
 #endif

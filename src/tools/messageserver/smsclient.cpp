@@ -540,6 +540,11 @@ void SmsClient::allMessagesRetrieved()
     emit allMessagesReceived();
 }
 
+bool SmsClient::isSimReady()
+{
+    return req->ready();
+}
+
 void SmsClient::simReadyChanged()
 {
     emit simReady(req->ready());

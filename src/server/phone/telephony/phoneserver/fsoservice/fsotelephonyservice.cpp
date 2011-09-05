@@ -24,7 +24,9 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this)
+    , pimContacts("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Contacts", QDBusConnection::systemBus(), this)
     , service_checker(this)
     , rf_functionality(this)
     , network_registration(this)
@@ -32,7 +34,19 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , call_provider(this)
     , sms_sender(this)
     , sms_reader(this)
+    , phone_book(this)
+    , sim_info(this)
 {
+    connect(&gsmDev,
+            SIGNAL(DeviceStatus(const QString &)),
+            this,
+            SLOT(deviceStatusChange(const QString &)));
+
+    connect(&gsmNet,
+            SIGNAL(Status(const QVariantMap &)),
+            this,
+            SLOT(networkStatusChange(const QVariantMap &)));
+
     connect(&gsmCall,
             SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
             this,
@@ -52,7 +66,12 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
             SIGNAL(IncomingMessageReport(int, const QString &, const QString &, const QString &)),
             this,
             SLOT(incomingMessageReport(int, const QString &, const QString &, const QString &)));
-    
+
+    connect(&pimMsg,
+            SIGNAL(IncomingMessage(const QString &)),
+            this,
+            SLOT(incomingMessage(const QString &)));
+
     QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
     watchFsoCall(call, this, SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
 }
@@ -84,18 +103,19 @@ void FsoTelephonyService::initialize()
     if ( !supports<QSMSReader>() )
         addInterface( &sms_reader );
     
-/*    if ( !supports<QSimInfo>() )
-        addInterface( new FsoSimInfo( this ) );
+    if ( !supports<QSimInfo>() )
+        addInterface( &sim_info );
 
+    /*
     if ( !supports<QSimToolkit>() )
         addInterface( new FsoSimToolkit( this ) );
 
-    if ( !supports<QPhoneBook>() )
-        addInterface( new FsoPhoneBook( this ) );
-
     if ( !supports<QTelephonyConfiguration>() )
         addInterface( new FsoConfiguration( this ) );
-	*/
+    */
+
+    if ( !supports<QPhoneBook>() )
+        addInterface( &phone_book );
 
     if ( !callProvider() )
         setCallProvider( &call_provider );
@@ -104,14 +124,24 @@ void FsoTelephonyService::initialize()
     //QModemService::initialize();
 }
 
+void FsoTelephonyService::deviceStatusChange(const QString &status)
+{
+    sim_info.deviceStatus(status);
+    sms_reader.deviceStatus(status);    
+}
+
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QString> reply = call;
     if(checkResult(reply))
     {
-        QString status = reply.value();
-        sms_reader.deviceStatus(status);
+        deviceStatusChange(reply.value());
     }
+}
+
+void FsoTelephonyService::networkStatusChange(const QVariantMap & status)
+{
+    network_registration.networkStatusChange(status);
 }
 
 void FsoTelephonyService::callStatusChange(int id, const QString &status, const QVariantMap &properties)
@@ -171,4 +201,10 @@ void FsoTelephonyService::incomingMessageReport(int reference, const QString &st
     qDebug() << "incomingMessageReport reference=" << reference
              << " status=" << status << " sender_number=" << sender_number
              << " contents=" << contents;
+}
+
+void FsoTelephonyService::incomingMessage(const QString &path)
+{
+    qDebug() << "incomingMessage path=" << path;
+    sms_reader.incomingMessage(path);
 }

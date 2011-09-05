@@ -84,6 +84,8 @@ public:
         QList<QMailAddress> separateSmsAddresses(const QList<QMailAddress> &);
         // Format an outgoing message
         QString formatOutgoing( const QString& subject, const QString &body );
+        // Is sim ready?
+        bool isSimReady();
 
         static QMailMessage toMailMessage(const QSMSMessage& msg, const QString& id, const QString& simId);
 

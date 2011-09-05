@@ -16,6 +16,8 @@
 #include "qfsogsmsms.h"
 #include "qfsopimmessages.h"
 #include "qfsopimmessagequery.h"
+#include "qfsogsmsim.h"
+#include "qfsogsmpdp.h"
 
 namespace Ui {
     class MainWindow;
@@ -39,6 +41,8 @@ private:
     QFsoGSMNetwork gsmNet;
     QFsoGSMCall gsmCall;
     QFsoGSMSMS gsmSms;
+    QFsoGSMSIM gsmSim;
+    QFsoGSMPDP gsmPdp;
     QFsoPIMMessages pimMsg;
 
     QFsoDBusPendingReply<QString> gsmStatusReply;
@@ -64,6 +68,10 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bDeactivateContext_clicked();
+    void on_tbActivateContext_clicked();
+    void on_bSetCredentials_clicked();
+    void on_bSimInfo_clicked();
     void on_bQueryMessages_clicked();
     void on_tbSmsContent_textChanged();
     void on_bGetStatus_clicked();

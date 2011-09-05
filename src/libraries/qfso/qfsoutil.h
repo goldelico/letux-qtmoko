@@ -87,14 +87,14 @@ public:
 public:
     QFsoDBusPendingCall pendingCall;            // current call, we can have just one pending call at a time
     bool pendingNotified;                       // true if we already signalled finish
-    const QObject * pendingReceiver;            // object to receive finish signal
+    QObject * pendingReceiver;                  // object to receive finish signal
     const char * pendingFinished;               // finish method to be called
     int checkInterval;                          // we start checking with small intervals and then make them longer
 
     static QFsoUtil instance;
 
     void watchCall(QFsoDBusPendingCall & call,
-                   const QObject * receiver,
+                   QObject * receiver,
                    const char * finishedMethod);
 
     static void waitForFinished();              // wait for current pending call to be finished
@@ -104,11 +104,11 @@ Q_SIGNALS:
 
 private slots:
     void pendingCheck();
-    void emitFinished(const QObject * receiver, const char * finishedMethod, QFsoDBusPendingCall & call);
+    void emitFinished(QObject * receiver, const char * finishedMethod, QFsoDBusPendingCall & call);
 };
 
 void QFSO_EXPORT watchFsoCall(QFsoDBusPendingCall & call,
-                              const QObject * receiver,
+                              QObject * receiver,
                               const char * finishedMethod);
 
 #endif // QFSOUTIL_H

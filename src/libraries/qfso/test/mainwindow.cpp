@@ -12,6 +12,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
+        gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this),
         gsmStatusReply(),
         gsmSignalReply(),
@@ -382,6 +384,9 @@ void MainWindow::on_bQueryMessages_clicked()
         showVariantMap(msg, "Message " + QString::number(i));
     }
 
+//    QFsoDBusPendingReply<QFsoSIMEntryList> reply = gsmSim.RetrievePhonebook("contacts", 0, 65535);
+
+
 //    QFsoDBusPendingReply<int> reply2 = q.GetResultCount();
 //    if(!checkReply2(reply2, false, true))
 //    {
@@ -389,4 +394,31 @@ void MainWindow::on_bQueryMessages_clicked()
 //    }
 //    int count = reply2.value();
 //    QMessageBox::information(this, "Message count", QString::number(count));
+}
+
+void MainWindow::on_bSimInfo_clicked()
+{
+    QFsoDBusPendingReply<QVariantMap> reply = gsmSim.GetSimInfo();
+    if(checkReply2(reply, false, true))
+    {
+        showVariantMapResult(reply, "Sim info");
+    }
+}
+
+void MainWindow::on_bSetCredentials_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.SetCredentials(ui->tbApn->text(), ui->tbUsername->text(), ui->tbPassword->text());
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_tbActivateContext_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.ActivateContext();
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bDeactivateContext_clicked()
+{
+    QFsoDBusPendingReply<> reply = gsmPdp.DeactivateContext();
+    checkReply2(reply, true, true);
 }

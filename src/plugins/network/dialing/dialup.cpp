@@ -40,6 +40,11 @@ static const QString pppScript = Qtopia::qtopiaDir()+"bin/ppp-network";
 
 DialupImpl::DialupImpl( const QString& confFile)
     : state( Initialize ), configIface(0), ifaceStatus(Unknown), tidStateUpdate(0)
+#ifndef QTOPIA_NO_FSO
+    , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
+    , fsoEnabled(false)
+#endif    
 #ifdef QTOPIA_CELL
     , regState(QTelephony::RegistrationUnknown), callManager( 0 ), 
     netReg( 0 ), pppdProcessBlocked( false )
@@ -49,6 +54,10 @@ DialupImpl::DialupImpl( const QString& confFile)
     qLog(Network) << "Creating DialupImpl instance";
     configIface = new DialupConfig( confFile );
 
+#ifndef QTOPIA_NO_FSO
+    fsoEnabled = !strcmp("Fso", getenv( "QTOPIA_PHONE" ));      // are we using FSO as backend?
+#endif    
+    
     //update state of this interface after each script execution
     connect( &thread, SIGNAL(scriptDone()), this, SLOT(updateState()));
 }
@@ -192,6 +201,18 @@ bool DialupImpl::setDefaultGateway()
 
 bool DialupImpl::start( const QVariant /*options*/ )
 {
+#ifndef QTOPIA_NO_FSO
+    if(fsoEnabled) {
+        QFsoDBusPendingCall call = gsmPdp.ActivateContext();
+        watchFsoCall(call, this,
+                     SLOT(activateContextFinished(QFsoDBusPendingCall &)));
+                     
+        ifaceStatus = QtopiaNetworkInterface::Pending;
+        netSpace->setAttribute("State", ifaceStatus);
+        return true;
+    }
+#endif
+    
     if ( ifaceStatus != QtopiaNetworkInterface::Down ) {
         switch ( ifaceStatus )
         {
@@ -345,8 +366,33 @@ bool DialupImpl::start( const QVariant /*options*/ )
     return true;
 }
 
+#ifndef QTOPIA_NO_FSO
+void DialupImpl::activateContextFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply<> reply = call;
+    bool ok = checkReply(reply);
+
+    ifaceStatus = ok ?
+        QtopiaNetworkInterface::Up : QtopiaNetworkInterface::Down;
+    
+    netSpace->setAttribute("State", ifaceStatus);
+}
+#endif
+
 bool DialupImpl::stop()
 {
+#ifndef QTOPIA_NO_FSO
+    if(fsoEnabled) {
+        QFsoDBusPendingReply<> reply = gsmPdp.DeactivateContext();
+        if(!checkReply(reply)) {
+            return false;
+        }
+        ifaceStatus = QtopiaNetworkInterface::Down;
+        netSpace->setAttribute("State", ifaceStatus);
+        return true;
+    }
+#endif
+    
     switch( ifaceStatus ) {
         case QtopiaNetworkInterface::Pending:
         case QtopiaNetworkInterface::Demand:
@@ -409,8 +455,15 @@ QtopiaNetwork::Type DialupImpl::type() const
     return QtopiaNetwork::toType( configIface->configFile() );
 }
 
-bool DialupImpl::isAvailable() const
+bool DialupImpl::isAvailable()
 {
+#ifndef QTOPIA_NO_FSO
+    if(fsoEnabled) {
+        QFsoDBusPendingReply<QString> reply = gsmDev.GetDeviceStatus();
+        return checkReply(reply) && reply.value() == "alive-registered";
+    }
+#endif    
+    
     const QtopiaNetwork::Type t = type();
 
 #ifdef QTOPIA_CELL
@@ -421,8 +474,9 @@ bool DialupImpl::isAvailable() const
              regState == QTelephony::RegistrationRoaming) && !pppdProcessBlocked ) {
             return true;
         }
-        if ( pppdProcessBlocked )
+        if ( pppdProcessBlocked ) {
             qLog(Network) << "pppd manager blocked";
+        }
         return false;
     }
 #endif
@@ -486,9 +540,20 @@ bool DialupImpl::isAvailable() const
     return false;
 }
 
-bool DialupImpl::isActive() const
+bool DialupImpl::isActive()
 {
-
+#ifndef QTOPIA_NO_FSO
+    if(fsoEnabled) {      // using FSO
+        QFsoDBusPendingReply<QString, QVariantMap> reply =
+            gsmPdp.GetContextStatus();
+        if(!checkReply(reply)) {
+            return false;
+        }
+        QString status = reply.argumentAt(0).toString();
+        return status == "active";
+    }
+#endif
+    
     if ( pppIface.isEmpty() ||  device().isEmpty() ) {
         qLog(Network) << "DialupImpl::isActive: no PPP connection active";
         return false;

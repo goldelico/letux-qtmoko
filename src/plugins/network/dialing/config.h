@@ -24,6 +24,12 @@
 #include <qtranslatablesettings.h>
 
 #include <QDialog>
+
+#ifndef QTOPIA_NO_FSO
+#include <qfsoutil.h>
+#include <qfsogsmpdp.h>
+#endif
+
 class DialupUI;
 
 class DialupConfig : public QtopiaNetworkConfiguration
@@ -47,6 +53,9 @@ public:
 private:
     QString currentConfig;
     mutable QTranslatableSettings cfg;
+#ifndef QTOPIA_NO_FSO
+    QFsoGSMPDP gsmPdp;
+#endif
 };
 
 #endif

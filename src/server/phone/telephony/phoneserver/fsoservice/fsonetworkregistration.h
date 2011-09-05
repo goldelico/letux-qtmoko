@@ -35,10 +35,14 @@ public:
 
     FsoTelephonyService * service;
 
+    void networkStatusChange(const QVariantMap &);
+
 public slots:
     void setCurrentOperator( QTelephony::OperatorMode mode,
                              const QString& id, const QString& technology );
     void requestAvailableOperators();
+
+private slots:
     void getStatusFinished(QFsoDBusPendingCall &);
 };
 

@@ -29,6 +29,7 @@
 -add-module telephony
 -add-module ui
 -add-module ipcomms
+-add-module fso
 
 # Device config
 -add-displaysize 480x640

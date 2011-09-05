@@ -65,6 +65,9 @@ public:
     };
 
     bool retrievalInProgress();
+#ifndef QTOPIA_NO_SMS
+    bool isSimReady();
+#endif    
 
 public slots:
     void send(const QMailMessageIdList& mailList);

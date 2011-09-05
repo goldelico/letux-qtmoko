@@ -20,14 +20,12 @@
 #include "fsosmsreader.h"
 #include "fsotelephonyservice.h"
 
-FsoSMSReader::FsoSMSReader( FsoTelephonyService *service )
-    : QSMSReader( service->service(), service, QCommInterface::Server )
+FsoSMSReader::FsoSMSReader(FsoTelephonyService * service)
+:  QSMSReader(service->service(), service, QCommInterface::Server)
     , service(service)
-    , smsId()
-    , messages()
-    , pimMessages()
     , msgQuery("", "", QDBusConnection::systemBus(), this)
-    , messageIndex(-1)
+    , resultIndex(-1)
+    , resultCount(0)
 {
     QTimer::singleShot(40000, this, SLOT(test()));
 }
@@ -49,13 +47,15 @@ void FsoSMSReader::deviceStatus(QString status)
 {
     bool oldReady = ready();
     bool newReady = status == "alive-registered";
-    if(oldReady == newReady)
-    {
+
+    qDebug() << "FsoSMSReader::deviceStatus oldReady=" << oldReady <<
+        ", newReady=" << newReady;
+
+    if (oldReady == newReady) {
         return;
     }
     setReady(newReady);
-    if(newReady)
-    {
+    if (newReady) {
         check();
     }
 }
@@ -63,86 +63,159 @@ void FsoSMSReader::deviceStatus(QString status)
 void FsoSMSReader::check()
 {
     qDebug() << "FsoSMSReader::check()";
-    
-    /* RetrieveTextMessages kills ogsmd for me
-    QFsoDBusPendingCall call = service->gsmSms.RetrieveTextMessages();
-    watchFsoCall(call, this, SLOT(retrieveTextMessagesFinished(QFsoDBusPendingCall &))); */
-    
-    QFsoDBusPendingReply<QString> reply = service->pimMsg.Query(QVariantMap());
-    if(!checkResult(reply))
-    {
+
+    // Destroy old query
+    if (!msgQuery.service().isEmpty()) {
+        QFsoDBusPendingReply <> reply2 = msgQuery.Dispose();
+        checkResult(reply2);
+    }
+
+    // Query for all messages
+    QFsoDBusPendingReply < QString > reply =
+        service->pimMsg.Query(QVariantMap());
+    if (!checkResult(reply)) {
         return;
     }
     QString path = reply.value();
-    new (&msgQuery) QFsoPIMMessageQuery("org.freesmartphone.opimd", path, QDBusConnection::systemBus(), this);
-    
-    QFsoDBusPendingCall call = msgQuery.GetMultipleResults(-1);
-    watchFsoCall(call, this, SLOT(getMultipleResultsFinished(QFsoDBusPendingCall &)));
+    new(&msgQuery) QFsoPIMMessageQuery("org.freesmartphone.opimd", path,
+                                       QDBusConnection::systemBus(), this);
+
+    QFsoDBusPendingCall call = msgQuery.GetResultCount();
+    watchFsoCall(call, this,
+                 SLOT(getResultCountFinished(QFsoDBusPendingCall &)));
 }
 
-void FsoSMSReader::getMultipleResultsFinished(QFsoDBusPendingCall & call)
+void FsoSMSReader::getResultCountFinished(QFsoDBusPendingCall & call)
 {
-    qDebug() << "getMultipleResultsFinished";
-    QFsoDBusPendingReply<QFsoVariantMapList> reply = call;
-    if(!checkResult(reply))
-    {
+    QFsoDBusPendingReply < int >reply = call;
+    if (!checkResult(reply)) {
         return;
     }
-    pimMessages = reply.value();
-    qDebug() << "pimMessages.count()=" << pimMessages.count();
-    emit messageCount(pimMessages.count());
+    resultCount = reply.value();
+    emit messageCount(resultCount);
 }
 
-void FsoSMSReader::retrieveTextMessagesFinished(QFsoDBusPendingCall & call)
+static QString fillMsg(QVariantMap & map, int index, QSMSMessage & m)
 {
-    qDebug() << "retrieveTextMessagesFinished";
-    QFsoDBusPendingReply<QFsoSIMMessageList> reply = call;
-    if(checkResult(reply))
-    {
-        messages = reply.value();
-        emit messageCount(messages.count());
+    QString dump;
+    for (int i = 0; i < map.count(); i++) {
+        QString key = map.keys().at(i);
+        dump += " " + key + "=" + map.value(key).toString();
     }
-}
+    qDebug() << "fillMsg index=" << index << ", map=" << dump;
 
-static QString fillMsg(QFsoVariantMapList & pimMessages, int index, QSMSMessage & m)
-{
-    if(index >= pimMessages.count())
-    {
-        return "";
-    }
-    QVariantMap map = pimMessages.at(index);
     QString direction = map.value("Direction").toString();
-    QString timestamp = map.value("Timestamp").toString();
-    uint secs = map.value("Timestamp").toUInt();
-    m.setText(map.value("Content").toString());    
+    int timestamp = map.value("Timestamp").toInt();
+    QString text = map.value("Content").toString();
+    QByteArray textBytes = text.toLatin1();
+    quint16 crc = qChecksum(textBytes.constData(), textBytes.length());
+
+    m.setText(text);
     m.setSender(map.value("Peer").toString());
-    m.setTimestamp(QDateTime::fromTime_t(secs));
-    return timestamp;
+    m.setTimestamp(QDateTime::fromTime_t(timestamp));
+
+    return QString("%1:%2").arg(timestamp).arg(crc);
 }
 
 void FsoSMSReader::firstMessage()
 {
     qDebug() << "FsoSMSReader::firstMessage()";
-    messageIndex = 0;
+    QFsoDBusPendingReply <> reply = msgQuery.Rewind();
+    if (!checkResult(reply)) {
+        return;
+    }
+    resultIndex = 0;
+    nextMessage();
+}
+
+void FsoSMSReader::getResultFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply < QVariantMap > reply = call;
+    if (!checkResult(reply)) {
+        return;
+    }
     QSMSMessage msg;
-    QString id = fillMsg(pimMessages, 0, msg);
+    QVariantMap map = reply.value();
+    QString id = fillMsg(map, ++resultIndex, msg);
     emit fetched(id, msg);
 }
 
 void FsoSMSReader::nextMessage()
 {
     qDebug() << "FsoSMSReader::nextMessage()";
-    QSMSMessage msg;
-    QString id = fillMsg(pimMessages, ++messageIndex, msg);
-    emit fetched(id, msg);
+    if (resultIndex < resultCount) {
+        QFsoDBusPendingCall call = msgQuery.GetResult();
+        watchFsoCall(call, this,
+                     SLOT(getResultFinished(QFsoDBusPendingCall &)));
+    } else {
+        QSMSMessage dummy;
+        emit fetched("", dummy);
+    }
 }
 
-void FsoSMSReader::deleteMessage( const QString& id )
+static void deleteMessages(const QString & id, QFsoVariantMapList & messages,
+                           FsoSMSReader * reader)
+{
+    for (int i = 0; i < messages.count(); i++) {
+        // Make sure we are deleting sms with given id
+        QVariantMap map = messages.at(i);
+        QSMSMessage m;
+        QString msgId = fillMsg(map, -1, m);
+        if (msgId != id) {
+            continue;
+        }
+
+        QString path = map.value("Path").toString();
+        qDebug() << "deleting message " << path;
+        QFsoPIMMessage msg("org.freesmartphone.opimd", path,
+                           QDBusConnection::systemBus(), reader);
+        QFsoDBusPendingReply <> reply = msg.Delete();
+        checkResult(reply);
+    }
+}
+
+void FsoSMSReader::deleteMessage(const QString & id)
 {
     qDebug() << "FsoSMSReader::deleteMessage() id=" << id;
+
+    // Parse timestamp from id
+    int timestamp = -1;
+    int index = id.indexOf(':');
+    bool ok = (index > 0);
+    if (ok) {
+        QString timestampStr = id.left(index);
+        timestamp = timestampStr.toInt(&ok);
+    }
+    if (!ok) {
+        qWarning() << "deleteMessage: badly formatted sms id" << id;
+        return;
+    }
+    // Query messages filtered by timestamp
+    QVariantMap map;
+    map.insert("Timestamp", timestamp);
+    QFsoDBusPendingReply < QString > reply = service->pimMsg.Query(map);
+    if (!checkResult(reply)) {
+        return;
+    }
+    QString path = reply.value();
+    QFsoPIMMessageQuery query("org.freesmartphone.opimd", path,
+                              QDBusConnection::systemBus(), this);
+    QFsoDBusPendingReply < QFsoVariantMapList > reply2 =
+        query.GetMultipleResults(-1);
+    if (checkResult(reply2)) {
+        QFsoVariantMapList messages = reply2.value();
+        deleteMessages(id, messages, this);
+    }
+    QFsoDBusPendingReply <> reply3 = query.Dispose();
+    checkResult(reply3);
 }
 
-void FsoSMSReader::setUnreadCount( int value )
+void FsoSMSReader::setUnreadCount(int value)
 {
     qDebug() << "FsoSMSReader::setUnreadCount() value=" << value;
+}
+
+void FsoSMSReader::incomingMessage(const QString &)
+{
+    check();
 }

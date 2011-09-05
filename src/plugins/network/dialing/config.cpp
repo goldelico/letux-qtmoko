@@ -76,7 +76,11 @@ private:
 };
 
 DialupConfig::DialupConfig( const QString& confFile )
-    : currentConfig( confFile ), cfg( confFile, QSettings::IniFormat)
+    : currentConfig( confFile )
+    , cfg( confFile, QSettings::IniFormat)
+#ifndef QTOPIA_NO_FSO
+    , gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus())
+#endif    
 {
 }
 
@@ -137,7 +141,6 @@ void DialupConfig::writeProperties( const QtopiaNetworkProperties& properties )
     while ( i.hasNext() ) {
         i.next();
         key = i.key();
-
         int groupIndex = key.indexOf('/');
         if ( groupIndex >= 0) {
             group = key.left( groupIndex );
@@ -155,6 +158,17 @@ void DialupConfig::writeProperties( const QtopiaNetworkProperties& properties )
     }
     cfg.endGroup();
     cfg.sync();
+    
+#ifndef QTOPIA_NO_FSO
+    QString apn = properties["Serial/APN"].toString();
+    if(!apn.isEmpty() && !strcmp("Fso", getenv( "QTOPIA_PHONE" ))) {
+        QString username = properties["Properties/Password"].toString();
+        QString password = properties["Properties/UserName"].toString();
+        QFsoDBusPendingReply<> reply = gsmPdp.SetCredentials(apn, username,
+                                                             password);
+        checkReply(reply);
+    }
+#endif
 }
 
 // DialupUI implementation

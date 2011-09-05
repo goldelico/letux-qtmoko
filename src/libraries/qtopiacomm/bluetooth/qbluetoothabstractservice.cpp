@@ -167,6 +167,7 @@ QBluetoothAbstractServicePrivate::QBluetoothAbstractServicePrivate(const QString
       m_name(name),
       m_displayName(displayName),
       m_description(description),
+      m_ifc(NULL),
       m_error(QBluetoothAbstractService::NoError),
       m_isRegistered(false)
 {
@@ -175,10 +176,10 @@ QBluetoothAbstractServicePrivate::QBluetoothAbstractServicePrivate(const QString
     QBluetoothDbusIface manager("org.bluez", "/", "org.bluez.Manager", dbc);
 
     QDBusReply<QDBusObjectPath> reply;
-    manager.btcall("DefaultAdapter", reply);
-    
-    m_ifc = new QBluetoothDbusIface("org.bluez", reply.value().path(),
-                                    "org.bluez.Service", dbc);
+    if(manager.btcall("DefaultAdapter", reply)) {
+        m_ifc = new QBluetoothDbusIface("org.bluez", reply.value().path(),
+                                        "org.bluez.Service", dbc);
+    }
 
     QObject::connect(parent, SIGNAL(started(bool,QString)),
                      SLOT(serviceStarted(bool,QString)));
