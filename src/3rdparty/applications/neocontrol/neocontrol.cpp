@@ -26,6 +26,9 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     chkMux = new QCheckBox(tr("Multiplexing"), this);
     connect(chkMux, SIGNAL(stateChanged(int)), this, SLOT(muxStateChanged(int)));
 
+    chkFso = new QCheckBox(tr("Use FSO (freesmatphone.org)"), this);
+    connect(chkFso, SIGNAL(stateChanged(int)), this, SLOT(fsoStateChanged(int)));
+
     label = new QLabel(this);
     lineEdit = new QLineEdit(this);
 
@@ -291,6 +294,52 @@ void NeoControl::muxStateChanged(int state)
     cfg.sync();
 
     QMessageBox::information(this, tr("Multiplexing"), tr("Settings will be activated after restarting QtExtended with POWER button"));
+}
+
+void NeoControl::setQpeEnv(bool fso)
+{
+    QFile f("/opt/qtmoko/qpe.env");
+    if(!f.open(QFile::ReadOnly))
+    {
+        QMessageBox::critical(this, tr("FSO"), tr("Failed to read") + " " + f.fileName());
+        return;
+    }
+    QString content = f.readAll();
+    f.close();
+    QString fsoStr = "export QTOPIA_PHONE=Fso";
+    QString atStr = "export QTOPIA_PHONE=AT";
+    if(fso)
+    {
+        content = content.replace(atStr, fsoStr);
+    }
+    else
+    {
+        content = content.replace(fsoStr, atStr);
+    }
+    if(!f.open(QFile::WriteOnly))
+    {
+        QMessageBox::critical(this, tr("FSO"), tr("Failed to write to") + " " + f.fileName());
+        return;
+    }
+    f.write(content.toLatin1());
+    f.close();
+    QMessageBox::information(this, tr("FSO"), tr("You have to restart your phone for changes to take place"));
+}
+
+void NeoControl::fsoStateChanged(int state)
+{
+    if(state != Qt::Checked)
+    {
+        setQpeEnv(false);     // disable FSO
+        return;
+    }
+    QMessageBox::information(this, tr("FSO"), tr("FSO packages have to be downloaded and installed. Please make sure you have internet connection now."));
+
+    if(!QFile::exists("/usr/sbin/fsogsmd"))
+    {
+        QProcess::execute("raptor", QStringList() << "-u" << "-i" << "fso-gsmd" << "fso-gsmd-openmoko");
+    }
+    setQpeEnv(true);
 }
 
 void NeoControl::updateModem()
