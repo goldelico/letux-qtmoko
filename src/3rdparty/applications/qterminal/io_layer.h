@@ -85,22 +85,22 @@ signals:
     /**
      * received input as QCString
      */
-    virtual void received( char*, int );
+    void received( char*, int );
 
     /**
      * an error occured
      * int for the error number
      * and QString for a text
      */
-    virtual void error( int, const QString& );
+    void error( int, const QString& );
 
 
-    virtual void closed();
+    void closed();
 
     /* signal emitted for closure of the IOLayer
      * for some reasons
      */
-    virtual void closed(IOLayer*);
+    void closed(IOLayer*);
 public slots:
     /**
      * send a QCString to the device
