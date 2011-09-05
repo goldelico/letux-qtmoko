@@ -287,12 +287,12 @@ Step 6.5 - omhacks
   and can't be used with > 2.6.34 kernels, so install from sid:
 
 chroot /media/card
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.14-1_armel.deb
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.14-1_armel.deb
-dpkg -i libomhacks0_0.14-1_armel.deb
-dpkg -i omhacks_0.14-1_armel.deb
-rm libomhacks0_0.14-1_armel.deb
-rm omhacks_0.14-1_armel.deb
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.15-1_armel.deb
+wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.15-1_armel.deb
+dpkg -i libomhacks0_0.15-1_armel.deb
+dpkg -i omhacks_0.15-1_armel.deb
+rm libomhacks0_0.15-1_armel.deb
+rm omhacks_0.15-1_armel.deb
 exit
 
 
