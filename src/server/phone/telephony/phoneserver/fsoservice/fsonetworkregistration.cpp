@@ -96,7 +96,7 @@ void FsoNetworkRegistration::networkStatusChange(const QVariantMap & map)
 void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QVariantMap> reply = call;
-    if(checkReply(reply))
+    if(checkReply(reply) && !initialized())
     {
         networkStatusChange(reply.value());
     }

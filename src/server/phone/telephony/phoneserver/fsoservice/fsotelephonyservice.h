@@ -75,6 +75,8 @@ public:
     FsoPhoneBook phone_book;
     FsoSimInfo sim_info;
 
+    bool deviceStatusInitialized;
+    
     void initialize();
     
 private slots:

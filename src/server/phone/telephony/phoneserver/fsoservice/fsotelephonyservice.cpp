@@ -36,6 +36,7 @@ FsoTelephonyService::FsoTelephonyService(const QString& service, QObject *parent
     , sms_reader(this)
     , phone_book(this)
     , sim_info(this)
+    , deviceStatusInitialized(false)
 {
     connect(&gsmDev,
             SIGNAL(DeviceStatus(const QString &)),
@@ -126,6 +127,7 @@ void FsoTelephonyService::initialize()
 
 void FsoTelephonyService::deviceStatusChange(const QString &status)
 {
+    deviceStatusInitialized = true;
     sim_info.deviceStatus(status);
     sms_reader.deviceStatus(status);    
 }
@@ -133,7 +135,7 @@ void FsoTelephonyService::deviceStatusChange(const QString &status)
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QString> reply = call;
-    if(checkResult(reply))
+    if(checkResult(reply) && !deviceStatusInitialized)
     {
         deviceStatusChange(reply.value());
     }
