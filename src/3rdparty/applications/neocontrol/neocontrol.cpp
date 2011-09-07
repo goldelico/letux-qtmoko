@@ -339,7 +339,7 @@ void NeoControl::fsoStateChanged(int state)
 
     if(!QFile::exists("/usr/sbin/fsogsmd"))
     {
-        QProcess::execute("raptor", QStringList() << "-u" << "-i" << "fso-gsmd" << "fso-gsmd-openmoko");
+        QProcess::execute("raptor", QStringList() << "-u" << "-i" << "fso-gsmd-openmoko");
     }
     setQpeEnv(true);
 }
