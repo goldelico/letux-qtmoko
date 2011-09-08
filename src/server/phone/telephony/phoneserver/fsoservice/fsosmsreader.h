@@ -22,10 +22,8 @@
 
 #include <QtDBus>
 #include <qsmsreader.h>
-#include "fsoutil.h"
-#include <qfsopimmessage.h>
-#include <qfsopimmessages.h>
-#include <qfsopimmessagequery.h>
+#include <qfsogsmsms.h>
+#include <qfsogsmsim.h>
 
 class FsoTelephonyService;
 
@@ -37,12 +35,12 @@ public:
     ~FsoSMSReader();
 
     FsoTelephonyService *service;
-    QFsoPIMMessageQuery msgQuery;
-    int resultIndex;
-    int resultCount;
+    QFsoSIMMessageList messages;
+    int index;
 
     void deviceStatus(QString status);  // called by fso telephony service to report device status
-    void incomingMessage(const QString & path);
+    void incomingTextMessage(const QString & number, const QString & timestamp,
+                             const QString & contents);
 
 public slots:
     void test();
@@ -53,8 +51,7 @@ public slots:
     void setUnreadCount(int value);
 
 private slots:
-    void getResultCountFinished(QFsoDBusPendingCall &);
-    void getResultFinished(QFsoDBusPendingCall &);
+    void retrieveTextMessagesFinished(QFsoDBusPendingCall &);
 };
 
 #endif

@@ -68,6 +68,7 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bRetrieveTextMessages_clicked();
     void on_bDeactivateContext_clicked();
     void on_tbActivateContext_clicked();
     void on_bSetCredentials_clicked();

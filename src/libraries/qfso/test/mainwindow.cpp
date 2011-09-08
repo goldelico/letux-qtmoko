@@ -422,3 +422,19 @@ void MainWindow::on_bDeactivateContext_clicked()
     QFsoDBusPendingReply<> reply = gsmPdp.DeactivateContext();
     checkReply2(reply, true, true);
 }
+
+void MainWindow::on_bRetrieveTextMessages_clicked()
+{
+    QFsoDBusPendingReply<QFsoSIMMessageList> reply = gsmSms.RetrieveTextMessages();
+    if(checkReply2(reply, false, true))
+    {
+        QFsoSIMMessageList list = reply.value();
+        QString str;
+        for(int i = 0; i < list.count(); i++)
+        {
+            QFsoSIMMessage msg = list.at(i);
+            str += msg.number + " " + msg.contents + "\n";
+        }
+        QMessageBox::information(this, "SMS messages", str);
+    }
+}

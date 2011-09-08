@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>7</number>
+       <number>5</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -325,6 +325,13 @@ Held</string>
         </item>
         <item>
          <widget class="QTextEdit" name="tbSmsContent"/>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bRetrieveTextMessages">
+          <property name="text">
+           <string>Retrieve text messages</string>
+          </property>
+         </widget>
         </item>
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_11"/>

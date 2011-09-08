@@ -53,8 +53,7 @@ class FsoTelephonyService : public QTelephonyService
 {
     Q_OBJECT
 public:
-    FsoTelephonyService
-        ( const QString& service, QObject *parent = 0 );
+    FsoTelephonyService(const QString & service, QObject * parent = 0);
     ~FsoTelephonyService();
 
     QFsoGSMDevice gsmDev;
@@ -76,19 +75,21 @@ public:
     FsoSimInfo sim_info;
 
     bool deviceStatusInitialized;
-    
+
     void initialize();
-    
+
 private slots:
     void getDeviceStatusFinished(QFsoDBusPendingCall &);
-    void deviceStatusChange(const QString &status);
+    void deviceStatusChange(const QString & status);
     void networkStatusChange(const QVariantMap &);
-    void callStatusChange(int id, const QString &status, const QVariantMap &properties);
-    void incomingUssd(const QString &mode, const QString &message);
-    void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
-    void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void incomingMessage(const QString &path);
+    void callStatusChange(int id, const QString & status,
+                          const QVariantMap & properties);
+    void incomingUssd(const QString & mode, const QString & message);
+    void incomingTextMessage(const QString & number, const QString & timestamp,
+                             const QString & contents);
+    void incomingMessageReport(int reference, const QString & status,
+                               const QString & sender_number,
+                               const QString & contents);
 };
 
 #endif
-
