@@ -139,7 +139,7 @@ void FsoTelephonyService::deviceStatusChange(const QString & status)
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply < QString > reply = call;
-    if (checkResult(reply) && !deviceStatusInitialized) {
+    if (checkReply(reply) && !deviceStatusInitialized) {
         deviceStatusChange(reply.value());
     }
 }

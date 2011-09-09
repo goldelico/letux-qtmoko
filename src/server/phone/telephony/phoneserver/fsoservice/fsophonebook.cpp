@@ -50,7 +50,7 @@ void FsoPhoneBook::retrievePhonebookFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<QFsoSIMEntryList> reply = call;
 
-    if (!checkResult(reply)) {
+    if (!checkReply(reply)) {
         return;
     }
 

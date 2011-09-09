@@ -47,7 +47,7 @@ void FsoSimInfo::deviceStatus(QString status)
 void FsoSimInfo::getSimInfoFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply < QVariantMap > reply = call;
-    if (!checkResult(reply)) {
+    if (!checkReply(reply)) {
         return;
     }
     info = reply.value();

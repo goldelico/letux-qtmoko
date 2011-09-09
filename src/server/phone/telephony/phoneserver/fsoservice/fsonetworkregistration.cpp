@@ -106,7 +106,7 @@ void FsoNetworkRegistration::setCurrentOperator
         ( QTelephony::OperatorMode, const QString & id, const QString &)
 {
     QFsoDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
-    emit setCurrentOperatorResult(checkResult(reply));
+    emit setCurrentOperatorResult(qTelResult(reply));
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
