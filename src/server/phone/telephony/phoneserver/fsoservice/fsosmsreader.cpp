@@ -143,9 +143,9 @@ void FsoSMSReader::deleteMessage(const QString & id)
     for (int i = 0; i < numSlots; i++) {
         QFsoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
             service->gsmSim.RetrieveMessage(i);
-        //if (!checkResult(reply)) {
-            //continue;
-        //}
+        if (!checkResult(reply)) {
+            continue;
+        }
         QVariantMap map = qdbus_cast < QVariantMap > (reply.argumentAt(3));
         QString timestamp = map.value("timestamp").toString();
         if (timestamp != msg.timestamp) {
