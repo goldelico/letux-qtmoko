@@ -34,6 +34,8 @@ public:
     ~FsoSimInfo();
 
     FsoTelephonyService *service;
+    QVariantMap info;
+    
     void deviceStatus(QString status);  // called by fso telephony service to report device status
 
 private slots:

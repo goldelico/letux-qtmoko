@@ -17,8 +17,8 @@
 // Waits for reply to finish if waitForFinished is true.
 // Returns value specified in ok if success.
 // Returns value specified in err if error.
-template <class T, class T2, class T3>
-        int QFSO_EXPORT checkReply(QFsoDBusPendingReply<T, T2, T3> & reply,
+template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+        int QFSO_EXPORT checkReply(QFsoDBusPendingReply<T1, T2, T3, T4, T5, T6, T7, T8> & reply,
                                    bool waitForFinished = true,
                                    int ok = 1,
                                    int err = 0,

@@ -7,8 +7,8 @@
 #include <qtelephonynamespace.h>
 #include <qfsoutil.h>
 
-template <class T, class T2, class T3>
-        QTelephony::Result checkResult(QFsoDBusPendingReply<T, T2, T3> & reply,
+template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, class T8>
+        QTelephony::Result checkResult(QFsoDBusPendingReply<T1, T2, T3, T4, T5, T6, T7, T8> & reply,
                                        bool waitForFinished = true)
 {
     if(checkReply(reply, waitForFinished))

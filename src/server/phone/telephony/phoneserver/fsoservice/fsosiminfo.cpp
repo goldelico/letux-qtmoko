@@ -23,6 +23,7 @@
 FsoSimInfo::FsoSimInfo(FsoTelephonyService * service)
 :  QSimInfo(service->service(), service, QCommInterface::Server)
     , service(service)
+    , info()
 {
 }
 
@@ -49,6 +50,6 @@ void FsoSimInfo::getSimInfoFinished(QFsoDBusPendingCall & call)
     if (!checkResult(reply)) {
         return;
     }
-    QVariantMap info = reply.value();
+    info = reply.value();
     setIdentity(info.value("imsi").toString());
 }

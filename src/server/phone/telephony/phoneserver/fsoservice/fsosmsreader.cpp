@@ -122,19 +122,38 @@ void FsoSMSReader::deleteMessage(const QString & id)
 {
     qDebug() << "FsoSMSReader::deleteMessage() id=" << id;
 
-    QSMSMessage msg;
+    // Find message by id
+    bool found = false;
+    QFsoSIMMessage msg;
     for (int i = 0; i < messages.count(); i++) {
-        QFsoSIMMessage f = messages.at(i);
-        QString msgId = getMsgId(f.contents, f.timestamp);
-        if (msgId != id) {
+        msg = messages.at(i);
+        QString msgId = getMsgId(msg.contents, msg.timestamp);
+        if (msgId == id) {
+            found = true;
+            break;
+        }
+    }
+    if (!found) {
+        qWarning() << "FsoSMSReader::deleteMessage() - message not found id=" <<
+            id;
+    }
+    // Delete messages with same timestamp
+    int numSlots = service->sim_info.info.value("slots").toInt();
+    qDebug() << "numSlots=" << numSlots;
+    for (int i = 0; i < numSlots; i++) {
+        QFsoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
+            service->gsmSim.RetrieveMessage(i);
+        //if (!checkResult(reply)) {
+            //continue;
+        //}
+        QVariantMap map = qdbus_cast < QVariantMap > (reply.argumentAt(3));
+        QString timestamp = map.value("timestamp").toString();
+        if (timestamp != msg.timestamp) {
             continue;
         }
-        QFsoDBusPendingReply <> reply = service->gsmSim.DeleteMessage(f.index);
-        checkResult(reply);
-        return;
+        QFsoDBusPendingReply <> delReply = service->gsmSim.DeleteMessage(i);
+        checkResult(delReply);
     }
-
-    qWarning() << "deleteMessage() id=" << id << ": message not found";
 }
 
 void FsoSMSReader::setUnreadCount(int value)
