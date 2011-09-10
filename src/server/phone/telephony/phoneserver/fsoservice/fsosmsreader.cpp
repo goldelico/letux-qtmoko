@@ -45,7 +45,7 @@ void FsoSMSReader::test()
 void FsoSMSReader::deviceStatus(QString status)
 {
     bool oldReady = ready();
-    bool newReady = status == "alive-registered";
+    bool newReady = (status == "alive-registered" || status == "alive-sim-ready");
 
     qDebug() << "FsoSMSReader::deviceStatus oldReady=" << oldReady <<
         ", newReady=" << newReady;
@@ -87,6 +87,23 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
     return QString("%1:%2").arg(timestamp).arg(crc);
 }
 
+// Parse timestamp obtained by RetrieveTextMessages() function
+// e.g. 11/09/08,14:15:28+08
+static QDateTime parseTimestamp(const QString & str)
+{
+    QDateTime dt;
+    if(str.length() == 20)
+    {
+        dt = QDateTime::fromString(str.left(17), "yy/MM/dd,hh:mm:ss");
+    }
+    if(dt.isValid())
+    {
+        return dt;
+    }
+    qWarning() << "parseTimestamp: wrong date " << str;
+    return dt;
+}
+
 static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
@@ -94,7 +111,7 @@ static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 
     m.setText(f.contents);
     m.setSender(f.number);
-    m.setTimestamp(QDateTime::fromTime_t(f.timestamp.toInt()));
+    m.setTimestamp(parseTimestamp(f.timestamp));
 
     return getMsgId(f.contents, f.timestamp);
 }
@@ -137,6 +154,7 @@ void FsoSMSReader::deleteMessage(const QString & id)
         qWarning() << "FsoSMSReader::deleteMessage() - message not found id=" <<
             id;
     }
+    
     // Delete messages with same timestamp
     int numSlots = service->sim_info.info.value("slots").toInt();
     qDebug() << "numSlots=" << numSlots;
@@ -148,7 +166,7 @@ void FsoSMSReader::deleteMessage(const QString & id)
         }
         QVariantMap map = qdbus_cast < QVariantMap > (reply.argumentAt(3));
         QString timestamp = map.value("timestamp").toString();
-        qDebug() << "timestamp=" << timestamp << "msg.timestamp=" << msg.timestamp;
+        qDebug() << "timestamp=" << timestamp << "msgTimestamp=" << msg.timestamp;
         if (timestamp != msg.timestamp) {
             continue;
         }

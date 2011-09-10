@@ -35,7 +35,7 @@ void FsoSimInfo::deviceStatus(QString status)
 {
     qDebug() << "FsoSimInfo::deviceStatus status=" << status;
 
-    if (status == "alive-registered") {
+    if (status == "alive-registered" || status == "alive-sim-ready") {
         QFsoDBusPendingCall call = service->gsmSim.GetSimInfo();
         watchFsoCall(call, this,
                      SLOT(getSimInfoFinished(QFsoDBusPendingCall &)));
