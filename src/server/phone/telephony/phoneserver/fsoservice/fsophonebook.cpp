@@ -23,6 +23,9 @@
 FsoPhoneBook::FsoPhoneBook(FsoTelephonyService * service)
 :  QPhoneBook(service->service(), service, QCommInterface::Server)
     , service(service)
+    , simReady(false)
+    , wantEntries(false)
+    , wantLimits(false)
     , freeIndex(-1)
     , numUsed(0)
 {
@@ -30,6 +33,26 @@ FsoPhoneBook::FsoPhoneBook(FsoTelephonyService * service)
 
 FsoPhoneBook::~FsoPhoneBook()
 {
+}
+
+void FsoPhoneBook::deviceStatus(QString status)
+{
+    bool oldReady = simReady;
+    simReady = (status == "alive-registered");
+
+    qDebug() << "FsoPhoneBook::deviceStatus status=" << status << ", oldReady="
+        << oldReady << ", simReady=" << simReady;
+
+    if (simReady && oldReady != simReady) {
+        if (wantEntries) {
+            wantEntries = false;
+            getEntries("SM");
+        }
+        if (wantLimits) {
+            wantLimits = false;
+            requestLimits("SM");
+        }
+    }
 }
 
 void FsoPhoneBook::getEntries(const QString & store)
@@ -40,6 +63,11 @@ void FsoPhoneBook::getEntries(const QString & store)
     if (store != "SM") {
         QList < QPhoneBookEntry > list;
         emit entries(store, list);
+        return;
+    }
+
+    if (!simReady) {
+        wantEntries = true;
         return;
     }
 
@@ -140,6 +168,11 @@ void FsoPhoneBook::clearPassword(const QString &)
 void FsoPhoneBook::requestLimits(const QString & store)
 {
     qDebug() << "FsoPhoneBook::requestLimits store=" << store;
+
+    if (!simReady) {
+        wantLimits = true;
+        return;
+    }
 
     QFsoDBusPendingReply < int, int, int >reply =
         service->gsmSim.GetPhonebookInfo("contacts");

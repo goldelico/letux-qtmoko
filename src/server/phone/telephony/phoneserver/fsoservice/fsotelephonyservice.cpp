@@ -138,6 +138,7 @@ void FsoTelephonyService::deviceStatusChange(const QString & status)
     network_registration.deviceStatus(status);
     sim_info.deviceStatus(status);
     sms_reader.deviceStatus(status);
+    phone_book.deviceStatus(status);
 }
 
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
