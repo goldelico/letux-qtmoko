@@ -25,6 +25,7 @@ FsoSMSReader::FsoSMSReader(FsoTelephonyService * service)
     , service(service)
     , messages()
     , index(-1)
+    , numSlots(-1)
 {
     //QTimer::singleShot(40000, this, SLOT(test()));
 }
@@ -63,21 +64,43 @@ void FsoSMSReader::check()
 {
     qDebug() << "FsoSMSReader::check()";
 
-    // Query for all messages
-    QFsoDBusPendingCall call = service->gsmSms.RetrieveTextMessages();
-    watchFsoCall(call, this,
-                 SLOT(retrieveTextMessagesFinished(QFsoDBusPendingCall &)));
-}
-
-void FsoSMSReader::retrieveTextMessagesFinished(QFsoDBusPendingCall & call)
-{
-    QFsoDBusPendingReply < QFsoSIMMessageList > reply = call;
-    if (!checkReply(reply)) {
+    numSlots = service->sim_info.info.value("slots").toInt();
+    if (numSlots <= 0) {
+        QTimer::singleShot(30000, this, SLOT(test()));  // sim info not available, try again later
         return;
     }
-    messages = reply.value();
-    qDebug() << "emit messageCount=" << messages.count();
-    emit messageCount(messages.count());
+    // Fill messages with values from SIM
+    messages.clear();
+    index = 0;
+
+    QFsoDBusPendingCall call = service->gsmSim.RetrieveMessage(0);
+    watchFsoCall(call, this,
+                 SLOT(retrieveMessageFinished(QFsoDBusPendingCall &)));
+}
+
+void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
+        call;
+    if (checkReply(reply)) {
+        QFsoSIMMessage f;
+        f.index = index;
+        f.status = reply.argumentAt(0).toString();
+        f.number = reply.argumentAt(1).toString();
+        f.contents = reply.argumentAt(2).toString();
+        f.properties = qdbus_cast < QVariantMap > (reply.argumentAt(3));
+        f.timestamp = f.properties.value("timestamp").toString();
+        messages.append(f);
+    }
+    index++;
+    if (index >= numSlots) {
+        qDebug() << "emit messageCount=" << messages.count();
+        emit messageCount(messages.count());
+        return;
+    }
+    QFsoDBusPendingCall nextCall = service->gsmSim.RetrieveMessage(index);
+    watchFsoCall(nextCall, this,
+                 SLOT(retrieveMessageFinished(QFsoDBusPendingCall &)));
 }
 
 static QString getMsgId(const QString & contents, const QString & timestamp)
@@ -123,36 +146,14 @@ void FsoSMSReader::deleteMessage(const QString & id)
     qDebug() << "FsoSMSReader::deleteMessage() id=" << id;
 
     // Find message by id
-    bool found = false;
-    QFsoSIMMessage msg;
     for (int i = 0; i < messages.count(); i++) {
-        msg = messages.at(i);
-        QString msgId = getMsgId(msg.contents, msg.timestamp);
-        if (msgId == id) {
-            found = true;
-            break;
-        }
-    }
-    if (!found) {
-        qWarning() << "FsoSMSReader::deleteMessage() - message not found id=" <<
-            id;
-    }
-    // Delete messages with same timestamp
-    int numSlots = service->sim_info.info.value("slots").toInt();
-    qDebug() << "numSlots=" << numSlots;
-    for (int i = 0; i < numSlots; i++) {
-        QFsoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
-            service->gsmSim.RetrieveMessage(i);
-        if (!checkReply(reply)) {
+        QFsoSIMMessage f = messages.at(i);
+        QString msgId = getMsgId(f.contents, f.timestamp);
+        if (msgId != id) {
             continue;
         }
-        QVariantMap map = qdbus_cast < QVariantMap > (reply.argumentAt(3));
-        QString timestamp = map.value("timestamp").toString();
-        qDebug() << "timestamp=" << timestamp << "msg.timestamp=" << msg.timestamp;
-        if (timestamp != msg.timestamp) {
-            continue;
-        }
-        QFsoDBusPendingReply <> delReply = service->gsmSim.DeleteMessage(i);
+        QFsoDBusPendingReply <> delReply =
+            service->gsmSim.DeleteMessage(f.index);
         checkReply(delReply);
     }
 }
@@ -162,8 +163,18 @@ void FsoSMSReader::setUnreadCount(int value)
     qDebug() << "FsoSMSReader::setUnreadCount() value=" << value;
 }
 
-void FsoSMSReader::incomingTextMessage(const QString &, const QString &,
-                                       const QString &)
+void FsoSMSReader::incomingTextMessage(const QString & number,
+                                       const QString & timestamp,
+                                       const QString & contents)
 {
+    qDebug() << "FsoSMSReader::incomingTextMessage() number=" << number <<
+        ", timestamp=" << timestamp << ", contents=" << contents;
     check();
 }
+
+void FsoSMSReader::incomingMessage(int index)
+{
+    qDebug() << "FsoSMSReader::incomingMessage() index=" << index;
+    check();
+}
+
