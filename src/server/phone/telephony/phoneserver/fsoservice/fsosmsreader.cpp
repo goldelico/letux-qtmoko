@@ -124,6 +124,8 @@ void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
     }
     index++;
     if (index >= numSlots) {
+        setValue("totalMessages", numSlots);
+        setValue("usedMessages", messages.count());
         removeIncomingOnSim(incoming, messages);    // remove incoming messages that are on SIM
         qDebug() << "emit messageCount=" << messages.count() + incoming.count();
         emit messageCount(messages.count() + incoming.count());
@@ -158,8 +160,8 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
 static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
-        ", f.index=" << f.index << "f.timestamp=" << f.
-        timestamp << ", f.contents=" << f.contents;
+        ", f.index=" << f.
+        index << "f.timestamp=" << f.timestamp << ", f.contents=" << f.contents;
 
     m.setText(f.contents);
     m.setSender(f.number);
