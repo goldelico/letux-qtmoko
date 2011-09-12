@@ -80,8 +80,8 @@ void FsoSMSReader::check()
 }
 
 // Remove SMS from incoming if it is on SIM
-static void removeFromIncoming(QFsoSIMMessageList & incoming,
-                               QFsoSIMMessageList & messages)
+static void removeIncomingOnSim(QFsoSIMMessageList & incoming,
+                                QFsoSIMMessageList & messages)
 {
     // Match messages by timestamp
     for (int i = 0; i < incoming.count();) {
@@ -124,7 +124,7 @@ void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
     }
     index++;
     if (index >= numSlots) {
-        removeFromIncoming(incoming, messages); // remove from incoming messages that are on SIM
+        removeIncomingOnSim(incoming, messages);    // remove incoming messages that are on SIM
         qDebug() << "emit messageCount=" << messages.count() + incoming.count();
         emit messageCount(messages.count() + incoming.count());
         return;
@@ -132,6 +132,20 @@ void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
     QFsoDBusPendingCall nextCall = service->gsmSim.RetrieveMessage(index);
     watchFsoCall(nextCall, this,
                  SLOT(retrieveMessageFinished(QFsoDBusPendingCall &)));
+}
+
+// Parse timestamp string e.g. "11/09/12,11:12:31+08"
+static QDateTime parseTimestamp(const QString & str)
+{
+    QDateTime dt;
+    if (str.count() == 20) {
+        dt = QDateTime::fromString(str.left(17),
+                                   "yy/MM/dd,HH:mm:ss").addYears(100);
+    }
+    if (dt.isNull()) {
+        qDebug() << "parseTimestamp(): invalid date" << str;
+    }
+    return dt;
 }
 
 static QString getMsgId(const QString & contents, const QString & timestamp)
@@ -144,12 +158,12 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
 static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
-        ", f.index=" << f.
-        index << "f.timestamp=" << f.timestamp << ", f.contents=" << f.contents;
+        ", f.index=" << f.index << "f.timestamp=" << f.
+        timestamp << ", f.contents=" << f.contents;
 
     m.setText(f.contents);
     m.setSender(f.number);
-    m.setTimestamp(QDateTime::fromTime_t(f.timestamp.toInt()));
+    m.setTimestamp(parseTimestamp(f.timestamp));
 
     return getMsgId(f.contents, f.timestamp);
 }
