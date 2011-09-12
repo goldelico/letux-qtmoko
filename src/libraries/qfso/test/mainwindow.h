@@ -18,6 +18,7 @@
 #include "qfsopimmessagequery.h"
 #include "qfsogsmsim.h"
 #include "qfsogsmpdp.h"
+#include "qfsousage.h"
 
 namespace Ui {
     class MainWindow;
@@ -44,6 +45,7 @@ private:
     QFsoGSMSIM gsmSim;
     QFsoGSMPDP gsmPdp;
     QFsoPIMMessages pimMsg;
+    QFsoUsage fsoUsage;
 
     QFsoDBusPendingReply<QString> gsmStatusReply;
     QFsoDBusPendingReply<int> gsmSignalReply;

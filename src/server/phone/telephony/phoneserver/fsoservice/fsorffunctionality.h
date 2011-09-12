@@ -33,6 +33,10 @@ public:
     ~FsoRfFunctionality();
 
     FsoTelephonyService *service;
+    bool modemAlive;
+    QPhoneRfFunctionality::Level reqLevel;      // requested level while device status was not alive
+
+    void deviceStatus(QString status);  // called by fso telephony service to report device status
     
 public slots:
     void forceLevelRequest();

@@ -35,6 +35,7 @@
 #include <qfsopimcontacts.h>
 #include <qfsopimcontactquery.h>
 #include <qfsogsmsim.h>
+#include <qfsousage.h>
 
 #include "fsophonecall.h"
 #include "fsocallprovider.h"
@@ -63,6 +64,7 @@ public:
     QFsoGSMSIM gsmSim;
     QFsoPIMMessages pimMsg;
     QFsoPIMContacts pimContacts;
+    QFsoUsage fsoUsage;
 
     FsoServiceChecker service_checker;
     FsoRfFunctionality rf_functionality;
@@ -80,6 +82,7 @@ public:
 
 private slots:
     void getDeviceStatusFinished(QFsoDBusPendingCall &);
+    void setResourcePolicyFinished(QFsoDBusPendingCall &);
     void deviceStatusChange(const QString & status);
     void networkStatusChange(const QVariantMap &);
     void callStatusChange(int id, const QString & status,

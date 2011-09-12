@@ -21,12 +21,10 @@
 #include "fsotelephonyservice.h"
 #include "fsoutil.h"
 
-FsoNetworkRegistration::FsoNetworkRegistration(FsoTelephonyService *service)
-    : QNetworkRegistrationServer( service->service(), service )
+FsoNetworkRegistration::FsoNetworkRegistration(FsoTelephonyService * service)
+:  QNetworkRegistrationServer(service->service(), service)
     , service(service)
 {
-    QFsoDBusPendingCall call = service->gsmNet.GetStatus();
-    watchFsoCall(call, this, SLOT(getStatusFinished(QFsoDBusPendingCall &)));
 }
 
 FsoNetworkRegistration::~FsoNetworkRegistration()
@@ -35,17 +33,17 @@ FsoNetworkRegistration::~FsoNetworkRegistration()
 
 static QTelephony::RegistrationState fsoRegStateToQt(QString state)
 {
-    if(state == "home")             // registered to home network
+    if (state == "home")        // registered to home network
         return QTelephony::RegistrationHome;
-    if(state == "unregistered")     // not registered, not trying
+    if (state == "unregistered")    // not registered, not trying
         return QTelephony::RegistrationNone;
-    if(state == "busy")             // not registered, but currently trying
+    if (state == "busy")        // not registered, but currently trying
         return QTelephony::RegistrationSearching;
-    if(state == "denied")           // no permitted network available
+    if (state == "denied")      // no permitted network available
         return QTelephony::RegistrationDenied;
-    if(state == "unknown")         // no idea
+    if (state == "unknown")     // no idea
         return QTelephony::RegistrationUnknown;
-    if(state == "roaming")         // registered to foreign network
+    if (state == "roaming")     // registered to foreign network
         return QTelephony::RegistrationRoaming;
 
     qWarning() << "unknown FSO registration state" << state;
@@ -54,13 +52,13 @@ static QTelephony::RegistrationState fsoRegStateToQt(QString state)
 
 static QTelephony::OperatorMode fsoOpModeToQt(QString mode)
 {
-    if(mode == "automatic")             // automatic selection
+    if (mode == "automatic")    // automatic selection
         return QTelephony::OperatorModeAutomatic;
-    if(mode == "manual")                // manual selection
+    if (mode == "manual")       // manual selection
         return QTelephony::OperatorModeManual;
-    if(mode == "manual;automatic")      // manual first, then automatic,
+    if (mode == "manual;automatic") // manual first, then automatic,
         return QTelephony::OperatorModeManualAutomatic;
-    if(mode == "unregister")            // manual unregister
+    if (mode == "unregister")   // manual unregister
         return QTelephony::OperatorModeDeregister;
 
     qWarning() << "unknown FSO operator mode " << mode;
@@ -69,15 +67,33 @@ static QTelephony::OperatorMode fsoOpModeToQt(QString mode)
 
 static QTelephony::OperatorAvailability fsoOpStatusToQt(QString status)
 {
-    if(status == "available")
+    if (status == "available")
         return QTelephony::OperatorAvailable;
-    if(status == "current")
+    if (status == "current")
         return QTelephony::OperatorCurrent;
-    if(status == "forbidden")
+    if (status == "forbidden")
         return QTelephony::OperatorForbidden;
 
     qWarning() << "unknown FSO operator status " << status;
     return QTelephony::OperatorUnavailable;
+}
+
+void FsoNetworkRegistration::deviceStatus(QString status)
+{
+    if (status == "alive-sim-ready") {
+        QFsoDBusPendingCall call = service->gsmNet.Register();
+        watchFsoCall(call, this, SLOT(registerFinished(QFsoDBusPendingCall &)));
+    } else if (status == "alive-registered") {
+        QFsoDBusPendingCall call = service->gsmNet.GetStatus();
+        watchFsoCall(call, this,
+                     SLOT(getStatusFinished(QFsoDBusPendingCall &)));
+    }
+}
+
+void FsoNetworkRegistration::registerFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply <> reply = call;
+    checkReply(reply);
 }
 
 void FsoNetworkRegistration::networkStatusChange(const QVariantMap & map)
@@ -87,7 +103,10 @@ void FsoNetworkRegistration::networkStatusChange(const QVariantMap & map)
     QString provider = map.value("provider").toString();
     QString display = map.value("display").toString();
     QString act = map.value("act").toString();
-    
+
+    qDebug() << "FsoNetworkRegistration::networkStatusChange registration=" <<
+        registration << ", mode=" << mode << ", provider=" << provider;
+
     updateInitialized(true);
     updateRegistrationState(fsoRegStateToQt(registration));
     updateCurrentOperator(fsoOpModeToQt(mode), provider, display, act);
@@ -95,39 +114,37 @@ void FsoNetworkRegistration::networkStatusChange(const QVariantMap & map)
 
 void FsoNetworkRegistration::getStatusFinished(QFsoDBusPendingCall & call)
 {
-    QFsoDBusPendingReply<QVariantMap> reply = call;
-    if(checkReply(reply) && !initialized())
-    {
+    QFsoDBusPendingReply < QVariantMap > reply = call;
+    if (checkReply(reply) && !initialized()) {
         networkStatusChange(reply.value());
     }
 }
 
 void FsoNetworkRegistration::setCurrentOperator
-        ( QTelephony::OperatorMode, const QString & id, const QString &)
+    (QTelephony::OperatorMode, const QString & id, const QString &)
 {
-    QFsoDBusPendingReply<> reply = service->gsmNet.RegisterWithProvider(id);
+    QFsoDBusPendingReply <> reply = service->gsmNet.RegisterWithProvider(id);
     emit setCurrentOperatorResult(qTelResult(reply));
 }
 
 void FsoNetworkRegistration::requestAvailableOperators()
 {
-    QFsoDBusPendingReply<QFsoNetworkProviderList> reply = service->gsmNet.ListProviders();
-    if(!checkReply(reply))
-    {
+    QFsoDBusPendingReply < QFsoNetworkProviderList > reply =
+        service->gsmNet.ListProviders();
+    if (!checkReply(reply)) {
         return;
     }
     QFsoNetworkProviderList list = reply.value();
-    QList<QNetworkRegistration::AvailableOperator> opers;
-    for(int i = 0; i < list.count(); i++)
-    {
+    QList < QNetworkRegistration::AvailableOperator > opers;
+    for (int i = 0; i < list.count(); i++) {
         QFsoNetworkProvider provider = list.at(i);
         QNetworkRegistration::AvailableOperator oper;
-        
+
         oper.availability = fsoOpStatusToQt(provider.status);
         oper.name = provider.longname;
         oper.id = provider.shortname;
         oper.technology = provider.act;
         opers.append(oper);
-    }    
+    }
     emit availableOperators(opers);
 }
