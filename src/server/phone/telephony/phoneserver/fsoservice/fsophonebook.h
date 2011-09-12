@@ -37,6 +37,8 @@ public:
     ~FsoPhoneBook();
 
     FsoTelephonyService *service;
+    int freeIndex;              // free index for new contact
+    int numUsed;                // number of used
 
 public slots:
     void getEntries(const QString & store);
@@ -55,7 +57,7 @@ private:
      bool fixedDialingEnabled;
 
 private slots:
-     void retrievePhonebookFinished(QFsoDBusPendingCall &);
+    void retrievePhonebookFinished(QFsoDBusPendingCall &);
 };
 
 #endif

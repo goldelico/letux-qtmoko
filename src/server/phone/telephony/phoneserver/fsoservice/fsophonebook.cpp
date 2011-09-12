@@ -23,6 +23,8 @@
 FsoPhoneBook::FsoPhoneBook(FsoTelephonyService * service)
 :  QPhoneBook(service->service(), service, QCommInterface::Server)
     , service(service)
+    , freeIndex(-1)
+    , numUsed(0)
 {
 }
 
@@ -41,14 +43,15 @@ void FsoPhoneBook::getEntries(const QString & store)
         return;
     }
 
-    QFsoDBusPendingCall call = service->gsmSim.RetrievePhonebook("contacts", 0, 65535);
+    QFsoDBusPendingCall call =
+        service->gsmSim.RetrievePhonebook("contacts", 0, 65535);
     watchFsoCall(call, this,
                  SLOT(retrievePhonebookFinished(QFsoDBusPendingCall &)));
 }
 
 void FsoPhoneBook::retrievePhonebookFinished(QFsoDBusPendingCall & call)
 {
-    QFsoDBusPendingReply<QFsoSIMEntryList> reply = call;
+    QFsoDBusPendingReply < QFsoSIMEntryList > reply = call;
 
     if (!checkReply(reply)) {
         return;
@@ -58,18 +61,24 @@ void FsoPhoneBook::retrievePhonebookFinished(QFsoDBusPendingCall & call)
     QList < QPhoneBookEntry > list;
 
     qDebug() << "pb.count()=" << pb.count();
+    freeIndex = -1;
+    numUsed = pb.count();
 
     for (int i = 0; i < pb.count(); i++) {
         QFsoSIMEntry entry = pb.at(i);
-        
-            qDebug() << "entry i=" << i << ", index=" << entry.index << ", name=" <<
-                entry.name << ", number=" << entry.number;
-                
+
+        qDebug() << "entry i=" << i << ", index=" << entry.index << ", name=" <<
+            entry.name << ", number=" << entry.number;
+
         QPhoneBookEntry item;
         item.setIndex(entry.index);
         item.setNumber(entry.number);
         item.setText(entry.name);
         list.append(item);
+
+        if (freeIndex < 0 || entry.index == freeIndex) {
+            freeIndex = entry.index + 1;
+        }
     }
     emit entries("SM", list);
 }
@@ -79,22 +88,25 @@ void FsoPhoneBook::add(const QPhoneBookEntry & entry, const QString & store,
 {
     qDebug() << "FsoPhoneBook::add entry.text()=" << entry.text() << "store=" <<
         store << "flush=" << flush;
-    if (store != "SM") {
-        if (flush)
-            getEntries(store);
-        return;
-    }
+
+    QFsoDBusPendingReply <> reply =
+        service->gsmSim.StoreEntry("contacts", freeIndex, entry.text(),
+                                   entry.number());
+
+    checkReply(reply);
+    getEntries(store);
 }
 
 void FsoPhoneBook::remove(uint index, const QString & store, bool flush)
 {
     qDebug() << "FsoPhoneBook::remove index=" << index << "store=" << store <<
         "flush=" << flush;
-    if (store != "SM") {
-        if (flush)
-            getEntries(store);
-        return;
-    }
+
+    QFsoDBusPendingReply <> reply =
+        service->gsmSim.DeleteEntry("contacts", index);
+
+    checkReply(reply);
+    getEntries(store);
 }
 
 void FsoPhoneBook::update(const QPhoneBookEntry & entry, const QString & store,
@@ -102,11 +114,12 @@ void FsoPhoneBook::update(const QPhoneBookEntry & entry, const QString & store,
 {
     qDebug() << "FsoPhoneBook::update entry.text()=" << entry.text() << "store="
         << store << "flush=" << flush;
-    if (store != "SM") {
-        if (flush)
-            getEntries(store);
-        return;
-    }
+
+    QFsoDBusPendingReply <> reply =
+        service->gsmSim.StoreEntry("contacts", entry.index(), entry.text(),
+                                   entry.number());
+    checkReply(reply);
+    getEntries(store);
 }
 
 void FsoPhoneBook::flush(const QString & store)
@@ -127,11 +140,19 @@ void FsoPhoneBook::clearPassword(const QString &)
 void FsoPhoneBook::requestLimits(const QString & store)
 {
     qDebug() << "FsoPhoneBook::requestLimits store=" << store;
+
+    QFsoDBusPendingReply < int, int, int >reply =
+        service->gsmSim.GetPhonebookInfo("contacts");
+
+    if (!checkReply(reply)) {
+        return;
+    }
     QPhoneBookLimits l;
-    l.setNumberLength(20);
-    l.setTextLength(18);
+    l.setUsed(numUsed);
     l.setFirstIndex(1);
-    l.setLastIndex(150);
+    l.setLastIndex(reply.argumentAt(0).toInt());
+    l.setNumberLength(reply.argumentAt(1).toInt());
+    l.setTextLength(reply.argumentAt(2).toInt());
     emit limits(store, l);
 }
 
