@@ -24,6 +24,7 @@ FsoSMSReader::FsoSMSReader(FsoTelephonyService * service)
 :  QSMSReader(service->service(), service, QCommInterface::Server)
     , service(service)
     , messages()
+    , incoming()
     , index(-1)
     , numSlots(-1)
 {
@@ -78,6 +79,35 @@ void FsoSMSReader::check()
                  SLOT(retrieveMessageFinished(QFsoDBusPendingCall &)));
 }
 
+// Remove SMS from incoming if it is on SIM
+static void removeFromIncoming(QFsoSIMMessageList & incoming,
+                               QFsoSIMMessageList & messages)
+{
+    // Match messages by timestamp
+    for (int i = 0; i < incoming.count();) {
+        QFsoSIMMessage ii = incoming.at(i);
+        int simLen = 0;
+        for (int j = 0; j < messages.count(); j++) {
+            QFsoSIMMessage mj = messages[j];
+            if (ii.timestamp == mj.timestamp) {
+                simLen += mj.contents.count();
+            }
+            qDebug() << "removeFromIncoming mj.timestamp=" << mj.timestamp <<
+                ", ii.timestamp=" << ii.timestamp << ", simLen=" << simLen <<
+                ", ii.contents.count()=" << ii.contents.count();
+        }
+        qDebug() << "simLen=" << simLen << "ii.contents.count()=" <<
+            ii.contents.count();
+        // Delete from incoming if the whole SMS is on SIM (dont delete if there
+        // is e.g. just first part on SIM)
+        if (simLen >= ii.contents.count()) {
+            incoming.removeAt(i);
+        } else {
+            i++;
+        }
+    }
+}
+
 void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
@@ -94,8 +124,9 @@ void FsoSMSReader::retrieveMessageFinished(QFsoDBusPendingCall & call)
     }
     index++;
     if (index >= numSlots) {
-        qDebug() << "emit messageCount=" << messages.count();
-        emit messageCount(messages.count());
+        removeFromIncoming(incoming, messages); // remove from incoming messages that are on SIM
+        qDebug() << "emit messageCount=" << messages.count() + incoming.count();
+        emit messageCount(messages.count() + incoming.count());
         return;
     }
     QFsoDBusPendingCall nextCall = service->gsmSim.RetrieveMessage(index);
@@ -113,7 +144,8 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
 static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
-        ", f.index=" << f.index << ", f.contents=" << f.contents;
+        ", f.index=" << f.
+        index << "f.timestamp=" << f.timestamp << ", f.contents=" << f.contents;
 
     m.setText(f.contents);
     m.setSender(f.number);
@@ -134,10 +166,14 @@ void FsoSMSReader::nextMessage()
     qDebug() << "FsoSMSReader::nextMessage()";
     QSMSMessage msg;
     QString id;
+    int incomingIndex = index - messages.count();
     if (index < messages.count()) {
-        id = fillMsg(messages.at(index), msg, index);
-        index++;
+        QFsoSIMMessage f = messages.at(index);
+        id = fillMsg(f, msg, index);
+    } else if (incomingIndex < incoming.count()) {
+        id = fillMsg(incoming.at(incomingIndex), msg, index);
     }
+    index++;
     emit fetched(id, msg);
 }
 
@@ -169,12 +205,14 @@ void FsoSMSReader::incomingTextMessage(const QString & number,
 {
     qDebug() << "FsoSMSReader::incomingTextMessage() number=" << number <<
         ", timestamp=" << timestamp << ", contents=" << contents;
+
+    // Keep the message in memory in case that it does not make it to SIM
+    // (e.g. SIM is full)
+    QFsoSIMMessage f;
+    f.number = number;
+    f.timestamp = timestamp;
+    f.contents = contents;
+    incoming.append(f);
+
     check();
 }
-
-void FsoSMSReader::incomingMessage(int index)
-{
-    qDebug() << "FsoSMSReader::incomingMessage() index=" << index;
-    check();
-}
-

@@ -35,14 +35,14 @@ public:
     ~FsoSMSReader();
 
     FsoTelephonyService *service;
-    QFsoSIMMessageList messages;
+    QFsoSIMMessageList messages;        // messages read from SIM
+    QFsoSIMMessageList incoming;        // messages that came from incomingTextMessage event
     int index;
     int numSlots;
 
     void deviceStatus(QString status);  // called by fso telephony service to report device status
     void incomingTextMessage(const QString & number, const QString & timestamp,
                              const QString & contents);
-    void incomingMessage(int index);    // called by fso telephonby service when SMS is received and stored on SIM
 
 public slots:
     void test();

@@ -76,9 +76,6 @@ FsoTelephonyService::FsoTelephonyService(const QString & service,
             SLOT(incomingMessageReport
                  (int, const QString &, const QString &, const QString &)));
 
-    connect(&gsmSim,
-            SIGNAL(IncomingMessage(int)), this, SLOT(incomingMessage(int)));
-
     QFsoDBusPendingCall call = gsmDev.GetDeviceStatus();
     watchFsoCall(call, this,
                  SLOT(getDeviceStatusFinished(QFsoDBusPendingCall &)));
@@ -212,10 +209,4 @@ void FsoTelephonyService::incomingMessageReport(int reference,
     qDebug() << "incomingMessageReport reference=" << reference
         << " status=" << status << " sender_number=" << sender_number
         << " contents=" << contents;
-}
-
-void FsoTelephonyService::incomingMessage(int index)
-{
-    qDebug() << "incomingMessage index=" << index;
-    sms_reader.incomingMessage(index);
 }
