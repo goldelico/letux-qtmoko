@@ -1,3 +1,18 @@
+qtmoko (36-1) unstable; urgency=low
+
+  * Can use freesmartphone.org stack as modem backend
+  * qterminal can run commands and scripts
+  * Bluetooth does not crash if bluetoothd is not running
+  * qmplayer can search for flac files
+  * Fixed "No network" bug if register to network was fast
+  * Dialer gui improvements
+  * Kill also telepathyagent when stopping
+  * Neocontrol has simplified volume setting
+  * Improved gsmhandset.state file
+  * Fix preview for jpg background in appearence setting
+
+ -- Radek Polak <psonek2@seznam.cz>  Fri, 01 Apr 2011 10:41:56 +0100
+
 qtmoko (35-1) unstable; urgency=low
 
   * Fix missing icon for qtmoko apps web
