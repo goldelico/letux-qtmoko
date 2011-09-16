@@ -1023,7 +1023,7 @@ QPhoneProfile::Schedule::Schedule(const Schedule &other)
 /*!
   Assigns \a other to this schedule and returns a reference to this schedule.
   */
-QPhoneProfile::Schedule::Schedule &QPhoneProfile::Schedule::operator=(const Schedule &other)
+QPhoneProfile::Schedule &QPhoneProfile::Schedule::operator=(const Schedule &other)
 {
     _active = other._active;
     _time = other._time;
