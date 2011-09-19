@@ -71,6 +71,7 @@ private:
     void showScreen(NeoControl::Screen scr);
     int openAlsaMixer();
     void closeAlsaMixer();
+    QString getQpeEnv();
     void setQpeEnv(bool);
 
 private slots:

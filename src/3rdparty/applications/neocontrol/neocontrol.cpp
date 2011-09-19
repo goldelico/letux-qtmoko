@@ -298,7 +298,7 @@ void NeoControl::muxStateChanged(int state)
     QMessageBox::information(this, tr("Multiplexing"), tr("Settings will be activated after restarting QtExtended with POWER button"));
 }
 
-void NeoControl::setQpeEnv(bool fso)
+QString getQpeEnv()
 {
     QFile f("/opt/qtmoko/qpe.env");
     if(!f.open(QFile::ReadOnly))
@@ -308,6 +308,12 @@ void NeoControl::setQpeEnv(bool fso)
     }
     QString content = f.readAll();
     f.close();
+    return content;
+}
+
+void NeoControl::setQpeEnv(bool fso)
+{
+    QString content = getQpeEnv();
     QString fsoStr = "export QTOPIA_PHONE=Fso";
     QString atStr = "export QTOPIA_PHONE=AT";
     if(fso)
@@ -318,6 +324,7 @@ void NeoControl::setQpeEnv(bool fso)
     {
         content = content.replace(fsoStr, atStr);
     }
+    QFile f("/opt/qtmoko/qpe.env");
     if(!f.open(QFile::WriteOnly))
     {
         QMessageBox::critical(this, tr("FSO"), tr("Failed to write to") + " " + f.fileName());
@@ -330,6 +337,10 @@ void NeoControl::setQpeEnv(bool fso)
 
 void NeoControl::fsoStateChanged(int state)
 {
+    if(updatingModem)
+    {
+        return;
+    }
     if(state != Qt::Checked)
     {
         setQpeEnv(false);     // disable FSO
@@ -339,6 +350,7 @@ void NeoControl::fsoStateChanged(int state)
 
     if(!QFile::exists("/usr/sbin/fsogsmd"))
     {
+
         QProcess::execute("raptor", QStringList() << "-u" << "-i" << "fso-gsmd-openmoko" << "fso-usaged-openmoko");
     }
     setQpeEnv(true);
@@ -364,6 +376,10 @@ void NeoControl::updateModem()
     chkMux->setChecked(multiplexing != "no");
 
     label->setText(text);
+
+    QString qpeEnv = getQpeEnv();
+    QString fsoStr = "export QTOPIA_PHONE=Fso";
+    chkFso->setChecked(qpeEnv.indexOf(fsoStr) >= 0);
 
     updatingModem = false;
     QTimer::singleShot(1000, this, SLOT(updateModem()));
