@@ -21,10 +21,11 @@
 #include "fsotelephonyservice.h"
 #include "fsoutil.h"
 
-FsoRfFunctionality::FsoRfFunctionality
-        ( FsoTelephonyService *service )
-    : QPhoneRfFunctionality( service->service(), service, QCommInterface::Server )
+FsoRfFunctionality::FsoRfFunctionality(FsoTelephonyService * service)
+:QPhoneRfFunctionality(service->service(), service, QCommInterface::Server)
     , service(service)
+    , modemAlive(false)
+    , reqLevel((QPhoneRfFunctionality::Level)(-1))
 {
 }
 
@@ -34,16 +35,13 @@ FsoRfFunctionality::~FsoRfFunctionality()
 
 QPhoneRfFunctionality::Level fsoLevelToQt(QString level)
 {
-    if(level == "full")
-    {
+    if (level == "full") {
         return QPhoneRfFunctionality::Full;
     }
-    if(level == "airplane")
-    {
+    if (level == "airplane") {
         return QPhoneRfFunctionality::DisableTransmitAndReceive;
     }
-    if(level == "minimal")
-    {
+    if (level == "minimal") {
         return QPhoneRfFunctionality::Minimum;
     }
     qWarning() << "fsoLevelToQt: unknown level " << level;
@@ -52,40 +50,65 @@ QPhoneRfFunctionality::Level fsoLevelToQt(QString level)
 
 QString qtLevelToFso(QPhoneRfFunctionality::Level level)
 {
-    switch(level)
-    {
-        case QPhoneRfFunctionality::Full:
-            return "full";
-        case QPhoneRfFunctionality::Minimum:
-            return "minimal";
-        default:
-            return "airplane";
+    switch (level) {
+    case QPhoneRfFunctionality::Full:
+        return "full";
+    case QPhoneRfFunctionality::Minimum:
+        return "minimal";
+    default:
+        return "airplane";
+    }
+}
+
+void FsoRfFunctionality::deviceStatus(QString status)
+{
+    bool oldAlive = modemAlive;
+    modemAlive = status.startsWith("alive-");
+
+    qDebug() << "FsoRfFunctionality::deviceStatus status=" << status <<
+        ", oldAlive=" << oldAlive << ", modemAlive=" << modemAlive;
+
+    if (oldAlive != modemAlive) {
+        // Set level which was requested while modem was not alive
+        if (modemAlive && reqLevel >= 0) {
+            setLevel(reqLevel);
+            reqLevel = (QPhoneRfFunctionality::Level)(-1);
+        }
+        forceLevelRequest();
     }
 }
 
 void FsoRfFunctionality::forceLevelRequest()
 {
-    qWarning() << "forceLevelRequest";
-    
-    QFsoDBusPendingReply<QString, bool, QString> reply = service->gsmDev.GetFunctionality();
-    if(!checkReply(reply, true))
-    {
+    qDebug() << "forceLevelRequest";
+
+    if (!modemAlive) {
+        return;
+    }
+
+    QFsoDBusPendingReply < QString, bool, QString > reply =
+        service->gsmDev.GetFunctionality();
+    if (!checkReply(reply, true)) {
         return;
     }
     QString level = reply.argumentAt(0).toString();
-    setValue( "level", qVariantFromValue( fsoLevelToQt(level) ) );
+    setValue("level", qVariantFromValue(fsoLevelToQt(level)));
     emit levelChanged();
 }
 
-void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
+void FsoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
 {
     qWarning() << "setLevel level=" << level;
 
+    if (!modemAlive) {
+        reqLevel = level;       // just remember the request
+        return;
+    }
     // Retrieve autoregister and pin values
-    QFsoDBusPendingReply<QString, bool, QString> reply = service->gsmDev.GetFunctionality();
+    QFsoDBusPendingReply < QString, bool, QString > reply =
+        service->gsmDev.GetFunctionality();
     QTelephony::Result res = qTelResult(reply);
-    if(res != QTelephony::OK)
-    {
+    if (res != QTelephony::OK) {
         emit setLevelResult(res);
         return;
     }
@@ -94,6 +117,7 @@ void FsoRfFunctionality::setLevel( QPhoneRfFunctionality::Level level )
     QString fsoLevel = qtLevelToFso(level);
 
     // Set actual value
-    QFsoDBusPendingReply<> reply2 = service->gsmDev.SetFunctionality(fsoLevel, autoregister, pin);
+    QFsoDBusPendingReply <> reply2 =
+        service->gsmDev.SetFunctionality(fsoLevel, autoregister, pin);
     emit setLevelResult(qTelResult(reply2));
 }

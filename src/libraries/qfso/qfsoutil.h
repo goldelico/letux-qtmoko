@@ -55,10 +55,10 @@ template <class T1, class T2, class T3, class T4, class T5, class T6, class T7, 
                         resStr += " " + key + "=" + map.value(key).toString();
                     }
                 }
-                else
-                {
-                    qWarning() << "checkReply: unknown signature " << signature;
-                }
+                //else
+                //{
+                    //qWarning() << "checkReply: unknown signature " << signature;
+                //}
             }
             else
             {

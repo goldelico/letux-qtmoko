@@ -35,6 +35,7 @@ public:
 
     FsoTelephonyService * service;
 
+    void deviceStatus(QString status);  // called by fso telephony service to report device status
     void networkStatusChange(const QVariantMap &);
 
 public slots:
@@ -43,6 +44,7 @@ public slots:
     void requestAvailableOperators();
 
 private slots:
+    void registerFinished(QFsoDBusPendingCall &);
     void getStatusFinished(QFsoDBusPendingCall &);
 };
 

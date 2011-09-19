@@ -35,8 +35,10 @@ public:
     ~FsoSMSReader();
 
     FsoTelephonyService *service;
-    QFsoSIMMessageList messages;
+    QFsoSIMMessageList messages;        // messages read from SIM
+    QFsoSIMMessageList incoming;        // messages that came from incomingTextMessage event
     int index;
+    int numSlots;
 
     void deviceStatus(QString status);  // called by fso telephony service to report device status
     void incomingTextMessage(const QString & number, const QString & timestamp,
@@ -51,7 +53,7 @@ public slots:
     void setUnreadCount(int value);
 
 private slots:
-    void retrieveTextMessagesFinished(QFsoDBusPendingCall &);
+    void retrieveMessageFinished(QFsoDBusPendingCall &);
 };
 
 #endif

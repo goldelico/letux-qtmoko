@@ -35,6 +35,8 @@ FsoTelephonyService::FsoTelephonyService(const QString & service,
          QDBusConnection::systemBus(), this)
 , pimContacts("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Contacts",
               QDBusConnection::systemBus(), this)
+, fsoUsage("org.freesmartphone.ousaged", "/org/freesmartphone/Usage",
+           QDBusConnection::systemBus(), this)
 , service_checker(this)
 , rf_functionality(this)
 , network_registration(this)
@@ -132,16 +134,34 @@ void FsoTelephonyService::initialize()
 void FsoTelephonyService::deviceStatusChange(const QString & status)
 {
     deviceStatusInitialized = true;
+    rf_functionality.deviceStatus(status);
+    network_registration.deviceStatus(status);
     sim_info.deviceStatus(status);
     sms_reader.deviceStatus(status);
+    phone_book.deviceStatus(status);
 }
 
 void FsoTelephonyService::getDeviceStatusFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply < QString > reply = call;
-    if (checkReply(reply) && !deviceStatusInitialized) {
+    if (!checkReply(reply)) {
+        return;
+    }
+    QString status = reply.value();
+    if (!deviceStatusInitialized) {
         deviceStatusChange(reply.value());
     }
+    if (status == "closed") {
+        QFsoDBusPendingCall call = fsoUsage.SetResourcePolicy("GSM", "enabled");
+        watchFsoCall(call, this,
+                     SLOT(setResourcePolicyFinished(QFsoDBusPendingCall &)));
+    }
+}
+
+void FsoTelephonyService::setResourcePolicyFinished(QFsoDBusPendingCall & call)
+{
+    QFsoDBusPendingReply <> reply = call;
+    checkReply(reply);
 }
 
 void FsoTelephonyService::networkStatusChange(const QVariantMap & status)
@@ -170,8 +190,8 @@ void FsoTelephonyService::callStatusChange(int id, const QString & status,
     QList < QPhoneCallImpl * >list = call_provider.calls();
     for (int i = 0; i < list.count(); i++) {
         FsoPhoneCall *call = static_cast < FsoPhoneCall * >(list.at(i));
-        qDebug() << "call identifier=" << call->
-            identifier() << ", call id=" << call->id;
+        qDebug() << "call identifier=" << call->identifier() << ", call id=" <<
+            call->id;
         if (call->id == id) {
             call->setFsoStatus(status);
             return;

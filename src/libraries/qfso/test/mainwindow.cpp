@@ -15,6 +15,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this),
         pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages", QDBusConnection::systemBus(), this),
+        fsoUsage("org.freesmartphone.ousaged", "/org/freesmartphone/Usage", QDBusConnection::systemBus(), this),
         gsmStatusReply(),
         gsmSignalReply(),
         gsmMessageSizeWatcher(QDBusPendingReply<uint>(), this)

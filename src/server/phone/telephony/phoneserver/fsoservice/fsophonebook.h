@@ -37,6 +37,13 @@ public:
     ~FsoPhoneBook();
 
     FsoTelephonyService *service;
+    bool simReady;
+    bool wantEntries;           // getEntries was called while sim was not ready yet
+    bool wantLimits;              // request limits was called while sim was not ready yet
+    int freeIndex;              // free index for new contact
+    int numUsed;                // number of used
+
+    void deviceStatus(QString status);  // called by fso telephony service to report device status
 
 public slots:
     void getEntries(const QString & store);
@@ -55,7 +62,7 @@ private:
      bool fixedDialingEnabled;
 
 private slots:
-     void retrievePhonebookFinished(QFsoDBusPendingCall &);
+    void retrievePhonebookFinished(QFsoDBusPendingCall &);
 };
 
 #endif
