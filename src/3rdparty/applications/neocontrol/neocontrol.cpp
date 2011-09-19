@@ -298,13 +298,13 @@ void NeoControl::muxStateChanged(int state)
     QMessageBox::information(this, tr("Multiplexing"), tr("Settings will be activated after restarting QtExtended with POWER button"));
 }
 
-QString getQpeEnv()
+QString NeoControl::getQpeEnv()
 {
     QFile f("/opt/qtmoko/qpe.env");
     if(!f.open(QFile::ReadOnly))
     {
         QMessageBox::critical(this, tr("FSO"), tr("Failed to read") + " " + f.fileName());
-        return;
+        return "";
     }
     QString content = f.readAll();
     f.close();
