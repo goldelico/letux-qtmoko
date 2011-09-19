@@ -85,6 +85,7 @@ private slots:
     void deepSleepStateChanged(int);
     void muxStateChanged(int);
     void fsoStateChanged(int);
+    void fsoChange();
 };
 
 #endif // NEOCONTROL_H
