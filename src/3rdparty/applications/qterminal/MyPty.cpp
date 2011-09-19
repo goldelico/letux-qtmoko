@@ -117,6 +117,10 @@ QSize MyPty::windowSize()
 void MyPty::donePty()
 {
     // This is code from the Qt DumbTerminal example
+    if(QApplication::argc() > 1)
+    {
+        Sleeper::msleep(3000);
+    }
 
     ::close(m_fd);
 

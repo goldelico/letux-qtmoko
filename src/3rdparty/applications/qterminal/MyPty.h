@@ -26,6 +26,7 @@
 #include <QtCore/QList>
 #include <QtCore/QStringList>
 #include <QtCore/QSize>
+#include <QThread>
 
 #include "io_layer.h"
 
@@ -111,6 +112,15 @@ private:
 
     QString m_cmd;
     EnvironmentMap m_env;
+};
+
+class Sleeper : public QThread
+{
+public:
+    static void msleep(unsigned long msecs)
+    {
+        QThread::msleep(msecs);
+    }
 };
 
 #endif
