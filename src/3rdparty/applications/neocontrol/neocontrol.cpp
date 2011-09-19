@@ -350,8 +350,10 @@ void NeoControl::fsoStateChanged(int state)
 
     if(!QFile::exists("/usr/sbin/fsogsmd"))
     {
-
         QProcess::execute("raptor", QStringList() << "-u" << "-i" << "fso-gsmd-openmoko" << "fso-usaged-openmoko");
+        QMessageBox::information(this, tr("FSO"), tr("QtMoko needs very recent FSO, it will be downloaded from http://activationrecord.net/radekp/pub/libfsogsm.so.0.0.0"));
+        QProcess::execute("qterminal", QStringList() << "-c" << "wget" << "http://activationrecord.net/radekp/pub/libfsogsm.so.0.0.0");
+        QProcess::execute("qterminal", QStringList() << "-c" << "mv" << "libfsogsm.so.0.0.0" << "/usr/lib/cornucopia/libs/fsogsm/libfsogsm.so.0.0.0");
     }
     setQpeEnv(true);
 }
