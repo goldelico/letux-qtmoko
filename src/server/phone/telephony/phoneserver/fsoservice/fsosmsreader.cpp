@@ -157,23 +157,6 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
     return QString("%1:%2").arg(timestamp).arg(crc);
 }
 
-// Parse timestamp obtained by RetrieveTextMessages() function
-// e.g. 11/09/08,14:15:28+08
-static QDateTime parseTimestamp(const QString & str)
-{
-    QDateTime dt;
-    if(str.length() == 20)
-    {
-        dt = QDateTime::fromString(str.left(17), "yy/MM/dd,hh:mm:ss");
-    }
-    if(dt.isValid())
-    {
-        return dt;
-    }
-    qWarning() << "parseTimestamp: wrong date " << str;
-    return dt;
-}
-
 static QString fillMsg(const QFsoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
