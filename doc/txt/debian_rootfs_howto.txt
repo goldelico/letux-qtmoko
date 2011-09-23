@@ -423,25 +423,23 @@ tar -czvf ../qtmoko-debian.tar.gz .
 Step 11 - make ubifs images
 ===========================
 
-* Copy your rootfs dir to /tmp/qtmoko-debian
-
 * Delete contents of boot, because for NAND it's not needed:
 
-rm -rf /tmp/qtmoko-debian/boot/*
+rm -rf /media/card/boot/*
 
 * Remove doc and stuff that is not needed and makes NAND image slower:
 
-find /tmp/qtmoko-debian/usr/share/locale/ -type f -exec rm -f '{}' \;
-find /tmp/qtmoko-debian/usr/share/doc/ -type f -exec rm -f '{}' \;
-find /tmp/qtmoko-debian/usr/share/doc-base/ -type f -exec rm -f '{}' \;
-find /tmp/qtmoko-debian/usr/share/info/ -type f -exec rm -f '{}' \;
-find /tmp/qtmoko-debian/usr/share/man/ -type f -exec rm -f '{}' \;
-rm -rf /tmp/qtmoko-debian/usr/share/sounds/alsa/*
-rm -rf /tmp/qtmoko-debian/usr/share/ssh/blacklist*
+find /media/card/usr/share/locale/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/doc-base/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/info/ -type f -exec rm -f '{}' \;
+find /media/card/usr/share/man/ -type f -exec rm -f '{}' \;
+rm -rf /media/card/usr/share/sounds/alsa/*
+rm -rf /media/card/usr/share/ssh/blacklist*
 
 * We need just 3 fonts
 
-cd /tmp/qtmoko-debian/usr/share/fonts/truetype/ttf-dejavu/
+cd /media/card/usr/share/fonts/truetype/ttf-dejavu/
 mv DejaVuSansCondensed-Bold.ttf 1
 mv DejaVuSansCondensed.ttf 2
 mv DejaVuSansMono.ttf 3
@@ -451,7 +449,7 @@ mv 2 DejaVuSansCondensed.ttf
 mv 3 DejaVuSansMono.ttf
 
 
-* Edit the mount for root in /tmp/qtmoko-debian/etc/fstab so that it reads:
+* Edit the mount for root in /media/card/etc/fstab so that it reads:
 
 rootfs  /                auto    defaults,no_chk_data_crc,bulk_read 0 1
 
@@ -470,7 +468,7 @@ vol_name=om-gta02-rootfs
 vol_flags=autoresize
 __END__
 
-mkfs.ubifs -r /tmp/qtmoko-debian -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 2047
+mkfs.ubifs -r /media/card -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 2047
 ubinize -o qtmoko-debian.ubi -m 2048 -p 128KiB -s 2048 -O 2048 ubinize.cfg
 rm qtmoko-debian.ubifs
 
@@ -479,11 +477,11 @@ Step 12 - jffs2 image (not using anymore)
 
 * Same first 2 steps as with ubi (copy&delete /boot)
 
-* Uncomment the /var/cache/apt mount in /tmp/qtmoko-debian/etc/fstab
+* Uncomment the /var/cache/apt mount in /media/card/etc/fstab
 
 * Make jffs2 image:
 
-mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/tmp/qtmoko-debian
+mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/media/card
 
 
 
