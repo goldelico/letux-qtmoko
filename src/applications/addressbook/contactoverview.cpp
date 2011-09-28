@@ -149,6 +149,25 @@ void ContactOverview::init( const QContact &entry )
         mEmail = new QPushButton();
         mEdit = new QPushButton();
 
+	QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	sizePolicy1.setHorizontalStretch(180);
+	sizePolicy1.setVerticalStretch(80);
+	sizePolicy1.setHeightForWidth(mCall->sizePolicy().hasHeightForWidth());
+	mCall->setSizePolicy(sizePolicy1);
+	mCall->setMinimumSize(QSize(180, 80));
+
+	sizePolicy1.setHeightForWidth(mText->sizePolicy().hasHeightForWidth());
+	mText->setSizePolicy(sizePolicy1);
+	mText->setMinimumSize(QSize(180, 80));
+
+	sizePolicy1.setHeightForWidth(mEmail->sizePolicy().hasHeightForWidth());
+	mEmail->setSizePolicy(sizePolicy1);
+	mEmail->setMinimumSize(QSize(180, 80));
+
+	sizePolicy1.setHeightForWidth(mEdit->sizePolicy().hasHeightForWidth());
+	mEdit->setSizePolicy(sizePolicy1);
+	mEdit->setMinimumSize(QSize(180, 80));
+
         buttons << mCall << mText << mEmail << mEdit;
 
         mEdit->setText(tr("Edit"));
