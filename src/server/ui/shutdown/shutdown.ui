@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>290</width>
-    <height>407</height>
+    <height>408</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -49,9 +49,15 @@
           <widget class="QPushButton" name="restart">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
+             <horstretch>180</horstretch>
+             <verstretch>80</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>80</height>
+            </size>
            </property>
            <property name="text">
             <string>Restart Qt Extended</string>
@@ -62,9 +68,15 @@
           <widget class="QPushButton" name="quit">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
+             <horstretch>180</horstretch>
+             <verstretch>80</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>80</height>
+            </size>
            </property>
            <property name="text">
             <string>Shutdown Qt Extended</string>
@@ -91,9 +103,15 @@
           <widget class="QPushButton" name="reboot">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
+             <horstretch>180</horstretch>
+             <verstretch>80</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>80</height>
+            </size>
            </property>
            <property name="text">
             <string>Restart Device</string>
@@ -104,9 +122,15 @@
           <widget class="QPushButton" name="shut">
            <property name="sizePolicy">
             <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
-             <horstretch>0</horstretch>
-             <verstretch>0</verstretch>
+             <horstretch>180</horstretch>
+             <verstretch>80</verstretch>
             </sizepolicy>
+           </property>
+           <property name="minimumSize">
+            <size>
+             <width>180</width>
+             <height>80</height>
+            </size>
            </property>
            <property name="text">
             <string>Shutdown Device</string>
@@ -130,7 +154,7 @@
         <property name="sizeHint" stdset="0">
          <size>
           <width>20</width>
-          <height>40</height>
+          <height>20</height>
          </size>
         </property>
        </spacer>
