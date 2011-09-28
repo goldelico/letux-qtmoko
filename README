@@ -10,7 +10,7 @@ apt-get build-dep libqt4-dev
   * Download and install toolchain
 
 cd /
-sudo wget http://sourceforge.net/projects/qtmoko/files/Toolchain/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download
+sudo wget http://sourceforge.net/projects/qtmoko/files/Toolchain/qtmoko-debian-toolchain-armv4t-eabi.tar.gz/download -O qtmoko-debian-toolchain-armv4t-eabi.tar.gz
 sudo tar xzvpf qtmoko-debian-toolchain-armv4t-eabi.tar.gz
 
   * If you are on x86_64 you will need to download following 32bit libraries:
