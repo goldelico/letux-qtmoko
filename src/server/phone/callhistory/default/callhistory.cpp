@@ -475,9 +475,16 @@ CallHistoryView::CallHistoryView( QWidget *parent, Qt::WFlags fl )
     h->addWidget( mName );
     h->addWidget( mContactTypePic );
     h->addStretch();
+
+	QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Fixed);
+	sizePolicy1.setHorizontalStretch(180);
+	sizePolicy1.setVerticalStretch(80);
+
     if (style()->inherits("QThumbStyle")) { // No find dialog for QThumbStyle
         mContactBtn = new QPushButton( tr( "Save to Contacts", "dial highlighted number" ), container );
-        mContactBtn->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
+	sizePolicy1.setHeightForWidth(mContactBtn->sizePolicy().hasHeightForWidth());
+	mContactBtn->setSizePolicy(sizePolicy1);
+	mContactBtn->setMinimumSize(QSize(180, 80));
         h->addWidget( mContactBtn, 1 );
     }
     l->addRow( tr("Name:"), h );
@@ -487,7 +494,9 @@ CallHistoryView::CallHistoryView( QWidget *parent, Qt::WFlags fl )
     h->addStretch();
     if (style()->inherits("QThumbStyle")) { // No find dialog for QThumbStyle
         QPushButton *dialBtn = new QPushButton( tr( "Dial", "dial highlighted number" ), container );
-        dialBtn->setSizePolicy(QSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed));
+	sizePolicy1.setHeightForWidth(dialBtn->sizePolicy().hasHeightForWidth());
+	dialBtn->setSizePolicy(sizePolicy1);
+	dialBtn->setMinimumSize(QSize(180, 80));
         h->addWidget( dialBtn, 1 );
         connect( dialBtn, SIGNAL(released()), this, SLOT(dialNumber()) );
         if (mContactBtn) {
