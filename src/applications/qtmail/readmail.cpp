@@ -84,6 +84,14 @@ public:
           existingButton(new QPushButton(tr("Add to existing")))
 #endif
     {
+	QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+	createButton->setSizePolicy(sizePolicy1);
+	createButton->setMinimumSize(QSize(180, 80));
+
+	existingButton->setSizePolicy(sizePolicy1);
+	existingButton->setMinimumSize(QSize(180, 80));
+
         setObjectName("SaveContactDialog");
         setModal(true);
 
