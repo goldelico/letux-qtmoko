@@ -100,7 +100,8 @@ QSize FolderDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelI
 {
     // Ensure that we use the full width for our item
     QSize base(QtopiaItemDelegate::sizeHint(option, index));
-    return QSize(qMax(base.width(), option.rect.width()), base.height());
+    // base.height() + base.height()/4 does bigger folders and uses the whole screen height
+    return QSize(qMax(base.width(), option.rect.width()), base.height() + base.height()/4);
 }
 
 void FolderDelegate::init(const QStyleOptionViewItem &option, const QModelIndex &index)
