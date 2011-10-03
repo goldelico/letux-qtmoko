@@ -85,6 +85,7 @@ Step 3 - add more package repositories
 
 echo "deb http://ftp.de.debian.org/debian squeeze contrib" >> /media/card/etc/apt/sources.list
 echo "deb http://ftp.de.debian.org/debian squeeze non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
 
 Step 3.1 - use geo mirrors
