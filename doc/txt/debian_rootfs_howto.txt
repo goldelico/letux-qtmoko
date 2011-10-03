@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://ftp.de.debian.org/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://cdn.debian.net/debian/
 
 
 * For bluetooth headset bluez-audio package is needed. But because of stupid
@@ -83,19 +83,10 @@ __END_CHROOT__
 Step 3 - add more package repositories
 ========================================
 
-echo "deb http://ftp.de.debian.org/debian squeeze contrib" >> /media/card/etc/apt/sources.list
-echo "deb http://ftp.de.debian.org/debian squeeze non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://cdn.debian.net/debian squeeze contrib" >> /media/card/etc/apt/sources.list
+echo "deb http://cdn.debian.net/debian squeeze non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
-
-Step 3.1 - use geo mirrors
-==========================
-
-* As described here
-
-http://wiki.debian.org/DebianGeoMirror#cdn.debian.net
-
-
 
 Step 4
 ======
@@ -288,8 +279,8 @@ Step 6.5 - omhacks
   and can't be used with > 2.6.34 kernels, so install from sid:
 
 chroot /media/card
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/libomhacks0_0.15-1_armel.deb
-wget http://ftp.de.debian.org/debian/pool/main/o/omhacks/omhacks_0.15-1_armel.deb
+wget http://cdn.debian.net/debian/pool/main/o/omhacks/libomhacks0_0.15-1_armel.deb
+wget http://cdn.debian.net/debian/pool/main/o/omhacks/omhacks_0.15-1_armel.deb
 dpkg -i libomhacks0_0.15-1_armel.deb
 dpkg -i omhacks_0.15-1_armel.deb
 rm libomhacks0_0.15-1_armel.deb
