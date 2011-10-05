@@ -1,0 +1,10 @@
+bigkeyboard for qtmoko project
+------------------------------
+
+Floating on-screen keyboard.
+This is a new big keyboard with auto landscape rotation.
+
+It is based on inputmethods/keyboard. In fact, it is
+the exact same code. Just that we did the keys bigger,
+layout more comfortable for fat fingers, and it autorotates
+when activated.
