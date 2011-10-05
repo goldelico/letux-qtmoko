@@ -6,7 +6,8 @@
 #        plugins/inputmethods/keyboard \
         plugins/inputmethods/fingerkeyboard \
         plugins/inputmethods/dockedkeyboard \
-        3rdparty/plugins/inputmethods/pkim
+        3rdparty/plugins/inputmethods/pkim \
+        plugins/inputmethods/biglandscapekeyboard
 
     contains(QTOPIA_LANGUAGES,zh_CN):PROJECTS*=plugins/inputmethods/pinyin
 }
