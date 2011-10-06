@@ -6,5 +6,21 @@ This is a new big keyboard with auto landscape rotation.
 
 It is based on inputmethods/keyboard. In fact, it is
 the exact same code. Just that we did the keys bigger,
-layout more comfortable for fat fingers, and it autorotates
-when activated.
+layout more comfortable for fat fingers, and we removed
+one file of keys to get space for bigger keys.
+
+It should be useful for writting sms with fat fingers.
+Also, this keyboard rotates automatically landscape,
+so it is easier to press the keys.
+    
+When exiting from composer (for pressing send button or cancel
+or whatever) the qtmoko GUI comes back again to the original
+rotation up to down.
+    
+A video of the current implementation is here :
+http://www.youtube.com/watch?v=WgZCWTrAev4
+    
+The keyboard is not so useful for terminal or other places,
+because it use a big part of the screen. Also it does not
+have control key, or alt.
+
