@@ -45,6 +45,8 @@ desktop.files+=desktop/wifi-maxperf-on.desktop
 desktop.files+=desktop/wifi-maxperf-off.desktop
 desktop.files+=desktop/usb-mass-storage-on.desktop
 desktop.files+=desktop/usb-mass-storage-off.desktop
+desktop.files+=desktop/autorotation-on.desktop
+desktop.files+=desktop/autorotation-off.desktop
 
 desktop.path=/apps/Devtools
 desktop.depends+=install_docapi_f_dir
