@@ -1,0 +1,23 @@
+Autorotation Feature
+--------------------
+
+This program is part of the autorotation feature of qtmoko project.
+
+The autorotation features is :
+
+- this autorotation program
+- the autorotation perl script
+- the two scripts to turn on and off autorotation feature
+
+The perl script works like this :
+
+The scripts sleeps most of time. After 3 seconds sleeping it reads
+accelerometers, doing 5 readings.
+
+If the phone was rotated by the user it calls autorotation program
+and rotates the whole QT GUI. Then the perl scripts
+starts to sleep again for 3 seconds. If the phone was
+not rotated by the user, then it continues sleeping.
+
+The idea is to be quiet and dont consume any cpu, or just
+a bit every a 3 seconds.
