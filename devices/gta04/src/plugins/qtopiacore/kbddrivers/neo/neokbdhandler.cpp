@@ -139,14 +139,12 @@ NeoKbdHandler::NeoKbdHandler()
 
 {
     bool ok;
-    isFreerunner = true;
 
     qLog(Input) << "Loaded Neo keypad plugin";
     setObjectName( "Neo Keypad Handler" );
 
     auxHandler = new FicLinuxInputEventHandler(this);
-    ok = auxHandler->openByName("gpio-keys") ||
-         auxHandler->openByPhysicalBus("neo1973kbd/input0");
+    ok = auxHandler->openByName("gpio-keys");
 
     if(ok) {
         connect(auxHandler, SIGNAL(inputEvent(struct input_event&)),
@@ -158,8 +156,7 @@ NeoKbdHandler::NeoKbdHandler()
     }
 
     powerHandler = new FicLinuxInputEventHandler(this);
-    ok = powerHandler->openByName("PCF50633 PMU events") ||
-         powerHandler->openByName("FIC Neo1973 PMU events");
+    ok = powerHandler->openByName("twl4030_pwrbutton");
 
     if (ok) {
         connect(powerHandler, SIGNAL(inputEvent(struct input_event&)),
@@ -181,8 +178,6 @@ NeoKbdHandler::NeoKbdHandler()
         delete jackHandler;
         jackHandler = 0;
     }
-
-    shift = false;
 }
 
 NeoKbdHandler::~NeoKbdHandler()
@@ -203,7 +198,7 @@ void NeoKbdHandler::inputEvent(struct input_event& event)
                    << ", value=" << event.value;
 
     switch(event.code) {
-    case 0xA9:
+    case 276:
         qtKeyCode = Qt::Key_F7;
         break;
 
@@ -214,10 +209,7 @@ void NeoKbdHandler::inputEvent(struct input_event& event)
     case SW_HEADPHONE_INSERT: //x02
     {
         QtopiaIpcEnvelope e("QPE/NeoHardware", "headphonesInserted(bool)");
-        if (isFreerunner)
-            e <<  isPress;
-        else
-            e <<  !isPress;
+        e <<  isPress;
     }
     break;
     case KEY_POWER2:

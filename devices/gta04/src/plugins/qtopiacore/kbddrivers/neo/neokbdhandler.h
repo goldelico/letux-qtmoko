@@ -72,12 +72,10 @@ class NeoKbdHandler : public QObject, public QWSKeyboardHandler
 public:
     NeoKbdHandler();
     ~NeoKbdHandler();
-    bool isFreerunner;
 
 private:
     QSocketNotifier *auxNotify;
     QSocketNotifier *powerNotify;
-    bool shift;
 
     QtopiaIpcAdaptor *mgr;
     QValueSpaceItem *m_headset;
@@ -86,7 +84,7 @@ private:
     FicLinuxInputEventHandler *powerHandler;
     FicLinuxInputEventHandler *jackHandler;
      
-    private slots:
+private slots:
     void inputEvent(struct input_event&);
 };
 
