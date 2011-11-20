@@ -59,11 +59,11 @@ NeoBattery::NeoBattery(QObject *parent)
 
     startTimer(60 * 1000);
 
-    if ( QFileInfo("/sys/class/power_supply/battery/status").exists()) {
+    if ( QFileInfo("/sys/class/power_supply/twl4030_bci_battery/status").exists()) {
         QTimer::singleShot( 10 * 1000, this, SLOT(updateSysStatus()));
         isSmartBattery = true;
     } else {
-        // 1973 only has dumb battery and must use apm
+        // dumb battery
         QTimer::singleShot( 10 * 1000, this, SLOT(updateDumbStatus()));
         isSmartBattery = false;
     }
@@ -140,7 +140,7 @@ int NeoBattery::getDumbCapacity()
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     int voltage = 0;
     QString inStr;
-    QFile battvolt("/sys/class/power_supply/battery/voltage_now");
+    QFile battvolt("/sys/class/power_supply/twl4030_bci_battery/voltage_now");
     battvolt.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&battvolt);
     in >> inStr;
@@ -152,7 +152,7 @@ int NeoBattery::getDumbCapacity()
     // 2 minutes left of battery life till neo shuts off might
     // as well be empty
 
-    voltage = voltage - 3400000;
+    voltage = voltage - 3400;
     float perc = voltage  / 8;
     percentCharge = (int)round( perc + 0.5);
     percentCharge = qBound<quint16>(0, percentCharge, 100);
@@ -164,7 +164,7 @@ int NeoBattery::getDumbCapacity()
 bool NeoBattery::batteryIsFull()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    if(getDumbCapacity() + 3400000 > 4170000)
+    if(getDumbCapacity() + 3400 > 4170)
         return true;
     return false;
 }
@@ -193,7 +193,7 @@ bool NeoBattery::isCharging()
 
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QString charge;
-    QFile chargeState("/sys/class/power_supply/battery/status");
+    QFile chargeState("/sys/class/power_supply/twl4030_bci_battery/status");
     chargeState.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&chargeState);
     in >> charge;
@@ -238,7 +238,7 @@ int NeoBattery::getCapacity()
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
 
     int capacity = 0;
-    QFile capacityState("/sys/class/power_supply/battery/capacity");
+    QFile capacityState("/sys/class/power_supply/twl4030_bci_battery/capacity");
     capacityState.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&capacityState);
     in >> capacity;

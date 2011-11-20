@@ -132,6 +132,9 @@ char *value;
   if (bytesAvail < readCount)
       readCount = bytesAvail;
   ueventSocket->read(&buffer[0],readCount);
+  
+  //printf("uevent %s\n", buffer);
+  
   if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/usb")==0)
   {
     qLog(PowerManagement)<<"usb change event";
