@@ -36,39 +36,17 @@
 
 QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
 {
-    QFile f("/sys/class/backlight/pcf50633-backlight/max_brightness");
-    if(!f.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "qpe_sysBrightnessSteps: " + f.errorString();
-        return 0;
-    }
-    QTextStream in(&f);
-    QString str;
-    in >> str;
-    f.close();
-    return str.toInt();
+    return 2;
 }
 
 QTOPIABASE_EXPORT void qpe_setBrightness(int b)
 {
-    int brightessSteps = qpe_sysBrightnessSteps();
-    if(b > brightessSteps)
-        b = brightessSteps;
-
-    if(b == 1) {
-        // dim
-        b = brightessSteps / 4;
-    } else if (b == -1) {
-        //bright
-        b = brightessSteps;
-    }
-
-    QFile f("/sys/class/backlight/pcf50633-backlight/brightness");
-    if(!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+    QFile f("/sys/devices/omapdss/display2/enabled");
+    if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         qWarning() << "qpe_setBrightness: " + f.errorString();
-	return;
+        return;
     }
     QTextStream out(&f);
-    out << QString::number(b);
+    out << (b == 1 ? "0" : "1"); // 1 == first step == dim, everything else is bright
     f.close();
 }
-
