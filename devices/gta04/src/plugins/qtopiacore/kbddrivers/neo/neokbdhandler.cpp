@@ -198,7 +198,7 @@ void NeoKbdHandler::inputEvent(struct input_event& event)
                    << ", value=" << event.value;
 
     switch(event.code) {
-    case 276:
+    case 0xA9:
         qtKeyCode = Qt::Key_F7;
         break;
 
