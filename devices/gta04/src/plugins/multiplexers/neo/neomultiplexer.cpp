@@ -59,26 +59,8 @@ NeoMultiplexerPlugin::~NeoMultiplexerPlugin()
 bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
-
-    // Power on modem via sysfs
-    QFile f("/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio.0/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on");
-    if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        f.write("0");
-        f.close();
-    }
-    if(f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        f.write("1");
-        f.close();
-    } else {
-        qWarning() << "Modem power on failed "<< f.errorString();
-    }
     
-    // The FIC needs a special line discipline set on the device.
     QSerialPort *port = qobject_cast<QSerialPort *>( device );
-    if (port) {
-        int discipline = N_TIHTC;
-        ::ioctl(port->fd(), TIOCSETD, &discipline);
-    }
     device->discard();
     int rc;
 
@@ -87,39 +69,11 @@ bool NeoMultiplexerPlugin::detect( QSerialIODevice *device )
     t.c_cflag |= CRTSCTS;
     rc = tcsetattr(port->fd(), TCSANOW, &t);
 
-    QValueSpaceItem deviceString("/Hardware/Neo/Device");
-    if ( deviceString.value().toString() == "GTA02") {
-        qLog(Hardware) << __PRETTY_FUNCTION__ << "is gta02";
-        muxEnabled = true;
-    } else {
-        qLog(Hardware) << __PRETTY_FUNCTION__ << "is gta01";
-        muxEnabled = false;
-    }
-
     QSettings cfg("Trolltech", "Modem");
     QString multiplexing = cfg.value("Multiplexing/Active", "yes").toString();
     muxEnabled &= (multiplexing != "no");
     qLog(Mux) << "Neo multiplexing " << (muxEnabled ? "enabled" : "disabled")
               << multiplexing;
-
-    // Make the modem talk to us. It can be a bit rough to get
-    // it initialized... So we will empty the current buffer
-    // and then send ^Z\r\n and wait for an OK or AT from the modem. This is
-    // mostly based on ideas from ogsmd
-
-    device->readAll();
-    int attempts = 0;
-    for (; attempts < 2; ++attempts) {
-        if (QSerialIODeviceMultiplexer::chat(device, QChar(0x1a))) {
-            qLog(Modem) << "Attempts needed to initialize the modem" << attempts;
-            break;
-        }
-    }
-
-    if (attempts == 2) {
-        qWarning() << "Initializing the modem failed.";
-        abort();
-    }
 
     // disable echoing of commands
     QSerialIODeviceMultiplexer::chat(device, "ATE0");
