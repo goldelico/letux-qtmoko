@@ -41,41 +41,41 @@ class NeoCallProvider : public QModemCallProvider
 {
     Q_OBJECT
 public:
-    NeoCallProvider( QModemService *service );
+    NeoCallProvider(QModemService * service);
     ~NeoCallProvider();
 
 protected:
     QModemCallProvider::AtdBehavior atdBehavior() const;
-    void abortDial( uint modemIdentifier, QPhoneCall::Scope scope );
+    void abortDial(uint modemIdentifier, QPhoneCall::Scope scope);
     void resetModem();
-    QString acceptCallCommand( bool otherActiveCalls ) const;
+    QString acceptCallCommand(bool otherActiveCalls) const;
     QModemService *modemService;
-    QString dialVoiceCommand(const QDialOptions& options) const;
+    QString dialVoiceCommand(const QDialOptions & options) const;
 
 private slots:
-    void cpiNotification( const QString& msg );
-    void cnapNotification( const QString& msg );
+    void cpiNotification(const QString & msg);
+    void cnapNotification(const QString & msg);
 };
 
 class NeoSimToolkit : public QModemSimToolkit
 {
     Q_OBJECT
 public:
-    NeoSimToolkit( QModemService *service );
+    NeoSimToolkit(QModemService * service);
     ~NeoSimToolkit();
 
 public slots:
     void initialize();
     void begin();
-    void sendResponse( const QSimTerminalResponse& resp );
-    void sendEnvelope( const QSimEnvelope& env );
+    void sendResponse(const QSimTerminalResponse & resp);
+    void sendEnvelope(const QSimEnvelope & env);
 
 private slots:
-    void sataNotification( const QString& msg );
-    void satnNotification( const QString& msg );
+    void sataNotification(const QString & msg);
+    void satnNotification(const QString & msg);
 
 private:
-    QSimCommand lastCommand;
+     QSimCommand lastCommand;
     QByteArray lastCommandBytes;
     QSimCommand mainMenu;
     QByteArray mainMenuBytes;
@@ -86,7 +86,7 @@ class NeoPhoneBook : public QModemPhoneBook
 {
     Q_OBJECT
 public:
-    NeoPhoneBook( QModemService *service );
+    NeoPhoneBook(QModemService * service);
     ~NeoPhoneBook();
 
 protected:
@@ -94,11 +94,11 @@ protected:
     bool hasEmptyPhoneBookIndex() const;
 
 private slots:
-    void cstatNotification( const QString& msg );
+    void cstatNotification(const QString & msg);
 
 private:
-    bool m_phoneBookIsReady;
-    bool m_smsIsReady;    
+     bool m_phoneBookIsReady;
+    bool m_smsIsReady;
     QModemService *service;
 };
 
@@ -106,7 +106,7 @@ class NeoPinManager : public QModemPinManager
 {
     Q_OBJECT
 public:
-    NeoPinManager( QModemService *service );
+    NeoPinManager(QModemService * service);
     ~NeoPinManager();
 
 protected:
@@ -117,21 +117,21 @@ class NeoBandSelection : public QBandSelection
 {
     Q_OBJECT
 public:
-    NeoBandSelection( QModemService *service );
+    NeoBandSelection(QModemService * service);
     ~NeoBandSelection();
 
 public slots:
     void requestBand();
     void requestBands();
-    void setBand( QBandSelection::BandMode mode, const QString& value );
+    void setBand(QBandSelection::BandMode mode, const QString & value);
 
 private slots:
-    void bandQuery( bool ok, const QAtResult& result );
-    void bandList( bool ok, const QAtResult& result );
-    void bandSet( bool ok, const QAtResult& result );
+    void bandQuery(bool ok, const QAtResult & result);
+    void bandList(bool ok, const QAtResult & result);
+    void bandSet(bool ok, const QAtResult & result);
 
 private:
-    QModemService *service;
+     QModemService * service;
 };
 
 /*
@@ -153,22 +153,22 @@ class NeoModemService : public QModemService
     Q_OBJECT
 public:
     NeoModemService
-        ( const QString& service, QSerialIODeviceMultiplexer *mux,
-          QObject *parent = 0 );
+        (const QString & service, QSerialIODeviceMultiplexer * mux,
+         QObject * parent = 0);
     ~NeoModemService();
 
     void initialize();
 
 private:
 //    NeoModemNetworkRegistration *neoNetRego;
-    QModemNetworkRegistration *neoNetRego;
+     QModemNetworkRegistration * neoNetRego;
 
 private slots:
-    void sigq( const QString& msg );
+    void sigq(const QString & msg);
     void firstCsqQuery();
 
-    void ctzu( const QString& msg );
-    void configureDone( bool ok );
+    void ctzu(const QString & msg);
+    void configureDone(bool ok);
     void reset();
     void suspend();
     void wake();
@@ -178,52 +178,51 @@ private slots:
     void sendRego();
 };
 
-class  NeoVibrateAccessory : public QVibrateAccessoryProvider
+class NeoVibrateAccessory : public QVibrateAccessoryProvider
 {
     Q_OBJECT
 public:
-     NeoVibrateAccessory( QModemService *service );
+    NeoVibrateAccessory(QModemService * service);
     ~NeoVibrateAccessory();
 
 public slots:
-    void setVibrateNow( const bool value );
-    void setVibrateOnRing( const bool value );
+    void setVibrateNow(const bool value);
+    void setVibrateOnRing(const bool value);
 };
 
 class NeoServiceNumbers : public QModemServiceNumbers
 {
     Q_OBJECT
 public:
-    NeoServiceNumbers( QModemService *service );
+    NeoServiceNumbers(QModemService * service);
     ~NeoServiceNumbers();
 
 public slots:
-    void requestServiceNumber( QServiceNumbers::NumberId id );
-    void setServiceNumber
-            ( QServiceNumbers::NumberId id, const QString& number );
+    void requestServiceNumber(QServiceNumbers::NumberId id);
+    void setServiceNumber(QServiceNumbers::NumberId id, const QString & number);
 
 private:
-    QModemService *service;
+     QModemService * service;
 };
 
 class NeoCallVolume : public QModemCallVolume
 {
     Q_OBJECT
 public:
-    explicit NeoCallVolume( NeoModemService *service);
+    explicit NeoCallVolume(NeoModemService * service);
     ~NeoCallVolume();
 
 public slots:
-    void setSpeakerVolume( int volume );
-    void setMicrophoneVolume( int volume );
-    void setSpeakerVolumeRange(int,int);
-    void setMicVolumeRange(int,int);
+    void setSpeakerVolume(int volume);
+    void setMicrophoneVolume(int volume);
+    void setSpeakerVolumeRange(int, int);
+    void setMicVolumeRange(int, int);
 
 protected:
-    bool hasDelayedInit() const;
+     bool hasDelayedInit() const;
 
 private:
-    NeoModemService *service;
+     NeoModemService * service;
     bool regoSent;
 };
 
@@ -233,7 +232,7 @@ class NeoSimInfo : public QSimInfo
 {
     Q_OBJECT
 public:
-    NeoSimInfo(NeoModemService *service );
+    NeoSimInfo(NeoModemService * service);
     ~NeoSimInfo();
 
 protected slots:
@@ -242,22 +241,21 @@ protected slots:
 
 private slots:
     void requestIdentity();
-    void cimi( bool ok, const QAtResult& result );
-    void serviceItemPosted( const QString& item );
+    void cimi(bool ok, const QAtResult & result);
+    void serviceItemPosted(const QString & item);
 
 private:
-    NeoSimInfoPrivate *d;
+     NeoSimInfoPrivate * d;
 
-    static QString extractIdentity( const QString& content );
+    static QString extractIdentity(const QString & content);
 };
 
 class NeoPreferredNetworkOperators : public QModemPreferredNetworkOperators
 {
     Q_OBJECT
 public:
-    explicit NeoPreferredNetworkOperators( QModemService *service );
+    explicit NeoPreferredNetworkOperators(QModemService * service);
     ~NeoPreferredNetworkOperators();
 };
 
- 
 #endif

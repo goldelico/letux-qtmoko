@@ -37,14 +37,14 @@
 
 static bool supportsStk = false;
 
-NeoCallProvider::NeoCallProvider( QModemService *service )
-    : QModemCallProvider( service )
+NeoCallProvider::NeoCallProvider(QModemService * service)
+:  QModemCallProvider(service)
 {
     modemService = service;
     service->primaryAtChat()->registerNotificationType
-        ( "%CPI:", this, SLOT(cpiNotification(QString)) );
+        ("%CPI:", this, SLOT(cpiNotification(QString)));
     service->primaryAtChat()->registerNotificationType
-        ( "%CNAP:", this, SLOT(cnapNotification(QString)) );
+        ("%CNAP:", this, SLOT(cnapNotification(QString)));
     setUseMissedTimer(false);
     setUseDetectTimer(false);
 }
@@ -53,7 +53,7 @@ NeoCallProvider::~NeoCallProvider()
 {
 }
 
-QModemCallProvider::AtdBehavior NeoCallProvider::atdBehavior() const
+QModemCallProvider::AtdBehavior NeoCallProvider::atdBehavior()const
 {
     // When ATD reports OK or NO CARRIER, it indicates that it is
     // back in command mode. We just want to ignore these in QModemCall
@@ -61,24 +61,24 @@ QModemCallProvider::AtdBehavior NeoCallProvider::atdBehavior() const
     return AtdOkIgnore;
 }
 
-void NeoCallProvider::abortDial( uint id, QPhoneCall::Scope scope )
+void NeoCallProvider::abortDial(uint id, QPhoneCall::Scope scope)
 {
     // Use the ATH command to abort outgoing calls, instead of AT+CHLD=1.
     //atchat()->chat( "ATH" );
 
     // Use default behaviour of CR followed by AT+CHLD - seems to work better.
-    QModemCallProvider::abortDial( id, scope );
+    QModemCallProvider::abortDial(id, scope);
 }
 
-QString NeoCallProvider::acceptCallCommand( bool otherActiveCalls ) const
+QString NeoCallProvider::acceptCallCommand(bool otherActiveCalls) const
 {
     // do undocumented echo cancellation and noise reduction
-    modemService->primaryAtChat()->chat( "AT@ST=\"-26\"" );
-    modemService->primaryAtChat()->chat( "AT%N0187" );
-    return QModemCallProvider::acceptCallCommand( otherActiveCalls );
+    modemService->primaryAtChat()->chat("AT@ST=\"-26\"");
+    modemService->primaryAtChat()->chat("AT%N0187");
+    return QModemCallProvider::acceptCallCommand(otherActiveCalls);
 }
 
-void NeoCallProvider::cpiNotification( const QString& msg )
+void NeoCallProvider::cpiNotification(const QString & msg)
 {
     // Call progress notification for the NEO device.
     // %CPI: <id>,<msgType>,<ibt>,<tch>,<dir>,<mode>,<number>,<ton>,<alpha>
@@ -89,105 +89,105 @@ void NeoCallProvider::cpiNotification( const QString& msg )
     // dir: 0 = mobile originated, 1 = mobile terminated, 2 = network initiaited mobile
     // originated call, 3 = redialing mobile originated
     uint posn = 5;
-    uint identifier = QAtUtils::parseNumber( msg, posn );
+    uint identifier = QAtUtils::parseNumber(msg, posn);
 
-    uint status = QAtUtils::parseNumber( msg, posn );
-    QAtUtils::skipField( msg, posn );
-    QAtUtils::skipField( msg, posn );
-    uint direction = QAtUtils::parseNumber( msg, posn );
-    QModemCall *call = callForIdentifier( identifier );
+    uint status = QAtUtils::parseNumber(msg, posn);
+    QAtUtils::skipField(msg, posn);
+    QAtUtils::skipField(msg, posn);
+    uint direction = QAtUtils::parseNumber(msg, posn);
+    QModemCall *call = callForIdentifier(identifier);
 
-    if ( status == 6 && call &&
-         ( call->state() == QPhoneCall::Dialing ||
-           call->state() == QPhoneCall::Alerting ) ) {
+    if (status == 6 && call &&
+        (call->state() == QPhoneCall::Dialing ||
+         call->state() == QPhoneCall::Alerting)) {
 
         // This is an indication that a "Dialing" connection
         // is now in the "Connected" state.
         call->setConnected();
 
-    } else if ( ( status == 1 || status == 7 ) && call &&
-                ( call->state() == QPhoneCall::Dialing ||
-                  call->state() == QPhoneCall::Alerting ) ) {
+    } else if ((status == 1 || status == 7) && call &&
+               (call->state() == QPhoneCall::Dialing ||
+                call->state() == QPhoneCall::Alerting)) {
 
         // We never managed to connect.
-        hangupRemote( call );
+        hangupRemote(call);
 
-    } else if ( status == 2 && call &&
-                call->state() == QPhoneCall::Dialing ) {
+    } else if (status == 2 && call && call->state() == QPhoneCall::Dialing) {
 
         // Call is moving from Dialing to Alerting.
-        call->setState( QPhoneCall::Alerting );
+        call->setState(QPhoneCall::Alerting);
 
-    } else if ( ( status == 1 || status == 7 ) && call &&
-                ( call->state() == QPhoneCall::Connected ||
-                  call->state() == QPhoneCall::Hold ) ) {
+    } else if ((status == 1 || status == 7) && call &&
+               (call->state() == QPhoneCall::Connected ||
+                call->state() == QPhoneCall::Hold)) {
 
         // This is an indication that the connection has been lost.
-        hangupRemote( call );
+        hangupRemote(call);
 
-    } else if ( ( status == 1 || status == 7 ) && call &&
-                call->state() == QPhoneCall::Incoming ) {
+    } else if ((status == 1 || status == 7) && call &&
+               call->state() == QPhoneCall::Incoming) {
 
         // This is an indication that an incoming call was missed.
-        call->setState( QPhoneCall::Missed );
+        call->setState(QPhoneCall::Missed);
 
-    } else if ( ( status == 2 || status == 4 || status == 0) && !call && direction == 1) {
+    } else if ((status == 2 || status == 4 || status == 0) && !call
+               && direction == 1) {
         // only for incoming calls
         // if you make an outgoing call, these states can occur, but
         // we don't want an aborted outgoing call to be registered as missed
         // therefore we use the direction parameter
 
         // This is a newly waiting call.  Treat it the same as "RING".
-        uint mode = QAtUtils::parseNumber( msg, posn );
+        uint mode = QAtUtils::parseNumber(msg, posn);
         QString callType;
-        if ( mode == 1 || mode == 6 || mode == 7 )
+        if (mode == 1 || mode == 6 || mode == 7)
             callType = "Data";  // No tr
-        else if ( mode == 2 || mode == 8 )
+        else if (mode == 2 || mode == 8)
             callType = "Fax";   // No tr
         else
             callType = "Voice"; // No tr
-        QString number = QAtUtils::nextString( msg, posn );
-        uint type = QAtUtils::parseNumber( msg, posn );
-        ringing( QAtUtils::decodeNumber( number, type ), callType, identifier );
+        QString number = QAtUtils::nextString(msg, posn);
+        uint type = QAtUtils::parseNumber(msg, posn);
+        ringing(QAtUtils::decodeNumber(number, type), callType, identifier);
 
-	// We got everything we need, indicate the call to the outside world
-	announceCall();
+        // We got everything we need, indicate the call to the outside world
+        announceCall();
     }
 }
 
-void NeoCallProvider::cnapNotification( const QString& msg )
+void NeoCallProvider::cnapNotification(const QString & msg)
 {
     // Calling name presentation from the network.
     uint posn = 6;
-    QAtUtils::skipField( msg, posn );	    // pres_mode
-    QAtUtils::skipField( msg, posn );	    // dcs
-    QAtUtils::skipField( msg, posn );	    // name_length
-    QString name = QAtUtils::nextString( msg, posn );
+    QAtUtils::skipField(msg, posn); // pres_mode
+    QAtUtils::skipField(msg, posn); // dcs
+    QAtUtils::skipField(msg, posn); // name_length
+    QString name = QAtUtils::nextString(msg, posn);
     QModemCall *call = incomingCall();
-    if ( call )
-        call->emitNotification( QPhoneCall::CallingName, name );
+    if (call)
+        call->emitNotification(QPhoneCall::CallingName, name);
 }
 
-QString NeoCallProvider::dialVoiceCommand(const QDialOptions& options) const
+QString NeoCallProvider::dialVoiceCommand(const QDialOptions & options) const
 {
     // do undocumented echo cancellation and noise reduction
-    modemService->primaryAtChat()->chat( "AT@ST=\"-26\"" );
-    modemService->primaryAtChat()->chat( "AT%N0187" );
+    modemService->primaryAtChat()->chat("AT@ST=\"-26\"");
+    modemService->primaryAtChat()->chat("AT%N0187");
     return QModemCallProvider::dialVoiceCommand(options);
 }
 
-NeoSimToolkit::NeoSimToolkit( QModemService *service )
-    : QModemSimToolkit( service )
+NeoSimToolkit::NeoSimToolkit(QModemService * service)
+:  QModemSimToolkit(service)
 {
     supportsStk = false;
-    lastCommand.setType( QSimCommand::NoCommand );
+    lastCommand.setType(QSimCommand::NoCommand);
     mainMenu = lastCommand;
     lastResponseWasExit = false;
 
     service->primaryAtChat()->registerNotificationType
-        ( "%SATA:", this, SLOT(sataNotification(QString)) );
+        ("%SATA:", this, SLOT(sataNotification(QString)));
     service->primaryAtChat()->registerNotificationType
-	( "%SATN:", this, SLOT(satnNotification(QString)) );
+        ("%SATN:", this, SLOT(satnNotification(QString)));
 }
 
 NeoSimToolkit::~NeoSimToolkit()
@@ -203,69 +203,68 @@ void NeoSimToolkit::initialize()
 
 void NeoSimToolkit::begin()
 {
-    if ( !supportsStk ) {
+    if (!supportsStk) {
 
-	// SIM toolkit functionality is not available.
-	emit beginFailed();
+        // SIM toolkit functionality is not available.
+        emit beginFailed();
 
-    } else if ( lastCommand.type() == QSimCommand::SetupMenu ) {
+    } else if (lastCommand.type() == QSimCommand::SetupMenu) {
 
-	// We just fetched the main menu, so return what we fetched.
-	emit command( lastCommand );
+        // We just fetched the main menu, so return what we fetched.
+        emit command(lastCommand);
 
-    } else if ( mainMenu.type() == QSimCommand::SetupMenu ) {
+    } else if (mainMenu.type() == QSimCommand::SetupMenu) {
 
-	// We have a cached main menu from a previous invocation.
-	lastCommand = mainMenu;
-	lastCommandBytes = mainMenuBytes;
-	emit command( mainMenu );
+        // We have a cached main menu from a previous invocation.
+        lastCommand = mainMenu;
+        lastCommandBytes = mainMenuBytes;
+        emit command(mainMenu);
 
     } else {
 
-	// The SIM toolkit is in an unknown state, so we cannot proceed.
-	// If the NEO could perform a proper STK reset, we might have
-	// been able to do something.
-	emit beginFailed();
+        // The SIM toolkit is in an unknown state, so we cannot proceed.
+        // If the NEO could perform a proper STK reset, we might have
+        // been able to do something.
+        emit beginFailed();
 
     }
 }
 
-void NeoSimToolkit::sendResponse( const QSimTerminalResponse& resp )
+void NeoSimToolkit::sendResponse(const QSimTerminalResponse & resp)
 {
-    if ( resp.command().type() == QSimCommand::SelectItem &&
-         resp.result() == QSimTerminalResponse::BackwardMove ) {
+    if (resp.command().type() == QSimCommand::SelectItem &&
+        resp.result() == QSimTerminalResponse::BackwardMove) {
         lastResponseWasExit = true;
     } else {
         lastResponseWasExit = false;
     }
     service()->primaryAtChat()->chat
-        ( "AT%SATR=\"" + QAtUtils::toHex( resp.toPdu() ) + "\"" );
+        ("AT%SATR=\"" + QAtUtils::toHex(resp.toPdu()) + "\"");
 }
 
-void NeoSimToolkit::sendEnvelope( const QSimEnvelope& env )
+void NeoSimToolkit::sendEnvelope(const QSimEnvelope & env)
 {
     service()->primaryAtChat()->chat
-        ( "AT%SATE=\"" + QAtUtils::toHex( env.toPdu() ) + "\"" );
+        ("AT%SATE=\"" + QAtUtils::toHex(env.toPdu()) + "\"");
 }
 
-void NeoSimToolkit::sataNotification( const QString& msg )
+void NeoSimToolkit::sataNotification(const QString & msg)
 {
     // SIM toolkit command indication.
-    QByteArray bytes = QAtUtils::fromHex( msg.mid(6) );
-    if ( bytes.size() > 0 ) {
+    QByteArray bytes = QAtUtils::fromHex(msg.mid(6));
+    if (bytes.size() > 0) {
 
         lastCommandBytes = bytes;
-        lastCommand = QSimCommand::fromPdu( bytes );
-        if ( lastCommand.type() == QSimCommand::SetupMenu ) {
+        lastCommand = QSimCommand::fromPdu(bytes);
+        if (lastCommand.type() == QSimCommand::SetupMenu) {
             // Cache the main menu, because we won't get it again!
             mainMenuBytes = bytes;
             mainMenu = lastCommand;
         }
-        qLog(AtChat)<< "SIM command of type" << (int)(lastCommand.type());
-        emitCommandAndRespond( lastCommand );
+        qLog(AtChat) << "SIM command of type" << (int)(lastCommand.type());
+        emitCommandAndRespond(lastCommand);
 
-    } else if ( lastResponseWasExit &&
-                mainMenu.type() == QSimCommand::SetupMenu ) {
+    } else if (lastResponseWasExit && mainMenu.type() == QSimCommand::SetupMenu) {
 
         // We exited from a submenu and we got an empty "%SATA"
         // response.  This is the NEO's way of telling us that we
@@ -273,13 +272,14 @@ void NeoSimToolkit::sataNotification( const QString& msg )
         // better if the NEO resent the menu to us itself.
         lastCommandBytes = mainMenuBytes;
         lastCommand = mainMenu;
-        qLog(AtChat)<< "Simulating SIM command of type"<< (int)(lastCommand.type());
-        emit command( lastCommand );
+        qLog(AtChat) << "Simulating SIM command of type" << (int)(lastCommand.
+                                                                  type());
+        emit command(lastCommand);
 
     }
 }
 
-void NeoSimToolkit::satnNotification( const QString& )
+void NeoSimToolkit::satnNotification(const QString &)
 {
     // Nothing to do here at present.  Just ignore the %SATN notifications.
 }
@@ -296,25 +296,23 @@ void NeoCallProvider::resetModem()
 {
     // We don't want RING, CRING, CLIP, COLP, COWA  but callNotification
     // disable all of these and do not call the base class
-    atchat()->chat( "AT+CRC=0" );
-    service()->retryChat( "AT+CLIP=0" );
-    service()->retryChat( "AT+COLP=0" );
-    service()->retryChat( "AT+CCWA=1" );
+    atchat()->chat("AT+CRC=0");
+    service()->retryChat("AT+CLIP=0");
+    service()->retryChat("AT+COLP=0");
+    service()->retryChat("AT+CCWA=1");
 }
 
-NeoPhoneBook::NeoPhoneBook( QModemService *service )
-    : QModemPhoneBook( service ),
-      m_phoneBookIsReady( false ),
-      m_smsIsReady( false )
+NeoPhoneBook::NeoPhoneBook(QModemService * service)
+:  QModemPhoneBook(service), m_phoneBookIsReady(false), m_smsIsReady(false)
 {
     this->service = service;
-    qLog(AtChat)<<"NeoPhoneBook::NeoPhoneBook";
+    qLog(AtChat) << "NeoPhoneBook::NeoPhoneBook";
     // Turn on status notification messages for finding out when
     // the phone book is ready to use.
 
     service->primaryAtChat()->registerNotificationType
-        ( "%CSTAT:", this, SLOT(cstatNotification(QString)) );
-    service->primaryAtChat()->chat( "AT%CSTAT=1" );
+        ("%CSTAT:", this, SLOT(cstatNotification(QString)));
+    service->primaryAtChat()->chat("AT%CSTAT=1");
 }
 
 NeoPhoneBook::~NeoPhoneBook()
@@ -331,9 +329,9 @@ bool NeoPhoneBook::hasEmptyPhoneBookIndex() const
     return true;
 }
 
-void NeoPhoneBook::cstatNotification( const QString& msg )
+void NeoPhoneBook::cstatNotification(const QString & msg)
 {
-    QString entity = msg.mid( 8, 3);
+    QString entity = msg.mid(8, 3);
 
 //    bool phonebkOk = false;
 //    bool smsOk = false;
@@ -354,15 +352,15 @@ void NeoPhoneBook::cstatNotification( const QString& msg )
         m_phoneBookIsReady = true;
     }
 
-    if  (m_smsIsReady && m_phoneBookIsReady) {
+    if (m_smsIsReady && m_phoneBookIsReady) {
         qLog(Modem) << __PRETTY_FUNCTION__ << "simready";
         this->service->post("simready");
         phoneBooksReady();
     }
 }
 
-NeoPinManager::NeoPinManager( QModemService *service )
-    : QModemPinManager( service )
+NeoPinManager::NeoPinManager(QModemService * service)
+:  QModemPinManager(service)
 {
 }
 
@@ -375,26 +373,26 @@ bool NeoPinManager::emptyPinIsReady() const
     return true;
 }
 
-
 // Known bands, by mask.
 typedef struct
 {
     const char *name;
-    int         value;
+    int value;
 
 } BandInfo;
 static BandInfo const bandInfo[] = {
-    {"GSM 900",             1},
-    {"DCS 1800",            2},
-    {"PCS 1900",            4},
-    {"E-GSM",               8},
-    {"GSM 850",             16},
+    {"GSM 900", 1},
+    {"DCS 1800", 2},
+    {"PCS 1900", 4},
+    {"E-GSM", 8},
+    {"GSM 850", 16},
     {"Tripleband 900/1800/1900", 15},
 };
+
 #define numBands    ((int)(sizeof(bandInfo) / sizeof(BandInfo)))
 
-NeoBandSelection::NeoBandSelection( QModemService *service )
-    : QBandSelection( service->service(), service, Server )
+NeoBandSelection::NeoBandSelection(QModemService * service)
+:  QBandSelection(service->service(), service, Server)
 {
     this->service = service;
 }
@@ -406,7 +404,7 @@ NeoBandSelection::~NeoBandSelection()
 void NeoBandSelection::requestBand()
 {
     service->primaryAtChat()->chat
-        ( "AT%BAND?", this, SLOT(bandQuery(bool,QAtResult)) );
+        ("AT%BAND?", this, SLOT(bandQuery(bool, QAtResult)));
 }
 
 void NeoBandSelection::requestBands()
@@ -418,77 +416,76 @@ void NeoBandSelection::requestBands()
 //     emit bands( list );
 
     service->primaryAtChat()->chat
-        ( "AT%BAND=?", this, SLOT(bandList(bool,QAtResult)) );
+        ("AT%BAND=?", this, SLOT(bandList(bool, QAtResult)));
 }
 
-void NeoBandSelection::setBand( QBandSelection::BandMode mode, const QString& value )
+void NeoBandSelection::setBand(QBandSelection::BandMode mode,
+                               const QString & value)
 {
-    if ( mode == Automatic ) {
+    if (mode == Automatic) {
         service->primaryAtChat()->chat
-            ( "AT%BAND=0", this, SLOT(bandSet(bool,QAtResult)) );
+            ("AT%BAND=0", this, SLOT(bandSet(bool, QAtResult)));
     } else {
         int bandValue = 0;
         QStringList names = value.split(", ");
-        foreach ( QString name, names ) {
+        foreach(QString name, names) {
             bool seen = false;
-            for ( int index = 0; index < numBands; ++index ) {
-                if ( name == bandInfo[index].name ) {
+            for (int index = 0; index < numBands; ++index) {
+                if (name == bandInfo[index].name) {
                     bandValue |= bandInfo[index].value;
                     seen = true;
                     break;
                 }
             }
-            if ( !seen ) {
+            if (!seen) {
                 // The band name is not valid.
-                emit setBandResult( QTelephony::OperationNotSupported );
+                emit setBandResult(QTelephony::OperationNotSupported);
                 return;
             }
         }
-        if ( !bandValue ) {
+        if (!bandValue) {
             // No band names supplied.
-            emit setBandResult( QTelephony::OperationNotSupported );
+            emit setBandResult(QTelephony::OperationNotSupported);
             return;
         }
         service->primaryAtChat()->chat
-            ( "AT%BAND=1," + QString::number( bandValue ),
-              this, SLOT(bandSet(bool,QAtResult)) );
+            ("AT%BAND=1," + QString::number(bandValue),
+             this, SLOT(bandSet(bool, QAtResult)));
     }
 }
 
 // Convert a band value into a name.  Returns an empty list if unknown.
-static QStringList bandValueToName( int bandValue )
+static QStringList bandValueToName(int bandValue)
 {
     QStringList bands;
-    for ( int index = 0; index < numBands; ++index ) {
-        if ( ( bandValue & bandInfo[index].value ) == bandInfo[index].value ) {
+    for (int index = 0; index < numBands; ++index) {
+        if ((bandValue & bandInfo[index].value) == bandInfo[index].value) {
             bandValue &= ~bandInfo[index].value;
-            bands += QString( bandInfo[index].name );
+            bands += QString(bandInfo[index].name);
         }
     }
     return bands;
 }
 
-void NeoBandSelection::bandQuery( bool, const QAtResult& result )
+void NeoBandSelection::bandQuery(bool, const QAtResult & result)
 {
 
-    QAtResultParser parser( result );
+    QAtResultParser parser(result);
     int bandValue;
-        qLog(Modem)<<"bandQuery";
-    if ( parser.next( "%BAND:" ) ) {
+    qLog(Modem) << "bandQuery";
+    if (parser.next("%BAND:")) {
         bandValue = (int)parser.readNumeric();
     } else {
         // Command did not work, so assume "Auto".
         bandValue = 4;
     }
-    for ( int index = 0; index < numBands; ++index ) {
-        if ( bandValue == bandInfo[index].value ) {
-            emit band( Manual, bandInfo[index].name );
+    for (int index = 0; index < numBands; ++index) {
+        if (bandValue == bandInfo[index].value) {
+            emit band(Manual, bandInfo[index].name);
             return;
         }
     }
-    emit band( Automatic, QString() );
-
-
+    emit band(Automatic, QString());
 
 //     QAtResultParser parser( result );
 //     int bandValue;
@@ -509,46 +506,46 @@ void NeoBandSelection::bandQuery( bool, const QAtResult& result )
 
 }
 
-void NeoBandSelection::bandList( bool, const QAtResult& result )
+void NeoBandSelection::bandList(bool, const QAtResult & result)
 {
-    QAtResultParser parser( result );
+    QAtResultParser parser(result);
     QStringList bandNames;
-    if ( parser.next( "%BAND:" ) ) {
+    if (parser.next("%BAND:")) {
 
-        parser.readList();  // Skip list of supported modes.
-        QList<QAtResultParser::Node> list = parser.readList();
-        foreach ( QAtResultParser::Node node, list ) {
+        parser.readList();      // Skip list of supported modes.
+        QList < QAtResultParser::Node > list = parser.readList();
+        foreach(QAtResultParser::Node node, list) {
 
-            if ( node.isNumber() ) {
-                bandNames += bandValueToName( (int)node.asNumber() );
-                qLog(Modem)<<  (int)node.asNumber();
-            } else if ( node.isRange() ) {
+            if (node.isNumber()) {
+                bandNames += bandValueToName((int)node.asNumber());
+                qLog(Modem) << (int)node.asNumber();
+            } else if (node.isRange()) {
                 int first = (int)node.asFirst();
                 int last = (int)node.asLast();
-                qLog(Modem)<<"isRange"<<first<<last;
-                while ( first <= last ) {
-                    qLog(Modem)<< bandValueToName( first ) << first;
-                    bandNames += bandValueToName( first ).join(" | ");
+                qLog(Modem) << "isRange" << first << last;
+                while (first <= last) {
+                    qLog(Modem) << bandValueToName(first) << first;
+                    bandNames += bandValueToName(first).join(" | ");
                     ++first;
                 }
             }
         }
     }
-     emit bands( bandNames );
+    emit bands(bandNames);
 }
 
-void NeoBandSelection::bandSet( bool, const QAtResult& result )
+void NeoBandSelection::bandSet(bool, const QAtResult & result)
 {
-    emit setBandResult( (QTelephony::Result)result.resultCode() );
+    emit setBandResult((QTelephony::Result) result.resultCode());
 }
 
 NeoModemService::NeoModemService
-        ( const QString& service, QSerialIODeviceMultiplexer *mux,
-          QObject *parent )
-    : QModemService( service, mux, parent )
+    (const QString & service, QSerialIODeviceMultiplexer * mux,
+     QObject * parent)
+:QModemService(service, mux, parent)
 {
     qDebug() << "======================================================";
-    
+
     //connect( this, SIGNAL(resetModem()), this, SLOT(reset()) );
     // Register a wakeup command to ping the modem if we haven't
     // sent anything during the last 5 seconds.  This command may
@@ -559,10 +556,9 @@ NeoModemService::NeoModemService
     // Turn on dynamic signal quality notifications.
     // Register for "%CSQ" notifications to get signal quality updates.
 //    primaryAtChat()->registerNotificationType
-        //( "%CSQ:", this, SLOT(csq(QString)) );
+    //( "%CSQ:", this, SLOT(csq(QString)) );
 //    chat("AT%CSQ=1");
 //    QTimer::singleShot( 2500, this, SLOT(firstCsqQuery()) );
-
 
     // Turn on SIM toolkit support in the modem.  This must be done
     // very early in the process, to ensure that it happens before
@@ -581,7 +577,7 @@ NeoModemService::NeoModemService
 
     // Enable the reporting of timezone and local time information.
     //primaryAtChat()->registerNotificationType
-        //( "%CTZV:", this, SLOT(ctzu(QString)), true );
+    //( "%CTZV:", this, SLOT(ctzu(QString)), true );
     //chat( "AT%CTZV=1" );
 
     // Turn on call progress indications, with phone number information.
@@ -590,14 +586,14 @@ NeoModemService::NeoModemService
     //  chat("AT%CMGRS=1"); //message transmission to get any failed sms during suspend
 
     //QTimer::singleShot(200, this, SLOT(sendRego()));
-    
+
     // Turn on dynamic signal quality notifications.
     // Register for "_OSIGQ" notifications to get signal quality updates.
     primaryAtChat()->registerNotificationType
-        ( "_OSIGQ:", this, SLOT(sigq(QString)) );
-    chat("AT_OSQI=1");           // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
+        ("_OSIGQ:", this, SLOT(sigq(QString)));
+    chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
 
-    chat("AT_OPCMENABLE=1");     // enable the PCM interface for voice calls
+    chat("AT_OPCMENABLE=1");    // enable the PCM interface for voice calls
 }
 
 NeoModemService::~NeoModemService()
@@ -610,62 +606,61 @@ void NeoModemService::sendRego()
     //begin really ugky hack
     QSettings cfg("Trolltech", "PhoneProfile");
     cfg.beginGroup("Profiles");
-    if( !cfg.value("PlaneMode",false).toBool()) {
+    if (!cfg.value("PlaneMode", false).toBool()) {
         //       chat("AT%NRG=0,0"); //force auto operations
-        chat("AT+COPS=0"); //force auto operations
+        chat("AT+COPS=0");      //force auto operations
     }
 }
 
 void NeoModemService::initialize()
 {
-    suppressInterface<QCellBroadcast>();        // disable this, GTA04 modem probably does not know AT+CSCB commands
-    
+    suppressInterface < QCellBroadcast > ();    // disable this, GTA04 modem probably does not know AT+CSCB commands
+
 #if 0
-    if ( !supports<QSimToolkit>() )
-        addInterface( new NeoSimToolkit( this ) );
+    if (!supports < QSimToolkit > ())
+        addInterface(new NeoSimToolkit(this));
 #endif
 
-    if ( !supports<QPinManager>() )
-        addInterface( new NeoPinManager( this ) );
+    if (!supports < QPinManager > ())
+        addInterface(new NeoPinManager(this));
 
-    if ( !supports<QPhoneBook>() )
-        addInterface( new NeoPhoneBook( this ) );
+    if (!supports < QPhoneBook > ())
+        addInterface(new NeoPhoneBook(this));
 
+    if (!supports < QBandSelection > ())
+        addInterface(new NeoBandSelection(this));
 
-    if ( !supports<QBandSelection>() )
-        addInterface( new NeoBandSelection( this ) );
+    if (!supports < QSimInfo > ())
+        addInterface(new NeoSimInfo(this));
 
-    if ( !supports<QSimInfo>() )
-        addInterface( new NeoSimInfo( this ) );
+    if (!callProvider())
+        setCallProvider(new NeoCallProvider(this));
 
-    if ( !callProvider() )
-        setCallProvider( new NeoCallProvider( this ) );
+    if (!supports < QVibrateAccessory > ())
+        addInterface(new NeoVibrateAccessory(this));
 
-   if ( !supports<QVibrateAccessory>() )
-        addInterface( new NeoVibrateAccessory( this ) );
+    if (!supports < QServiceNumbers > ())
+        addInterface(new NeoServiceNumbers(this));
 
-   if ( !supports<QServiceNumbers>() )
-        addInterface( new NeoServiceNumbers( this ) );
+    if (!supports < QCallVolume > ())
+        addInterface(new NeoCallVolume(this));
 
-    if ( !supports<QCallVolume>() )
-        addInterface( new NeoCallVolume(this));
-
-    if ( !supports<QPreferredNetworkOperators>() )
-        addInterface( new NeoPreferredNetworkOperators(this));
+    if (!supports < QPreferredNetworkOperators > ())
+        addInterface(new NeoPreferredNetworkOperators(this));
 
 //    if ( ! supports <QModemNetworkRegistration>())
 //        addInterface( new NeoModemNetworkRegistration(this));
 
-   QModemService::initialize();
+    QModemService::initialize();
 }
 
-void NeoModemService::sigq( const QString& msg )
+void NeoModemService::sigq(const QString & msg)
 {
     // Automatic signal quality update, in the range 0-31, e.g. _OSIGQ: 7,0
-    if ( msg.contains( QChar(',') ) ) {
+    if (msg.contains(QChar(','))) {
         uint posn = 8;
-        uint rssi = QAtUtils::parseNumber( msg, posn );
-        indicators()->setSignalQuality( (int)rssi, 31 );
+        uint rssi = QAtUtils::parseNumber(msg, posn);
+        indicators()->setSignalQuality((int)rssi, 31);
     }
 }
 
@@ -675,10 +670,10 @@ void NeoModemService::firstCsqQuery()
     // respond with a +CSQ notification.  This is needed to shut
     // off AT+CSQ polling in qmodemindicators.cpp when the modem is
     // quiet and not sending periodic +CSQ notifications at startup.
-    chat( "AT%CSQ?" );
+    chat("AT%CSQ?");
 }
 
-void NeoModemService::ctzu( const QString& msg )
+void NeoModemService::ctzu(const QString & msg)
 {
     // Timezone information from the network.  Format is "yy/mm/dd,hh:mm:ss+/-tz".
     // There is no dst indicator according to the spec, but we parse an extra
@@ -686,16 +681,16 @@ void NeoModemService::ctzu( const QString& msg )
     // If there is no extra argument, the default value of zero will be used.
     uint posn = 7;
     qLog(Modem) << __PRETTY_FUNCTION__ << msg;
-    QString time = QAtUtils::nextString( msg, posn );
-    int dst = ((int)QAtUtils::parseNumber( msg, posn )) * 60;
+    QString time = QAtUtils::nextString(msg, posn);
+    int dst = ((int)QAtUtils::parseNumber(msg, posn)) * 60;
     int zoneIndex = time.length();
-    while ( zoneIndex > 0 && time[zoneIndex - 1] != QChar('-') &&
-            time[zoneIndex - 1] != QChar('+') )
+    while (zoneIndex > 0 && time[zoneIndex - 1] != QChar('-') &&
+           time[zoneIndex - 1] != QChar('+'))
         --zoneIndex;
     int zoneOffset;
-    if ( zoneIndex > 0 && time[zoneIndex - 1] == QChar('-') ) {
+    if (zoneIndex > 0 && time[zoneIndex - 1] == QChar('-')) {
         zoneOffset = time.mid(zoneIndex - 1).toInt() * 15;
-    } else if ( zoneIndex > 0 && time[zoneIndex - 1] == QChar('+') ) {
+    } else if (zoneIndex > 0 && time[zoneIndex - 1] == QChar('+')) {
         zoneOffset = time.mid(zoneIndex).toInt() * 15;
     } else {
         // Unknown timezone information.
@@ -708,26 +703,26 @@ void NeoModemService::ctzu( const QString& msg )
         timeString = time;
     QDateTime t = QDateTime::fromString(timeString, "yy/MM/dd,HH:mm:ss");
     if (!t.isValid())
-        t = QDateTime::fromString(timeString, "yyyy/MM/dd,HH:mm:ss"); // Just in case.
+        t = QDateTime::fromString(timeString, "yyyy/MM/dd,HH:mm:ss");   // Just in case.
     QDateTime utc = QDateTime(t.date(), t.time(), Qt::UTC);
     utc = utc.addSecs(-zoneOffset * 60);
-    indicators()->setNetworkTime( utc.toTime_t(), zoneOffset, dst );
+    indicators()->setNetworkTime(utc.toTime_t(), zoneOffset, dst);
 }
 
-void NeoModemService::configureDone( bool ok )
+void NeoModemService::configureDone(bool ok)
 {
     supportsStk = ok;
 }
 
 void NeoModemService::reset()
 {
-    qLog(Modem)<<" NeoModemService::reset()";
+    qLog(Modem) << " NeoModemService::reset()";
     chat("AT%CWUP=1");
     chat("ATE0");
 
     // Turn on "%CNAP" notifications, which supply the caller's
     // name on an call.  Only supported on some networks.
-    chat( "AT%CNAP=1" );
+    chat("AT%CNAP=1");
 }
 
 void NeoModemService::sendSuspendDone()
@@ -737,7 +732,7 @@ void NeoModemService::sendSuspendDone()
 
 void NeoModemService::suspend()
 {
-    qLog(Modem)<<" NeoModemService::suspend()";
+    qLog(Modem) << " NeoModemService::suspend()";
     // Turn off cell id information on +CREG and +CGREG as it will
     // cause unnecessary wakeups when moving between cells.
 
@@ -756,21 +751,21 @@ void NeoModemService::suspend()
     chat("AT%CBHZ=0");
 
 //     // Turn off signal quality notifications while the system is suspended.
-     chat( "AT%CSQ=0", this, SLOT(mcsqOff()) );
+    chat("AT%CSQ=0", this, SLOT(mcsqOff()));
 }
 
 void NeoModemService::wake()
 {
-    qLog(Modem)<<" NeoModemService::wake()";
+    qLog(Modem) << " NeoModemService::wake()";
 
     chat("ATE0");
     // Turn cell id information back on.
-    chat( "AT+CREG=2" );
-    chat( "AT+CGREG=2" );
+    chat("AT+CREG=2");
+    chat("AT+CGREG=2");
 
-     // Turn on timezone notifications again.
-    chat( "AT+CTZR=1" );
-    chat( "AT%CTZU=1" );
+    // Turn on timezone notifications again.
+    chat("AT+CTZR=1");
+    chat("AT%CTZU=1");
 
     chat("AT+CSCB=1");
 
@@ -783,12 +778,12 @@ void NeoModemService::wake()
     // Turn on dynamic signal quality notifications.
 
     // Re-enable signal quality notifications when the system wakes up again.
-    chat( "AT%CSQ=1", this, SLOT(mcsqOn()) );
+    chat("AT%CSQ=1", this, SLOT(mcsqOn()));
 }
 
 void NeoModemService::mcsqOff()
 {
-    QTimer::singleShot( 500, this, SLOT(sendSuspendDone()) );
+    QTimer::singleShot(500, this, SLOT(sendSuspendDone()));
 }
 
 void NeoModemService::mcsqOn()
@@ -796,61 +791,63 @@ void NeoModemService::mcsqOn()
     wakeDone();
 }
 
-
- NeoVibrateAccessory::NeoVibrateAccessory
-        ( QModemService *service )
-    : QVibrateAccessoryProvider( service->service(), service )
+NeoVibrateAccessory::NeoVibrateAccessory(QModemService * service)
+:  QVibrateAccessoryProvider(service->service(), service)
 {
-    setSupportsVibrateOnRing( true );
-    setSupportsVibrateNow( false );
+    setSupportsVibrateOnRing(true);
+    setSupportsVibrateNow(false);
 }
 
 NeoVibrateAccessory::~NeoVibrateAccessory()
 {
 }
 
-void NeoVibrateAccessory::setVibrateOnRing( const bool value )
+void NeoVibrateAccessory::setVibrateOnRing(const bool value)
 {
-    qLog(Modem)<<"setVibrateOnRing "<<value;
+    qLog(Modem) << "setVibrateOnRing " << value;
     setVibrateNow(value);
 }
 
-void NeoVibrateAccessory::setVibrateNow( const bool value )
+void NeoVibrateAccessory::setVibrateNow(const bool value)
 {
-    qLog(Modem)<<"setVibrateNow "<<value;
+    qLog(Modem) << "setVibrateNow " << value;
     QString vibFile("/sys/class/leds/gta02::vibrator");
-    if ( value ) { //turn on
-        QFile trigger( vibFile + "/trigger");
-        trigger.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    if (value) {                //turn on
+        QFile trigger(vibFile + "/trigger");
+        trigger.
+            open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         QTextStream out(&trigger);
-        out<<"timer";
+        out << "timer";
         trigger.close();
 
-        QFile delayOn( vibFile + "/delay_on");
-        delayOn.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+        QFile delayOn(vibFile + "/delay_on");
+        delayOn.
+            open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         QTextStream out1(&delayOn);
-        out1<<"500";
+        out1 << "500";
         delayOn.close();
 
         QFile delayOff(vibFile + "/delay_off");
-        delayOff.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+        delayOff.
+            open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         QTextStream out2(&delayOff);
-        out2<<"1000";
+        out2 << "1000";
         delayOff.close();
 
-    } else { //turn off
-        QFile trigger( vibFile + "/trigger");
-        trigger.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
+    } else {                    //turn off
+        QFile trigger(vibFile + "/trigger");
+        trigger.
+            open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
         QTextStream out(&trigger);
-        out<<"none";
+        out << "none";
         trigger.close();
     }
 
-    QVibrateAccessoryProvider::setVibrateNow( value );
+    QVibrateAccessoryProvider::setVibrateNow(value);
 }
 
-NeoServiceNumbers::NeoServiceNumbers( QModemService *service )
-    : QModemServiceNumbers( service )
+NeoServiceNumbers::NeoServiceNumbers(QModemService * service)
+:  QModemServiceNumbers(service)
 {
     this->service = service;
 }
@@ -859,48 +856,45 @@ NeoServiceNumbers::~NeoServiceNumbers()
 {
 }
 
-void NeoServiceNumbers::requestServiceNumber
-        ( QServiceNumbers::NumberId id )
+void NeoServiceNumbers::requestServiceNumber(QServiceNumbers::NumberId id)
 {
-    if ( id == QServiceNumbers::VoiceMail ) {
-        QModemServiceNumbers::requestServiceNumberFromFile( id );
+    if (id == QServiceNumbers::VoiceMail) {
+        QModemServiceNumbers::requestServiceNumberFromFile(id);
     } else {
-        QModemServiceNumbers::requestServiceNumber( id );
+        QModemServiceNumbers::requestServiceNumber(id);
     }
 }
 
 void NeoServiceNumbers::setServiceNumber
-        ( QServiceNumbers::NumberId id, const QString& number )
+    (QServiceNumbers::NumberId id, const QString & number)
 {
-    if ( id == QServiceNumbers::VoiceMail ) {
-        QModemServiceNumbers::setServiceNumberInFile( id, number );
+    if (id == QServiceNumbers::VoiceMail) {
+        QModemServiceNumbers::setServiceNumberInFile(id, number);
     } else {
-        QModemServiceNumbers::setServiceNumber( id, number );
+        QModemServiceNumbers::setServiceNumber(id, number);
     }
 }
 
-NeoCallVolume::NeoCallVolume(NeoModemService *service)
-    : QModemCallVolume(service)
+NeoCallVolume::NeoCallVolume(NeoModemService * service)
+:  QModemCallVolume(service)
 {
-   this->service = service;
+    this->service = service;
 
-
-    QtopiaIpcAdaptor *adaptor
-            = new QtopiaIpcAdaptor( "QPE/NeoModem", this );
+    QtopiaIpcAdaptor *adaptor = new QtopiaIpcAdaptor("QPE/NeoModem", this);
 
     QtopiaIpcAdaptor::connect
-            ( adaptor, MESSAGE(setSpeakerVolumeRange(int, int)),
-              this, SLOT(setSpeakerVolumeRange(int,int)) );
+        (adaptor, MESSAGE(setSpeakerVolumeRange(int, int)),
+         this, SLOT(setSpeakerVolumeRange(int, int)));
     QtopiaIpcAdaptor::connect
-            ( adaptor, MESSAGE(setMicVolumeRange(int, int)),
-              this, SLOT(setMicVolumeRange(int,int)) );
+        (adaptor, MESSAGE(setMicVolumeRange(int, int)),
+         this, SLOT(setMicVolumeRange(int, int)));
 
     QtopiaIpcAdaptor::connect
-            ( adaptor, MESSAGE(setOutputVolume(int)),
-              this, SLOT(setSpeakerVolume(int)) );
+        (adaptor, MESSAGE(setOutputVolume(int)),
+         this, SLOT(setSpeakerVolume(int)));
     QtopiaIpcAdaptor::connect
-            ( adaptor, MESSAGE(setMicVolume(int)),
-              this, SLOT(setMicrophoneVolume(int)) );
+        (adaptor, MESSAGE(setMicVolume(int)),
+         this, SLOT(setMicrophoneVolume(int)));
 
 }
 
@@ -914,37 +908,35 @@ bool NeoCallVolume::hasDelayedInit() const
     return true;
 }
 
-void NeoCallVolume::setSpeakerVolume( int volume )
+void NeoCallVolume::setSpeakerVolume(int volume)
 {
     int boundedVolume = qBound(value("MinimumSpeakerVolume").toInt(), volume,
                                value("MaximumSpeakerVolume").toInt());
 
-    setValue( "SpeakerVolume", boundedVolume );
+    setValue("SpeakerVolume", boundedVolume);
     emit speakerVolumeChanged(boundedVolume);
 }
 
-void NeoCallVolume::setMicrophoneVolume( int volume )
+void NeoCallVolume::setMicrophoneVolume(int volume)
 {
     int boundedVolume = qBound(value("MinimumMicrophoneVolume").toInt(), volume,
                                value("MaximumMicrophoneVolume").toInt());
 
-    setValue( "MicrophoneVolume", boundedVolume );
+    setValue("MicrophoneVolume", boundedVolume);
     emit microphoneVolumeChanged(boundedVolume);
 }
 
-
-void NeoCallVolume::setSpeakerVolumeRange(int min,int max)
+void NeoCallVolume::setSpeakerVolumeRange(int min, int max)
 {
-    setValue( "MinimumSpeakerVolume", min );
-    setValue( "MaximumSpeakerVolume", max );
+    setValue("MinimumSpeakerVolume", min);
+    setValue("MaximumSpeakerVolume", max);
 }
 
-void NeoCallVolume::setMicVolumeRange(int min,int max)
+void NeoCallVolume::setMicVolumeRange(int min, int max)
 {
-    setValue( "MinimumMicrophoneVolume", min );
-    setValue( "MaximumMicrophoneVolume", max );
+    setValue("MinimumMicrophoneVolume", min);
+    setValue("MaximumMicrophoneVolume", max);
 }
-
 
 // Number of milliseconds between polling attempts on AT+CIMI command.
 #ifndef CIMI_TIMEOUT
@@ -954,29 +946,30 @@ void NeoCallVolume::setMicVolumeRange(int min,int max)
 class NeoSimInfoPrivate
 {
 public:
-    NeoModemService *service;
+    NeoModemService * service;
     QTimer *checkTimer;
     int count;
     bool simPinRequired;
 };
 
-NeoSimInfo::NeoSimInfo( NeoModemService *service )
-    : QSimInfo( service->service(), service, QCommInterface::Server )
+NeoSimInfo::NeoSimInfo(NeoModemService * service)
+:  QSimInfo(service->service(), service, QCommInterface::Server)
 {
     d = new NeoSimInfoPrivate();
     d->service = service;
-    d->checkTimer = new QTimer( this );
-    d->checkTimer->setSingleShot( true );
-    connect( d->checkTimer, SIGNAL(timeout()), this, SLOT(requestIdentity()) );
+    d->checkTimer = new QTimer(this);
+    d->checkTimer->setSingleShot(true);
+    connect(d->checkTimer, SIGNAL(timeout()), this, SLOT(requestIdentity()));
     d->count = 0;
     d->simPinRequired = false;
 
     // Perform an initial AT+CIMI request to get the SIM identity.
-    QTimer::singleShot( 0, this, SLOT(requestIdentity()) );
+    QTimer::singleShot(0, this, SLOT(requestIdentity()));
 
     // Hook onto the posted event of the service to determine
     // the current sim pin status
-    connect( service, SIGNAL(posted(QString)), this, SLOT(serviceItemPosted(QString)) );
+    connect(service, SIGNAL(posted(QString)), this,
+            SLOT(serviceItemPosted(QString)));
 }
 
 NeoSimInfo::~NeoSimInfo()
@@ -986,60 +979,60 @@ NeoSimInfo::~NeoSimInfo()
 
 void NeoSimInfo::simInserted()
 {
-    if ( !d->checkTimer->isActive() )
+    if (!d->checkTimer->isActive())
         requestIdentity();
 }
 
 void NeoSimInfo::simRemoved()
 {
-    setIdentity( QString() );
+    setIdentity(QString());
 }
 
 void NeoSimInfo::requestIdentity()
 {
     d->service->primaryAtChat()->chat
-        ( "AT+CIMI", this, SLOT(cimi(bool,QAtResult)) );
+        ("AT+CIMI", this, SLOT(cimi(bool, QAtResult)));
 }
 
-void NeoSimInfo::cimi( bool ok, const QAtResult& result )
+void NeoSimInfo::cimi(bool ok, const QAtResult & result)
 {
-    QString id = extractIdentity( result.content().trimmed() );
+    QString id = extractIdentity(result.content().trimmed());
 
     qLog(Modem) << __PRETTY_FUNCTION__ << id;
 
-    if ( ok && !id.isEmpty() ) {
+    if (ok && !id.isEmpty()) {
         // We have a valid SIM identity.
-        setIdentity( id );
+        setIdentity(id);
     } else {
         // No SIM identity, so poll again in a few seconds for the first two minutes.
-        setIdentity( QString() );
+        setIdentity(QString());
 
-        if ( d->count < 120000/CIMI_TIMEOUT ) {
-            d->checkTimer->start( CIMI_TIMEOUT );
+        if (d->count < 120000 / CIMI_TIMEOUT) {
+            d->checkTimer->start(CIMI_TIMEOUT);
             d->count++;
         } else {
             d->count = 0;
             // If not waiting for SIM pin to be entered by the user
-            if ( !d->simPinRequired ) {
+            if (!d->simPinRequired) {
                 // post a message to modem service to stop SIM PIN polling
-                d->service->post( "simnotinserted" );
+                d->service->post("simnotinserted");
                 emit notInserted();
             }
         }
         // If we got a definite "not inserted" or "sim failure" error,
         // then emit notInserted().
-        qLog(Modem) << __PRETTY_FUNCTION__ <<  result.resultCode();
-        if ( result.resultCode() == QAtResult::SimNotInserted
-          || result.resultCode() == QAtResult::SimFailure)
+        qLog(Modem) << __PRETTY_FUNCTION__ << result.resultCode();
+        if (result.resultCode() == QAtResult::SimNotInserted
+            || result.resultCode() == QAtResult::SimFailure)
             emit notInserted();
     }
 }
 
-void NeoSimInfo::serviceItemPosted( const QString &item )
+void NeoSimInfo::serviceItemPosted(const QString & item)
 {
-    if ( item == "simpinrequired" )
+    if (item == "simpinrequired")
         d->simPinRequired = true;
-    else if ( item == "simpinentered" )
+    else if (item == "simpinentered")
         d->simPinRequired = false;
 }
 
@@ -1047,30 +1040,30 @@ void NeoSimInfo::serviceItemPosted( const QString &item )
 // It is possible that we got multiple lines, including some unsolicited
 // notifications from the modem that are not yet recognised.  Skip over
 // such garbage and find the actual identity.
-QString NeoSimInfo::extractIdentity( const QString& content )
+QString NeoSimInfo::extractIdentity(const QString & content)
 {
-    QStringList lines = content.split( QChar('\n') );
-    foreach ( QString line, lines ) {
-        if ( line.length() > 0 ) {
+    QStringList lines = content.split(QChar('\n'));
+    foreach(QString line, lines) {
+        if (line.length() > 0) {
             uint ch = line[0].unicode();
-            if ( ch >= '0' && ch <= '9' )
+            if (ch >= '0' && ch <= '9')
                 return line;
         }
     }
     return QString();
 }
 
-NeoPreferredNetworkOperators::NeoPreferredNetworkOperators( QModemService *service )
-    : QModemPreferredNetworkOperators( service )
+NeoPreferredNetworkOperators::NeoPreferredNetworkOperators(QModemService *
+                                                           service)
+:  QModemPreferredNetworkOperators(service)
 {
     // We have to delete an entry before we can write operator details into it.
-    setDeleteBeforeUpdate( true );
+    setDeleteBeforeUpdate(true);
 
     // Quote operator numbers when modifying preferred operator entries.
-    setQuoteOperatorNumber( true );
+    setQuoteOperatorNumber(true);
 }
 
 NeoPreferredNetworkOperators::~NeoPreferredNetworkOperators()
 {
 }
-
