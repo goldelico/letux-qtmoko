@@ -280,8 +280,6 @@ void QModemIndicators::csq( bool ok, const QAtResult& result )
     // Result of polling for signal quality.
     QAtResultParser parser( result );
     if ( ok && parser.next( "+CSQ:" ) ) {
-        setSignalQualityInternal( (int)parser.readNumeric(), 31 );
-
         // when modem responds with a signal level of 99, this means
         // not known or undetectable. We need to handle this
         int rssi = parser.readNumeric();
