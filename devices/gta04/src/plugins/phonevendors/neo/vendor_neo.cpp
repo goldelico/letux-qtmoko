@@ -33,6 +33,7 @@
 
 #include <qmodemcallvolume.h>
 #include <qmodemsiminfo.h>
+#include <qmodemcellbroadcast.h>
 
 static bool supportsStk = false;
 
@@ -546,19 +547,21 @@ NeoModemService::NeoModemService
           QObject *parent )
     : QModemService( service, mux, parent )
 {
-    connect( this, SIGNAL(resetModem()), this, SLOT(reset()) );
+    qDebug() << "======================================================";
+    
+    //connect( this, SIGNAL(resetModem()), this, SLOT(reset()) );
     // Register a wakeup command to ping the modem if we haven't
     // sent anything during the last 5 seconds.  This command may
     // not get a response, but the modem should then become responsive
     // to the next command that is sent afterwards.
-    primaryAtChat()->registerWakeupCommand( QChar(0x1a), 5000 );
+    //primaryAtChat()->registerWakeupCommand( QChar(0x1a), 5000 );
 
     // Turn on dynamic signal quality notifications.
     // Register for "%CSQ" notifications to get signal quality updates.
-    primaryAtChat()->registerNotificationType
-        ( "%CSQ:", this, SLOT(csq(QString)) );
-    chat("AT%CSQ=1");
-    QTimer::singleShot( 2500, this, SLOT(firstCsqQuery()) );
+//    primaryAtChat()->registerNotificationType
+        //( "%CSQ:", this, SLOT(csq(QString)) );
+//    chat("AT%CSQ=1");
+//    QTimer::singleShot( 2500, this, SLOT(firstCsqQuery()) );
 
 
     // Turn on SIM toolkit support in the modem.  This must be done
@@ -574,34 +577,27 @@ NeoModemService::NeoModemService
     // Make the modem send unsolicited reports at any time
     // the "user is not typing".  i.e. don't intersperse unsolicited
     // notifications and command echo as it will confuse QAtChat.
-    chat( "AT%CUNS=1" );
+    //chat( "AT%CUNS=1" );
 
     // Enable the reporting of timezone and local time information.
-    primaryAtChat()->registerNotificationType
-        ( "%CTZV:", this, SLOT(ctzu(QString)), true );
-    chat( "AT%CTZV=1" );
+    //primaryAtChat()->registerNotificationType
+        //( "%CTZV:", this, SLOT(ctzu(QString)), true );
+    //chat( "AT%CTZV=1" );
 
     // Turn on call progress indications, with phone number information.
-    chat( "AT%CPI=2" );
+    //chat( "AT%CPI=2" );
 
     //  chat("AT%CMGRS=1"); //message transmission to get any failed sms during suspend
 
-    QString deepsleep="adaptive";
-    QSettings cfg("Trolltech", "Modem");
-    cfg.beginGroup("DeepSleep");
-    deepsleep = cfg.value("Active",deepsleep).toString();
-    qLog(Modem) << "DeepSleep value:" << deepsleep;
+    //QTimer::singleShot(200, this, SLOT(sendRego()));
+    
+    // Turn on dynamic signal quality notifications.
+    // Register for "_OSIGQ" notifications to get signal quality updates.
+    primaryAtChat()->registerNotificationType
+        ( "_OSIGQ:", this, SLOT(sigq(QString)) );
+    chat("AT_OSQI=1");           // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
 
-    if (deepsleep == "never")
-        chat("AT%SLEEP=2"); 
-    else 
-        chat("AT%SLEEP=4");
-
-    // Turn cell id information back on.
-    chat( "AT+CREG=2" );
-    chat( "AT+CGREG=2" );
-
-    QTimer::singleShot(200, this, SLOT(sendRego()));
+    chat("AT_OPCMENABLE=1");     // enable the PCM interface for voice calls
 }
 
 NeoModemService::~NeoModemService()
@@ -622,6 +618,8 @@ void NeoModemService::sendRego()
 
 void NeoModemService::initialize()
 {
+    suppressInterface<QCellBroadcast>();        // disable this, GTA04 modem probably does not know AT+CSCB commands
+    
 #if 0
     if ( !supports<QSimToolkit>() )
         addInterface( new NeoSimToolkit( this ) );
@@ -661,11 +659,11 @@ void NeoModemService::initialize()
    QModemService::initialize();
 }
 
-void NeoModemService::csq( const QString& msg )
+void NeoModemService::sigq( const QString& msg )
 {
-    // Automatic signal quality update, in the range 0-31.
+    // Automatic signal quality update, in the range 0-31, e.g. _OSIGQ: 7,0
     if ( msg.contains( QChar(',') ) ) {
-        uint posn = 6;
+        uint posn = 8;
         uint rssi = QAtUtils::parseNumber( msg, posn );
         indicators()->setSignalQuality( (int)rssi, 31 );
     }

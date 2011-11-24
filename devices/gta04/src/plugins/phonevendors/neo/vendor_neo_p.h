@@ -164,7 +164,7 @@ private:
     QModemNetworkRegistration *neoNetRego;
 
 private slots:
-    void csq( const QString& msg );
+    void sigq( const QString& msg );
     void firstCsqQuery();
 
     void ctzu( const QString& msg );
