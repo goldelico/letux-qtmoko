@@ -459,6 +459,10 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this, SLOT(processFinished(int, QProcess::ExitStatus)));
     process->setProcessChannelMode(QProcess::ForwardedChannels);
+
+    // Remove QtMoko LD_LIBRARY_PATH so that X11-QT programs work ok
+    unsetenv("LD_LIBRARY_PATH");
+
     process->start(filename, NULL);
 
     if(!process->waitForStarted())

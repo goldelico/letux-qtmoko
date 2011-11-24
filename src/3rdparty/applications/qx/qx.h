@@ -38,6 +38,7 @@
 #include "wm.h"
 #include <unistd.h>
 #include <fcntl.h>
+#include <stdlib.h>
 #include <linux/vt.h>
 #include <sys/ioctl.h>
 #include <X11/Xlib.h>
