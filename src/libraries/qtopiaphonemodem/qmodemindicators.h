@@ -54,6 +54,8 @@ public slots:
     void setSmsMemoryFull( QModemIndicators::SmsMemoryFullStatus value );
     void setNetworkTimeZone( int zone, int dst );
     void setNetworkTime( uint time, int zone, int dst );
+    void setPolling( bool pollForSignalQuality, bool pollForSignalQualityOnce,
+                     bool pollForBatteryCharge );
 
 private slots:
     void resetModem();

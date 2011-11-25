@@ -91,6 +91,7 @@ public:
         this->signalQualityUnsolicited = false;
         this->batteryChargeUnsolicited = false;
         this->pollForSignalQuality = true;
+        this->pollForSignalQualityOnce = false;
         this->pollForBatteryCharge = true;
     }
 
@@ -99,6 +100,7 @@ public:
     bool signalQualityUnsolicited;
     bool batteryChargeUnsolicited;
     bool pollForSignalQuality;
+    bool pollForSignalQualityOnce;
     bool pollForBatteryCharge;
     QList<QString> indicators;
     QSignalSourceProvider* signalProvider;
@@ -143,6 +145,27 @@ QModemIndicators::QModemIndicators( QModemService *service )
 QModemIndicators::~QModemIndicators()
 {
     delete d;
+}
+
+/*!
+    Allows to manually disable/enable polling for signal quality and
+    battery charge.
+
+    By default polling is enabled, but modems which support unsolicited
+    reports might want to disable this feature.
+    
+    Setting first three params to false will completely stop polling.
+    Setting \a pollForSignalQualityOnce to true will poll signal quality
+    just once and then disable signal polling. This is useful for initial
+    signal check and leaving rest on unsolicited signal reports.
+*/
+void QModemIndicators::setPolling( bool pollForSignalQuality,
+                                   bool pollForSignalQualityOnce,
+                                   bool pollForBatteryCharge )
+{
+    d->pollForSignalQuality = pollForSignalQuality;
+    d->pollForSignalQualityOnce = pollForSignalQualityOnce;
+    d->pollForBatteryCharge = pollForBatteryCharge;
 }
 
 /*!
@@ -454,15 +477,18 @@ void QModemIndicators::setBatteryChargeInternal
 
 void QModemIndicators::pollSignalQuality()
 {
-    if ( d->pollForSignalQuality ) {
+    if ( d->pollForSignalQuality || d->pollForSignalQualityOnce ) {
         d->service->primaryAtChat()->chat
             ( "AT+CSQ", this, SLOT(csq(bool,QAtResult)) );
+    }
+    if ( d->pollForSignalQualityOnce ) {
+        d->pollForSignalQualityOnce = d->pollForSignalQuality = false;
     }
 }
 
 void QModemIndicators::pollBatteryCharge()
 {
-    if ( d->pollForBatteryCharge ) {
+    if ( d->pollForBatteryCharge) {
         d->service->primaryAtChat()->chat
             ( "AT+CBC", this, SLOT(cbc(bool,QAtResult)) );
     }
