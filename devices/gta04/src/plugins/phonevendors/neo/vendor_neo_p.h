@@ -2,7 +2,7 @@
 **
 ** This file is part of the Qt Extended Opensource Package.
 **
-** Copyright (C) 2009 Trolltech ASA.
+** Copyright (C) 2011 Radek Polak <psonek2@seznam.cz>
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -37,116 +37,16 @@
 
 #include <alsa/asoundlib.h>
 
-class NeoCallProvider : public QModemCallProvider
+class Gta04ModemIndicators : public QModemIndicators
 {
     Q_OBJECT
 public:
-    NeoCallProvider(QModemService * service);
-    ~NeoCallProvider();
+    Gta04ModemIndicators(QModemService * service);
+    ~Gta04ModemIndicators();
 
-protected:
-    QModemCallProvider::AtdBehavior atdBehavior() const;
-    void abortDial(uint modemIdentifier, QPhoneCall::Scope scope);
+private slots:
     void resetModem();
-    QString acceptCallCommand(bool otherActiveCalls) const;
-    QModemService *modemService;
-    QString dialVoiceCommand(const QDialOptions & options) const;
-
-private slots:
-    void cpiNotification(const QString & msg);
-    void cnapNotification(const QString & msg);
 };
-
-class NeoSimToolkit : public QModemSimToolkit
-{
-    Q_OBJECT
-public:
-    NeoSimToolkit(QModemService * service);
-    ~NeoSimToolkit();
-
-public slots:
-    void initialize();
-    void begin();
-    void sendResponse(const QSimTerminalResponse & resp);
-    void sendEnvelope(const QSimEnvelope & env);
-
-private slots:
-    void sataNotification(const QString & msg);
-    void satnNotification(const QString & msg);
-
-private:
-     QSimCommand lastCommand;
-    QByteArray lastCommandBytes;
-    QSimCommand mainMenu;
-    QByteArray mainMenuBytes;
-    bool lastResponseWasExit;
-};
-
-class NeoPhoneBook : public QModemPhoneBook
-{
-    Q_OBJECT
-public:
-    NeoPhoneBook(QModemService * service);
-    ~NeoPhoneBook();
-
-protected:
-    bool hasModemPhoneBookCache() const;
-    bool hasEmptyPhoneBookIndex() const;
-
-private slots:
-    void cstatNotification(const QString & msg);
-
-private:
-     bool m_phoneBookIsReady;
-    bool m_smsIsReady;
-    QModemService *service;
-};
-
-class NeoPinManager : public QModemPinManager
-{
-    Q_OBJECT
-public:
-    NeoPinManager(QModemService * service);
-    ~NeoPinManager();
-
-protected:
-    bool emptyPinIsReady() const;
-};
-
-class NeoBandSelection : public QBandSelection
-{
-    Q_OBJECT
-public:
-    NeoBandSelection(QModemService * service);
-    ~NeoBandSelection();
-
-public slots:
-    void requestBand();
-    void requestBands();
-    void setBand(QBandSelection::BandMode mode, const QString & value);
-
-private slots:
-    void bandQuery(bool ok, const QAtResult & result);
-    void bandList(bool ok, const QAtResult & result);
-    void bandSet(bool ok, const QAtResult & result);
-
-private:
-     QModemService * service;
-};
-
-/*
- class NeoModemNetworkRegistration : public QModemNetworkRegistration
- {
-         Q_OBJECT
-             public:
-     explicit NeoModemNetworkRegistration( QModemService *service );
-
- protected:
-      virtual QString setCurrentOperatorCommand
-          ( QTelephony::OperatorMode mode, const QString& id,
-            const QString& technology );
- };
-*/
 
 class NeoModemService : public QModemService
 {
@@ -159,103 +59,11 @@ public:
 
     void initialize();
 
-private:
-//    NeoModemNetworkRegistration *neoNetRego;
-     QModemNetworkRegistration * neoNetRego;
-
 private slots:
     void sigq(const QString & msg);
-    void firstCsqQuery();
-
-    void ctzu(const QString & msg);
-    void configureDone(bool ok);
     void reset();
     void suspend();
     void wake();
-    void sendSuspendDone();
-    void mcsqOff();
-    void mcsqOn();
-    void sendRego();
-};
-
-class NeoVibrateAccessory : public QVibrateAccessoryProvider
-{
-    Q_OBJECT
-public:
-    NeoVibrateAccessory(QModemService * service);
-    ~NeoVibrateAccessory();
-
-public slots:
-    void setVibrateNow(const bool value);
-    void setVibrateOnRing(const bool value);
-};
-
-class NeoServiceNumbers : public QModemServiceNumbers
-{
-    Q_OBJECT
-public:
-    NeoServiceNumbers(QModemService * service);
-    ~NeoServiceNumbers();
-
-public slots:
-    void requestServiceNumber(QServiceNumbers::NumberId id);
-    void setServiceNumber(QServiceNumbers::NumberId id, const QString & number);
-
-private:
-     QModemService * service;
-};
-
-class NeoCallVolume : public QModemCallVolume
-{
-    Q_OBJECT
-public:
-    explicit NeoCallVolume(NeoModemService * service);
-    ~NeoCallVolume();
-
-public slots:
-    void setSpeakerVolume(int volume);
-    void setMicrophoneVolume(int volume);
-    void setSpeakerVolumeRange(int, int);
-    void setMicVolumeRange(int, int);
-
-protected:
-     bool hasDelayedInit() const;
-
-private:
-     NeoModemService * service;
-    bool regoSent;
-};
-
-class NeoSimInfoPrivate;
-
-class NeoSimInfo : public QSimInfo
-{
-    Q_OBJECT
-public:
-    NeoSimInfo(NeoModemService * service);
-    ~NeoSimInfo();
-
-protected slots:
-    void simInserted();
-    void simRemoved();
-
-private slots:
-    void requestIdentity();
-    void cimi(bool ok, const QAtResult & result);
-    void serviceItemPosted(const QString & item);
-
-private:
-     NeoSimInfoPrivate * d;
-
-    static QString extractIdentity(const QString & content);
-};
-
-class NeoPreferredNetworkOperators : public QModemPreferredNetworkOperators
-{
-    Q_OBJECT
-public:
-    explicit NeoPreferredNetworkOperators(QModemService * service);
-    ~NeoPreferredNetworkOperators();
 };
 
 #endif
