@@ -714,3 +714,8 @@ void QModemService::stkInitDone()
     // STK init is done, so we can reset the modem now.
     emit resetModem();
 }
+
+bool QModemService::supportsAtCced()
+{
+    return true;
+}

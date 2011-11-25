@@ -35,19 +35,6 @@
 #include <qmodemsiminfo.h>
 #include <qmodemcellbroadcast.h>
 
-Gta04ModemIndicators::Gta04ModemIndicators(QModemService * service)
-: QModemIndicators(service)
-{
-}
-
-Gta04ModemIndicators::~Gta04ModemIndicators()
-{
-}
-
-Gta04ModemIndicators::resetModem()
-{
-}
-
 NeoModemService::NeoModemService
     (const QString & service, QSerialIODeviceMultiplexer * mux,
      QObject * parent)
@@ -73,9 +60,6 @@ void NeoModemService::initialize()
     // Disable cell broadcast, GTA04 modem probably does not know AT+CSCB commands
     suppressInterface < QCellBroadcast > ();
 
-    if ( !supports<QPhoneRfFunctionality>() )
-        addInterface( new Gta04ModemIndicators( this ) );
-    
     QModemService::initialize();
 
     // Disable signal and battery polling, just do initial signal check
@@ -103,4 +87,9 @@ void NeoModemService::suspend()
 void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
+}
+
+bool NeoModemService::supportsAtCced()
+{
+    return false;
 }

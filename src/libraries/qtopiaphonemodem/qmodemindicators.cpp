@@ -291,7 +291,9 @@ void QModemIndicators::resetModem()
 {
     // Turn on automatic signal quality updates, if supported.
     // The updates will be reported via unsolicited "+CSQ:" notifications.
-    d->service->primaryAtChat()->chat( "AT+CCED=1,8" );
+    if(d->service->supportsAtCced()) {
+        d->service->primaryAtChat()->chat( "AT+CCED=1,8" );
+    }
 
     // Ask the modem what indicators it supports.
     d->service->primaryAtChat()->chat

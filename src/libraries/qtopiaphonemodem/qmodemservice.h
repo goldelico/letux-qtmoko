@@ -64,6 +64,7 @@ public:
         ( const QString& item, QObject *target, const char *slot );
 
     QModemIndicators *indicators() const;
+    virtual bool supportsAtCced();      // does modem support AT+CCED command?
 
 protected slots:
     virtual void needSms();

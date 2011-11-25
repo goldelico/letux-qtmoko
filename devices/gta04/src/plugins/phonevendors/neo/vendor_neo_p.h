@@ -37,17 +37,6 @@
 
 #include <alsa/asoundlib.h>
 
-class Gta04ModemIndicators : public QModemIndicators
-{
-    Q_OBJECT
-public:
-    Gta04ModemIndicators(QModemService * service);
-    ~Gta04ModemIndicators();
-
-private slots:
-    void resetModem();
-};
-
 class NeoModemService : public QModemService
 {
     Q_OBJECT
@@ -58,7 +47,8 @@ public:
     ~NeoModemService();
 
     void initialize();
-
+    bool supportsAtCced();
+    
 private slots:
     void sigq(const QString & msg);
     void reset();
