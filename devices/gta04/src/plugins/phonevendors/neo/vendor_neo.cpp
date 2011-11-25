@@ -652,6 +652,9 @@ void NeoModemService::initialize()
 //        addInterface( new NeoModemNetworkRegistration(this));
 
     QModemService::initialize();
+    
+    // Set battery state to avoid AT+CBC polling
+    indicators()->setBatteryCharge(100, -1, QModemIndicators::PoweredByBattery);
 }
 
 void NeoModemService::sigq(const QString & msg)
