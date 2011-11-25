@@ -129,7 +129,7 @@ QModemIndicators::QModemIndicators( QModemService *service )
 
     QTimer::singleShot( SIGNAL_QUALITY_TIMEOUT,
                         this, SLOT(pollSignalQuality()) );
-    pollBatteryCharge(); //poll now to get first update immediately
+
     QTimer::singleShot( BATTERY_CHARGE_TIMEOUT,
                         this, SLOT(pollBatteryCharge()) );
 
