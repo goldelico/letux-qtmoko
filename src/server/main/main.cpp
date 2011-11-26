@@ -59,6 +59,7 @@ QSXE_APP_KEY
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <unistd.h>
+#include <ftw.h>
 
 #include <QValueSpaceItem>
 #include <QKeyEvent>
@@ -493,6 +494,21 @@ static void check_prefix()
     }
 }
 
+static int unlink_cb(const char *fpath, const struct stat *, int, struct FTW *)
+{
+    int rv = remove(fpath);
+
+    if (rv)
+        perror(fpath);
+
+    return rv;
+}
+
+static int rmrf(const char *path)
+{
+    return nftw(path, unlink_cb, 64, FTW_DEPTH | FTW_PHYS);
+}
+
 #ifdef SINGLE_EXEC
 #include "../tools/quicklauncher/quicklaunch.h"
 int main_quicklaunch( int argc, char **argv );
@@ -535,6 +551,10 @@ int main( int argc, char ** argv )
     restartMarker.open( QIODevice::Append | QIODevice::Truncate );
     restartMarker.close();
 
+    // Delete tmp dir in case that we preivously crashed. This is needed so
+    // that e.g. local sockets can be created again
+    rmrf(Qtopia::tempDir().toLocal8Bit().constData());
+    
     int retVal = initApplication( argc, argv );
     // Have we been asked to restart?
     if(!(QtopiaServerApplication::shutdownType() == QtopiaServerApplication::RestartDesktop)) {
