@@ -140,6 +140,10 @@ static bool amixerSet(QStringList & args)
 {
     qLog(AudioState) << "amixer set " << args;
 
+    if(!qLogEnabled(AudioState))
+    {
+        args.insert(0, "-q");           // make it quiet if audio state logging disabled
+    }
     args.insert(0, "set");
     int ret = QProcess::execute("amixer", args);
     if (ret != 0) {
