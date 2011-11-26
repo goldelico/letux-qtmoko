@@ -140,10 +140,7 @@ static bool amixerSet(QStringList & args)
 {
     qLog(AudioState) << "amixer set " << args;
 
-    if(!qLogEnabled(AudioState))
-    {
-        args.insert(0, "-q");           // make it quiet if audio state logging disabled
-    }
+    args.insert(0, "-q");           // make it quiet
     args.insert(0, "set");
     int ret = QProcess::execute("amixer", args);
     if (ret != 0) {
@@ -194,13 +191,17 @@ private:
 HandsfreeAudioState::HandsfreeAudioState(bool isPhone, QObject * parent):
 QAudioState(parent), m_isPhone(isPhone)
 {
-    qLog(AudioState) << "HandsfreeAudioState::HandsfreeAudioState() " <<
-        m_isPhone;
-
-    m_info.setDomain("Media");
-    m_info.setProfile("MediaSpeaker");
-    m_info.setDisplayName(tr("Stereo Speaker"));
-    m_info.setPriority(150);
+    if (isPhone) {
+        m_info.setDomain("Phone");
+        m_info.setProfile("PhoneSpeaker");
+        m_info.setPriority(150);
+        
+    } else {
+        m_info.setDomain("Media");
+        m_info.setProfile("MediaSpeaker");
+        m_info.setPriority(100);
+    }
+    m_info.setDisplayName(tr("Speaker"));
 }
 
 QAudioStateInfo HandsfreeAudioState::info() const
@@ -210,7 +211,7 @@ QAudioStateInfo HandsfreeAudioState::info() const
 
 QAudio::AudioCapabilities HandsfreeAudioState::capabilities()const
 {
-    return QAudio::InputOnly | QAudio::OutputOnly;
+    return QAudio::OutputOnly;
 }
 
 bool HandsfreeAudioState::isAvailable() const
@@ -255,19 +256,21 @@ public:
 private:
     QAudioStateInfo m_info;
     bool m_isPhone;
-
 };
-///Hardware/Accessories/PortableHandsfree"
+
 EarpieceAudioState::EarpieceAudioState(bool isPhone, QObject * parent):
 QAudioState(parent), m_isPhone(isPhone)
 {
-    qLog(AudioState) << "EarpieceAudioState" << isPhone;
-
-    m_info.setDomain("Phone");
-    m_info.setProfile("PhoneSpeaker");
-    m_info.setDisplayName(tr("Handset"));
-
-    m_info.setPriority(50);
+    if(isPhone) {
+        m_info.setDomain("Phone");
+        m_info.setProfile("PhoneEarpiece");
+        m_info.setPriority(100);
+    } else {
+        m_info.setDomain("Media");
+        m_info.setProfile("MediaEarpiece");
+        m_info.setPriority(150);
+    }
+    m_info.setDisplayName(tr("Earpiece"));
 }
 
 QAudioStateInfo EarpieceAudioState::info() const
@@ -277,7 +280,7 @@ QAudioStateInfo EarpieceAudioState::info() const
 
 QAudio::AudioCapabilities EarpieceAudioState::capabilities()const
 {
-    return QAudio::InputOnly | QAudio::OutputOnly;
+    return QAudio::OutputOnly;
 }
 
 bool EarpieceAudioState::isAvailable() const
@@ -326,18 +329,16 @@ private:
 HeadsetAudioState::HeadsetAudioState(bool isPhone, QObject * parent):
 QAudioState(parent), m_isPhone(isPhone)
 {
-    qLog(AudioState) << __PRETTY_FUNCTION__ << "isPhone" << m_isPhone;
-
     if (m_isPhone) {
         m_info.setDomain("Phone");
-        m_info.setProfile("Headphone");
+        m_info.setProfile("PhoneHeadset");
     } else {
         m_info.setDomain("Media");
-        m_info.setProfile("Headphone");
+        m_info.setProfile("MediaHeadset");
     }
 
     m_info.setDisplayName(tr("Headphones"));
-    m_info.setPriority(25);
+    m_info.setPriority(50);
 
     m_headset =
         new QValueSpaceItem("/Hardware/Accessories/PortableHandsfree/Present",
@@ -582,9 +583,11 @@ QAudioStatePlugin(parent)
 {
     m_data = new NeoAudioPluginPrivate;
 
-    m_data->m_states.push_back(new HandsfreeAudioState(this));
-    m_data->m_states.push_back(new EarpieceAudioState(this));
-    m_data->m_states.push_back(new HeadsetAudioState(this));
+    m_data->m_states.push_back(new HandsfreeAudioState(false, this));           // ringtones, mp3 etc..
+    m_data->m_states.push_back(new HandsfreeAudioState(true, this));            // loud gsm
+    m_data->m_states.push_back(new EarpieceAudioState(this));                   // default for gsm calls
+    m_data->m_states.push_back(new HeadsetAudioState(false, this));             // audio in headphones
+    m_data->m_states.push_back(new HeadsetAudioState(true, this));              // gsm in headphones
 
 #ifdef QTOPIA_BLUETOOTH
     // Can play media through bluetooth. Can record through bluetooth as well.
