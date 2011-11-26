@@ -294,7 +294,7 @@ bool EarpieceAudioState::enter(QAudio::AudioCapability)
 
     return amixerSet(QStringList() << "Earpiece" << "100%") &&
         amixerSet(QStringList() << "Earpiece Mixer AudioL2" << "on") &&
-        amixerSet(QStringList() << "Earpiece Mixer AudioR2" << "off") &&
+        //amixerSet(QStringList() << "Earpiece Mixer AudioR2" << "off") &&
         amixerSet(QStringList() << "Earpiece Mixer Voice" << "off");
 }
 
