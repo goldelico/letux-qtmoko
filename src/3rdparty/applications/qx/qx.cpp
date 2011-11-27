@@ -392,6 +392,15 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
 
     showScreen(QX::ScreenStarting);
 
+    // Ask to delete X temporary files - hack for recovering from crashed X
+    if(QFile::exists("/tmp/.X0-lock"))
+    {
+        if(QMessageBox::question(this, tr("QX"), tr("The X lock file exists (X is running), delete it and start new X server?"),
+                                                 QMessageBox::Yes | QMessageBox::No) == QMessageBox::Yes)
+        {
+            system("rm -rf /tmp/.X*");
+        }
+    }
     if(!QFile::exists("/tmp/.X0-lock"))
     {
         xprocess = new QProcess(this);
