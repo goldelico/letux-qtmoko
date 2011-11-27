@@ -13,6 +13,6 @@ SOURCES	        =  neoaudioplugin.cpp
 
 conf [
     hint=image
-    files=gta04_initial_alsa.state
+    files=*.state
     path=/etc/alsa
 ]

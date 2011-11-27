@@ -2,7 +2,7 @@
 **
 ** This file is part of the Qt Extended Opensource Package.
 **
-** Copyright (C) 2009 Trolltech ASA.
+** Copyright (C) 2011 Radek Polak <psonek2@seznam.cz>
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -128,13 +128,21 @@ arecord | tee record.wav | aplay
 
 */
 
-enum Gta04AudioScenario
-{
-    Scenario_Handsfree,         // stereo output from internal GTA04 speaker + internal MIC
-    Scenario_Earpiece,          // default for GSM calls, ouput from earpiece + internal MIC
-    Scenario_Headset,           // external headphones
-    Scenario_GSMBluetooth,      // for gsm calls
-};
+// We support following scenarios:
+//     Handsfree: stereo output from internal GTA04 speaker + internal MIC
+//      Earpiece: default for GSM calls, ouput from earpiece + internal MIC
+//       Headset: external headphones
+//     Recording: for recording audio e.g. in voice notes app
+//  GSMBluetooth: for gsm calls over bluetooth
+//
+// The strategy is that we always start from default state which is state for
+// audio playback (Handsfree with phone=false).
+//
+// To make switching from default -> GSM we use amixer and toggle only minimum
+// switches needed.
+//
+// For setting e.g. recording state where speed does not matter that much we
+// restore the whole state file.
 
 static bool amixerSet(QStringList & args)
 {
@@ -158,6 +166,18 @@ static bool alsactl(QStringList & args)
         qWarning() << "alsactl returned " << ret;
     }
     return ret == 0;
+}
+
+static bool restoreState(QString stateFile)
+{
+    return alsactl(QStringList() << "-f" << "/opt/qtmoko/etc/alsa/" +
+                   stateFile << "restore");
+}
+
+// Initialise to default state (for audio playback with mic off)
+static bool restoreDefaultState()
+{
+    return restoreState("gta04_initial_alsa.state");
 }
 
 static bool writeToFile(const char *filename, const char *val, int len)
@@ -443,6 +463,61 @@ bool HeadsetAudioState::leave()
         amixerSet(QStringList() << "HeadsetR Mixer AudioR2" << "off");
 }
 
+// ========================================================================= //
+class RecordingAudioState : public QAudioState
+{
+    Q_OBJECT
+public:
+    RecordingAudioState(QObject * parent = 0);
+
+    QAudioStateInfo info() const;
+    QAudio::AudioCapabilities capabilities() const;
+
+    bool isAvailable() const;
+    bool enter(QAudio::AudioCapability capability);
+    bool leave();
+
+private:
+    QAudioStateInfo m_info;
+};
+
+RecordingAudioState::RecordingAudioState(QObject * parent):
+QAudioState(parent)
+{
+    m_info.setDomain("Media");
+    m_info.setProfile("Recording");
+    m_info.setDisplayName(tr("Recording"));
+    m_info.setPriority(150);
+}
+
+QAudioStateInfo RecordingAudioState::info() const
+{
+    return m_info;
+}
+
+QAudio::AudioCapabilities RecordingAudioState::capabilities()const
+{
+    return QAudio::InputOnly;
+}
+
+bool RecordingAudioState::isAvailable() const
+{
+    return true;
+}
+
+bool RecordingAudioState::enter(QAudio::AudioCapability capability)
+{
+    Q_UNUSED(capability)
+        qLog(AudioState) << "RecordingAudioState::enter()";
+    return restoreState("gta04_recording.state");
+}
+
+bool RecordingAudioState::leave()
+{
+    qLog(AudioState) << "RecordingAudioState::leave()";
+    return restoreDefaultState();
+}
+
 #ifdef QTOPIA_BLUETOOTH
 class BluetoothAudioState : public QAudioState
 {
@@ -630,16 +705,15 @@ QAudioStatePlugin(parent)
     m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
     m_data->m_states.push_back(new HeadsetAudioState(false, this)); // audio in headphones
     m_data->m_states.push_back(new HeadsetAudioState(true, this));  // gsm in headphones
-
+    m_data->m_states.push_back(new RecordingAudioState(this));  // for recording e.g. in voice notes app
 #ifdef QTOPIA_BLUETOOTH
     // Can play media through bluetooth. Can record through bluetooth as well.
     m_data->m_states.push_back(new BluetoothAudioState(false, this));
     m_data->m_states.push_back(new BluetoothAudioState(true, this));
 #endif
 
-    // Initialise to default state
-    alsactl(QStringList() << "-f" <<
-            "/opt/qtmoko/etc/alsa/gta04_initial_alsa.state" << "restore");
+    // Set default alsa state
+    restoreDefaultState();
 }
 
 NeoAudioPlugin::~NeoAudioPlugin()
