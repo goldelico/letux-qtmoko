@@ -140,11 +140,22 @@ static bool amixerSet(QStringList & args)
 {
     qLog(AudioState) << "amixer set " << args;
 
-    args.insert(0, "-q");           // make it quiet
+    args.insert(0, "-q");       // make it quiet
     args.insert(0, "set");
     int ret = QProcess::execute("amixer", args);
     if (ret != 0) {
         qWarning() << "amixer returned " << ret;
+    }
+    return ret == 0;
+}
+
+static bool alsactl(QStringList & args)
+{
+    qLog(AudioState) << "alsactl " << args;
+
+    int ret = QProcess::execute("alsactl", args);
+    if (ret != 0) {
+        qWarning() << "alsactl returned " << ret;
     }
     return ret == 0;
 }
@@ -195,7 +206,7 @@ QAudioState(parent), m_isPhone(isPhone)
         m_info.setDomain("Phone");
         m_info.setProfile("PhoneSpeaker");
         m_info.setPriority(150);
-        
+
     } else {
         m_info.setDomain("Media");
         m_info.setProfile("MediaSpeaker");
@@ -224,16 +235,32 @@ bool HandsfreeAudioState::enter(QAudio::AudioCapability)
     qLog(AudioState) << "HandsfreeAudioState::enter()" << "isPhone" <<
         m_isPhone;
 
-    return
+    bool ok = true;
+    if (m_isPhone) {
+        ok = amixerSet(QStringList() << "Analog Left Main Mic" << "cap");   // turn on internal mic capturing
+    }
+
+    ok &=
         amixerSet(QStringList() << "HandsfreeL" << "on") &&
         amixerSet(QStringList() << "HandsfreeR" << "on") &&
         amixerSet(QStringList() << "HandsfreeL Mux" << "AudioL2") &&
         amixerSet(QStringList() << "HandsfreeR Mux" << "AudioR2");
+
+    if (m_isPhone) {
+        system("umts-sound-route-start.sh");
+    }
+
+    return ok;
+
 }
 
 bool HandsfreeAudioState::leave()
 {
     qLog(AudioState) << "HandsfreeAudioState::leave()";
+
+    if (m_isPhone) {
+        system("umts-sound-route-stop.sh");
+    }
 
     return amixerSet(QStringList() << "HandsfreeL" << "off")
         && amixerSet(QStringList() << "HandsfreeR" << "off");
@@ -261,7 +288,7 @@ private:
 EarpieceAudioState::EarpieceAudioState(bool isPhone, QObject * parent):
 QAudioState(parent), m_isPhone(isPhone)
 {
-    if(isPhone) {
+    if (isPhone) {
         m_info.setDomain("Phone");
         m_info.setProfile("PhoneEarpiece");
         m_info.setPriority(100);
@@ -292,15 +319,31 @@ bool EarpieceAudioState::enter(QAudio::AudioCapability)
 {
     qLog(AudioState) << "EarpieceAudioState::enter()" << "isPhone" << m_isPhone;
 
-    return amixerSet(QStringList() << "Earpiece" << "100%") &&
+    bool ok = true;
+    if (m_isPhone) {
+        ok = amixerSet(QStringList() << "Analog Left Main Mic" << "cap");   // turn on internal mic capturing
+    }
+
+    ok &= amixerSet(QStringList() << "Earpiece" << "100%") &&
         amixerSet(QStringList() << "Earpiece Mixer AudioL2" << "on") &&
         //amixerSet(QStringList() << "Earpiece Mixer AudioR2" << "off") &&
         amixerSet(QStringList() << "Earpiece Mixer Voice" << "off");
+
+    if (m_isPhone) {
+        system("umts-sound-route-start.sh");
+    }
+
+    return ok;
 }
 
 bool EarpieceAudioState::leave()
 {
-    return amixerSet(QStringList() << "Earpiece Mixer AudioL2" << "off");
+    if (m_isPhone) {
+        system("umts-sound-route-stop.sh");
+    }
+
+    return amixerSet(QStringList() << "Analog Left Main Mic" << "nocap") && // turn off internal mic capturing
+        amixerSet(QStringList() << "Earpiece Mixer AudioL2" << "off");
 }
 
 // ========================================================================= //
@@ -382,8 +425,7 @@ bool HeadsetAudioState::isAvailable() const
 
 bool HeadsetAudioState::enter(QAudio::AudioCapability)
 {
-    qLog(AudioState) << "HEarpieceAudioState::enter()" << "isPhone" <<
-        m_isPhone;
+    qLog(AudioState) << "EarpieceAudioState::enter()" << "isPhone" << m_isPhone;
 
     return writeToFile("/sys/devices/virtual/gpio/gpio55/value", "1", 1) &&
         amixerSet(QStringList() << "Headset" << "2") &&
@@ -583,11 +625,11 @@ QAudioStatePlugin(parent)
 {
     m_data = new NeoAudioPluginPrivate;
 
-    m_data->m_states.push_back(new HandsfreeAudioState(false, this));           // ringtones, mp3 etc..
-    m_data->m_states.push_back(new HandsfreeAudioState(true, this));            // loud gsm
-    m_data->m_states.push_back(new EarpieceAudioState(this));                   // default for gsm calls
-    m_data->m_states.push_back(new HeadsetAudioState(false, this));             // audio in headphones
-    m_data->m_states.push_back(new HeadsetAudioState(true, this));              // gsm in headphones
+    m_data->m_states.push_back(new HandsfreeAudioState(false, this));   // ringtones, mp3 etc..
+    m_data->m_states.push_back(new HandsfreeAudioState(true, this));    // loud gsm
+    m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
+    m_data->m_states.push_back(new HeadsetAudioState(false, this)); // audio in headphones
+    m_data->m_states.push_back(new HeadsetAudioState(true, this));  // gsm in headphones
 
 #ifdef QTOPIA_BLUETOOTH
     // Can play media through bluetooth. Can record through bluetooth as well.
@@ -595,10 +637,9 @@ QAudioStatePlugin(parent)
     m_data->m_states.push_back(new BluetoothAudioState(true, this));
 #endif
 
-    // Basic initialization
-    amixerSet(QStringList() << "DAC1 Analog" << "off");
-    amixerSet(QStringList() << "DAC2 Analog" << "on");
-    amixerSet(QStringList() << "Codec Operation Mode" << "Option 1 (audio)");
+    // Initialise to default state
+    alsactl(QStringList() << "-f" <<
+            "/opt/qtmoko/etc/alsa/gta04_initial_alsa.state" << "restore");
 }
 
 NeoAudioPlugin::~NeoAudioPlugin()
