@@ -1,9 +1,0 @@
-[Translation]
-File=QtopiaApplications
-Context=PowerManagerServices
-[Desktop Entry]
-Comment[]=Turn on Wifi
-Exec=wifi-bind.sh
-Icon=devtools/devtools
-Type=ConsoleApplication
-Name[]=Turn on Wifi
