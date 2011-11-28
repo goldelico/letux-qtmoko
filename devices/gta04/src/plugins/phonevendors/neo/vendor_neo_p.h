@@ -48,7 +48,8 @@ public:
 
     void initialize();
     bool supportsAtCced();
-    
+    QString decodeOperatorName(QString name);
+
 private slots:
     void sigq(const QString & msg);
     void reset();

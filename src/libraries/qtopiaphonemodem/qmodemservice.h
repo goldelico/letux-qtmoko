@@ -64,7 +64,8 @@ public:
         ( const QString& item, QObject *target, const char *slot );
 
     QModemIndicators *indicators() const;
-    virtual bool supportsAtCced();      // does modem support AT+CCED command?
+    virtual bool supportsAtCced();                      // does modem support AT+CCED command?
+    virtual QString decodeOperatorName(QString name);   // some modems like GTA04 need to modify name returned by AT+COPS?
 
 protected slots:
     virtual void needSms();

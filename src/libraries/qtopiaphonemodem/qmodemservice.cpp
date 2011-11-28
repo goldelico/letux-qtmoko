@@ -719,3 +719,8 @@ bool QModemService::supportsAtCced()
 {
     return true;
 }
+
+QString QModemService::decodeOperatorName(QString name)
+{
+    return name;
+}

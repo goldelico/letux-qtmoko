@@ -93,3 +93,19 @@ bool NeoModemService::supportsAtCced()
 {
     return false;
 }
+
+// Each char of output operator name is 4 chars in input name. The 4 chars is
+// integer string of unicode value. E.g.
+// 0056006f006400610066006f006e006500200043005a -> Vodafone CZ
+QString NeoModemService::decodeOperatorName(QString name)
+{
+    QString str;
+    str.resize(name.size() / 4);
+    for (int i = 0; i < str.size(); i++) {
+        QString numStr = name.mid(i * 4, 4);
+        bool ok;
+        int num = numStr.toInt(&ok, 16);
+        str[i] = QChar(num);
+    }
+    return str;
+}
