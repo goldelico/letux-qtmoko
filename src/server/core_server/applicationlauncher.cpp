@@ -1238,23 +1238,30 @@ bool ConsoleApplicationLauncher::canLaunch(const QString &app)
 /*! \internal */
 void ConsoleApplicationLauncher::launch(const QString &app)
 {
-    if(d->apps.find(app) != d->apps.end())
+    QString exe = app;
+    QStringList args;
+    if(app.contains(' ')) {
+        args = app.split(' ');
+        exe = args.takeAt(0);
+    }
+    
+    if(d->apps.find(exe) != d->apps.end())
         return;
 
-    Q_ASSERT(canLaunch(app));
+    Q_ASSERT(canLaunch(exe));
 
-    QStringList exes = applicationExecutable(app);
+    QStringList exes = applicationExecutable(exe);
     for(int ii = 0; ii < exes.count(); ++ii) {
         if(QFile::exists(exes.at(ii))) {
 
             ConsoleApplicationLauncherPrivate::App *capp = new
                 ConsoleApplicationLauncherPrivate::App();
-            capp->app = app;
+            capp->app = exe;
             capp->state = Starting;
             capp->process->setReadChannelMode(QProcess::ForwardedChannels);
             capp->process->closeWriteChannel();
             qLog(QtopiaServer) << "Starting" << exes.at(ii);
-            capp->process->start(exes.at(ii));
+            capp->process->start(exes.at(ii), args);
 
             QObject::connect(capp->process, SIGNAL(started()),
                              this, SLOT(appStarted()));
@@ -1263,12 +1270,12 @@ void ConsoleApplicationLauncher::launch(const QString &app)
             QObject::connect(capp->process,SIGNAL(error(QProcess::ProcessError)),
                              this,SLOT(appError(QProcess::ProcessError)));
 
-            d->apps.insert(app, capp);
+            d->apps.insert(exe, capp);
 
             ApplicationIpcRouter *r = qtopiaTask<ApplicationIpcRouter>();
-            if(r) r->addRoute(app, this);
+            if(r) r->addRoute(exe, this);
 
-            emit applicationStateChanged(app, Starting);
+            emit applicationStateChanged(exe, Starting);
             return;
         }
     }
