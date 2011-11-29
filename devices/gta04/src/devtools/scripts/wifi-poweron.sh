@@ -25,3 +25,5 @@ then
     cat /lib/firmware/sd8686.bin > /sys/devices/platform/mmci-omap-hs.1/mmc_host/mmc1/mmc1:0001/mmc1:0001:1/firmware/mmc1:0001:1/data
     echo 0 > /sys/devices/platform/mmci-omap-hs.1/mmc_host/mmc1/mmc1:0001/mmc1:0001:1/firmware/mmc1:0001:1/loading
 fi
+
+ifconfig wlan0 up
