@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=NetworkServices
 [Desktop Entry]
 Comment[]=Resume X
-Exec=resumex.sh
+Exec=qterminal -c resumex.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=Resume X

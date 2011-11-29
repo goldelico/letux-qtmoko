@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=NetworkServices
 [Desktop Entry]
 Comment[]=Start network services
-Exec=bt-poweron.sh
+Exec=qterminal -c bt-poweron.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=Power on bluetooth

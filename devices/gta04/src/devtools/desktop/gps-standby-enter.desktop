@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=PowerManagerServices
 [Desktop Entry]
 Comment[]=GPS standby enter
-Exec=gps-standby-enter.sh
+Exec=qterminal -c gps-standby-enter.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=GPS standby enter

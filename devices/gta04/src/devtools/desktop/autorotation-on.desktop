@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=PowerManagerServices
 [Desktop Entry]
 Comment[]=Autorotation on
-Exec=autorotation-on.sh
+Exec=qterminal -c autorotation-on.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=Autorotation on

@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=NetworkServices
 [Desktop Entry]
 Comment[]=Start network services
-Exec=bt-poweroff.sh
+Exec=qterminal -c bt-poweroff.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=Power off bluetooth

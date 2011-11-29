@@ -1,2 +1,2 @@
 #!/bin/sh
-/opt/qtmoko/bin/gps-event.sh on
+echo "Not implemented for GTA04"

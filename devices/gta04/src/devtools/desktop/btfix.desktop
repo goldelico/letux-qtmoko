@@ -3,7 +3,7 @@ File=QtopiaApplications
 Context=NetworkServices
 [Desktop Entry]
 Comment[]=Fix bluetooth
-Exec=btfix.sh
+Exec=qterminal -c btfix.sh
 Icon=devtools/devtools
 Type=ConsoleApplication
 Name[]=Fix bluetooth
