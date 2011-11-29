@@ -812,15 +812,15 @@ void SimpleExeApplicationLauncher::launch(const QString &app)
 
 /*! \internal */
 QStringList
-SimpleExeApplicationLauncher::applicationExecutable(const QString &app)
+SimpleExeApplicationLauncher::applicationExecutable(const QString &exe)
 {
-    if ( app.startsWith( "/" )) // app is a path, not just in standard location
-        return QStringList() << app;
+    if ( exe.startsWith( "/" )) // app is a path, not just in standard location
+        return QStringList() << exe;
 
     QStringList rv;
     QStringList paths = Qtopia::installPaths();
     for(int ii = 0; ii < paths.count(); ++ii)
-        rv.append(paths.at(ii) + "bin/" + app);
+        rv.append(paths.at(ii) + "bin/" + exe);
 
     return rv;
 }
@@ -1256,7 +1256,7 @@ void ConsoleApplicationLauncher::launch(const QString &app)
 
             ConsoleApplicationLauncherPrivate::App *capp = new
                 ConsoleApplicationLauncherPrivate::App();
-            capp->app = exe;
+            capp->app = app;
             capp->state = Starting;
             capp->process->setReadChannelMode(QProcess::ForwardedChannels);
             capp->process->closeWriteChannel();
@@ -1270,12 +1270,12 @@ void ConsoleApplicationLauncher::launch(const QString &app)
             QObject::connect(capp->process,SIGNAL(error(QProcess::ProcessError)),
                              this,SLOT(appError(QProcess::ProcessError)));
 
-            d->apps.insert(exe, capp);
+            d->apps.insert(app, capp);
 
             ApplicationIpcRouter *r = qtopiaTask<ApplicationIpcRouter>();
             if(r) r->addRoute(exe, this);
 
-            emit applicationStateChanged(exe, Starting);
+            emit applicationStateChanged(app, Starting);
             return;
         }
     }
