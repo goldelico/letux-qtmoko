@@ -139,6 +139,10 @@ SCORouting=PCM
 
     update-rc.d -f alsa-utils remove
 
+* Remove bluetooth from init scripts to save power and until it works good:
+
+    update-rc.d -f alsa-utils bluetooth
+
 Step 4.1 - DHCP server - not using now
 ======================================
 
