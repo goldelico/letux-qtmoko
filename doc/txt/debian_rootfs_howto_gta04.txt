@@ -32,11 +32,6 @@ Step 1
 
 cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://cdn.debian.net/debian/
 
-
-* For bluetooth headset bluez-audio package is needed. But because of stupid
-  dependencies on gstreamer it takes 4MB. With this package and some tweaks you
-  can have mplayer working with btluethooth headset.
-
 Step 2
 ======
 
@@ -86,45 +81,22 @@ Step 3 - add more package repositories
 echo "deb http://cdn.debian.net/debian squeeze contrib" >> /media/card/etc/apt/sources.list
 echo "deb http://cdn.debian.net/debian squeeze non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
-echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/debian/gta04 /" >> /media/card/etc/apt/sources.list
 
 Step 4
 ======
 
 * Device drivers modules. Most of device drivers are built in kernel, but
-  following drivers are exception. g_ether is module so that we can switch
-  between mass storage and with ppp_generic saves space so that we fit under
-  2MB u-boot limit.
+  following drivers are exception: g_ether is module so that we can switch
+  between mass storage, ppp_generic is not needed for people not using GPRS,
+  joydev is used in qtmaze for accelerometers, hso is for UMTS.
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 
-* Unpack alsa scenarios to /usr/share/openmoko - you can find these files
-  in any openmoko distro.
-
 * Edit /media/card/etc/ppp/options and replace "auth" with "noauth"
-
-* Create /media/card/etc/fb.modes
-
-cat > /media/card/etc/fb.modes << __END__
-mode "vga"
-    geometry 480 640 480 1280 16
-    timings 40816 8 16 2 16 8 2
-    rgba 5/11,6/5,5/0,0/0
-endmode
-
-mode "qvga"
-    geometry 480 640 480 1280 16
-    timings 100000 8 16 2 16 8 2
-    rgba 5/11,6/5,5/0,0/0
-endmode
-
-__END__
-
-  Calling "fbset qvga" and "echo qvga > /sys/class/lcd/jbt6k74-lcd/device/resolution"
-  is needed for mplayer in 320x240 with correct colors.
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
@@ -137,11 +109,15 @@ SCORouting=PCM
 * Remove alsa-utils init scripts - we dont need them, we set correct alsa
   state ourselves when qtmoko starts up:
 
-    update-rc.d -f alsa-utils remove
+chroot /media/card
+update-rc.d -f alsa-utils remove
+exit
 
 * Remove bluetooth from init scripts to save power and until it works good:
 
-    update-rc.d -f alsa-utils bluetooth
+chroot /media/card
+update-rc.d -f bluetooth remove
+exit
 
 Step 4.1 - DHCP server - not using now
 ======================================
@@ -225,22 +201,6 @@ update-rc.d -f klogd remove
 update-rc.d -f sysklogd remove
 exit
 
-Step 4.8 - fix GPRS stability
-=============================
-
-* Freerunner has problem with GPRS stability. This will limit max speed on ppp
-insterface to 1000 bytes/s, with faster speed calypso crashes. For more info
-see http://docs.openmoko.org/trac/ticket/2264
-
-cat > /media/card/etc/ppp/ip-up.d/09lindi-tc << __END__
-#!/bin/sh
-/sbin/tc qdisc add dev ppp0 root tbf rate 7kbit latency 4500ms burst 3200
-
-__END__
-
-chmod +x /media/card/etc/ppp/ip-up.d/09lindi-tc
-
-
 Step 5
 ======
 
@@ -276,26 +236,6 @@ mkdir /media/card/etc/network/run
 * Create dir for atd jobs:
 
 mkdir /media/card/var/spool/at
-
-Step 6 - qpe bootscript
-=======================
-
-* not using now - it's in debian package already
-
-Step 6.5 - omhacks
-==================
-
-* omhacks is used for controlling neo hardware, the version in squeeze is old
-  and can't be used with > 2.6.34 kernels, so install from sid:
-
-chroot /media/card
-wget http://cdn.debian.net/debian/pool/main/o/omhacks/libomhacks0_0.15-1_armel.deb
-wget http://cdn.debian.net/debian/pool/main/o/omhacks/omhacks_0.15-1_armel.deb
-dpkg -i libomhacks0_0.15-1_armel.deb
-dpkg -i omhacks_0.15-1_armel.deb
-rm libomhacks0_0.15-1_armel.deb
-rm omhacks_0.15-1_armel.deb
-exit
 
 
 Step 7 - logread utility
@@ -334,22 +274,22 @@ Step 8 - install QtMoko
 
 * I use qemu armel host for building qtmoko package. It should be as simple as
 
-git checkout v33
+git checkout v37_gta04
 dpkg-buildpackage
 
 * Please note that releases are made from translations branch so that we have
   all languages.
 
 * Now upload the package to sourceforge. In filezilla connect to sourceforge
-  sftp and upload it to /home/project-web/qtmoko/htdocs/debian
+  sftp and upload it to /home/project-web/qtmoko/htdocs/debian/gta04
 
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
-dpkg -i qtmoko_34-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko_37-1_armel.deb
+dpkg -i qtmoko_37-1_armel.deb
 update-rc.d qtmoko defaults
-rm qtmoko_34-1_armel.deb
+rm qtmoko_37-1_armel.deb
 exit
 
 
@@ -362,7 +302,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
+git checkout v2.6.32-gta04-qtmoko-v37
 
 * Create package in buildhost:
 
@@ -370,24 +310,19 @@ cd linux-2.6
 dpkg-buildpackage
 
 * You should remove .git while building the package so that the tar with
-  sources is not that big. The package to sourceforge.
+  sources is not that big. Upload the package to sourceforge.
 
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
-dpkg -i linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
-rm linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
+dpkg -i linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
+rm linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
 exit
 
-* Create boot args and symlink for qi:
 
-cd /media/card/boot
-echo "console=tty0 loglevel=3 rootwait" > append-GTA02
-ln -s uImage.bin uImage-GTA02.bin
-
-Step 9.1 - Linux kernel cross compiling - not using anymore
-===========================================================
+Step 9.1 - Linux kernel cross compiling - not using anymore for releases
+========================================================================
 
 * If you want to cross compile kernel and make uboot image on PC:
 
@@ -486,16 +421,6 @@ mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/media/card
 
 
 
-Step 12 - qi for booting ubi image
-==================================
-
-* Standard qi from openmoko git has jffs2 hardcoded as root file system. If your
-  want to use ubi image you need patched qi.
-
-git clone git://github.com/radekp/qi.git
-cd qi
-git checkout qtmoko-v28
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- CPU=s3c2442
 
 
 Boot speedup

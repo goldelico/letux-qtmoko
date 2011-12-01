@@ -32,11 +32,6 @@ Step 1
 
 cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://cdn.debian.net/debian/
 
-
-* For bluetooth headset bluez-audio package is needed. But because of stupid
-  dependencies on gstreamer it takes 4MB. With this package and some tweaks you
-  can have mplayer working with btluethooth headset.
-
 Step 2
 ======
 
