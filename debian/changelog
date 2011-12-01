@@ -1,3 +1,24 @@
+qtmoko (37-1) unstable; urgency=low
+
+  * doc - fixed toolchain instructions (Rafael Ignacio Zurita)
+  * finger friendly patches for contacts, shutdown, call history, qtmail (Rafael Ignacio Zurita)
+  * added security.debian.org to sources.list (pabs3)
+  * using geomirros for in sources.list (pabs3)
+  * new input biglangscape input method (Rafael Ignacio Zurita)
+  * autorotation script (Rafael Ignacio Zurita)
+  * qx can now launch Qt-X11 apps like fbreader (LD_LIBRARY_PATH problem)
+  * qx can delete X11 lock files (useful if X crashed)
+  * delete qtopia temp dir on start (local sockets work after unclean restart)
+  * fixed singal status polling for AT modems
+  * option to disable signal polling for AT modems
+  * dont poll battery immediately on AT modems
+  * option to disable AT+CCED on AT modem
+  * option to decode operator name for AT modem plugins
+  * support for Exec argument .desktop files
+  * gta04 support for keys, battery, backlight, modem
+
+ -- Radek Polak <psonek2@seznam.cz>  Wed, 30 Nov 2011 10:57:00 +0100
+
 qtmoko (36-1) unstable; urgency=low
 
   * Can use freesmartphone.org stack as modem backend
