@@ -113,12 +113,6 @@ chroot /media/card
 update-rc.d -f alsa-utils remove
 exit
 
-* Remove bluetooth from init scripts to save power and until it works good:
-
-chroot /media/card
-update-rc.d -f bluetooth remove
-exit
-
 Step 4.1 - DHCP server - not using now
 ======================================
 
@@ -315,9 +309,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
-dpkg -i linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
-rm linux-image-2.6.34-qtmoko-gta04_37-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
+dpkg -i linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
+rm linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
 exit
 
 
@@ -331,6 +325,14 @@ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm uImage
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
 find  GTA04/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
+
+Step 9.2 - Remove bluetooth from init scripts to save power and until it works good
+===================================================================================
+
+chroot /media/card
+update-rc.d -f bluetooth remove
+exit
+
 
 Step 9.5 - remove bash history
 ==============================
