@@ -36,17 +36,17 @@
 
 QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
 {
-    return 2;
+    return 101;
 }
 
 QTOPIABASE_EXPORT void qpe_setBrightness(int b)
 {
-    QFile f("/sys/devices/omapdss/display2/enabled");
+    QFile f("/sys/class/backlight/pwm-backlight/brightness");
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         qWarning() << "qpe_setBrightness: " + f.errorString();
         return;
     }
     QTextStream out(&f);
-    out << (b == 1 ? "0" : "1"); // 1 == first step == dim, everything else is bright
+    out << b;
     f.close();
 }
