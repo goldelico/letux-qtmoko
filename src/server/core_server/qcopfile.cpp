@@ -52,13 +52,13 @@ bool QCopFile::writeQCopMessage(const QString& app,
         fl.l_pid = getpid();
         if (fcntl(qcopfile.handle(), F_SETLKW, &fl) == -1) {
             /* some error occurred */
-            qWarning(QString("Failed to obtain file lock on %1 (%2)")
+            qWarning("%s", QString("Failed to obtain file lock on %1 (%2)")
                     .arg(qcopfn).arg( errno ).toAscii().constData());
         }
 #else
         if(flock(qcopfile.handle(), LOCK_EX)) {
             /* some error occurred */
-            qWarning(QString("Failed to obtain file lock on %1 (%2)")
+            qWarning("%s", QString("Failed to obtain file lock on %1 (%2)")
                     .arg(qcopfn).arg( errno ).toAscii().constData());
         }
 #endif
@@ -77,7 +77,7 @@ bool QCopFile::writeQCopMessage(const QString& app,
 
         return true;
     } else {
-        qWarning(QString("Failed to open file %1")
+        qWarning("%s", QString("Failed to open file %1")
                 .arg(qcopfn).toAscii().constData());
         return false;
     }

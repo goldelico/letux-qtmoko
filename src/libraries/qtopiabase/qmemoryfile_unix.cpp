@@ -135,7 +135,7 @@ QMemoryFileData * QMemoryFile::openData (const QString &fileName, int flags,
             shmKey = st.st_ino;
             ::close(f);
         }else{
-            qWarning(QString("QMemoryFile result: %1").arg(strerror(errno)).toLatin1().constData());
+            qWarning("%s", QString("QMemoryFile result: %1").arg(strerror(errno)).toLatin1().constData());
             qWarning("QMemoryfile: Unable to create shared key via id file");
             return data;
         }
@@ -173,7 +173,7 @@ QMemoryFileData * QMemoryFile::openData (const QString &fileName, int flags,
                 // attach to previously created shared memory
                 block = (char*)shmat(shmId, NULL, shmAtFlag );
                 if (block == (void*)-1)
-                  qWarning(QString("QMemoryFile : %1").arg(strerror(errno)).toLatin1().constData());
+                  qWarning("%s", QString("QMemoryFile : %1").arg(strerror(errno)).toLatin1().constData());
             }
 
             if (block != NULL){
@@ -219,7 +219,7 @@ QMemoryFileData * QMemoryFile::openData (const QString &fileName, int flags,
                 //f = ::open(fileName.toLocal8Bit(), fileMode | O_CREAT);
 
                 if ((::lseek(f, size, SEEK_SET) == -1) || (::write(f, "", 1) == -1)){
-                  qWarning(QString("QMemoryFile result: %1").arg(strerror(errno)).toLatin1().constData());
+                  qWarning("%s", QString("QMemoryFile result: %1").arg(strerror(errno)).toLatin1().constData());
                   qWarning("QMemoryFile: Unable to initialize new file");
                 }else
                   lseek(f, 0L, SEEK_SET);

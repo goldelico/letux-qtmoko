@@ -54,7 +54,7 @@ bool QDBMigrationEngine::check(bool result, int line, const char *file, const ch
         QString errString=QString("CHECK: %1:%2 check failed: %3\n").arg(file).arg(line).arg(message);
         db.rollback();
         db.close();
-        qCritical(qPrintable(errString));
+        qCritical("%s", qPrintable(errString));
     }
     return result;
 }
@@ -68,7 +68,7 @@ bool QDBMigrationEngine::exec(QSqlQuery &query, int line, const char *file)
         errString+=QString("SqlError: (%1, %2)\n").arg(query.lastError().number()).arg(query.lastError().text());
         db.rollback();
         db.close();
-        qCritical(qPrintable(errString));
+        qCritical("%s", qPrintable(errString));
         return false;
     }
     else
@@ -85,7 +85,7 @@ bool QDBMigrationEngine::exec(const QString &query, int line, const char *file)
         errString+=QString("SqlError: (%1, %2, %3)\n").arg(qry.lastError().number()).arg(qry.lastError().databaseText()).arg(qry.lastError().driverText());
         db.rollback();
         db.close();
-        qCritical(qPrintable(errString));
+        qCritical("%s", qPrintable(errString));
         return false;
     }
     else
@@ -280,7 +280,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
     if (!database->isOpen()) {
         if (!database->open()) {
             QString errString=QString("OPEN DATABASE: failed (%1, %2, %3)\n").arg(db.lastError().number()).arg(db.lastError().databaseText()).arg(db.lastError().driverText());
-            qCritical(qPrintable(errString));
+            qCritical("%s", qPrintable(errString));
             return false;
         }
     }
@@ -320,7 +320,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
 
             if (!database->open()) {
                 QString errString=QString("OPEN DATABASE: failed (%1, %2, %3)\n").arg(db.lastError().number()).arg(db.lastError().databaseText()).arg(db.lastError().driverText());
-                qCritical(qPrintable(errString));
+                qCritical("%s", qPrintable(errString));
                 return false;
             }
         }
@@ -334,7 +334,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
     if (!database->transaction()) {
         QString errString=QString("BEGIN TRANSACTION: failed (%1, %2, %3)\n").arg(database->lastError().number()).arg(database->lastError().databaseText()).arg(db.lastError().driverText());
         db.close();
-        qCritical(qPrintable(errString));
+        qCritical("%s", qPrintable(errString));
         return false;
     }
 
@@ -519,7 +519,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
             QString errString=QString("COMMIT: failed (%1, %2, %3)\n").arg(db.lastError().number()).arg(db.lastError().databaseText()).arg(db.lastError().driverText());
             db.rollback();
             db.close();
-            qCritical(qPrintable(errString));
+            qCritical("%s", qPrintable(errString));
             return false;
         }
     }
@@ -538,7 +538,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
         {
             QString errString=QString("BEGIN TRANSACTION: failed (%1, %2, %3)\n").arg(db.lastError().number()).arg(db.lastError().databaseText()).arg(db.lastError().driverText());
             db.close();
-            qCritical(qPrintable(errString));
+            qCritical("%s", qPrintable(errString));
             return false;
         }
 
@@ -553,7 +553,7 @@ bool QDBMigrationEngine::migrate(QSqlDatabase *database, bool system)
             QString errString=QString("COMMIT: failed (%1, %2, %3)\n").arg(db.lastError().number()).arg(db.lastError().databaseText()).arg(db.lastError().driverText());
             db.rollback();
             db.close();
-            qCritical(qPrintable(errString));
+            qCritical("%s", qPrintable(errString));
             return false;
         }
     }

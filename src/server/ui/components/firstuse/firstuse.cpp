@@ -418,7 +418,7 @@ void FirstUse::reloadLanguages()
     config.beginGroup("Language");
     QString l = config.value("Language", "en_US").toString();
     QString cl = getenv("LANG");
-    qWarning(QString("language message - %1").arg(l).toLatin1().constData());
+    qWarning("%s", QString("language message - %1").arg(l).toLatin1().constData());
     // setting anyway...
     if (l.isNull())
         unsetenv("LANG");
@@ -445,7 +445,7 @@ void FirstUse::reloadLanguages()
         trans = new QTranslator(qApp);
         QString atf = qmFiles[i];
         QString tfn = Qtopia::qtopiaDir() + "i18n/"+l+"/"+atf;
-        qWarning(QString("loading %1").arg(tfn).toLatin1().constData());
+        qWarning("%s", QString("loading %1").arg(tfn).toLatin1().constData());
         if ( trans->load(tfn) ) {
             qWarning(" installing translator");
             qApp->installTranslator( trans );
@@ -463,7 +463,7 @@ void FirstUse::reloadLanguages()
             trans = new QTranslator(qApp);
             QString atf = settingsTable[i].trans;
             QString tfn = Qtopia::qtopiaDir() + "i18n/"+l+"/"+atf;
-            qWarning(QString("loading %1").arg(tfn).toLatin1().constData());
+            qWarning("%s", QString("loading %1").arg(tfn).toLatin1().constData());
             if ( trans->load(tfn) ) {
                 qWarning(" installing translator");
                 qApp->installTranslator( trans );
