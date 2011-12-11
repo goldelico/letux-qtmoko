@@ -1228,7 +1228,7 @@ void ExpressionSemanticAnalyser::setReturnType(ExpressionParserNode* node)
                     n->returnType = ExpressionToken::Integer;
                     // else runtime coercion
                 } else {
-                    qFatal(QString("Unhandled combination of operands '%1' and '%2' for equality operator '%3'").arg(ExpressionToken::typeToName(leftChild->returnType)).arg(ExpressionToken::typeToName(rightChild->returnType)).arg(ExpressionToken::typeToName(node->token.type)).toAscii().data());
+                    qFatal("%s", QString("Unhandled combination of operands '%1' and '%2' for equality operator '%3'").arg(ExpressionToken::typeToName(leftChild->returnType)).arg(ExpressionToken::typeToName(rightChild->returnType)).arg(ExpressionToken::typeToName(node->token.type)).toAscii().data());
                 }
                 break;
             }

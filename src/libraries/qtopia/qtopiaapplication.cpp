@@ -1853,25 +1853,25 @@ void QtopiaApplication::init(int argc, char **argv, Type t)
     QString dataDir(Qtopia::tempDir());
     if ( mkdir( dataDir.toLatin1(), 0700 ) ) {
         if ( errno != EEXIST ) {
-            qFatal( QString("Cannot create Qt Extended data directory with permissions 0700: %1")
+            qFatal( "%s", QString("Cannot create Qt Extended data directory with permissions 0700: %1")
                     .arg( dataDir ).toLatin1().constData() );
         }
     }
 
     struct stat buf;
     if ( lstat( dataDir.toLatin1(), &buf ) )
-        qFatal( QString( "stat failed for Qtopia data directory: %1" )
+        qFatal( "%s", QString( "stat failed for Qtopia data directory: %1" )
                 .arg( dataDir ).toLatin1().constData() );
 
     if ( !S_ISDIR( buf.st_mode ) )
-        qFatal( QString( "%1 is not a directory" ).arg( dataDir ).toLatin1().constData() );
+        qFatal( "%s", QString( "%1 is not a directory" ).arg( dataDir ).toLatin1().constData() );
 
     if ( buf.st_uid != getuid() )
-        qFatal( QString( "Qt Extended data directory is not owned by user %1: %2" )
+        qFatal( "%s", QString( "Qt Extended data directory is not owned by user %1: %2" )
                 .arg( getuid() ).arg( dataDir ).toLatin1().constData() );
 
     if ( (buf.st_mode & 0677) != 0600 )
-        qFatal( QString( "Qt Extended data directory has incorrect permissions (expecting 0700): %1" )
+        qFatal( "%s", QString( "Qt Extended data directory has incorrect permissions (expecting 0700): %1" )
                 .arg( dataDir ).toLatin1().constData() );
 
     QPixmapCache::setCacheLimit(256);  // sensible default for smaller devices.
