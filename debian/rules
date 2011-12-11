@@ -36,9 +36,6 @@ QTMOKO_DEVICE ?= neo
 TOOLCHAIN := linux-native-g++
 QMAKE_CONF := devices/$(QTMOKO_DEVICE)/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 
-toto:
-	echo $(LANGUAGES)
-
 %:
 	dh $@
 
