@@ -280,19 +280,6 @@ rm omhacks_0.15-1_armel.deb
 exit
 
 
-Step 7 - logread utility
-========================
-
-* Used for displaying log in settings. It's not presented in debian. Instead we
-  provide simple bash script:
-
-cat > /media/card/sbin/logread <<__END__
-#!/bin/sh
-tail -n 100 /var/log/messages
-__END__
-
-chmod +x /media/card/sbin/logread
-
 Step 7.5 - dash
 ===============
 
