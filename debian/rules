@@ -52,6 +52,7 @@ override_dh_auto_configure:
 	[ ! -f debian/qtmoko-$(QTMOKO_DEVICE).install.in ] || \
 		cat debian/qtmoko-$(QTMOKO_DEVICE).install.in >>debian/qtmoko-$(QTMOKO_DEVICE).install
 	cp debian/qtmoko.links.in debian/qtmoko-$(QTMOKO_DEVICE).links
+	cp debian/qtmoko.init.in debian/qtmoko-$(QTMOKO_DEVICE).init
 
 	# Patch the qmake.conf file with proper toolchain configuration
 	cp -a $(QMAKE_CONF) $(QMAKE_CONF).orig
@@ -82,6 +83,7 @@ override_dh_auto_clean:
 	# debhelper files
 	rm -f debian/qtmoko-*.install
 	rm -f debian/qtmoko-*.links
+	rm -f debian/qtmoko-*.init
 
 override_dh_auto_install:
 	cd ../build && make install
