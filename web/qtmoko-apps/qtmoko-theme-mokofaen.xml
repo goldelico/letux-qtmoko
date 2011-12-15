@@ -1,9 +1,9 @@
 <package
-      name="qtmoko-theme-faenqo"
+      name="qtmoko-theme-mokofaen"
       arch="all"
       version="1-1"
-      title="Faenqo theme"
-      summary="Faenqo is nice theme for your phone created by Cyberspirit"
+      title="Mokofaen theme"
+      summary="Mokofaen is nice theme for your phone created by Joif"
       category="themes"
       >
 </package>
