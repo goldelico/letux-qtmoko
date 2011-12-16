@@ -11,7 +11,7 @@
           <ul>
           <li>The package is not finished yet,</li>
           <li>You might need to manually install standard fbreader dependencies</li>
-          <li>Or you can do: <pre>apt-get install fbreader</pre> to also install fbreader for X with it's dependencies</li>
+          <li>Or you can do: <pre>apt-get install fbreader</pre> to install fbreader for X and get the dependencies</li>
           <li>Icons for fullscreen and quit are missing, but the fulscreen button and quit menu item work</li>
           </ul>
       </details>
