@@ -39,5 +39,7 @@
 -D _FORTIFY_SOURCE=0
 -rtti
 -confirm-license
+# Both extra config -opensource are needed
 -extra-qt-config "-opensource"
+-extra-qt-embedded-config "-opensource"
 -force-build-qt
