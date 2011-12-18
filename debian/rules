@@ -55,17 +55,18 @@ override_dh_auto_configure:
 	cp debian/qtmoko.init.in debian/qtmoko-$(QTMOKO_DEVICE).qtmoko.init
 
 	# Patch the qmake.conf file with proper toolchain configuration
-	cp -a $(QMAKE_CONF) $(QMAKE_CONF).orig
-	sed -i 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" $(QMAKE_CONF)
-	sed -i 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" $(QMAKE_CONF)
+	sed -i.orig \
+		-e 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" \
+		-e 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" \
+		-e 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" \
+		-e 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" \
+		-e 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" \
+		-e 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' \
+		-e 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' \
+		-e 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" \
+		-e 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" \
+		-e 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" \
+		$(QMAKE_CONF) 
 
 	# Qt Extended configuration step
 	mkdir -p ../build
