@@ -15,6 +15,23 @@ binary: build
 	cp *.xml debian/tmp/opt/qtmoko/etc/themes/mokofaen
 	cp decorationrc debian/tmp/opt/qtmoko/etc/themes/mokofaen
 	cp -r pics/* debian/tmp/opt/qtmoko/pics/themes/mokofaen
+	find debian/tmp/opt/qtmoko/pics/themes/mokofaen -type f -name "*.svg" -exec rm -f {} \;
+	
+	# Remove png backgrounds that have jpg variant
+	find debian/tmp/opt/qtmoko/pics/themes/mokofaen -type f -name "*.jpg" -printf "rm -f %p\n" > rmpng.sh
+
+	# We need svg ones for SIM pin unlock
+	rm -f debian/tmp/opt/qtmoko/pics/themes/mokofaen/button.png
+	rm -f debian/tmp/opt/qtmoko/pics/themes/mokofaen/buttonp.png
+
+	cp pics/button.svg debian/tmp/opt/qtmoko/pics/themes/mokofaen
+	cp pics/buttonp.svg debian/tmp/opt/qtmoko/pics/themes/mokofaen
+
+	chmod +x rmpng.sh 
+	sed -i 's/jpg/png/g' rmpng.sh 
+	./rmpng.sh
+	rm rmpng.sh
+
 	install -d debian/tmp/DEBIAN
 	dpkg-gencontrol
 	chown -R root:root debian/tmp/opt
