@@ -251,7 +251,7 @@ dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
 
-apt-get install libX11-dev libXext-dev libXtst-dev libasound2-dev libdbus-1-dev
+apt-get install libX11-dev libXext-dev libXtst-dev libasound2-dev libdbus-1-dev libts-dev
 
 ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
 
