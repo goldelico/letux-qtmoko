@@ -360,6 +360,7 @@ bool HeadsetAudioState::leave()
     if (m_isPhone) {
         system("umts-sound-route-stop.sh");
     }
+    return true;
 }
 
 // ========================================================================= //
@@ -599,8 +600,8 @@ QAudioStatePlugin(parent)
 {
     m_data = new NeoAudioPluginPrivate;
 
-    m_data->m_states.push_back(new HandsfreeAudioState(false, this));   // ringtones, mp3 etc..
-    m_data->m_states.push_back(new HandsfreeAudioState(true, this));    // loud gsm
+    m_data->m_states.push_back(new SpeakerAudioState(false, this));   // ringtones, mp3 etc..
+    m_data->m_states.push_back(new SpeakerAudioState(true, this));    // loud gsm
     m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
     m_data->m_states.push_back(new HeadsetAudioState(false, this)); // audio in headphones
     m_data->m_states.push_back(new HeadsetAudioState(true, this));  // gsm in headphones
