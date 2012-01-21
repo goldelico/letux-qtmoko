@@ -82,11 +82,13 @@ void NeoModemService::reset()
 void NeoModemService::suspend()
 {
     qLog(Modem) << " Gta04ModemService::suspend()";
+    suspendDone();
 }
 
 void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
+    wakeDone();
 }
 
 bool NeoModemService::supportsAtCced()
