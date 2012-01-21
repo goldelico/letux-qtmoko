@@ -82,12 +82,14 @@ void NeoModemService::reset()
 void NeoModemService::suspend()
 {
     qLog(Modem) << " Gta04ModemService::suspend()";
+    chat("AT_OSQI=0");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     suspendDone();
 }
 
 void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
+    chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
 }
 
