@@ -1,3 +1,24 @@
+qtmoko (38-1) unstable; urgency=low
+
+  * fixed launching apps with arguments from .desktop files
+  * gta04 is based on 3.2 kernel now
+  * gta04 uses bq27000 battery driver now
+  * gta04 display brightness can be now adjusted
+  * gta04 much better sound routing
+  * gta04 uses state files for switching audio scenarios
+  * gta04 can suspend
+  * gta04 modem does not report signal quality in suspend
+  * cleaned up debian packages (Gilles Filippini)
+  * fixed many compile warnings (Gilles Filippini)
+  * alsa state files are now part of qtmoko.deb (Gilles Filippini)
+  * using /sbin/wpa_supplicant now (Gilles Filippini)
+  * ship logread in qtmoko.deb (Gilles Filippini)
+  * mokofaen theme (Joif)
+  * fixed mokofaen build segfault (Gilles Filippini)
+  * updated doc with missing packages (Tiago Bortoletto Vaz)
+
+ -- Radek Polak <psonek2@seznam.cz>  Mon, 23 Jan 2012 10:23:00 +0100
+
 qtmoko (37-1) unstable; urgency=low
 
   * doc - fixed toolchain instructions (Rafael Ignacio Zurita)
