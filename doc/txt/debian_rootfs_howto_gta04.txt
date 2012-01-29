@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libmng1,libtiff4,libxtst6,sqlite3 squeeze /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -95,8 +95,6 @@ echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
-
-* Edit /media/card/etc/ppp/options and replace "auth" with "noauth"
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
@@ -266,10 +264,10 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko_37-1_armel.deb
-dpkg -i qtmoko_37-1_armel.deb
-update-rc.d qtmoko defaults
-rm qtmoko_37-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_38-1_armel.deb
+dpkg -i qtmoko-gta04_38-1_armel.deb
+update-rc.d qtmoko-gta04 defaults
+rm qtmoko-gta04_38-1_armel.deb
 exit
 
 
@@ -317,6 +315,18 @@ Step 9.2 - Remove bluetooth from init scripts to save power and until it works g
 
 chroot /media/card
 update-rc.d -f bluetooth remove
+exit
+
+
+Step 9.3 - Install libts from lindi
+===================================
+
+* It is needed for more recent kernels
+
+chroot /media/card
+wget http://lindi.iki.fi/lindi/tslib/libts-0.0-0_1.0-8lindi1_armel.deb
+dpkg -i libts-0.0-0_1.0-8lindi1_armel.deb
+rm libts-0.0-0_1.0-8lindi1_armel.deb
 exit
 
 
