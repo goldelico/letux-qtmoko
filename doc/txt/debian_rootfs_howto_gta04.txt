@@ -354,8 +354,8 @@ Step 10 - release tarball
 cd /media/card
 tar -czvf ../qtmoko-debian.tar.gz .
 
-Step 11 - make ubifs images
-===========================
+Step 11 - make ubifs images - not using yet
+===========================================
 
 * Delete contents of boot, because for NAND it's not needed:
 
@@ -406,20 +406,52 @@ mkfs.ubifs -r /media/card -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 20
 ubinize -o qtmoko-debian.ubi -m 2048 -p 128KiB -s 2048 -O 2048 ubinize.cfg
 rm qtmoko-debian.ubifs
 
-Step 12 - jffs2 image (not using anymore)
-=========================================
+Step 12 - jffs2
+===============
 
 * Same first 2 steps as with ubi (copy&delete /boot)
 
-* Uncomment the /var/cache/apt mount in /media/card/etc/fstab
+* Create tarbal for NAND:
 
-* Make jffs2 image:
+tar -czvf ../qtmoko-debian-nand.tar.gz .
 
-mkfs.jffs2 --pad=0x700000 -o qtmoko-debian.jffs2 -e 0x20000 -n -d/media/card
+* You will need bootloader script with bootmenu, you can find it under
+  devices/gta04/boot. The script is generated with:
 
+mkimage -A arm -O linux -a 0 -e 0 -T script -C none -n "GTA04 Boot Script" -d 
+boot.scr.in boot.scr
 
+* You will need uImage with cmdline compiled with root on NAND, so replace the
+  part with root on /dev/mmcblk02 with root=/dev/mtdblock4 rootfstype=jffs2 rw
+  in kernel config and make new kernel package. You also have to enable JFFS2
+  filesystem.
 
+* Boot GTA04 from SD card
 
+* Write kernel to NAND (based on instructions from
+  http://elinux.org/BeagleBoardNAND):
+
+flash_eraseall /dev/mtd3
+nandwrite -p /dev/mtd3 uImage   # uImage is the one with root=/dev/mtdblock4
+
+* Write rootfs to NAND:
+
+flash_eraseall -j /dev/mtd4
+mount -t jffs2 /dev/mtdblock4 /mnt
+cd /mnt
+tar xzvpf qtmoko-debian-nand.tar.gz
+
+* Uncomment the /var/cache/apt mount in /mnt/etc/fstab
+
+* Unmount NAND:
+
+cd /
+sync
+umount /mnt
+
+* Write boot.scr with bootmenu to root of FAT boot partition
+
+* Reboot and select NAND from the bootmenu
 
 Boot speedup
 ============
