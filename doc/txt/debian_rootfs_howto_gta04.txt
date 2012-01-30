@@ -443,6 +443,10 @@ tar xzvpf qtmoko-debian-nand.tar.gz
 
 * Uncomment the /var/cache/apt mount in /mnt/etc/fstab
 
+* Edit the mount for root in /mnt/etc/fstab so that it reads:
+
+/dev/mtdblock4  /       jffs2   rw,noatime      1  1 
+
 * Unmount NAND:
 
 cd /
