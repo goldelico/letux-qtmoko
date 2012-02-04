@@ -1,3 +1,9 @@
+qtmoko (39-1) unstable; urgency=low
+
+  * fixed alsa scenarios path
+
+ -- Radek Polak <psonek2@seznam.cz>  Sat, 04 Feb 2012 22:22:00 +0100
+
 qtmoko (38-1) unstable; urgency=low
 
   * fixed launching apps with arguments from .desktop files
