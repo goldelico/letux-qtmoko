@@ -125,6 +125,14 @@ nano /media/card/etc/bluetooth/audio.conf
 
 SCORouting=PCM
 
+* Remove alsa-utils init scripts - we dont need them, we set correct alsa
+  state ourselves when qtmoko starts up:
+
+chroot /media/card
+update-rc.d -f alsa-utils remove
+exit
+
+
 Step 4.1 - DHCP server - not using now
 ======================================
 
