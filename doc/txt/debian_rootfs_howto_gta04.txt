@@ -457,6 +457,18 @@ umount /mnt
 
 * Reboot and select NAND from the bootmenu
 
+
+Step 13 - generate Packages.gz for debian repository
+====================================================
+
+* We have debian repository at http://qtmoko.sourceforge.net/debian/ After you
+  upload packages there (using filezilla, host is frs.sourceforge.net user is
+  radekp,qtmoko and directory is /home/project-web/qtmoko/htdocs/debian) you
+  have to generate Packages.gz:
+
+dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+
+
 Boot speedup
 ============
 
