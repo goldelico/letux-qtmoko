@@ -7,12 +7,17 @@ if [ ! -d /dev/pts ]; then
     mount -t devpts none /dev/pts
     modprobe joydev
 fi
+
+# Power on modem on GTA04A4 and higher
+if [ -f /sys/class/gpio/gpio186/value ];
+then
+   echo 1 >/sys/class/gpio/gpio186/value
+fi
+
 rm -f /dev/input/mice
 echo '1' > /proc/sys/kernel/printk
 echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
 stty -F /dev/tty1 -echo
-rm -rf /var/run/ppp
-mkdir /var/run/ppp
 mkdir -p /var/cache/apt/archives/partial
 atd /var/spool/at
 
