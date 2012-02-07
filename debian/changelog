@@ -1,6 +1,10 @@
 qtmoko (39-1) unstable; urgency=low
 
-  * fixed alsa scenarios path
+  * fixed alsa scenarios path on GTA02
+  * gta04-gsm-voice-routing for gsm voice calls on GTA04
+  * fixed cruxus to close pcm device when not used
+  * powering up modem with gpio186 on GTA04A04 in qpe.sh
+  * remaped long AUX button function to short POWER
 
  -- Radek Polak <psonek2@seznam.cz>  Sat, 04 Feb 2012 22:22:00 +0100
 
