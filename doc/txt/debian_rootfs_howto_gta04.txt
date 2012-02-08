@@ -92,7 +92,6 @@ Step 4
   joydev is used in qtmaze for accelerometers, hso is for UMTS.
 
 echo g_ether > /media/card/etc/modules
-echo ppp_generic >> /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 
@@ -212,13 +211,6 @@ ln -s libts-0.0.so.0 libts-1.0.so.0
 cd /media/card/dev
 rm -rf .udev
 
-* Remove udev from startup scripts, we have devtmpfs in kernel and it's faster:
-
-chroot /media/card
-update-rc.d -f udev-mtab remove
-update-rc.d -f udev remove
-exit
-
 * Remove /etc/network/run and do make dir /etc/network/run
   Otherwise fstab mounting will fail for this directory
 
@@ -239,12 +231,31 @@ cd /media/card/bin/
 rm sh
 ln -s dash sh
 
+
+Step 7.6 - libertas firmware
+============================
+
+* Wifi needs sd8686.bin and sd8686_helper.bin in /lib/firmware:
+
+chroot /media/card
+wget http://ftp.de.debian.org/debian/pool/non-free/libe/libertas-firmware/libertas-firmware_9.70.7.p0.0-1_all.deb
+dpkg -i libertas-firmware_9.70.7.p0.0-1_all.deb
+rm libertas-firmware_9.70.7.p0.0-1_all.deb
+cd /lib/firmware
+mv sd8686.bin 1
+mv sd8686_helper.bin 2
+rm -f *.bin
+mv 1 sd8686.bin
+mv 2 sd8686_helper.bin
+exit
+
+
 Step 8 - install QtMoko
 =======================
 
 * I use qemu armel host for building qtmoko package. It should be as simple as
 
-git checkout v37_gta04
+git checkout v39_gta04
 dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
@@ -264,11 +275,12 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_38-1_armel.deb
-dpkg -i qtmoko-gta04_38-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_39-1_armel.deb
+dpkg -i qtmoko-gta04_39-1_armel.deb
 update-rc.d qtmoko-gta04 defaults
-rm qtmoko-gta04_38-1_armel.deb
+rm qtmoko-gta04_39-1_armel.deb
 exit
+killall qpe.sh  # recent versions start qtmoko after install, so kill it
 
 
 Step 9 - Linux kernel
@@ -280,7 +292,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout v2.6.32-gta04-qtmoko-v37
+git checkout v3.2-gta04-qtmoko-v39
 
 * Create package in buildhost:
 
@@ -293,9 +305,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
-dpkg -i linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
-rm linux-image-2.6.32-qtmoko-gta04_37-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.2-qtmoko-gta04_39-1_armel.deb
+dpkg -i linux-image-3.2-qtmoko-gta04_39-1_armel.deb
+rm linux-image-3.2-qtmoko-gta04_39-1_armel.deb
 exit
 
 
@@ -310,8 +322,8 @@ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
 find  GTA04/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
 
-Step 9.2 - Remove bluetooth from init scripts to save power and until it works good
-===================================================================================
+Step 9.2 - Remove bluetooth from init scripts until it works good
+=================================================================
 
 chroot /media/card
 update-rc.d -f bluetooth remove
@@ -352,7 +364,7 @@ Step 10 - release tarball
 =========================
 
 cd /media/card
-tar -czvf ../qtmoko-debian.tar.gz .
+tar -czvf ../qtmoko-debian-gta04-v39.tar.gz .
 
 Step 11 - make ubifs images - not using yet
 ===========================================
