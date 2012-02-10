@@ -82,6 +82,7 @@ echo "deb http://cdn.debian.net/debian squeeze contrib" >> /media/card/etc/apt/s
 echo "deb http://cdn.debian.net/debian squeeze non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/gta04 /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/apps /" >> /media/card/etc/apt/sources.list
 
 Step 4
 ======
