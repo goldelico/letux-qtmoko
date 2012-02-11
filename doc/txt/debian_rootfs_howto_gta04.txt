@@ -111,28 +111,15 @@ chroot /media/card
 update-rc.d -f alsa-utils remove
 exit
 
-Step 4.1 - DHCP server - not using now
-======================================
+Step 4.1 - stable device nodes for UMTS
+=======================================
 
-* DHCP server will arrange USB networking with PC out-of-the-box for
-  distributions using NetworkManager.
+* Modem device is by default on /dev/ttyHS3, but it can rename after
+  suspend/resume (for details see http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001515.html)
+  We will use udev to create stable symlinks for us:
 
-* Not using now - the problem is that e.g. my notebook prefers usb0 over wifi
-  and internet does not work then.
-  
-* You need install package dhcp3-server in step1.
-
-cat > /media/card/etc/dhcp3/dhcpd.conf <<__END__
-subnet 192.168.0.0 netmask 255.255.255.0 {
-    option routers 192.168.0.202;
-    option domain-name-servers 208.67.222.222, 208.67.220.220;
-
-    pool {
-        max-lease-time 7200;
-        range 192.168.0.200 192.168.0.201;
-        allow unknown clients;
-    }
-}
+cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_$attr{hsotype}"
 __END__
 
 
