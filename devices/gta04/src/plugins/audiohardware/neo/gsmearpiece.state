@@ -174,7 +174,7 @@ state.gta04 {
 		comment.dbmax 1200
 		iface MIXER
 		name 'Earpiece Playback Volume'
-		value 1
+		value 3
 	}
 	control.17 {
 		comment.access 'read write'
