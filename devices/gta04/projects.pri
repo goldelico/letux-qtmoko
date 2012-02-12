@@ -5,7 +5,8 @@ PROJECTS-=\
     applications/camera \
     settings/serverwidgets \
     server/phone/ui/components/simapp \
-    ../examples/whereabouts/mappingdemo
+    ../examples/whereabouts/mappingdemo \
+    src/plugins/network/dialing
 
 SERVER_PROJECTS-=\
     server/media/genericvolumeservice \
@@ -28,4 +29,4 @@ PROJECTS*=\
     3rdparty/tools/atd \
     3rdparty/applications/neocontrol \
     3rdparty/applications/raptor \
-    3rdparty/applications/gta04-gsm-voice-routing \
+    3rdparty/applications/gta04-gsm-voice-routing
