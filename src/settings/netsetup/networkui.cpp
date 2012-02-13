@@ -267,8 +267,8 @@ void NetworkMonitor::deviceStateChanged(QtopiaNetworkInterface::Status s,
 {
 
     if (qLogEnabled(Network) && error) {
-        qLog(Network) << "******" << netItem->
-            config() << dev->errorString() << dev->interfaceName();
+        qLog(Network) << "******" << netItem->config() << dev->
+            errorString() << dev->interfaceName();
     }
     updateStatus(s);
 }
@@ -568,8 +568,9 @@ void NetworkUI::updateExtraActions(const QString & config,
         if (iface) {
             QStringList actions = iface->configuration()->types();
             for (int i = 1; i < actions.count(); i++) {
-                QPointer < QAction > act =
-                    new QAction(actions.at(i) + "...", this);
+                QString label = actions.at(i) + "...";
+                label.replace("(default)", "");
+                QPointer < QAction > act = new QAction(label, this);
                 connect(act, SIGNAL(triggered(bool)), this,
                         SLOT(doProperties()));
                 act->setData(actions.at(i));
@@ -886,13 +887,13 @@ void NetworkUI::applyRemoteSettings(const QString & from,
         if (wapcfg.isEmpty() && dialupcfg.isEmpty())
             text =
                 tr
-                ("<qt>Received network settings for \"%1\".  Do you wish to apply them?</qt>").arg
-                (name);
+                ("<qt>Received network settings for \"%1\".  Do you wish to apply them?</qt>").
+                arg(name);
         else
             text =
                 tr
-                ("<qt>Received updated network settings for \"%1\".  Do you wish to apply them?</qt>").arg
-                (name);
+                ("<qt>Received updated network settings for \"%1\".  Do you wish to apply them?</qt>").
+                arg(name);
     }
 
     QMessageBox box(tr("Internet"), text, QMessageBox::NoIcon,
