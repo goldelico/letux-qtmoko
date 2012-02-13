@@ -140,7 +140,7 @@ QStringList LANConfig::types() const
 #if WIRELESS_EXT > 13
     QString type = property("Info/Type").toString();
     if ( type == "wlan" || type == "pcmciawlan" )
-        ui << QObject::tr("WLAN detection") + " |default|";
+        ui << QObject::tr("WLAN detection") + " (default)";
 #endif
 #endif
 

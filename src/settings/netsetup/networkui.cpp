@@ -267,8 +267,8 @@ void NetworkMonitor::deviceStateChanged(QtopiaNetworkInterface::Status s,
 {
 
     if (qLogEnabled(Network) && error) {
-        qLog(Network) << "******" << netItem->config() << dev->
-            errorString() << dev->interfaceName();
+        qLog(Network) << "******" << netItem->
+            config() << dev->errorString() << dev->interfaceName();
     }
     updateStatus(s);
 }
@@ -321,11 +321,12 @@ void NetworkUI::init()
     vb->addWidget(label);
 
     table = new QTableWidget();
-    table->setColumnCount(2);
+    table->setColumnCount(3);
     table->setEditTriggers(QAbstractItemView::NoEditTriggers);
     table->setAlternatingRowColors(true);
     table->setShowGrid(false);
     table->horizontalHeader()->setResizeMode(0, QHeaderView::ResizeToContents);
+    table->horizontalHeader()->setResizeMode(1, QHeaderView::Stretch);
     table->horizontalHeader()->setStretchLastSection(true);
     table->verticalHeader()->hide();
     table->horizontalHeader()->hide();
@@ -445,11 +446,14 @@ void NetworkUI::updateConfig()
         nameItem->setData(Qt::UserRole, newConfig);
         QString type = cfg.value("Info/Type").toString();
         NetworkWidgetItem *statusItem = new NetworkWidgetItem(nameItem);
+        QIcon selIcon = QIcon(":icon/settings");
+        QTableWidgetItem *selIconItem = new QTableWidgetItem(selIcon, "");
 
         int rowCount = table->rowCount() + 1;
         table->setRowCount(rowCount);
         table->setItem(rowCount - 1, 0, nameItem);
         table->setItem(rowCount - 1, 1, statusItem);
+        table->setItem(rowCount - 1, 2, selIconItem);
         table->resizeRowToContents(rowCount - 1);
     }
     table->sortItems(0);
@@ -585,10 +589,14 @@ void NetworkUI::updateExtraActions(const QString & config,
     }
 }
 
-// Execute default action on click. Default action has "|default|" string in
+// Execute default action on click. Default action has "(default)" string in
 // the name. E.g. for wifi it's the wifi scan dialog.
 void NetworkUI::tableCellClicked(int, int column)
 {
+    if (column >= 2) {
+        return;                 // clicking on last column just selects so that user can bring up context menu
+    }
+
     QTableWidgetItem *item = table->item(table->currentRow(), 0);
     if (!item)
         return;
@@ -608,8 +616,7 @@ void NetworkUI::tableCellClicked(int, int column)
     QString action;
     for (int i = actions.count() - 1; i >= 0;) {
         action = actions.at(i);
-        qDebug() << "action=" << action;
-        if (action.contains("|default|")) {
+        if (action.contains("(default)")) {
             break;
         }
         i--;
@@ -879,13 +886,13 @@ void NetworkUI::applyRemoteSettings(const QString & from,
         if (wapcfg.isEmpty() && dialupcfg.isEmpty())
             text =
                 tr
-                ("<qt>Received network settings for \"%1\".  Do you wish to apply them?</qt>").
-                arg(name);
+                ("<qt>Received network settings for \"%1\".  Do you wish to apply them?</qt>").arg
+                (name);
         else
             text =
                 tr
-                ("<qt>Received updated network settings for \"%1\".  Do you wish to apply them?</qt>").
-                arg(name);
+                ("<qt>Received updated network settings for \"%1\".  Do you wish to apply them?</qt>").arg
+                (name);
     }
 
     QMessageBox box(tr("Internet"), text, QMessageBox::NoIcon,
