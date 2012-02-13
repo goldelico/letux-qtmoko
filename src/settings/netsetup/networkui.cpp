@@ -337,6 +337,8 @@ void NetworkUI::init()
             this, SLOT(updateActions()));
     connect(table, SIGNAL(itemChanged(QTableWidgetItem *)), this,
             SLOT(updateActions()));
+    connect(table, SIGNAL(cellClicked(int, int)), this,
+            SLOT(tableCellClicked(int, int)));
 
     contextMenu = QSoftMenuBar::menuFor(dataPage);
 
@@ -583,6 +585,41 @@ void NetworkUI::updateExtraActions(const QString & config,
     }
 }
 
+// Execute default action on click. Default action has "|default|" string in
+// the name. E.g. for wifi it's the wifi scan dialog.
+void NetworkUI::tableCellClicked(int, int column)
+{
+    QTableWidgetItem *item = table->item(table->currentRow(), 0);
+    if (!item)
+        return;
+
+    QString config = item->data(Qt::UserRole).toString();
+    if (config.isEmpty())
+        return;
+
+    QPointer < QtopiaNetworkInterface > iface =
+        QtopiaNetwork::loadPlugin(config);
+
+    if (!iface) {
+        return;
+    }
+
+    QStringList actions = iface->configuration()->types();
+    QString action;
+    for (int i = actions.count() - 1; i >= 0;) {
+        action = actions.at(i);
+        qDebug() << "action=" << action;
+        if (action.contains("|default|")) {
+            break;
+        }
+        i--;
+        if (i < 0) {
+            return;
+        }
+    }
+    doAction(config, action);
+}
+
 void NetworkUI::addService(const QString & newConfig)
 {
     QPointer < QtopiaNetworkInterface > iface =
@@ -665,24 +702,14 @@ void NetworkUI::removeService()
     table->setEditFocus(true);
 }
 
-void NetworkUI::doProperties()
+void NetworkUI::doAction(QString config, QString type)
 {
-    QTableWidgetItem *item = table->item(table->currentRow(), 0);
-    if (!item)
-        return;
-
-    QString config = item->data(Qt::UserRole).toString();
     if (config.isEmpty())
         return;
 
     QtopiaNetworkInterface *plugin = QtopiaNetwork::loadPlugin(config);
     if (!plugin)
         return;
-
-    QString type;
-    QAction *a = qobject_cast < QAction * >(sender());
-    if (a)
-        type = a->data().toString();
 
     QDialog *dialog = plugin->configuration()->configure(this, type);
     if (!dialog)
@@ -697,6 +724,22 @@ void NetworkUI::doProperties()
     if (dialog)
         delete dialog;
     table->setEditFocus(true);
+}
+
+void NetworkUI::doProperties()
+{
+    QTableWidgetItem *item = table->item(table->currentRow(), 0);
+    if (!item)
+        return;
+
+    QString config = item->data(Qt::UserRole).toString();
+
+    QString type;
+    QAction *a = qobject_cast < QAction * >(sender());
+    if (a)
+        type = a->data().toString();
+
+    doAction(config, type);
 }
 
 void NetworkUI::setGateway()

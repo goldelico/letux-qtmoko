@@ -58,12 +58,14 @@ private slots:
     void addService();
     void removeService();
     void serviceSelected();
+    void doAction(QString config, QString type);
     void doProperties();
     void updateActions();
     void updateIfaceStates();
     void tabChanged(int index);
     void setGateway();
     void updateConfig();
+    void tableCellClicked(int row, int column);
 
 public slots:
 #ifdef QTOPIA_CELL
