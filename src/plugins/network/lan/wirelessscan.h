@@ -48,6 +48,7 @@
 #include <QObject>
 #include <QWidget>
 #include <QList>
+#include <QMessageBox>
 
 #include <qtopianetworkinterface.h>
 
@@ -119,7 +120,10 @@ private slots:
     void deleteNetwork();
     void showAllNetworks();
     void stateChanged(QtopiaNetworkInterface::Status newState, bool error);
-    void changePriority( QListWidgetItem* item );
+    void itemActivated( QListWidgetItem* item );
+    void changePriority();
+    void startScanning();
+    void scanningFinished();
 
 private:
     void initUI();
@@ -130,14 +134,16 @@ private:
 private:
     QString config;
     WirelessScan* scanEngine;
-    QAction* connectAction, *scanAction, *environmentAction, *deleteAction;
-    QListWidget* knownNetworks;
+    QAction* connectAction, *scanAction, *environmentAction, *deleteAction, *filterHidden, *priorityAction;
+    QListWidget* netList;
     QLabel* descr;
     QLabel* currentNetwork;
     QtopiaNetworkInterface::Status state;
     QListWidgetItem* currentSelection;
     bool isRestart;
     QNetworkDevice *devSpace;
+    quint16 listSum;
+    bool changingPriority;
 };
 #endif
 #endif

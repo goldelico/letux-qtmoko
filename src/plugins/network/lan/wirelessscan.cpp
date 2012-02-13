@@ -925,7 +925,7 @@ static const int WPAEnterpriseRole = Qt::UserRole + 22;
 
 WSearchPage::WSearchPage( const QString& c, QWidget* parent, Qt::WFlags flags )
     : QWidget( parent, flags ), config( c ), scanEngine( 0 ), state( QtopiaNetworkInterface::Unknown ),
-        currentSelection( 0 ), isRestart( false )
+        currentSelection( 0 ), isRestart( false ), listSum(0), changingPriority(false)
 {
     // itemDescription is used to generate translations
     Q_UNUSED(itemDescription);
@@ -968,20 +968,20 @@ void WSearchPage::initUI()
     seperator->setFrameShape( QFrame::HLine );
     vbox->addWidget( seperator );
 
-    descr = new QLabel( tr("Network priority:"), this );
+    descr = new QLabel( tr("Wireless networks:"), this );
     descr->setWordWrap( true );
     vbox->addWidget( descr );
 
-    knownNetworks = new QListWidget( this );
-    knownNetworks->setAlternatingRowColors( true );
-    knownNetworks->setSelectionBehavior( QAbstractItemView::SelectRows );
-    knownNetworks->setEditTriggers( QAbstractItemView::NoEditTriggers );
-    vbox->addWidget( knownNetworks );
+    netList = new QListWidget( this );
+    netList->setAlternatingRowColors( true );
+    netList->setSelectionBehavior( QAbstractItemView::SelectRows );
+    netList->setEditTriggers( QAbstractItemView::NoEditTriggers );
+    vbox->addWidget( netList );
 
-    connect( knownNetworks, SIGNAL(itemActivated(QListWidgetItem*)),
-        this, SLOT(changePriority(QListWidgetItem*)) );
+    connect( netList, SIGNAL(itemActivated(QListWidgetItem*)),
+        this, SLOT(itemActivated(QListWidgetItem*)) );
 
-    knownNetworks->installEventFilter( this );
+    netList->installEventFilter( this );
 
     QMenu* menu = QSoftMenuBar::menuFor( this );
     QSoftMenuBar::setHelpEnabled ( this, true );
@@ -989,6 +989,12 @@ void WSearchPage::initUI()
     scanAction->setVisible( false );
     menu->addAction( scanAction );
 
+    filterHidden = new QAction( tr("Show hidden networks"), this );
+    filterHidden->setCheckable( true );
+    filterHidden->setChecked( false );
+    menu->addAction( filterHidden );
+    connect( filterHidden, SIGNAL(toggled(bool)), this, SLOT(updateConnectivity()) );
+    
     environmentAction = new QAction( QIcon(":icon/new"), tr("Add new networks..."), this );
     menu->addAction( environmentAction );
     connect( environmentAction, SIGNAL(triggered()), this, SLOT(showAllNetworks()) );
@@ -1002,6 +1008,10 @@ void WSearchPage::initUI()
     menu->addAction( deleteAction );
     deleteAction->setVisible( false );
     connect( deleteAction, SIGNAL(triggered()), this, SLOT(deleteNetwork()) );
+    
+    priorityAction = new QAction( QIcon(":icon/Network/lan/WLAN-online"), tr("Change priority"), this );
+    menu->addAction( priorityAction );
+    connect( priorityAction, SIGNAL(triggered()), this, SLOT(changePriority()) );
 }
 
 
@@ -1012,7 +1022,7 @@ void WSearchPage::initUI()
   */
 void WSearchPage::loadKnownNetworks()
 {
-    knownNetworks->clear();
+    netList->clear();
     QSettings cfg( config, QSettings::IniFormat );
     int size = cfg.beginReadArray( "WirelessNetworks" );
 
@@ -1020,13 +1030,13 @@ void WSearchPage::loadKnownNetworks()
         QListWidgetItem* item = new QListWidgetItem( tr("<No known networks>") );
         item->setData( MacAddressRole, "INVALID" );
         item->setTextAlignment( Qt::AlignCenter );
-        knownNetworks->addItem( item );
-        knownNetworks->setSelectionMode( QAbstractItemView::NoSelection );
+        netList->addItem( item );
+        netList->setSelectionMode( QAbstractItemView::NoSelection );
         cfg.endArray();
         return;
     }
 
-    knownNetworks->setSelectionMode( QAbstractItemView::SingleSelection );
+    netList->setSelectionMode( QAbstractItemView::SingleSelection );
 
     QListWidgetItem* item;
     QString speed;
@@ -1038,7 +1048,7 @@ void WSearchPage::loadKnownNetworks()
         QString itemText = essid;
         if ( speed != "0" )
             itemText += " ("+speed+" "+ tr("Mb/s" , "Megabit per seconds")+")" ;
-        item = new QListWidgetItem( itemText, knownNetworks );
+        item = new QListWidgetItem( itemText, netList );
         item->setData( MacAddressRole, cfg.value("AccessPoint").toString() );
         item->setIcon( QIcon(":icon/Network/lan/WLAN-notavail") );
         item->setData( OnlineStateRole, false );
@@ -1096,8 +1106,8 @@ void WSearchPage::stateChanged(QtopiaNetworkInterface::Status newState, bool /*e
                     const QString mac = scanEngine->currentAccessPoint();
                     QString essid;
                     QListWidgetItem* lwi = 0;
-                    for (int i = 0; i<knownNetworks->count() && essid.isEmpty(); i++) {
-                        QListWidgetItem* item = knownNetworks->item( i );
+                    for (int i = 0; i<netList->count() && essid.isEmpty(); i++) {
+                        QListWidgetItem* item = netList->item( i );
                         if ( !item )
                             return;
                         if ( item->data( MacAddressRole ).toString() == mac ) {
@@ -1123,7 +1133,7 @@ void WSearchPage::stateChanged(QtopiaNetworkInterface::Status newState, bool /*e
                     currentNetwork->setText( QString(
                                     tr("Connection state:\n<center>Connected to <b>%1</b></center>", "1=network name") )
                             .arg( essid ));
-                    updateActions( knownNetworks->currentItem(), 0 ); //update all actions
+                    updateActions( netList->currentItem(), 0 ); //update all actions
                 }
             }
             break;
@@ -1157,11 +1167,11 @@ void WSearchPage::saveKnownNetworks() {
     cfg.remove(""); //delete all "known networks" information
     cfg.endGroup();
 
-    if ( knownNetworks->count() ) {
+    if ( netList->count() ) {
         QListWidgetItem* item;
         cfg.beginWriteArray( "WirelessNetworks" );
-        for ( int i = 0; i<knownNetworks->count(); i++ ) {
-            item = knownNetworks->item( i );
+        for ( int i = 0; i<netList->count(); i++ ) {
+            item = netList->item( i );
             if (!item)
                 continue;
             QString mac = item->data( MacAddressRole ).toString();
@@ -1256,8 +1266,8 @@ void WSearchPage::attachToInterface( const QString& ifaceName )
         QSettings cfg(config, QSettings::IniFormat);
         const bool scanWhileDown = cfg.value("Properties/ScanWhileDown", true).toBool();
         scanEngine = new WirelessScan( ifaceName, scanWhileDown, this );
-        connect( scanEngine, SIGNAL(scanningFinished()), this, SLOT(updateConnectivity()) );
-        connect( scanAction, SIGNAL(triggered()), scanEngine, SLOT(startScanning()) );
+        connect( scanEngine, SIGNAL(scanningFinished()), this, SLOT(scanningFinished()) );
+        connect( scanAction, SIGNAL(triggered()), this, SLOT(startScanning()) );
 
         //do we support network scanning?
         struct iw_range range;
@@ -1266,11 +1276,30 @@ void WSearchPage::attachToInterface( const QString& ifaceName )
         qLog(Network) << "Wireless extension version" << weVersion << "detected";
         if ( weVersion >= 14 ) { //WE v14 introduced SIOCSIWSCAN and friends
             scanAction->setVisible( true );
-            QTimer::singleShot( 1, scanEngine, SLOT(startScanning()) );
+            QTimer::singleShot( 1, this, SLOT(startScanning()) );
         } else {
             scanAction->setVisible( false );
         }
     }
+}
+
+void WSearchPage::startScanning()
+{
+    if(changingPriority) {
+        return;
+    }
+    descr->setText( tr("Searching for wireless networks...") );
+    scanEngine->startScanning();
+}
+
+void WSearchPage::scanningFinished()
+{
+    if(changingPriority) {
+        return;
+    }
+    descr->setText( tr("Wireless networks:") );
+    updateConnectivity();
+    QTimer::singleShot( 5000, this, SLOT(startScanning()) );
 }
 
 /*!
@@ -1302,7 +1331,7 @@ void WSearchPage::connectToNetwork()
 {
     if ( !scanEngine )
         return;
-    QListWidgetItem* item = knownNetworks->currentItem();
+    QListWidgetItem* item = netList->currentItem();
     if ( !item )
         return;
 
@@ -1354,11 +1383,11 @@ void WSearchPage::connectToNetwork()
   */
 void WSearchPage::deleteNetwork()
 {
-    int row = knownNetworks->currentRow();
-    if ( row < 0 || row >= knownNetworks->count() )
+    int row = netList->currentRow();
+    if ( row < 0 || row >= netList->count() )
         return;
 
-    QListWidgetItem* item = knownNetworks->takeItem( row );
+    QListWidgetItem* item = netList->takeItem( row );
     delete item;
 }
 
@@ -1401,7 +1430,7 @@ void WSearchPage::updateKnownNetworkList( const WirelessNetwork& record, QListWi
         return;
     QListWidgetItem* item = itemToUpdate;
     if ( !item )
-        item = new QListWidgetItem( knownNetworks );
+        item = new QListWidgetItem( netList );
     else
         item->setText("");
 
@@ -1440,7 +1469,7 @@ void WSearchPage::updateKnownNetworkList( const WirelessNetwork& record, QListWi
                 tr("Mb/s" , "Megabit per seconds")+")" );
     else
         item->setText( item->data(ESSIDRole).toString() );
-    knownNetworks->setSelectionMode( QAbstractItemView::SingleSelection );
+    netList->setSelectionMode( QAbstractItemView::SingleSelection );
 }
 
 /*!
@@ -1468,23 +1497,23 @@ void WSearchPage::showAllNetworks()
         const QString selectedEssid = net.data( WirelessNetwork::ESSID).toString();
 
         //delete "no known network item"
-        if ( knownNetworks->count() == 1 &&
-                knownNetworks->item(0) && knownNetworks->item(0)->data( MacAddressRole ).toString() == "INVALID" ) {
-            knownNetworks->clear();
+        if ( netList->count() == 1 &&
+                netList->item(0) && netList->item(0)->data( MacAddressRole ).toString() == "INVALID" ) {
+            netList->clear();
         }
 
         //select current item if it's among known Networks already (matching MAC and ESSID)
         const bool hiddenEssid = (selectedEssid == "<hidden>");
         int matching = -1;
-        for (int i = 0; i<knownNetworks->count(); i++) {
-            QListWidgetItem* item = knownNetworks->item( i );
+        for (int i = 0; i<netList->count(); i++) {
+            QListWidgetItem* item = netList->item( i );
             if ( !item )
                 continue;
             if ( !hiddenEssid && item->data(ESSIDRole).toString() == selectedEssid ) {
                 if ( matching < 0 )
                     matching = i;
                 if ( item->data(MacAddressRole).toString() == selectedMac ) { //exact match
-                    knownNetworks->setCurrentItem( item );
+                    netList->setCurrentItem( item );
                     return;
                 }
             } else if ( !hiddenEssid ) {
@@ -1495,16 +1524,16 @@ void WSearchPage::showAllNetworks()
             }
         }
         if ( matching >= 0 ) { //we had at least one network with the same essid
-            knownNetworks->setCurrentItem( knownNetworks->item( matching ) );
+            netList->setCurrentItem( netList->item( matching ) );
             return;
         }
 
         //the selected network is not in our list yet
         updateKnownNetworkList( net );
 
-        int row = knownNetworks->count() - 1;
+        int row = netList->count() - 1;
         if ( row >= 0 )
-            knownNetworks->setCurrentRow( row );
+            netList->setCurrentRow( row );
     }
 }
 
@@ -1522,9 +1551,75 @@ void WSearchPage::updateConnectivity()
     QList<WirelessNetwork> results = scanEngine->results();
     QStringList foundMacs;
     QStringList foundEssids;
+    quint16 newSum = 0;
     foreach ( WirelessNetwork net, results ) {
-        foundMacs.append( net.data( WirelessNetwork::AP ).toString() );
-        foundEssids.append( net.data( WirelessNetwork::ESSID ).toString() );
+        QString mac = net.data( WirelessNetwork::AP ).toString();
+        QString essid = net.data( WirelessNetwork::ESSID ).toString();
+        foundMacs.append( mac );
+        foundEssids.append( essid );
+        newSum ^= qChecksum((const char *)(essid.constData()), essid.length() * 2);
+        if(newSum == 0) {
+            newSum = 1;        // in 1/65535 cases we force list update
+        }
+    }
+
+    // Update list only when something changed
+    if(newSum != listSum)
+    {
+        listSum = newSum;
+        
+        netList->clear();
+
+        const bool showHidden = filterHidden->isChecked();
+
+        QListWidgetItem* item;
+        if ( !results.count() )
+        {
+            item = new QListWidgetItem( netList );
+            netList->setSelectionMode( QAbstractItemView::NoSelection );
+            item->setText( tr("<No WLAN found>") );
+            item->setTextAlignment( Qt::AlignCenter );
+        }
+
+        QVariant tmp;
+        QString essid;
+        QHash<QString,int> essidExist;
+        foreach( WirelessNetwork net, results ) {
+            essid = net.data(WirelessNetwork::ESSID).toString();
+
+            if ( !showHidden && essid == "<hidden>" )
+                continue;
+
+            if ( essid != "<hidden>" ) {
+                if ( essidExist[essid] < 1 )
+                    essidExist[essid]++;
+                else
+                    continue; //don't show several APs with same essid
+            }
+
+            item = new QListWidgetItem( netList );
+            item->setData( ESSIDRole, essid );
+
+            tmp = net.data(WirelessNetwork::Encoding).toString();
+            bool securedNet = false;
+            if ( tmp.toString() !=  WirelessScan::tr("off") )
+                securedNet = true;
+
+            tmp = net.data( WirelessNetwork::Quality );
+            if ( tmp.isValid() )
+                item->setIcon( QIcon(qualityToImage( tmp.toString(), securedNet )) );
+            else
+                item->setIcon( QIcon(qualityToImage( net.data(WirelessNetwork::Signal).toString(), securedNet )) );
+
+            bool ok;
+            int rate = net.data(WirelessNetwork::BitRate).toInt( &ok );
+            if ( ok && rate>0 ) {
+                essid += QLatin1String("    ");
+                essid += QString::number(rate/1e6) + QLatin1String(" ") + tr("Mb/s" , "Megabit per seconds");
+            }
+            item->setText( essid );
+            item->setData( MacAddressRole, net.data(WirelessNetwork::AP) );
+        }
     }
 
     // network is a match if
@@ -1532,8 +1627,8 @@ void WSearchPage::updateConnectivity()
     // b) essid is not hidden and essid matches or
     // c) essid is hidden and mac matches
 
-    for ( int i = 0; i< knownNetworks->count(); ++i ) {
-        QListWidgetItem* item = knownNetworks->item( i );
+    for ( int i = 0; i< netList->count(); ++i ) {
+        QListWidgetItem* item = netList->item( i );
         if ( !item )
             continue;
         const QString macAddress = item->data(MacAddressRole).toString();
@@ -1553,55 +1648,79 @@ void WSearchPage::updateConnectivity()
         }
     }
 
-    updateActions( knownNetworks->currentItem(), 0 ); //update all actions
+    updateActions( netList->currentItem(), 0 ); //update all actions
 }
 
-void WSearchPage::changePriority( QListWidgetItem* item )
+void WSearchPage::itemActivated( QListWidgetItem* item )
 {
+    if(changingPriority) {
+        changePriority();
+        return;
+    }
+    
+    connectAction->setVisible( !item );
+    scanAction->setVisible( !item );
+    environmentAction->setVisible( !item );
+    deleteAction->setVisible( !item );
+    
     if ( !item )
         return;
+    
+    if(QMessageBox::question(this, tr("Connect to WLAN?"),
+        tr("Connect to %1?").arg(item->text()),
+                             QMessageBox::Yes | QMessageBox::No) != QMessageBox::Yes)
+    {
+        return;
+    }
+    connectToNetwork();
+}
+
+void WSearchPage::changePriority()
+{
+    changingPriority = true;
+
+    QListWidgetItem* item = netList->currentItem();
+    if ( !item ) {
+        return;
+    }
     if ( !currentSelection ) {
         descr->setText( tr("Moving %1", "%1=essid").arg(item->text()) );
         QFont f = item->font();
         f.setBold( true );
         item->setFont( f );
         currentSelection = item;
-        QSoftMenuBar::setLabel( knownNetworks, Qt::Key_Back, QSoftMenuBar::NoLabel );
-        QSoftMenuBar::setLabel( knownNetworks, Qt::Key_Back, QSoftMenuBar::NoLabel );
+        QSoftMenuBar::setLabel( netList, Qt::Key_Back, QSoftMenuBar::NoLabel );
+        QSoftMenuBar::setLabel( netList, Qt::Key_Back, QSoftMenuBar::NoLabel );
     }else if ( currentSelection ) {
         descr->setText( tr("Network priority:") );
         QFont f = currentSelection->font();
         f.setBold( false );
         currentSelection->setFont( f );
         if ( item != currentSelection) {
-            int oldRow = knownNetworks->row(currentSelection);
-            int newRow = knownNetworks->row(item);
+            int oldRow = netList->row(currentSelection);
+            int newRow = netList->row(item);
             if (oldRow>newRow) {
-                knownNetworks->takeItem(oldRow);
-                knownNetworks->insertItem(newRow+1, currentSelection);
-                knownNetworks->takeItem(newRow);
-                knownNetworks->insertItem(oldRow, item);
+                netList->takeItem(oldRow);
+                netList->insertItem(newRow+1, currentSelection);
+                netList->takeItem(newRow);
+                netList->insertItem(oldRow, item);
             } else {
-                knownNetworks->takeItem(oldRow);
-                knownNetworks->insertItem(newRow, currentSelection);
-                knownNetworks->takeItem(newRow-1);
-                knownNetworks->insertItem(oldRow, item);
+                netList->takeItem(oldRow);
+                netList->insertItem(newRow, currentSelection);
+                netList->takeItem(newRow-1);
+                netList->insertItem(oldRow, item);
             }
-            knownNetworks->setCurrentRow(newRow);
+            netList->setCurrentRow(newRow);
         }
         currentSelection = 0;
-        QSoftMenuBar::setLabel( knownNetworks, Qt::Key_Back, QSoftMenuBar::Back );
+        QSoftMenuBar::setLabel( netList, Qt::Key_Back, QSoftMenuBar::Back );
+        changingPriority = false;
     }
-
-    connectAction->setVisible( !currentSelection );
-    scanAction->setVisible( !currentSelection );
-    environmentAction->setVisible( !currentSelection );
-    deleteAction->setVisible( !currentSelection );
 }
 
 bool WSearchPage::eventFilter( QObject* watched, QEvent* event )
 {
-    if ( watched == knownNetworks &&
+    if ( watched == netList &&
             0 != currentSelection )
     {
         if ( event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease ) {
@@ -1611,20 +1730,20 @@ bool WSearchPage::eventFilter( QObject* watched, QEvent* event )
                     (ke->key() == Qt::Key_Up || ke->key() == Qt::Key_Down || ke->key()==Qt::Key_Back) )
                 return true;
 
-            int row = knownNetworks->currentRow();
+            int row = netList->currentRow();
             if ( ke->key() == Qt::Key_Up ) {
                 if ( row > 0 ) //top row cannot move further up
                 {
-                    knownNetworks->takeItem( row );
-                    knownNetworks->insertItem( row-1, currentSelection );
-                    knownNetworks->setCurrentRow( row-1 );
+                    netList->takeItem( row );
+                    netList->insertItem( row-1, currentSelection );
+                    netList->setCurrentRow( row-1 );
                 }
                 return true;
             } else if ( ke->key() == Qt::Key_Down ) {
-                if ( row < knownNetworks->count()-1 ) { //bottom row cannot move further down
-                    knownNetworks->takeItem( row );
-                    knownNetworks->insertItem( row+1, currentSelection );
-                    knownNetworks->setCurrentRow( row+1 );
+                if ( row < netList->count()-1 ) { //bottom row cannot move further down
+                    netList->takeItem( row );
+                    netList->insertItem( row+1, currentSelection );
+                    netList->setCurrentRow( row+1 );
                 }
                 return true;
             } else if ( ke->key() == Qt::Key_Back ) {
