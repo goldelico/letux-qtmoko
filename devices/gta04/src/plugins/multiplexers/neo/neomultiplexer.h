@@ -32,9 +32,6 @@ public:
 
     bool detect(QSerialIODevice * device);
     QSerialIODeviceMultiplexer *create(QSerialIODevice * device);
-
-private:
-     bool muxEnabled;
 };
 
 #endif
