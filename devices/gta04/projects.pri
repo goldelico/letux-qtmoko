@@ -5,8 +5,7 @@ PROJECTS-=\
     applications/camera \
     settings/serverwidgets \
     server/phone/ui/components/simapp \
-    ../examples/whereabouts/mappingdemo \
-    src/plugins/network/dialing
+    ../examples/whereabouts/mappingdemo
 
 SERVER_PROJECTS-=\
     server/media/genericvolumeservice \

@@ -479,7 +479,7 @@ stop()
     fi
     killall -q wpa_supplicant
 
-#    ifup usb0
+    ifup usb0
 }
 
 # Cleans any existing configuration file. This is called when the user deletes the interface
