@@ -35,10 +35,106 @@
 #include <qmodemsiminfo.h>
 #include <qmodemcellbroadcast.h>
 
+#define CLCC_POLL_INTERVAL 1000
+
+// Call provider for GTM601 modem. Currently there is no way how to detect
+// remote party hangup so during calls we do CLCC polling to detect it.
+NeoCallProvider::NeoCallProvider(NeoModemService * service)
+:  QModemCallProvider(service)
+    , clccTimer(this)
+{
+    modemService = service;
+    setUseMissedTimer(false);
+    setUseDetectTimer(false);
+
+    clccTimer.setSingleShot(true);
+    connect(&clccTimer, SIGNAL(timeout()), this, SLOT(doClcc()));
+}
+
+NeoCallProvider::~NeoCallProvider()
+{
+}
+
+bool NeoCallProvider::hasRepeatingRings() const
+{
+    return true;
+}
+
+void NeoCallProvider::ringing(const QString &, const QString &, uint)
+{
+    doClcc();                   // start CLCC polling
+}
+
+void NeoCallProvider::clcc(bool, const QAtResult & result)
+{
+    QModemCall *ic = incomingCall();
+    bool icMissing = true;
+
+    int count = 0;
+
+    // Find the current state of the call in the AT+CLCC results.
+    QAtResultParser parser(result);
+    while (parser.next("+CLCC:")) {
+        uint id = parser.readNumeric();
+        parser.readNumeric();   // dir
+        uint state = parser.readNumeric();
+        uint mode = parser.readNumeric();
+        parser.readNumeric();   // mpty
+        QString number = QAtUtils::decodeNumber(parser);
+        QString callType = resolveCallMode(mode);
+        //qDebug() << "=============== CLCC id=" << id << ", state =" << state <<
+        //    ", mode=" << mode << ", number=" << number << "callType=" << callType;
+
+        if (state == 4) {       // incoming
+            if (ic && ic->number() == number) {
+                icMissing = false;  // still ringing
+            } else {            // new incoming call
+                QModemCallProvider::ringing(number, callType, id);
+                announceCall();
+                clccTimer.start(CLCC_POLL_INTERVAL);
+                return;
+            }
+        }
+        count++;
+    }
+
+    // We still have call in incoming state
+    if (ic) {
+        if (icMissing) {
+            qLog(Modem) << "Reporting missed call.";    // but it's missing in CLCC list
+            ic->setState(QPhoneCall::Missed);   // make the call missed
+            return;
+        }
+        clccTimer.start(CLCC_POLL_INTERVAL);    // continue with polling
+        return;
+    }
+    // We still have some connected calls
+    if (count > 0) {
+        clccTimer.start(CLCC_POLL_INTERVAL);    // continue with polling
+        return;
+    }
+
+    qLog(Modem) << "No more calls left";
+
+    QList < QPhoneCallImpl * >list = calls();
+    QList < QPhoneCallImpl * >::ConstIterator it;
+    for (it = list.begin(); it != list.end(); ++it) {
+        (*it)->setState(QPhoneCall::HangupRemote);
+    }
+}
+
+void NeoCallProvider::doClcc()
+{
+    if (clccTimer.isActive()) {
+        return;                 // CLCC is already running
+    }
+    atchat()->chat("AT+CLCC", this, SLOT(clcc(bool, QAtResult)));
+}
+
 NeoModemService::NeoModemService
     (const QString & service, QSerialIODeviceMultiplexer * mux,
      QObject * parent)
-:QModemService(service, mux, parent)
+:  QModemService(service, mux, parent)
 {
     qDebug() << "Gta04ModemService::constructor";
 
@@ -59,6 +155,10 @@ void NeoModemService::initialize()
 {
     // Disable cell broadcast, GTA04 modem probably does not know AT+CSCB commands
     suppressInterface < QCellBroadcast > ();
+
+    if (!callProvider()) {
+        setCallProvider(new NeoCallProvider(this));
+    }
 
     QModemService::initialize();
 
