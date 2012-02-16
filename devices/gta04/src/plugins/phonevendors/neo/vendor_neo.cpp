@@ -70,6 +70,8 @@ void NeoCallProvider::clcc(bool, const QAtResult & result)
     QModemCall *ic = incomingCall();
     bool icMissing = true;
 
+    int count = 0;
+
     // Find the current state of the call in the AT+CLCC results.
     QAtResultParser parser(result);
     while (parser.next("+CLCC:")) {
@@ -77,7 +79,7 @@ void NeoCallProvider::clcc(bool, const QAtResult & result)
         parser.readNumeric();   // dir
         uint state = parser.readNumeric();
         uint mode = parser.readNumeric();
-        parser.readNumeric();  // mpty
+        parser.readNumeric();   // mpty
         QString number = QAtUtils::decodeNumber(parser);
         QString callType = resolveCallMode(mode);
         //qDebug() << "=============== CLCC id=" << id << ", state =" << state <<
@@ -93,6 +95,7 @@ void NeoCallProvider::clcc(bool, const QAtResult & result)
                 return;
             }
         }
+        count++;
     }
 
     // We still have call in incoming state
@@ -104,6 +107,19 @@ void NeoCallProvider::clcc(bool, const QAtResult & result)
         }
         clccTimer.start(CLCC_POLL_INTERVAL);    // continue with polling
         return;
+    }
+    // We still have some connected calls
+    if (count > 0) {
+        clccTimer.start(CLCC_POLL_INTERVAL);    // continue with polling
+        return;
+    }
+
+    qLog(Modem) << "No more calls left";
+
+    QList < QPhoneCallImpl * >list = calls();
+    QList < QPhoneCallImpl * >::ConstIterator it;
+    for (it = list.begin(); it != list.end(); ++it) {
+        (*it)->setState(QPhoneCall::HangupRemote);
     }
 }
 
