@@ -1,3 +1,18 @@
+qtmoko (40-1) unstable; urgency=low
+
+  * added qtmoko apps repository
+  * using /dev/ttyHS_Application for gta04 modem (and udev rule for it)
+  * gta04 earpiece is a bit louder
+  * reworked wifi plugin (periodic search, easier to use)
+  * arora and profiles have better description
+  * wifi - make it scan and work on GTA04
+  * gps should be working on gta04
+  * ugly patch for modem port disapear on GTA04 (apply it manualy)
+  * fixed incoming/missed calls and remote hangup on gta04
+  * gta02 - revert closing pcm in cruxus 
+
+ -- Radek Polak <psonek2@seznam.cz>  Thu, 16 Feb 2012 23:07:00 +0100
+
 qtmoko (39-1) unstable; urgency=low
 
   * fixed alsa scenarios path on GTA02
