@@ -119,7 +119,7 @@ Step 4.1 - stable device nodes for UMTS
   We will use udev to create stable symlinks for us:
 
 cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_$attr{hsotype}"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_$attr{hsotype}", OPTIONS+="string_escape=replace"
 __END__
 
 
