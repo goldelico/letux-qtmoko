@@ -58,7 +58,8 @@ iface usb0 inet static
 __END__
 cat > /media/card/etc/fstab << __END__
 rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
-/dev/mmcblk0p1 /media/card auto  defaults                           0 0
+/dev/mmcblk0p1 /boot     auto  defaults                           0 0
+/dev/mmcblk0p3 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
 #tmpfs   /var/cache/apt   tmpfs   defaults,noatime                   0 0
@@ -119,7 +120,7 @@ Step 4.1 - stable device nodes for UMTS
   We will use udev to create stable symlinks for us:
 
 cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_$attr{hsotype}", OPTIONS+="string_escape=replace"
+SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_\$attr{hsotype}", OPTIONS+="string_escape=replace"
 __END__
 
 
@@ -263,10 +264,10 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_39-1_armel.deb
-dpkg -i qtmoko-gta04_39-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_40-1_armel.deb
+dpkg -i qtmoko-gta04_40-1_armel.deb
 update-rc.d qtmoko-gta04 defaults
-rm qtmoko-gta04_39-1_armel.deb
+rm qtmoko-gta04_40-1_armel.deb
 exit
 killall qpe.sh  # recent versions start qtmoko after install, so kill it
 
@@ -352,7 +353,7 @@ Step 10 - release tarball
 =========================
 
 cd /media/card
-tar -czvf ../qtmoko-debian-gta04-v39.tar.gz .
+tar -czvf ../qtmoko-debian-gta04-v40.tar.gz .
 
 Step 11 - make ubifs images - not using yet
 ===========================================
