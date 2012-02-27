@@ -1,6 +1,6 @@
 [SkinFile]
-Up=ficgta01-skin.png
-Down=ficgta01-skin-down.png
+Up=gta04-skin.png
+Down=gta04-skin-down.png
 Screen=313 302 480 640
 Areas=2
 HasMouseHover=false
