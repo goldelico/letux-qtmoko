@@ -1,6 +1,3 @@
-method return sender=:1.0 -> dest=:1.7 reply_serial=2
-   string "<!DOCTYPE node PUBLIC "-//freedesktop//DTD D-BUS Object Introspection 1.0//EN"
-"http://www.freedesktop.org/standards/dbus/1.0/introspect.dtd">
 <node>
 	<interface name="org.freedesktop.DBus.Introspectable">
 		<method name="Introspect">
@@ -281,4 +278,3 @@ method return sender=:1.0 -> dest=:1.7 reply_serial=2
 	<node name="context1"/>
 	<node name="operator"/>
 </node>
-"

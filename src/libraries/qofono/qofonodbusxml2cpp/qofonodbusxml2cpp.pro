@@ -1,6 +1,6 @@
-SOURCES = qfsodbusxml2cpp.cpp
+SOURCES = qofonodbusxml2cpp.cpp
 DESTDIR = .
-TARGET = qfsodbusxml2cpp
+TARGET = qofonodbusxml2cpp
 QT = core xml
 CONFIG += qdbus
 CONFIG -= app_bundle

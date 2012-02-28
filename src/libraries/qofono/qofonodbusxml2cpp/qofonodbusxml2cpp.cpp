@@ -62,7 +62,7 @@
 #include <process.h>
 #endif
 
-#define PROGRAMNAME     "qfsodbusxml2cpp"
+#define PROGRAMNAME     "qofonodbusxml2cpp"
 #define PROGRAMVERSION  "0.7"
 #define PROGRAMCOPYRIGHT "Copyright (C) 2009 Nokia Corporation and/or its subsidiary(-ies)."
 
@@ -348,9 +348,9 @@ static QString classNameForInterface(const QString &interface, ClassType classTy
     return retval;
 }
 
-bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
+bool readOFonoField(QDomNode n, QString & fieldName, QString & fieldType)
 {
-    if(n.nodeName() != "fso:field")
+    if(n.nodeName() != "ofono:field")
     {
         return false;
     }
@@ -358,8 +358,8 @@ bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
     QString fieldSignature = n.attributes().namedItem("type").toAttr().value();
 
     // TODO: handle enums properly
-    QString fsoType = n.attributes().namedItemNS("http://www.freesmartphone.org/schemas/DBusSpecExtension", "type").toAttr().value();
-    if(fsoType.length() > 0)
+    QString ofonoType = n.attributes().namedItemNS("http://www.freesmartphone.org/schemas/DBusSpecExtension", "type").toAttr().value();
+    if(ofonoType.length() > 0)
     {
         fieldSignature = "s";
     }
@@ -380,7 +380,7 @@ bool readFsoField(QDomNode n, QString & fieldName, QString & fieldType)
     return false;
 }
 
-static QString genCustomFsoType(QString typeName)
+static QString genCustomOFonoType(QString typeName)
 {
     qDebug() << "Generating type " << typeName << " from file " << inputFile;
 
@@ -423,7 +423,7 @@ static QString genCustomFsoType(QString typeName)
     for(QDomNode n = root.firstChild(); !n.isNull(); n = n.nextSibling())
     {
         //qDebug() << "nodename=" << n.nodeName();
-        if(n.nodeName() != "fso:struct")
+        if(n.nodeName() != "ofono:struct")
         {
             continue;
         }
@@ -435,7 +435,7 @@ static QString genCustomFsoType(QString typeName)
         {
             xmlType = xmlType.mid(lastDot + 1);
         }
-        xmlType = "QFso" + xmlType;
+        xmlType = "QOFono" + xmlType;
         if(xmlType == typeName)
         {
             structNode = n;
@@ -466,12 +466,12 @@ static QString genCustomFsoType(QString typeName)
             << "#define " << hIfDef << endl
             << "#include <QtDBus>" << endl
             << endl
-            << "#if defined(QFSO_LIBRARY)" << endl
-            << "    #define QFSO_EXPORT Q_DECL_EXPORT" << endl
+            << "#if defined(QOFONO_LIBRARY)" << endl
+            << "    #define QOFONO_EXPORT Q_DECL_EXPORT" << endl
             << "#else" << endl
-            << "    #define QFSO_EXPORT Q_DECL_IMPORT" << endl
+            << "    #define QOFONO_EXPORT Q_DECL_IMPORT" << endl
             << "#endif" << endl << endl
-            << "class QFSO_EXPORT " << typeName << endl
+            << "class QOFONO_EXPORT " << typeName << endl
             << "{" << endl
             << "public:" << endl
             << "    explicit " << typeName << "();" << endl;
@@ -479,7 +479,7 @@ static QString genCustomFsoType(QString typeName)
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
         QString fieldName, fieldType;
-        if(!readFsoField(n, fieldName, fieldType))
+        if(!readOFonoField(n, fieldName, fieldType))
         {
             continue;
         }
@@ -487,8 +487,8 @@ static QString genCustomFsoType(QString typeName)
     }
 
     hs
-            << "    QFSO_EXPORT friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
-            << "    QFSO_EXPORT friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
+            << "    QOFONO_EXPORT friend QDBusArgument &operator<<(QDBusArgument &argument, const " << typeName << " & value);" << endl
+            << "    QOFONO_EXPORT friend const QDBusArgument &operator>>(const QDBusArgument &argument, " << typeName << " & value);" << endl
             << "};" << endl
             << endl
             << "Q_DECLARE_METATYPE(" << typeName << ")" << endl
@@ -520,7 +520,7 @@ static QString genCustomFsoType(QString typeName)
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
         QString fieldName, fieldType;
-        if(!readFsoField(n, fieldName, fieldType))
+        if(!readOFonoField(n, fieldName, fieldType))
         {
             continue;
         }
@@ -538,7 +538,7 @@ static QString genCustomFsoType(QString typeName)
     for(QDomNode n = structNode.firstChild(); !n.isNull(); n = n.nextSibling())
     {
         QString fieldName, fieldType;
-        if(!readFsoField(n, fieldName, fieldType))
+        if(!readOFonoField(n, fieldName, fieldType))
         {
             continue;
         }
@@ -590,24 +590,27 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
             annotationName += QString::fromLatin1(".%1%2").arg(QLatin1String(direction)).arg(paramId);
         QString qttype = annotations.value(annotationName);
 
-        // Generate FSO custom type
+        // Generate OFONO custom type
         bool isCustomList = false;
-        if(qttype.startsWith("QFso"))
+        if(qttype.startsWith("QOFono"))
         {
             isCustomList = qttype.endsWith("List");
-            qttype = genCustomFsoType(qttype);
+            qttype = genCustomOFonoType(qttype);
         }
 
         if (qttype.isEmpty())
         {
             if(signature == "a{ss}")
-                qttype = "QFsoStringMap";
+                qttype = "QOFonoStringMap";
 
             if(signature == "a{si}")
-                qttype = "QFsoIntMap";
+                qttype = "QOFonoIntMap";
 
             if(signature == "aa{sv}")
-                qttype = "QFsoVariantMapList";
+                qttype = "QOFonoVariantMapList";
+
+            if(signature == "a(oa{sv})")
+                qttype = "QOFonoObjectList";
         }
         if(!qttype.isEmpty())
         {
@@ -801,7 +804,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
     is << "#include <QtCore/QObject>" << endl
        << includeList
        << "#include <QtDBus/QtDBus>" << endl
-       << "#include <qfsodbusabstractinterface.h>" << endl;
+       << "#include <qofonodbusabstractinterface.h>" << endl;
 
     foreach (QString include, includes) {
         is << "#include \"" << include << "\"" << endl;
@@ -819,10 +822,10 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
             cs << "#include \"" << headerName << "\"" << endl << endl;
     }
 
-    hs << "#if defined(QFSO_LIBRARY)" << endl <<
-          "    #define QFSO_EXPORT Q_DECL_EXPORT" << endl <<
+    hs << "#if defined(QOFONO_LIBRARY)" << endl <<
+          "    #define QOFONO_EXPORT Q_DECL_EXPORT" << endl <<
           "#else" << endl <<
-          "    #define QFSO_EXPORT Q_DECL_IMPORT" << endl <<
+          "    #define QOFONO_EXPORT Q_DECL_IMPORT" << endl <<
           "#endif" << endl << endl;
 
 
@@ -839,7 +842,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
            << endl;
 
         // class header:
-        hs << "class QFSO_EXPORT " << className << ": public QFsoDbusAbstractInterface" << endl
+        hs << "class QOFONO_EXPORT " << className << ": public QOFonoDbusAbstractInterface" << endl
            << "{" << endl
            << "    Q_OBJECT" << endl;
 
@@ -916,7 +919,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
             if (isNoReply) {
                 hs << "Q_NOREPLY void ";
             } else {
-                hs << "QFsoDBusPendingReply<";
+                hs << "QOFonoDBusPendingReply<";
                 for (int i = 0; i < method.outputArgs.count(); ++i)
                     hs << (i > 0 ? ", " : "")
                        << templateArg(qtTypeName(method.outputArgs.at(i).type, method.annotations, i, "Out"));
@@ -943,7 +946,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
                 hs << "        callWithArgumentList(QDBus::NoBlock, "
                    <<  "QLatin1String(\"" << method.name << "\"), argumentList);" << endl;
             else
-                hs << "        return fsoAsyncCall(QLatin1String(\""
+                hs << "        return ofonoAsyncCall(QLatin1String(\""
                    << method.name << "\"), argumentList);" << endl;
 
             // close the function:
@@ -1013,7 +1016,7 @@ static void writeProxy(const QString &filename, const QDBusIntrospection::Interf
 
         // constructor/destructor for the cpp
         cs << className << "::" << className << "(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)" << endl
-           << "    : QFsoDbusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
+           << "    : QOFonoDbusAbstractInterface(service, path, staticInterfaceName(), connection, parent)" << endl
            << "{" << endl;
 
         foreach (const QString customType, customTypes)
