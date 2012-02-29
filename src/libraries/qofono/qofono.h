@@ -20,10 +20,7 @@
 #include <QtCore/QVariant>
 #include <QtDBus/QtDBus>
 #include <qofonodbusabstractinterface.h>
-#include "qofonoobjectlist.h"
-#include "qofonoobjectlist.h"
-#include "qofonoobjectlist.h"
-#include "qofonoobjectlist.h"
+#include "qofonoobject.h"
 
 #if defined(QOFONO_LIBRARY)
     #define QOFONO_EXPORT Q_DECL_EXPORT
