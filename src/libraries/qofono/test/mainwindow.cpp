@@ -45,7 +45,7 @@ void MainWindow::checkIface(QDBusAbstractInterface *iface)
     ui->tbInit->append(status + " " + iface->service() + " " + iface->path());
 }
 
-void MainWindow::showVariantMap(QVariantMap map, QString caption)
+QString variantMapToStr(QVariantMap map)
 {
     QString str;
     for(int i = 0; i < map.count(); i++)
@@ -53,7 +53,32 @@ void MainWindow::showVariantMap(QVariantMap map, QString caption)
         QString key = map.keys().at(i);
         str += key + ": " + map.value(key).toString() + "\n";
     }
-    QMessageBox::information(this, caption, str);
+    return str;
+}
+
+QString ofonoObjectToStr(QOFonoObject o)
+{
+    QString str;
+    str.append(o.object.path());
+    str.append("\n");
+    str.append(variantMapToStr(o.properties));
+    str.append("\n\n");
+    return str;
+}
+
+QString ofonoObjectListToStr(QOFonoObjectList list)
+{
+    QString str;
+    for(int i = 0; i < list.count(); i++)
+    {
+        str.append(ofonoObjectToStr(list.at(i)));
+    }
+    return str;
+}
+
+void MainWindow::showVariantMap(QVariantMap map, QString caption)
+{
+    QMessageBox::information(this, caption, variantMapToStr(map));
 }
 
 void MainWindow::showVariantMapResult(QOFonoDBusPendingReply<QVariantMap> reply, QString caption)
@@ -92,6 +117,13 @@ void MainWindow::refresh()
         checkIface(&oSim);
         checkIface(&oSuplServices);
         checkIface(&oCallManager);
+    }
+    if(ui->tabManager->isVisible())
+    {
+        QOFonoDBusPendingReply<QOFonoObjectList> reply = oManager.GetModems();
+        checkReply2(reply, false, true);
+        QOFonoObjectList modems = reply.value();
+        ui->lModems->setText(ofonoObjectListToStr(modems));
     }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));

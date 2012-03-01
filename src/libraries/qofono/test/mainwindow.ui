@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>5</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -30,29 +30,15 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabLeds">
+      <widget class="QWidget" name="tabManager">
        <attribute name="title">
-        <string>Leds</string>
+        <string>Manager</string>
        </attribute>
        <layout class="QHBoxLayout" name="horizontalLayout">
         <item>
-         <widget class="QCheckBox" name="cbRedLed">
+         <widget class="QLabel" name="lModems">
           <property name="text">
-           <string>Red led</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbBlueLed">
-          <property name="text">
-           <string>Blue led</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QCheckBox" name="cbOrangeLed">
-          <property name="text">
-           <string>Orange led</string>
+           <string>Modems...</string>
           </property>
          </widget>
         </item>
