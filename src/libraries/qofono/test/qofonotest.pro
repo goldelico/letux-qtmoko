@@ -22,7 +22,8 @@ SOURCES += main.cpp \
     ../ofonoradiosettings.cpp \
     ../ofonovoicecallmanager.cpp \
     ../ofonophonebook.cpp \
-    ../qofonoobjectlist.cpp
+    ../qofonoobjectlist.cpp \
+    ../ofonomanager.cpp
 HEADERS += mainwindow.h \
     ofonoutil.h \
     qtelephonynamespace.h \
@@ -41,4 +42,5 @@ HEADERS += mainwindow.h \
     ../ofononetworkregistration.h \
     ../ofonomessagemanager.h \
     ../ofonosimmanager.h \
-    ../qofonoobjectlist.h
+    ../qofonoobjectlist.h \
+    ../ofonomanager.h

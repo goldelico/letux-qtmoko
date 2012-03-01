@@ -4,6 +4,23 @@
 			<arg type="s" direction="out"/>
 		</method>
 	</interface>
+	<interface name="org.ofono.Manager">
+		<method name="GetModems">
+			<arg type="a(oa{sv})" direction="out"/>
+		</method>
+		<signal name="ModemAdded">
+			<arg type="o"/>
+			<arg type="a{sv}"/>
+		</signal>
+		<signal name="ModemRemoved">
+			<arg type="o"/>
+		</signal>
+	</interface>
+	<interface name="org.freedesktop.DBus.Introspectable">
+		<method name="Introspect">
+			<arg type="s" direction="out"/>
+		</method>
+	</interface>
 	<interface name="org.ofono.Modem">
 		<method name="GetProperties">
 			<arg type="a{sv}" direction="out"/>

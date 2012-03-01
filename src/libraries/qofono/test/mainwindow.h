@@ -9,6 +9,7 @@
 #include <QLabel>
 
 #include "ofonoutil.h"
+#include "ofonomanager.h"
 
 namespace Ui {
     class MainWindow;
@@ -25,6 +26,7 @@ protected:
 
 private:
     Ui::MainWindow *ui;
+    OrgOfonoManagerInterface oManager;
 
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);

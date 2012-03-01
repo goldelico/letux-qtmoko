@@ -36,6 +36,7 @@ SOURCES += main.cpp \
     ../ofonoradiosettings.cpp \
     ../ofonovoicecallmanager.cpp \
     ../ofonophonebook.cpp \
+    ../ofonomanager.cpp \
     ../qofonoobjectlist.cpp
 
 HEADERS += mainwindow.h \
@@ -56,6 +57,7 @@ HEADERS += mainwindow.h \
     ../ofononetworkregistration.h \
     ../ofonomessagemanager.h \
     ../ofonosimmanager.h \
+    ../ofonomanager.h \
     ../qofonoobjectlist.h
 
 FORMS += mainwindow.ui

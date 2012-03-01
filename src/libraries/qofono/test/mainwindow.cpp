@@ -4,7 +4,8 @@
 
 MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         QMainWindow(parent),
-        ui(new Ui::MainWindow)
+        ui(new Ui::MainWindow),
+        oManager("org.ofono.Manager", "/", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
