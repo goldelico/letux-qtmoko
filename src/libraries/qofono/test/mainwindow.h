@@ -8,8 +8,23 @@
 #include <QMessageBox>
 #include <QLabel>
 
-#include "ofonoutil.h"
-#include "ofonomanager.h"
+#include "qofonoutil.h"
+#include "qofonomanager.h"
+#include "qofonocellbroadcast.h"
+#include "qofonodbuspendingreply.h"
+#include "qofonoobjectlist.h"
+#include "qofonosimmanager.h"
+#include "qofonovoicecallmanager.h"
+#include "qofonoconnectionmanager.h"
+#include "qofonophonebook.h"
+#include "qofonostringmap.h"
+#include "qofonodbusabstractinterface.h"
+#include "qofonomessagemanager.h"
+#include "qofonopushnotification.h"
+#include "qofonosupplementaryservices.h"
+#include "qofonodbuspendingcall.h"
+#include "qofononetworkregistration.h"
+#include "qofonoradiosettings.h"
 
 namespace Ui {
     class MainWindow;
@@ -27,6 +42,16 @@ protected:
 private:
     Ui::MainWindow *ui;
     OrgOfonoManagerInterface oManager;
+    OrgOfonoCellBroadcastInterface oCellBroadcast;
+    OrgOfonoConnectionManagerInterface oConnMan;
+    OrgOfonoMessageManagerInterface oMessageManager;
+    OrgOfonoNetworkRegistrationInterface oNetReg;
+    OrgOfonoPhonebookInterface oPhoneBook;
+    OrgOfonoPushNotificationInterface oPushNotify;
+    OrgOfonoRadioSettingsInterface oRadio;
+    OrgOfonoSimManagerInterface oSim;
+    OrgOfonoSupplementaryServicesInterface oSuplServices;
+    OrgOfonoVoiceCallManagerInterface oCallManager;
 
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);

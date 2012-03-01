@@ -5,7 +5,17 @@
 MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),
-        oManager("org.ofono.Manager", "/", QDBusConnection::systemBus(), this)
+        oManager("org.ofono", "/", QDBusConnection::systemBus(), this),
+        oCellBroadcast("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oConnMan("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oMessageManager("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oNetReg("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oPhoneBook("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oPushNotify("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oRadio("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oSim("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oSuplServices("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
+        oCallManager("org.ofono", "/hso_0", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
@@ -68,7 +78,23 @@ void MainWindow::on_cbOrangeLed_stateChanged(int state)
 
 void MainWindow::refresh()
 {
+    // Init tab
+    if(ui->tabInit->isVisible())
+    {
+        ui->tbInit->clear();
+        checkIface(&oManager);
+        checkIface(&oConnMan);
+        checkIface(&oMessageManager);
+        checkIface(&oNetReg);
+        checkIface(&oPhoneBook);
+        checkIface(&oPushNotify);
+        checkIface(&oRadio);
+        checkIface(&oSim);
+        checkIface(&oSuplServices);
+        checkIface(&oCallManager);
+    }
 
+    QTimer::singleShot(1000, this, SLOT(refresh()));
 }
 
 void MainWindow::on_bRegister_clicked()

@@ -19,35 +19,35 @@ pkg [
 ]
 
 SOURCES += qofonodbusabstractinterface.cpp \
-    ofonosimmanager.cpp \
-    ofonoconnectionmanager.cpp \
-    ofonosupplementaryservices.cpp \
+    qofonosimmanager.cpp \
+    qofonoconnectionmanager.cpp \
+    qofonosupplementaryservices.cpp \
     qofonodbuspendingcall.cpp \
     qofonoutil.cpp \
-    ofonopushnotification.cpp \
-    ofonocellbroadcast.cpp \
-    ofononetworkregistration.cpp \
-    ofonomessagemanager.cpp \
-    ofonoradiosettings.cpp \
-    ofonovoicecallmanager.cpp \
-    ofonophonebook.cpp \
-    ofonomanager.cpp \
+    qofonopushnotification.cpp \
+    qofonocellbroadcast.cpp \
+    qofononetworkregistration.cpp \
+    qofonomessagemanager.cpp \
+    qofonoradiosettings.cpp \
+    qofonovoicecallmanager.cpp \
+    qofonophonebook.cpp \
+    qofonomanager.cpp \
     qofonoobjectlist.cpp
 
-HEADERS += ofonovoicecallmanager.h \
-    ofonophonebook.h \
-    ofonosupplementaryservices.h \
-    ofonoradiosettings.h \
+HEADERS += qofonovoicecallmanager.h \
+    qofonophonebook.h \
+    qofonosupplementaryservices.h \
+    qofonoradiosettings.h \
     qofonodbuspendingcall.h \
     qofonodbusabstractinterface.h \
-    ofonoconnectionmanager.h \
+    qofonoconnectionmanager.h \
     qofonoutil.h \
     qofonodbuspendingreply.h \
-    ofonopushnotification.h \
-    ofonocellbroadcast.h \
+    qofonopushnotification.h \
+    qofonocellbroadcast.h \
     qofonostringmap.h \
-    ofononetworkregistration.h \
-    ofonomessagemanager.h \
-    ofonosimmanager.h \
-    ofonomanager.h \
+    qofononetworkregistration.h \
+    qofonomessagemanager.h \
+    qofonosimmanager.h \
+    qofonomanager.h \
     qofonoobjectlist.h

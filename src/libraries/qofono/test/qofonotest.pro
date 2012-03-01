@@ -10,37 +10,37 @@ SOURCES += main.cpp \
     mainwindow.cpp \
     ofonoutil.cpp \
     ../qofonodbusabstractinterface.cpp \
-    ../ofonosimmanager.cpp \
-    ../ofonoconnectionmanager.cpp \
-    ../ofonosupplementaryservices.cpp \
+    ../qofonosimmanager.cpp \
+    ../qofonoconnectionmanager.cpp \
+    ../qofonosupplementaryservices.cpp \
     ../qofonodbuspendingcall.cpp \
     ../qofonoutil.cpp \
-    ../ofonopushnotification.cpp \
-    ../ofonocellbroadcast.cpp \
-    ../ofononetworkregistration.cpp \
-    ../ofonomessagemanager.cpp \
-    ../ofonoradiosettings.cpp \
-    ../ofonovoicecallmanager.cpp \
-    ../ofonophonebook.cpp \
+    ../qofonopushnotification.cpp \
+    ../qofonocellbroadcast.cpp \
+    ../qofononetworkregistration.cpp \
+    ../qofonomessagemanager.cpp \
+    ../qofonoradiosettings.cpp \
+    ../qofonovoicecallmanager.cpp \
+    ../qofonophonebook.cpp \
     ../qofonoobjectlist.cpp \
-    ../ofonomanager.cpp
+    ../qofonomanager.cpp
 HEADERS += mainwindow.h \
     ofonoutil.h \
     qtelephonynamespace.h \
-    ../ofonovoicecallmanager.h \
-    ../ofonophonebook.h \
-    ../ofonosupplementaryservices.h \
-    ../ofonoradiosettings.h \
+    ../qofonovoicecallmanager.h \
+    ../qofonophonebook.h \
+    ../qofonosupplementaryservices.h \
+    ../qofonoradiosettings.h \
     ../qofonodbuspendingcall.h \
     ../qofonodbusabstractinterface.h \
-    ../ofonoconnectionmanager.h \
+    ../qofonoconnectionmanager.h \
     ../qofonoutil.h \
     ../qofonodbuspendingreply.h \
-    ../ofonopushnotification.h \
-    ../ofonocellbroadcast.h \
+    ../qofonopushnotification.h \
+    ../qofonocellbroadcast.h \
     ../qofonostringmap.h \
-    ../ofononetworkregistration.h \
-    ../ofonomessagemanager.h \
-    ../ofonosimmanager.h \
+    ../qofononetworkregistration.h \
+    ../qofonomessagemanager.h \
+    ../qofonosimmanager.h \
     ../qofonoobjectlist.h \
-    ../ofonomanager.h
+    ../qofonomanager.h
