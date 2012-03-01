@@ -9,7 +9,6 @@
 #include <QLabel>
 
 #include "ofonoutil.h"
-#include "qofono.h"
 
 namespace Ui {
     class MainWindow;
@@ -29,10 +28,10 @@ private:
 
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);
-    void showVariantMapResult(QOfonoDBusPendingReply<QVariantMap> reply, QString caption);
+    void showVariantMapResult(QOFonoDBusPendingReply<QVariantMap> reply, QString caption);
 
     template <class T, class T2, class T3>
-            bool checkReply2(QofonoDBusPendingReply<T,T2,T3> & reply,
+            bool checkReply2(QOFonoDBusPendingReply<T,T2,T3> & reply,
                              bool okBox,
                              bool waitForFinished,
                              QLabel * label = NULL);
@@ -65,7 +64,6 @@ private slots:
     void on_bActivateConference_clicked();
     void on_bActivateCall_clicked();
     void on_bUssdReq_clicked();
-    void on_bListCalls_clicked();
     void on_bListProviders_clicked();
     void on_bGsmFeatures_clicked();
     void on_bCall_clicked();
@@ -79,11 +77,11 @@ private slots:
     void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
-    void gsmMessageSizeFinished(QofonoDBusPendingCall & call);
+    void gsmMessageSizeFinished(QOFonoDBusPendingCall & call);
 };
 
 template <class T, class T2, class T3>
-        bool MainWindow::checkReply2(QofonoDBusPendingReply<T, T2, T3> & reply,
+        bool MainWindow::checkReply2(QOFonoDBusPendingReply<T, T2, T3> & reply,
                                      bool okBox,
                                      bool waitForFinished,
                                      QLabel * label)
