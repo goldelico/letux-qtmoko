@@ -16,12 +16,14 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         oRadio("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oSim("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oSuplServices("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
-        oVoiceCall("org.ofono", "/hso_0", QDBusConnection::systemBus(), this)
+        oVoiceCallManager("org.ofono", "/hso_0", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
     connect(&oNetReg, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
-    connect(&oVoiceCall, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallPropertyChanged(const QString, const QDBusVariant)));
+    connect(&oVoiceCallManager, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallManagerPropertyChanged(const QString, const QDBusVariant)));
+    connect(&oVoiceCallManager, SIGNAL(CallAdded(const QDBusObjectPath &, const QVariantMap &)), this, SLOT(voiceCallAdded(const QDBusObjectPath &, const QVariantMap &)));
+    connect(&oVoiceCallManager, SIGNAL(CallRemoved(const QDBusObjectPath &)), this, SLOT(voiceCallRemoved(const QDBusObjectPath &)));
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -125,26 +127,32 @@ void MainWindow::refresh()
         checkIface(&oRadio);
         checkIface(&oSim);
         checkIface(&oSuplServices);
-        checkIface(&oVoiceCall);
+        checkIface(&oVoiceCallManager);
     }
     if(ui->tabManager->isVisible())
     {
         QOFonoDBusPendingReply<QOFonoObjectList> reply = oManager.GetModems();
-        checkReply2(reply, false, true);
-        QOFonoObjectList modems = reply.value();
-        ui->lModems->setText(ofonoObjectListToStr(modems));
+        if(checkReply2(reply, false, true))
+        {
+            QOFonoObjectList modems = reply.value();
+            ui->lModems->setText(ofonoObjectListToStr(modems));
+        }
     }
     if(ui->tabNetwork->isVisible())
     {
         QOFonoDBusPendingReply<QVariantMap> reply = oNetReg.GetProperties();
-        checkReply2(reply, false, true);
-        ui->lNetwork->setText(variantMapToStr(reply.value()));
+        if(checkReply2(reply, false, true))
+        {
+            ui->lNetwork->setText(variantMapToStr(reply.value()));
+        }
     }
     if(ui->tabVoiceCall->isVisible())
     {
-        QOFonoDBusPendingReply<QVariantMap> reply = oVoiceCall.GetProperties();
-        checkReply2(reply, false, true);
-        ui->lVoiceCallProperties->setText(variantMapToStr(reply.value()));
+        QOFonoDBusPendingReply<QVariantMap> reply = oVoiceCallManager.GetProperties();
+        if(checkReply2(reply, false, true))
+        {
+            ui->lVoiceCallProperties->setText(variantMapToStr(reply.value()));
+        }
     }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
@@ -296,14 +304,14 @@ void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &
     ui->tbNetRegPropertyChanges->append(name + "->" + value.variant().toString());
 }
 
-void MainWindow::voiceCallPropertyChanged(const QString &name, const QDBusVariant &value)
+void MainWindow::voiceCallManagerPropertyChanged(const QString &name, const QDBusVariant &value)
 {
     ui->tbVoiceCallPropertyChanges->append(name + "->" + value.variant().toString());
 }
 
 void MainWindow::on_bDial_clicked()
 {
-    QOFonoDBusPendingReply<QDBusObjectPath> reply = oVoiceCall.Dial(ui->tbDialNum->text(), "");
+    QOFonoDBusPendingReply<QDBusObjectPath> reply = oVoiceCallManager.Dial(ui->tbDialNum->text(), "");
     if(checkReply2(reply, true, true))
     {
 
@@ -312,6 +320,26 @@ void MainWindow::on_bDial_clicked()
 
 void MainWindow::on_bHangupAll_clicked()
 {
-    QOFonoDBusPendingReply<> reply = oVoiceCall.HangupAll();
+    QOFonoDBusPendingReply<> reply = oVoiceCallManager.HangupAll();
     checkReply2(reply, true, true);
+}
+
+void MainWindow::voiceCallAdded(const QDBusObjectPath &path, const QVariantMap &properties)
+{
+    ui->lwCalls->addItem(path.path());
+}
+
+void MainWindow::voiceCallRemoved(const QDBusObjectPath &path)
+{
+    for(int i = 0; i < ui->lwCalls->count(); i++)
+    {
+        QListWidgetItem *item = ui->lwCalls->item(i);
+        if(item->text() == path.path())
+        {
+            ui->lwCalls->takeItem(i);
+            delete(item);
+            return;
+        }
+    }
+    qWarning() << "voiceCallRemoved: call not found " << path.path();
 }

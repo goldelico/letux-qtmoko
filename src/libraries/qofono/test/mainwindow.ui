@@ -130,6 +130,16 @@
          </layout>
         </item>
         <item>
+         <widget class="QListWidget" name="lwCalls"/>
+        </item>
+        <item>
+         <widget class="QLabel" name="lCallProperties">
+          <property name="text">
+           <string>Call properties...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <layout class="QHBoxLayout" name="horizontalLayout_5">
           <item>
            <widget class="QLineEdit" name="tbCallId">
