@@ -20,6 +20,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 {
     ui->setupUi(this);
 
+    connect(&oNetReg, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
+
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
 
@@ -280,4 +282,9 @@ void MainWindow::on_bScan_clicked()
     {
         showVariantMapResult(reply, "Scan");
     }
+}
+
+void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &value)
+{
+    ui->tbNetRegPropertyChange->append(name + "->" + value.variant().toString());
 }

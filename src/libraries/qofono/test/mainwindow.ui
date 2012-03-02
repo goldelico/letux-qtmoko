@@ -71,6 +71,9 @@
          </widget>
         </item>
         <item>
+         <widget class="QTextEdit" name="tbNetRegPropertyChange"/>
+        </item>
+        <item>
          <widget class="QPushButton" name="bRegister">
           <property name="text">
            <string>Register</string>

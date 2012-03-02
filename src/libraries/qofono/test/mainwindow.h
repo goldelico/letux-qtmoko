@@ -104,6 +104,7 @@ private slots:
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );
     void refresh();
+    void netRegPropertyChanged(const QString &name, const QDBusVariant &value);
     void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
