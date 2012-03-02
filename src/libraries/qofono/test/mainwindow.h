@@ -7,6 +7,7 @@
 #include <QTimer>
 #include <QMessageBox>
 #include <QLabel>
+#include <QListWidget>
 
 #include "qofonoutil.h"
 #include "qofonomanager.h"
@@ -26,6 +27,8 @@
 #include "qofonodbuspendingcall.h"
 #include "qofononetworkregistration.h"
 #include "qofonoradiosettings.h"
+#include "qofonovoicecall.h"
+#include "qofononetworkoperator.h"
 
 namespace Ui {
     class MainWindow;
@@ -75,6 +78,10 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bHangup_clicked();
+    void on_bGetCalls_clicked();
+    void on_bAnswer_clicked();
+    void on_lwCalls_currentItemChanged(QListWidgetItem* current, QListWidgetItem* previous);
     void on_bHangupAll_clicked();
     void on_bDial_clicked();
     void on_bScan_clicked();
