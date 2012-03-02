@@ -18,3 +18,5 @@ $QDBUSXML2CPP -p qofonosupplementaryservices ofono.xml org.ofono.SupplementarySe
 $QDBUSXML2CPP -p qofononetworkregistration ofono.xml org.ofono.NetworkRegistration
 $QDBUSXML2CPP -p qofonocellbroadcast ofono.xml org.ofono.CellBroadcast
 $QDBUSXML2CPP -p qofonoconnectionmanager ofono.xml org.ofono.ConnectionManager
+$QDBUSXML2CPP -p qofononetworkoperator ofono-operator.xml org.ofono.NetworkOperator
+$QDBUSXML2CPP -p qofonovoicecall ofono-voicecall.xml org.ofono.VoiceCall

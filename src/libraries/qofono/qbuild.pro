@@ -33,6 +33,8 @@ SOURCES += qofonodbusabstractinterface.cpp \
     qofonophonebook.cpp \
     qofonomanager.cpp \
     qofonomodem.cpp \
+    qofonovoicecall.cpp \
+    qofononetworkoperator.cpp \
     qofonoobjectlist.cpp
 
 HEADERS += qofonovoicecallmanager.h \
@@ -52,4 +54,6 @@ HEADERS += qofonovoicecallmanager.h \
     qofonosimmanager.h \
     qofonomanager.h \
     qofonomodem.h \
+    qofonovoicecall.h \
+    qofononetworkoperator.h \
     qofonoobjectlist.h

@@ -24,7 +24,9 @@ SOURCES += main.cpp \
     ../qofonophonebook.cpp \
     ../qofonoobjectlist.cpp \
     ../qofonomanager.cpp \
-    ../qofonomodem.cpp
+    ../qofonomodem.cpp \
+    ../qofonovoicecall.cpp \
+    ../qofononetworkoperator.cpp
 HEADERS += mainwindow.h \
     ofonoutil.h \
     qtelephonynamespace.h \
@@ -45,4 +47,6 @@ HEADERS += mainwindow.h \
     ../qofonosimmanager.h \
     ../qofonoobjectlist.h \
     ../qofonomanager.h \
-    ../qofonomodem.h
+    ../qofonomodem.h \
+    ../qofononetworkoperator.h \
+    ../qofonovoicecall.h
