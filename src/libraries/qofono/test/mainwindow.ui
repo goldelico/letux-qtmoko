@@ -34,11 +34,25 @@
        <attribute name="title">
         <string>Manager</string>
        </attribute>
-       <layout class="QHBoxLayout" name="horizontalLayout">
+       <layout class="QVBoxLayout" name="verticalLayout_9">
         <item>
          <widget class="QLabel" name="lModems">
           <property name="text">
            <string>Modems...</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bPowerOnModem">
+          <property name="text">
+           <string>Power on modem</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bOnlineModem">
+          <property name="text">
+           <string>Online modem</string>
           </property>
          </widget>
         </item>

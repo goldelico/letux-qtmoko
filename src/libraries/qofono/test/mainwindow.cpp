@@ -6,6 +6,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         QMainWindow(parent),
         ui(new Ui::MainWindow),
         oManager("org.ofono", "/", QDBusConnection::systemBus(), this),
+        oModem("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oCellBroadcast("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oConnMan("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oMessageManager("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
@@ -252,4 +253,16 @@ void MainWindow::on_bDeactivateContext_clicked()
 
 void MainWindow::on_bRetrieveTextMessages_clicked()
 {
+}
+
+void MainWindow::on_bPowerOnModem_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oModem.SetProperty("Powered", QDBusVariant(true));
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bOnlineModem_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oModem.SetProperty("Online", QDBusVariant(true));
+    checkReply2(reply, true, true);
 }

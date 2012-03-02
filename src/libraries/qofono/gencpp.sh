@@ -7,6 +7,7 @@
 QDBUSXML2CPP=qofonodbusxml2cpp/qofonodbusxml2cpp
 
 $QDBUSXML2CPP -p qofonomanager ofono.xml org.ofono.Manager
+$QDBUSXML2CPP -p qofonomodem ofono.xml org.ofono.Modem
 $QDBUSXML2CPP -p qofonosimmanager ofono.xml org.ofono.SimManager
 $QDBUSXML2CPP -p qofonovoicecallmanager ofono.xml org.ofono.VoiceCallManager
 $QDBUSXML2CPP -p qofonoradiosettings ofono.xml org.ofono.RadioSettings

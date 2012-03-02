@@ -10,6 +10,7 @@
 
 #include "qofonoutil.h"
 #include "qofonomanager.h"
+#include "qofonomodem.h"
 #include "qofonocellbroadcast.h"
 #include "qofonodbuspendingreply.h"
 #include "qofonoobjectlist.h"
@@ -42,6 +43,7 @@ protected:
 private:
     Ui::MainWindow *ui;
     OrgOfonoManagerInterface oManager;
+    OrgOfonoModemInterface oModem;
     OrgOfonoCellBroadcastInterface oCellBroadcast;
     OrgOfonoConnectionManagerInterface oConnMan;
     OrgOfonoMessageManagerInterface oMessageManager;
@@ -72,6 +74,8 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bOnlineModem_clicked();
+    void on_bPowerOnModem_clicked();
     void on_bRetrieveTextMessages_clicked();
     void on_bDeactivateContext_clicked();
     void on_tbActivateContext_clicked();

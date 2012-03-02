@@ -37,6 +37,7 @@ SOURCES += main.cpp \
     ../qofonovoicecallmanager.cpp \
     ../qofonophonebook.cpp \
     ../qofonomanager.cpp \
+    ../qofonomodem.cpp \
     ../qofonoobjectlist.cpp
 
 HEADERS += mainwindow.h \
@@ -58,6 +59,7 @@ HEADERS += mainwindow.h \
     ../qofonomessagemanager.h \
     ../qofonosimmanager.h \
     ../qofonomanager.h \
+    ../qofonomodem.cpp \
     ../qofonoobjectlist.h
 
 FORMS += mainwindow.ui
