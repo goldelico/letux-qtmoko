@@ -53,7 +53,7 @@ private:
     OrgOfonoRadioSettingsInterface oRadio;
     OrgOfonoSimManagerInterface oSim;
     OrgOfonoSupplementaryServicesInterface oSuplServices;
-    OrgOfonoVoiceCallManagerInterface oCallManager;
+    OrgOfonoVoiceCallManagerInterface oVoiceCall;
 
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);
@@ -75,6 +75,8 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bHangupAll_clicked();
+    void on_bDial_clicked();
     void on_bScan_clicked();
     void on_bGetOperators_clicked();
     void on_bRegister_clicked();
@@ -105,6 +107,7 @@ private slots:
     void on_cbRedLed_stateChanged(int );
     void refresh();
     void netRegPropertyChanged(const QString &name, const QDBusVariant &value);
+    void voiceCallPropertyChanged(const QString &name, const QDBusVariant &value);
     void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);

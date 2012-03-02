@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>2</number>
+       <number>3</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -71,7 +71,7 @@
          </widget>
         </item>
         <item>
-         <widget class="QTextEdit" name="tbNetRegPropertyChange"/>
+         <widget class="QTextEdit" name="tbNetRegPropertyChanges"/>
         </item>
         <item>
          <widget class="QPushButton" name="bRegister">
@@ -96,15 +96,15 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabGsmCall">
+      <widget class="QWidget" name="tabVoiceCall">
        <attribute name="title">
-        <string>GSM call</string>
+        <string>Voice call</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout_4">
         <item>
          <layout class="QHBoxLayout" name="horizontalLayout_3">
           <item>
-           <widget class="QLineEdit" name="tbCallNum">
+           <widget class="QLineEdit" name="tbDialNum">
             <property name="inputMask">
              <string/>
             </property>
@@ -114,9 +114,16 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="bCall">
+           <widget class="QPushButton" name="bDial">
             <property name="text">
              <string>Dial</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QPushButton" name="bHangupAll">
+            <property name="text">
+             <string>Hangup all</string>
             </property>
            </widget>
           </item>
@@ -208,9 +215,9 @@ Held</string>
          </layout>
         </item>
         <item>
-         <widget class="QLabel" name="lLastCall">
+         <widget class="QLabel" name="lVoiceCallProperties">
           <property name="text">
-           <string>Last call:</string>
+           <string>Properties</string>
           </property>
           <property name="wordWrap">
            <bool>true</bool>
@@ -223,6 +230,9 @@ Held</string>
            <string>List calls</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="tbVoiceCallPropertyChanges"/>
         </item>
        </layout>
       </widget>

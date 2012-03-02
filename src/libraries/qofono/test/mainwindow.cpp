@@ -16,11 +16,12 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
         oRadio("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oSim("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
         oSuplServices("org.ofono", "/hso_0", QDBusConnection::systemBus(), this),
-        oCallManager("org.ofono", "/hso_0", QDBusConnection::systemBus(), this)
+        oVoiceCall("org.ofono", "/hso_0", QDBusConnection::systemBus(), this)
 {
     ui->setupUi(this);
 
     connect(&oNetReg, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
+    connect(&oVoiceCall, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallPropertyChanged(const QString, const QDBusVariant)));
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -124,7 +125,7 @@ void MainWindow::refresh()
         checkIface(&oRadio);
         checkIface(&oSim);
         checkIface(&oSuplServices);
-        checkIface(&oCallManager);
+        checkIface(&oVoiceCall);
     }
     if(ui->tabManager->isVisible())
     {
@@ -138,6 +139,12 @@ void MainWindow::refresh()
         QOFonoDBusPendingReply<QVariantMap> reply = oNetReg.GetProperties();
         checkReply2(reply, false, true);
         ui->lNetwork->setText(variantMapToStr(reply.value()));
+    }
+    if(ui->tabVoiceCall->isVisible())
+    {
+        QOFonoDBusPendingReply<QVariantMap> reply = oVoiceCall.GetProperties();
+        checkReply2(reply, false, true);
+        ui->lVoiceCallProperties->setText(variantMapToStr(reply.value()));
     }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
@@ -286,5 +293,25 @@ void MainWindow::on_bScan_clicked()
 
 void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &value)
 {
-    ui->tbNetRegPropertyChange->append(name + "->" + value.variant().toString());
+    ui->tbNetRegPropertyChanges->append(name + "->" + value.variant().toString());
+}
+
+void MainWindow::voiceCallPropertyChanged(const QString &name, const QDBusVariant &value)
+{
+    ui->tbVoiceCallPropertyChanges->append(name + "->" + value.variant().toString());
+}
+
+void MainWindow::on_bDial_clicked()
+{
+    QOFonoDBusPendingReply<QDBusObjectPath> reply = oVoiceCall.Dial(ui->tbDialNum->text(), "");
+    if(checkReply2(reply, true, true))
+    {
+
+    }
+}
+
+void MainWindow::on_bHangupAll_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oVoiceCall.HangupAll();
+    checkReply2(reply, true, true);
 }
