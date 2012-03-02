@@ -77,6 +77,11 @@ QString ofonoObjectListToStr(QOFonoObjectList list)
     return str;
 }
 
+void MainWindow::showOFonoObjectList(QOFonoObjectList list, QString caption)
+{
+    QMessageBox::information(this, caption, ofonoObjectListToStr(list));
+}
+
 void MainWindow::showVariantMap(QVariantMap map, QString caption)
 {
     QMessageBox::information(this, caption, variantMapToStr(map));
@@ -126,16 +131,14 @@ void MainWindow::refresh()
         QOFonoObjectList modems = reply.value();
         ui->lModems->setText(ofonoObjectListToStr(modems));
     }
+    if(ui->tabNetwork->isVisible())
+    {
+        QOFonoDBusPendingReply<QVariantMap> reply = oNetReg.GetProperties();
+        checkReply2(reply, false, true);
+        ui->lNetwork->setText(variantMapToStr(reply.value()));
+    }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
-}
-
-void MainWindow::on_bRegister_clicked()
-{
-}
-
-void MainWindow::on_bUnregister_clicked()
-{
 }
 
 void MainWindow::on_bCall_clicked()
@@ -146,19 +149,7 @@ void MainWindow::on_bGsmFeatures_clicked()
 {
 }
 
-void MainWindow::on_bListProviders_clicked()
-{
-}
-
 void MainWindow::gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties)
-{
-}
-
-void MainWindow::incomingUssd(const QString &mode, const QString &message)
-{
-}
-
-void MainWindow::on_bUssdReq_clicked()
 {
 }
 
@@ -265,4 +256,28 @@ void MainWindow::on_bOnlineModem_clicked()
 {
     QOFonoDBusPendingReply<> reply = oModem.SetProperty("Online", QDBusVariant(true));
     checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bRegister_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oNetReg.Register();
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bGetOperators_clicked()
+{
+    QOFonoDBusPendingReply<QOFonoObjectList> reply = oNetReg.GetOperators();
+    if(checkReply2(reply, false, true))
+    {
+        showOFonoObjectList(reply.value(), "GetOperators");
+    }
+}
+
+void MainWindow::on_bScan_clicked()
+{
+    QOFonoDBusPendingReply<QOFonoObjectList> reply = oNetReg.Scan();
+    if(checkReply2(reply, false, true))
+    {
+        showVariantMapResult(reply, "Scan");
+    }
 }

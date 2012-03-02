@@ -58,6 +58,7 @@ private:
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);
     void showVariantMapResult(QOFonoDBusPendingReply<QVariantMap> reply, QString caption);
+    void showOFonoObjectList(QOFonoObjectList list, QString caption);
 
     template <class T, class T2, class T3>
             bool checkReply2(QOFonoDBusPendingReply<T,T2,T3> & reply,
@@ -74,6 +75,9 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bScan_clicked();
+    void on_bGetOperators_clicked();
+    void on_bRegister_clicked();
     void on_bOnlineModem_clicked();
     void on_bPowerOnModem_clicked();
     void on_bRetrieveTextMessages_clicked();
@@ -94,18 +98,13 @@ private slots:
     void on_bRelease_clicked();
     void on_bActivateConference_clicked();
     void on_bActivateCall_clicked();
-    void on_bUssdReq_clicked();
-    void on_bListProviders_clicked();
     void on_bGsmFeatures_clicked();
     void on_bCall_clicked();
-    void on_bUnregister_clicked();
-    void on_bRegister_clicked();
     void on_cbOrangeLed_stateChanged(int );
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );
     void refresh();
     void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
-    void incomingUssd(const QString &mode, const QString &message);
     void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
     void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
     void gsmMessageSizeFinished(QOFonoDBusPendingCall & call);

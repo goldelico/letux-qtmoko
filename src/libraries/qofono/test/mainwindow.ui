@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>1</number>
+       <number>2</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -58,92 +58,36 @@
         </item>
        </layout>
       </widget>
-      <widget class="QWidget" name="tabGsmDev">
+      <widget class="QWidget" name="tabNetwork">
        <attribute name="title">
-        <string>GSM device</string>
-       </attribute>
-       <layout class="QVBoxLayout" name="verticalLayout_6">
-        <item>
-         <widget class="QLabel" name="lGsmStatus">
-          <property name="text">
-           <string>GSM status:</string>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGetFunctionality">
-          <property name="text">
-           <string>Get functionality</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGsmFeatures">
-          <property name="text">
-           <string>GSM features</string>
-          </property>
-         </widget>
-        </item>
-       </layout>
-      </widget>
-      <widget class="QWidget" name="tabGsmNet">
-       <attribute name="title">
-        <string>GSM net</string>
+        <string>Network</string>
        </attribute>
        <layout class="QVBoxLayout" name="verticalLayout">
         <item>
-         <widget class="QLabel" name="lSignalStrength">
+         <widget class="QLabel" name="lNetwork">
           <property name="text">
-           <string>Signal strength:</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_4">
-          <item>
-           <widget class="QLineEdit" name="tbUssdReq">
-            <property name="text">
-             <string>*22#</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bUssdReq">
-            <property name="text">
-             <string>USSD Request</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bGetStatus">
-          <property name="text">
-           <string>Get status</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bListProviders">
-          <property name="text">
-           <string>List providers</string>
-          </property>
-         </widget>
-        </item>
-        <item>
-         <widget class="QPushButton" name="bUnregister">
-          <property name="text">
-           <string>Unregister from network</string>
+           <string>Properties...</string>
           </property>
          </widget>
         </item>
         <item>
          <widget class="QPushButton" name="bRegister">
           <property name="text">
-           <string>Register to network</string>
+           <string>Register</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bGetOperators">
+          <property name="text">
+           <string>Get operators</string>
+          </property>
+         </widget>
+        </item>
+        <item>
+         <widget class="QPushButton" name="bScan">
+          <property name="text">
+           <string>Scan</string>
           </property>
          </widget>
         </item>
