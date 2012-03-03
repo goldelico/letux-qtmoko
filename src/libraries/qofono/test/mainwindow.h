@@ -113,6 +113,7 @@ private slots:
     void on_cbBlueLed_stateChanged(int );
     void on_cbRedLed_stateChanged(int );
     void refresh();
+    void modemPropertyChanged(const QString &name, const QDBusVariant &value);
     void netRegPropertyChanged(const QString &name, const QDBusVariant &value);
     void voiceCallManagerPropertyChanged(const QString &name, const QDBusVariant &value);
     void voiceCallAdded(const QDBusObjectPath &path, const QVariantMap &properties);

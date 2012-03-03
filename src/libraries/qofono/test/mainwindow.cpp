@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 {
     ui->setupUi(this);
 
+    connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(modemPropertyChanged(const QString, const QDBusVariant)));
     connect(&oNetReg, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
     connect(&oVoiceCallManager, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallManagerPropertyChanged(const QString, const QDBusVariant)));
     connect(&oVoiceCallManager, SIGNAL(CallAdded(const QDBusObjectPath &, const QVariantMap &)), this, SLOT(voiceCallAdded(const QDBusObjectPath &, const QVariantMap &)));
@@ -306,6 +307,11 @@ void MainWindow::on_bScan_clicked()
     {
         showVariantMapResult(reply, "Scan");
     }
+}
+
+void MainWindow::modemPropertyChanged(const QString &name, const QDBusVariant &value)
+{
+    ui->tbModemPropertyChanges->append(name + "->" + value.variant().toString());
 }
 
 void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &value)

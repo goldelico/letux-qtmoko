@@ -21,17 +21,16 @@
 #include "ofonotelephonyservice.h"
 
 /*!
-    Construct a server-side service checker for OFONO services.
+    Construct a server-side service checker for oFono services.
 */
-OFonoServiceChecker::OFonoServiceChecker
-        ( OFonoTelephonyService *service )
-    : QServiceChecker( service->service(), service, Server )
+OFonoServiceChecker::OFonoServiceChecker(OFonoTelephonyService * service)
+:QServiceChecker(service->service(), service, Server)
 {
-    setValid( true );
+    setValid(true);
 }
 
 /*!
-    Destroy this server-side OFONO service checker.
+    Destroy this server-side oFono service checker.
 */
 OFonoServiceChecker::~OFonoServiceChecker()
 {

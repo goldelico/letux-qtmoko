@@ -31,16 +31,15 @@ class OFonoCallProvider : public QPhoneCallProvider
 {
     Q_OBJECT
 public:
-    OFonoCallProvider( OFonoTelephonyService * service );
+    OFonoCallProvider(OFonoTelephonyService * service);
     ~OFonoCallProvider();
 
     OFonoTelephonyService *service;
 
 protected:
-    QPhoneCallImpl *create
-        ( const QString& identifier, const QString& callType );
-        
+     QPhoneCallImpl * create
+        (const QString & identifier, const QString & callType);
+
 };
 
 #endif
-

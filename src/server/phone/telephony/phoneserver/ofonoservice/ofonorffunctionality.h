@@ -21,6 +21,7 @@
 #define OFONOPHONERFFUNCTIONALITY_H
 
 #include <QDebug>
+#include <qofonoutil.h>
 #include <qphonerffunctionality.h>
 
 class OFonoTelephonyService;
@@ -29,19 +30,19 @@ class OFonoRfFunctionality : public QPhoneRfFunctionality
 {
     Q_OBJECT
 public:
-    OFonoRfFunctionality( OFonoTelephonyService *service );
+    OFonoRfFunctionality(OFonoTelephonyService * service);
     ~OFonoRfFunctionality();
 
     OFonoTelephonyService *service;
-    bool modemAlive;
-    QPhoneRfFunctionality::Level reqLevel;      // requested level while device status was not alive
+    bool modemPowered;
+    QPhoneRfFunctionality::Level reqLevel; // requested level while device status was not alive
 
-    void deviceStatus(QString status);  // called by ofono telephony service to report device status
-    
+    void modemPropertyChanged(const QString & name, const QDBusVariant & value);  // called by ofono telephony service when modem property changes
+
 public slots:
+    void onlineFinished(QOFonoDBusPendingCall &);
     void forceLevelRequest();
-    void setLevel( QPhoneRfFunctionality::Level level );
+    void setLevel(QPhoneRfFunctionality::Level level);
 };
 
 #endif
-

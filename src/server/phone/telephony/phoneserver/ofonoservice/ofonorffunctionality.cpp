@@ -22,10 +22,10 @@
 #include "ofonoutil.h"
 
 OFonoRfFunctionality::OFonoRfFunctionality(OFonoTelephonyService * service)
-:QPhoneRfFunctionality(service->service(), service, QCommInterface::Server)
+:  QPhoneRfFunctionality(service->service(), service, QCommInterface::Server)
     , service(service)
-    , modemAlive(false)
-    , reqLevel((QPhoneRfFunctionality::Level)(-1))
+    , modemPowered(false)
+    , reqLevel((QPhoneRfFunctionality::Level) (-1))
 {
 }
 
@@ -33,46 +33,23 @@ OFonoRfFunctionality::~OFonoRfFunctionality()
 {
 }
 
-QPhoneRfFunctionality::Level ofonoLevelToQt(QString level)
+void OFonoRfFunctionality::modemPropertyChanged(const QString & name,
+                                                const QDBusVariant & value)
 {
-    if (level == "full") {
-        return QPhoneRfFunctionality::Full;
-    }
-    if (level == "airplane") {
-        return QPhoneRfFunctionality::DisableTransmitAndReceive;
-    }
-    if (level == "minimal") {
-        return QPhoneRfFunctionality::Minimum;
-    }
-    qWarning() << "ofonoLevelToQt: unknown level " << level;
-    return QPhoneRfFunctionality::Full;
-}
+    if (name == "Powered") {
+        bool oldPowered = modemPowered;
+        modemPowered = value.variant().toBool();
 
-QString qtLevelToOFono(QPhoneRfFunctionality::Level level)
-{
-    switch (level) {
-    case QPhoneRfFunctionality::Full:
-        return "full";
-    case QPhoneRfFunctionality::Minimum:
-        return "minimal";
-    default:
-        return "airplane";
-    }
-}
+        qDebug() << "OFonoRfFunctionality::modemPropertyChanged oldPowered=" <<
+            oldPowered << ", modemPowered=" << modemPowered;
 
-void OFonoRfFunctionality::deviceStatus(QString status)
-{
-    bool oldAlive = modemAlive;
-    modemAlive = status.startsWith("alive-");
-
-    qDebug() << "OFonoRfFunctionality::deviceStatus status=" << status <<
-        ", oldAlive=" << oldAlive << ", modemAlive=" << modemAlive;
-
-    if (oldAlive != modemAlive) {
+        if (oldPowered == modemPowered) {
+            return;
+        }
         // Set level which was requested while modem was not alive
-        if (modemAlive && reqLevel >= 0) {
+        if (modemPowered && reqLevel >= 0) {
             setLevel(reqLevel);
-            reqLevel = (QPhoneRfFunctionality::Level)(-1);
+            reqLevel = (QPhoneRfFunctionality::Level) (-1);
         }
         forceLevelRequest();
     }
@@ -82,44 +59,42 @@ void OFonoRfFunctionality::forceLevelRequest()
 {
     qDebug() << "forceLevelRequest";
 
-    if (!modemAlive) {
+    if (!modemPowered) {
         return;
     }
 
-/*    QOFonoDBusPendingReply < QString, bool, QString > reply =
-        service->gsmDev.GetFunctionality();
+    QOFonoDBusPendingReply < QVariantMap > reply =
+        service->oModem.GetProperties();
     if (!checkReply(reply, true)) {
         return;
     }
-    QString level = reply.argumentAt(0).toString();
-    setValue("level", qVariantFromValue(ofonoLevelToQt(level)));
+    QVariantMap properties = reply.value();
+    bool online = properties.value("Online").toBool();
+    setValue("level",
+             online ? QPhoneRfFunctionality::Full : QPhoneRfFunctionality::
+             DisableTransmitAndReceive);
     emit levelChanged();
-    */
 }
 
 void OFonoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
 {
     qWarning() << "setLevel level=" << level;
 
-/*    
-    if (!modemAlive) {
+    if (!modemPowered) {
         reqLevel = level;       // just remember the request
         return;
     }
-    // Retrieve autoregister and pin values
-    QOFonoDBusPendingReply < QString, bool, QString > reply =
-        service->gsmDev.GetFunctionality();
-    QTelephony::Result res = qTelResult(reply);
-    if (res != QTelephony::OK) {
-        emit setLevelResult(res);
-        return;
-    }
-    bool autoregister = reply.argumentAt(1).toBool();
-    QString pin = reply.argumentAt(2).toString();
-    QString ofonoLevel = qtLevelToOFono(level);
 
-    // Set actual value
-    QOFonoDBusPendingReply <> reply2 =
-        service->gsmDev.SetFunctionality(ofonoLevel, autoregister, pin);
-    emit setLevelResult(qTelResult(reply2)); */
+    bool online = (level == QPhoneRfFunctionality::Full);
+
+    QOFonoDBusPendingCall call =
+        service->oModem.SetProperty("Online", QDBusVariant(online));
+    watchOFonoCall(call, this, SLOT(onlineFinished(QOFonoDBusPendingCall &)));
+}
+
+void OFonoRfFunctionality::onlineFinished(QOFonoDBusPendingCall & call)
+{
+    QOFonoDBusPendingReply <> reply = call;
+    QTelephony::Result res = qTelResult(reply);
+    emit setLevelResult(res);
 }

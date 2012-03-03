@@ -28,9 +28,8 @@ class OFonoServiceChecker : public QServiceChecker
 {
     Q_OBJECT
 public:
-    OFonoServiceChecker( OFonoTelephonyService *service );
+    OFonoServiceChecker(OFonoTelephonyService * service);
     ~OFonoServiceChecker();
 };
 
 #endif
-

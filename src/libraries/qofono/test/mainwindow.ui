@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -41,6 +41,9 @@
            <string>Modems...</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="tbModemPropertyChanges"/>
         </item>
         <item>
          <widget class="QPushButton" name="bPowerOnModem">

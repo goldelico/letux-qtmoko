@@ -93,7 +93,7 @@ public:
 
 private slots:
     void poweredFinished(QOFonoDBusPendingCall &);
-    void onlineFinished(QOFonoDBusPendingCall &);
+    void modemPropertyChanged(const QString & name, const QDBusVariant & value);
     void netRegPropertyChanged(const QString & name,
                                const QDBusVariant & value);
 };

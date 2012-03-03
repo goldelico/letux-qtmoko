@@ -44,10 +44,35 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
 , phone_book(this)
 , sim_info(this)
 {
+    connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)),
+            this,
+            SLOT(modemPropertyChanged(const QString, const QDBusVariant)));
+
     connect(&oNetReg,
             SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this,
             SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
 
+    QOFonoDBusPendingReply < QVariantMap > reply = oModem.GetProperties();
+    if (!checkReply(reply, true)) {
+        return;
+    }
+    QVariantMap properties = reply.value();
+
+    // Notfify all interface about initial properties
+    QStringList keys = properties.keys();
+    for (int i = 0; i < keys.count(); i++) {
+        QString name = keys.at(i);
+        QVariant value = properties.value(name);
+        QDBusVariant dbusValue(value);
+        modemPropertyChanged(name, dbusValue);
+    }
+
+    // Is modem powered?
+    bool powered = properties.value("Powered").toBool();
+    if (powered) {
+        return;
+    }
+    // Power it on if not
     QOFonoDBusPendingCall call =
         oModem.SetProperty("Powered", QDBusVariant(true));
     watchOFonoCall(call, this, SLOT(poweredFinished(QOFonoDBusPendingCall &)));
@@ -107,21 +132,18 @@ void OFonoTelephonyService::poweredFinished(QOFonoDBusPendingCall & call)
     if (!checkReply(reply)) {
         return;
     }
-    QOFonoDBusPendingCall call2 =
-        oModem.SetProperty("Online", QDBusVariant(true));
-    watchOFonoCall(call2, this, SLOT(onlineFinished(QOFonoDBusPendingCall &)));
 }
 
-void OFonoTelephonyService::onlineFinished(QOFonoDBusPendingCall & call)
+void OFonoTelephonyService::modemPropertyChanged(const QString & name,
+                                                 const QDBusVariant & value)
 {
-    QOFonoDBusPendingReply <> reply = call;
-    if (!checkReply(reply)) {
-        return;
-    }
+    qDebug() << "modemPropertyChanged " << name << "=" << value.variant();
+    rf_functionality.modemPropertyChanged(name, value);
 }
 
 void OFonoTelephonyService::netRegPropertyChanged(const QString & name,
                                                   const QDBusVariant & value)
 {
+    qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
     network_registration.netRegPropertyChanged(name, value);
 }
