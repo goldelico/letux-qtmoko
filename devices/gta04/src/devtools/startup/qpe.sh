@@ -17,6 +17,7 @@ fi
 rm -f /dev/input/mice
 echo '1' > /proc/sys/kernel/printk
 echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
+echo 0 > /sys/class/leds/gta04\:red\:power/brightness
 stty -F /dev/tty1 -echo
 mkdir -p /var/cache/apt/archives/partial
 atd /var/spool/at
