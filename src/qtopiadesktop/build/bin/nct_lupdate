@@ -203,7 +203,7 @@ for my $tsfile ( keys %contextinfo ) {
 	if ( $global ) {
 	    $filename = $depot."/i18n/".$lang;
             if ( ! -e $filename ) {
-                mkdir ($filename, 0755) || print "Failed to create $filename\n";
+                mkdir ($filename, 0755) || print "nct_lupdate: Failed to create $filename\n";
             }
 	    $filename = $filename."/".$tsfile.".ts";
 	} else {
@@ -213,7 +213,7 @@ for my $tsfile ( keys %contextinfo ) {
     }
     close CPP;
     my $cmd = "$HOST_QT_BINS/lupdate $silent $tmp.pro";
-    print "$cmd\n";
+    print "nct_lupdate: $cmd\n";
     system($cmd);
 
     if ( $STRING_LANGUAGE ) {
@@ -224,7 +224,7 @@ for my $tsfile ( keys %contextinfo ) {
 	if ( $global ) {
 	    $filename = $depot."/i18n/".$STRING_LANGUAGE;
             if ( ! -e $filename ) {
-                mkdir ($filename, 0755) || print "Failed to create $filename\n";
+                mkdir ($filename, 0755) || print "nct_lupdate: Failed to create $filename\n";
             }
 	    $filename = $filename."/".$tsfile.".ts";
 	} else {
@@ -233,7 +233,7 @@ for my $tsfile ( keys %contextinfo ) {
         print CPP "TRANSLATIONS += $filename\n";
         close CPP;
         $cmd = "$HOST_QT_BINS/lupdate $silent -pluralonly $tmp.pro";
-        print "$cmd\n";
+        print "nct_lupdate: $cmd\n";
         system($cmd);
     }
 

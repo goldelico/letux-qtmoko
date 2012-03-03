@@ -80,7 +80,7 @@ for my $lang ( @LANGS ) {
 }
 close CPP;
 my $cmd = "$HOST_QT_BINS/lupdate -silent $tmp.pro";
-print "$cmd\n";
+print "theme_lupdate: $cmd\n";
 system($cmd);
 
 if ( $STRING_LANGUAGE ) {
@@ -91,7 +91,7 @@ if ( $STRING_LANGUAGE ) {
     print CPP "TRANSLATIONS += $filename\n";
     close CPP;
     $cmd = "$HOST_QT_BINS/lupdate -silent -pluralonly $tmp.pro";
-    print "$cmd\n";
+    print "theme_lupdate: $cmd\n";
     system($cmd);
 }
 
@@ -107,7 +107,7 @@ sub parseFile
         $filename = "$themedir/$page";
     }
     $pageName = undef;
-    DEBUG and print "Parsing $filename\n";
+    DEBUG and print "theme_lupdate: Parsing $filename\n";
     my $parser = new XML::Parser(ErrorContext => 2);
     $parser->setHandlers( Start => \&start_handler,
                             Char => \&char_handler );
