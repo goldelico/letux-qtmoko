@@ -37,7 +37,7 @@ OFonoPhoneBook::~OFonoPhoneBook()
 
 void OFonoPhoneBook::deviceStatus(QString status)
 {
-    bool oldReady = simReady;
+/*    bool oldReady = simReady;
     simReady = (status == "alive-registered");
 
     qDebug() << "OFonoPhoneBook::deviceStatus status=" << status << ", oldReady="
@@ -52,14 +52,14 @@ void OFonoPhoneBook::deviceStatus(QString status)
             wantLimits = false;
             requestLimits("SM");
         }
-    }
+    } */
 }
 
 void OFonoPhoneBook::getEntries(const QString & store)
 {
     qDebug() << "OFonoPhoneBook::getEntries store=" << store;
 
-    // We support only "SM" store
+/*    // We support only "SM" store
     if (store != "SM") {
         QList < QPhoneBookEntry > list;
         emit entries(store, list);
@@ -74,12 +74,12 @@ void OFonoPhoneBook::getEntries(const QString & store)
     QOFonoDBusPendingCall call =
         service->gsmSim.RetrievePhonebook("contacts", 0, 65535);
     watchOFonoCall(call, this,
-                 SLOT(retrievePhonebookFinished(QOFonoDBusPendingCall &)));
+                 SLOT(retrievePhonebookFinished(QOFonoDBusPendingCall &))); */
 }
 
 void OFonoPhoneBook::retrievePhonebookFinished(QOFonoDBusPendingCall & call)
 {
-    QOFonoDBusPendingReply < QOFonoSIMEntryList > reply = call;
+/*    QOFonoDBusPendingReply < QOFonoSIMEntryList > reply = call;
 
     if (!checkReply(reply)) {
         return;
@@ -108,13 +108,13 @@ void OFonoPhoneBook::retrievePhonebookFinished(QOFonoDBusPendingCall & call)
             freeIndex = entry.index + 1;
         }
     }
-    emit entries("SM", list);
+    emit entries("SM", list); */
 }
 
 void OFonoPhoneBook::add(const QPhoneBookEntry & entry, const QString & store,
                        bool flush)
 {
-    qDebug() << "OFonoPhoneBook::add entry.text()=" << entry.text() << "store=" <<
+/*    qDebug() << "OFonoPhoneBook::add entry.text()=" << entry.text() << "store=" <<
         store << "flush=" << flush;
 
     QOFonoDBusPendingReply <> reply =
@@ -122,19 +122,19 @@ void OFonoPhoneBook::add(const QPhoneBookEntry & entry, const QString & store,
                                    entry.number());
 
     checkReply(reply);
-    getEntries(store);
+    getEntries(store);*/
 }
 
 void OFonoPhoneBook::remove(uint index, const QString & store, bool flush)
 {
-    qDebug() << "OFonoPhoneBook::remove index=" << index << "store=" << store <<
+/*    qDebug() << "OFonoPhoneBook::remove index=" << index << "store=" << store <<
         "flush=" << flush;
 
     QOFonoDBusPendingReply <> reply =
         service->gsmSim.DeleteEntry("contacts", index);
 
     checkReply(reply);
-    getEntries(store);
+    getEntries(store);*/
 }
 
 void OFonoPhoneBook::update(const QPhoneBookEntry & entry, const QString & store,
@@ -143,16 +143,16 @@ void OFonoPhoneBook::update(const QPhoneBookEntry & entry, const QString & store
     qDebug() << "OFonoPhoneBook::update entry.text()=" << entry.text() << "store="
         << store << "flush=" << flush;
 
-    QOFonoDBusPendingReply <> reply =
+/*    QOFonoDBusPendingReply <> reply =
         service->gsmSim.StoreEntry("contacts", entry.index(), entry.text(),
                                    entry.number());
     checkReply(reply);
-    getEntries(store);
+    getEntries(store); */
 }
 
 void OFonoPhoneBook::flush(const QString & store)
 {
-    getEntries(store);
+    //getEntries(store);
 }
 
 void OFonoPhoneBook::setPassword(const QString &, const QString &)
@@ -169,7 +169,7 @@ void OFonoPhoneBook::requestLimits(const QString & store)
 {
     qDebug() << "OFonoPhoneBook::requestLimits store=" << store;
 
-    if (!simReady) {
+/*    if (!simReady) {
         wantLimits = true;
         return;
     }
@@ -186,7 +186,7 @@ void OFonoPhoneBook::requestLimits(const QString & store)
     l.setLastIndex(reply.argumentAt(0).toInt());
     l.setNumberLength(reply.argumentAt(1).toInt());
     l.setTextLength(reply.argumentAt(2).toInt());
-    emit limits(store, l);
+    emit limits(store, l); */
 }
 
 void OFonoPhoneBook::requestFixedDialingState()

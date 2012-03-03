@@ -80,7 +80,7 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
 
 void OFonoNetworkRegistration::deviceStatus(QString status)
 {
-    if (status == "alive-sim-ready") {
+/*    if (status == "alive-sim-ready") {
         QOFonoDBusPendingCall call = service->gsmNet.Register();
         watchOFonoCall(call, this, SLOT(registerFinished(QOFonoDBusPendingCall &)));
     } else if (status == "alive-registered") {
@@ -88,6 +88,7 @@ void OFonoNetworkRegistration::deviceStatus(QString status)
         watchOFonoCall(call, this,
                      SLOT(getStatusFinished(QOFonoDBusPendingCall &)));
     }
+    */
 }
 
 void OFonoNetworkRegistration::registerFinished(QOFonoDBusPendingCall & call)
@@ -96,13 +97,14 @@ void OFonoNetworkRegistration::registerFinished(QOFonoDBusPendingCall & call)
     checkReply(reply);
 }
 
-void OFonoNetworkRegistration::networkStatusChange(const QVariantMap & map)
+void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
+                               const QDBusVariant & value)
 {
-    QString registration = map.value("registration").toString();
-    QString mode = map.value("mode").toString();
-    QString provider = map.value("provider").toString();
-    QString display = map.value("display").toString();
-    QString act = map.value("act").toString();
+    QString registration = "home";
+    QString mode = "automatic";
+    QString provider = "t-mobile";
+    QString display = "t-mobile";
+    QString act = "act";
 
     qDebug() << "OFonoNetworkRegistration::networkStatusChange registration=" <<
         registration << ", mode=" << mode << ", provider=" << provider;
@@ -112,24 +114,16 @@ void OFonoNetworkRegistration::networkStatusChange(const QVariantMap & map)
     updateCurrentOperator(ofonoOpModeToQt(mode), provider, display, act);
 }
 
-void OFonoNetworkRegistration::getStatusFinished(QOFonoDBusPendingCall & call)
-{
-    QOFonoDBusPendingReply < QVariantMap > reply = call;
-    if (checkReply(reply) && !initialized()) {
-        networkStatusChange(reply.value());
-    }
-}
-
 void OFonoNetworkRegistration::setCurrentOperator
     (QTelephony::OperatorMode, const QString & id, const QString &)
 {
-    QOFonoDBusPendingReply <> reply = service->gsmNet.RegisterWithProvider(id);
-    emit setCurrentOperatorResult(qTelResult(reply));
+/*    QOFonoDBusPendingReply <> reply = service->gsmNet.RegisterWithProvider(id);
+    emit setCurrentOperatorResult(qTelResult(reply));*/
 }
 
 void OFonoNetworkRegistration::requestAvailableOperators()
 {
-    QOFonoDBusPendingReply < QOFonoNetworkProviderList > reply =
+    /*QOFonoDBusPendingReply < QOFonoNetworkProviderList > reply =
         service->gsmNet.ListProviders();
     if (!checkReply(reply)) {
         return;
@@ -146,5 +140,5 @@ void OFonoNetworkRegistration::requestAvailableOperators()
         oper.technology = provider.act;
         opers.append(oper);
     }
-    emit availableOperators(opers);
+    emit availableOperators(opers);*/
 }

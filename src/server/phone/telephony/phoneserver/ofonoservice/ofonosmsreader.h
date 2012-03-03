@@ -22,8 +22,7 @@
 
 #include <QtDBus>
 #include <qsmsreader.h>
-#include <qofonogsmsms.h>
-#include <qofonogsmsim.h>
+#include <qofonoutil.h>
 
 class OFonoTelephonyService;
 
@@ -35,8 +34,8 @@ public:
     ~OFonoSMSReader();
 
     OFonoTelephonyService *service;
-    QOFonoSIMMessageList messages;        // messages read from SIM
-    QOFonoSIMMessageList incoming;        // messages that came from incomingTextMessage event
+//    QOFonoSIMMessageList messages;        // messages read from SIM
+//    QOFonoSIMMessageList incoming;        // messages that came from incomingTextMessage event
     int index;
     int numSlots;
 

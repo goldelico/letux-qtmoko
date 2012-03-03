@@ -21,8 +21,8 @@
 #define OFONONETWORKREGISTRATION_H
 
 #include <QTimer>
+#include <qofonoutil.h>
 #include <qnetworkregistration.h>
-#include <qofonogsmnetwork.h>
 
 class OFonoTelephonyService;
 
@@ -35,8 +35,9 @@ public:
 
     OFonoTelephonyService * service;
 
-    void deviceStatus(QString status);  // called by ofono telephony service to report device status
-    void networkStatusChange(const QVariantMap &);
+    void deviceStatus(QString status);
+    void netRegPropertyChanged(const QString & name,
+                               const QDBusVariant & value);
 
 public slots:
     void setCurrentOperator( QTelephony::OperatorMode mode,
@@ -45,7 +46,6 @@ public slots:
 
 private slots:
     void registerFinished(QOFonoDBusPendingCall &);
-    void getStatusFinished(QOFonoDBusPendingCall &);
 };
 
 #endif

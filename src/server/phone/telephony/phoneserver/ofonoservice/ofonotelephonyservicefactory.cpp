@@ -19,25 +19,39 @@
 
 #include "ofonotelephonyservicefactory.h"
 #include <qvaluespace.h>
-#include <QSignalSourceProvider>
 #include <qtimer.h>
+#include <QSignalSourceProvider>
+
+#include <qofonoutil.h>
+#include <qofonomanager.h>
+
 #include "phoneserver.h"
 #include "ofonotelephonyservice.h"
 
-OFonoTelephonyServiceFactory::OFonoTelephonyServiceFactory(QObject *parent)
+OFonoTelephonyServiceFactory::OFonoTelephonyServiceFactory(QObject * parent)
 {
     Q_UNUSED(parent);
 }
 
-QTelephonyService* OFonoTelephonyServiceFactory::service()
+QTelephonyService *OFonoTelephonyServiceFactory::service()
 {
-    return new OFonoTelephonyService("modem", NULL);
+    OrgOfonoManagerInterface oManager("org.ofono", "/",
+                                      QDBusConnection::systemBus(), this);
+    QOFonoDBusPendingReply < QOFonoObjectList > reply = oManager.GetModems();
+    if (!checkReply(reply)) {
+        return NULL;
+    }
+    QOFonoObjectList modems = reply.value();
+    if (modems.count() == 0) {
+        return NULL;
+    }
+    return new OFonoTelephonyService("modem", modems.at(0).object.path(), NULL);
 }
 
-QByteArray OFonoTelephonyServiceFactory::serviceName() const 
+QByteArray OFonoTelephonyServiceFactory::serviceName() const
 {
-    //synchronize with phoneserver.cpp 
-    return QByteArray("OFono");    
+    // Synchronize with phoneserver.cpp
+    return QByteArray("oFono");
 }
 
 QTOPIA_TASK(OFonoTelephonyServiceFactory, OFonoTelephonyServiceFactory);

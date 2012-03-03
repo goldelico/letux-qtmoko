@@ -66,6 +66,7 @@ void OFonoPhoneCall::dial( const QDialOptions& options )
     
     qDebug() << "OFonoPhoneCall::dial(" << number << ")";
 
+/*    
     // If the number starts with '*' or '#', then this is a request
     // for a supplementary service, not an actual phone call.
     // So we dial and then immediately hang up, allowing the network
@@ -79,6 +80,7 @@ void OFonoPhoneCall::dial( const QDialOptions& options )
     QOFonoDBusPendingCall call = service->gsmCall.Initiate(number, "voice");
     watchOFonoCall(call, this, SLOT(initiateFinished(QOFonoDBusPendingCall &)));
     setState(QPhoneCall::Dialing);
+    */
 }
 
 void OFonoPhoneCall::initiateFinished(QOFonoDBusPendingCall & call)
@@ -87,14 +89,14 @@ void OFonoPhoneCall::initiateFinished(QOFonoDBusPendingCall & call)
     if(checkReply(reply, "Initiate"))
     {
         id = reply.value();
-    }   
+    }
 }
 
 void OFonoPhoneCall::hangup( QPhoneCall::Scope scope)
 {
     qDebug() << "OFonoPhoneCall::hangup()";
 
-    if(scope == QPhoneCall::CallOnly)
+/*    if(scope == QPhoneCall::CallOnly)
     {
         QOFonoDBusPendingReply<> reply = service->gsmCall.Release(id);
         checkReply(reply);
@@ -106,28 +108,28 @@ void OFonoPhoneCall::hangup( QPhoneCall::Scope scope)
         checkReply(reply);
     }
     id = -1;
-    setState(QPhoneCall::HangupLocal);
+    setState(QPhoneCall::HangupLocal); */
 }
 
 void OFonoPhoneCall::accept()
 {
-    qDebug() << "OFonoPhoneCall::accept()";
+/*    qDebug() << "OFonoPhoneCall::accept()";
     QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply);
+    checkReply(reply);*/
 }
 
 void OFonoPhoneCall::hold()
 {
     qDebug() << "OFonoPhoneCall::hold()";
-    QOFonoDBusPendingReply<> reply = service->gsmCall.HoldActive();
-    checkReply(reply);
+/*    QOFonoDBusPendingReply<> reply = service->gsmCall.HoldActive();
+    checkReply(reply);*/
 }
 
 void OFonoPhoneCall::activate( QPhoneCall::Scope )
 {
     qDebug() << "OFonoPhoneCall::activate()";
-    QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply);
+/*    QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
+    checkReply(reply);*/
 }
 
 void OFonoPhoneCall::tone( const QString& tones )

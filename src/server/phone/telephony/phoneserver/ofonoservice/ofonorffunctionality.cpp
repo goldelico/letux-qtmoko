@@ -86,7 +86,7 @@ void OFonoRfFunctionality::forceLevelRequest()
         return;
     }
 
-    QOFonoDBusPendingReply < QString, bool, QString > reply =
+/*    QOFonoDBusPendingReply < QString, bool, QString > reply =
         service->gsmDev.GetFunctionality();
     if (!checkReply(reply, true)) {
         return;
@@ -94,12 +94,14 @@ void OFonoRfFunctionality::forceLevelRequest()
     QString level = reply.argumentAt(0).toString();
     setValue("level", qVariantFromValue(ofonoLevelToQt(level)));
     emit levelChanged();
+    */
 }
 
 void OFonoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
 {
     qWarning() << "setLevel level=" << level;
 
+/*    
     if (!modemAlive) {
         reqLevel = level;       // just remember the request
         return;
@@ -119,5 +121,5 @@ void OFonoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
     // Set actual value
     QOFonoDBusPendingReply <> reply2 =
         service->gsmDev.SetFunctionality(ofonoLevel, autoregister, pin);
-    emit setLevelResult(qTelResult(reply2));
+    emit setLevelResult(qTelResult(reply2)); */
 }

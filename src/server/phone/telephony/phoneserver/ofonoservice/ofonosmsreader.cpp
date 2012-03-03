@@ -23,8 +23,6 @@
 OFonoSMSReader::OFonoSMSReader(OFonoTelephonyService * service)
 :  QSMSReader(service->service(), service, QCommInterface::Server)
     , service(service)
-    , messages()
-    , incoming()
     , index(-1)
     , numSlots(-1)
 {
@@ -71,15 +69,16 @@ void OFonoSMSReader::check()
         return;
     }
     // Fill messages with values from SIM
-    messages.clear();
+/*    messages.clear();
     index = 0;
 
     QOFonoDBusPendingCall call = service->gsmSim.RetrieveMessage(0);
     watchOFonoCall(call, this,
-                 SLOT(retrieveMessageFinished(QOFonoDBusPendingCall &)));
+                 SLOT(retrieveMessageFinished(QOFonoDBusPendingCall &)));*/
 }
 
 // Remove SMS from incoming if it is on SIM
+/*    
 static void removeIncomingOnSim(QOFonoSIMMessageList & incoming,
                                 QOFonoSIMMessageList & messages)
 {
@@ -106,10 +105,11 @@ static void removeIncomingOnSim(QOFonoSIMMessageList & incoming,
             i++;
         }
     }
-}
+}*/
 
 void OFonoSMSReader::retrieveMessageFinished(QOFonoDBusPendingCall & call)
 {
+    /*
     QOFonoDBusPendingReply < QString, QString, QString, QVariantMap > reply =
         call;
     if (checkReply(reply)) {
@@ -134,6 +134,7 @@ void OFonoSMSReader::retrieveMessageFinished(QOFonoDBusPendingCall & call)
     QOFonoDBusPendingCall nextCall = service->gsmSim.RetrieveMessage(index);
     watchOFonoCall(nextCall, this,
                  SLOT(retrieveMessageFinished(QOFonoDBusPendingCall &)));
+                 */
 }
 
 // Parse timestamp string e.g. "11/09/12,11:12:31+08"
@@ -157,6 +158,7 @@ static QString getMsgId(const QString & contents, const QString & timestamp)
     return QString("%1:%2").arg(timestamp).arg(crc);
 }
 
+/*
 static QString fillMsg(const QOFonoSIMMessage & f, QSMSMessage & m, int index)
 {
     qDebug() << "fillMsg index=" << index << "f.number=" << f.number +
@@ -169,6 +171,7 @@ static QString fillMsg(const QOFonoSIMMessage & f, QSMSMessage & m, int index)
 
     return getMsgId(f.contents, f.timestamp);
 }
+*/
 
 void OFonoSMSReader::firstMessage()
 {
@@ -180,7 +183,7 @@ void OFonoSMSReader::firstMessage()
 void OFonoSMSReader::nextMessage()
 {
     qDebug() << "OFonoSMSReader::nextMessage()";
-    QSMSMessage msg;
+/*    QSMSMessage msg;
     QString id;
     int incomingIndex = index - messages.count();
     if (index < messages.count()) {
@@ -190,13 +193,14 @@ void OFonoSMSReader::nextMessage()
         id = fillMsg(incoming.at(incomingIndex), msg, index);
     }
     index++;
-    emit fetched(id, msg);
+    emit fetched(id, msg);*/
 }
 
 void OFonoSMSReader::deleteMessage(const QString & id)
 {
     qDebug() << "OFonoSMSReader::deleteMessage() id=" << id;
 
+/*
     // Find message by id
     for (int i = 0; i < messages.count(); i++) {
         QOFonoSIMMessage f = messages.at(i);
@@ -209,6 +213,7 @@ void OFonoSMSReader::deleteMessage(const QString & id)
             service->gsmSim.DeleteMessage(f.index);
         checkReply(delReply);
     }
+    */
 }
 
 void OFonoSMSReader::setUnreadCount(int value)
@@ -222,7 +227,8 @@ void OFonoSMSReader::incomingTextMessage(const QString & number,
 {
     qDebug() << "OFonoSMSReader::incomingTextMessage() number=" << number <<
         ", timestamp=" << timestamp << ", contents=" << contents;
-
+/*        
+        
     // Keep the message in memory in case that it does not make it to SIM
     // (e.g. SIM is full)
     QOFonoSIMMessage f;
@@ -231,5 +237,5 @@ void OFonoSMSReader::incomingTextMessage(const QString & number,
     f.contents = contents;
     incoming.append(f);
 
-    check();
+    check(); */
 }

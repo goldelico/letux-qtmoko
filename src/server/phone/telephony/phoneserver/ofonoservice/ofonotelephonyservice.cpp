@@ -19,24 +19,21 @@
 #include "ofonotelephonyservice.h"
 
 OFonoTelephonyService::OFonoTelephonyService(const QString & service,
-                                         QObject * parent)
-:QTelephonyService(service, parent)
-, gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
-         QDBusConnection::systemBus(), this)
-, gsmNet("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
-         QDBusConnection::systemBus(), this)
-, gsmCall("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
-          QDBusConnection::systemBus(), this)
-, gsmSms("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
-         QDBusConnection::systemBus(), this)
-, gsmSim("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
-         QDBusConnection::systemBus(), this)
-, pimMsg("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Messages",
-         QDBusConnection::systemBus(), this)
-, pimContacts("org.freesmartphone.opimd", "/org/freesmartphone/PIM/Contacts",
-              QDBusConnection::systemBus(), this)
-, ofonoUsage("org.freesmartphone.ousaged", "/org/freesmartphone/Usage",
-           QDBusConnection::systemBus(), this)
+                                             QString modemDbusPath,
+                                             QObject * parent)
+:QTelephonyService(service, parent), oModem("org.ofono", modemDbusPath,
+                                            QDBusConnection::systemBus(), this),
+oCellBroadcast("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oConnMan("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oMessageManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oNetReg("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oPhoneBook("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oPushNotify("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oRadio("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oSim("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oSuplServices("org.ofono", modemDbusPath, QDBusConnection::systemBus(), this),
+oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
+                  this)
 , service_checker(this)
 , rf_functionality(this)
 , network_registration(this)
@@ -46,41 +43,14 @@ OFonoTelephonyService::OFonoTelephonyService(const QString & service,
 , sms_reader(this)
 , phone_book(this)
 , sim_info(this)
-, deviceStatusInitialized(false)
 {
-    connect(&gsmDev,
-            SIGNAL(DeviceStatus(const QString &)),
-            this, SLOT(deviceStatusChange(const QString &)));
+    connect(&oNetReg,
+            SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this,
+            SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
 
-    connect(&gsmNet,
-            SIGNAL(Status(const QVariantMap &)),
-            this, SLOT(networkStatusChange(const QVariantMap &)));
-
-    connect(&gsmCall,
-            SIGNAL(CallStatus(int, const QString &, const QVariantMap &)),
-            this,
-            SLOT(callStatusChange(int, const QString &, const QVariantMap &)));
-
-    connect(&gsmNet,
-            SIGNAL(IncomingUssd(const QString &, const QString &)),
-            this, SLOT(incomingUssd(const QString &, const QString &)));
-
-    connect(&gsmSms,
-            SIGNAL(IncomingTextMessage
-                   (const QString &, const QString &, const QString &)), this,
-            SLOT(incomingTextMessage
-                 (const QString &, const QString &, const QString &)));
-
-    connect(&gsmSms,
-            SIGNAL(IncomingMessageReport
-                   (int, const QString &, const QString &, const QString &)),
-            this,
-            SLOT(incomingMessageReport
-                 (int, const QString &, const QString &, const QString &)));
-
-    QOFonoDBusPendingCall call = gsmDev.GetDeviceStatus();
-    watchOFonoCall(call, this,
-                 SLOT(getDeviceStatusFinished(QOFonoDBusPendingCall &)));
+    QOFonoDBusPendingCall call =
+        oModem.SetProperty("Powered", QDBusVariant(true));
+    watchOFonoCall(call, this, SLOT(poweredFinished(QOFonoDBusPendingCall &)));
 }
 
 OFonoTelephonyService::~OFonoTelephonyService()
@@ -89,7 +59,7 @@ OFonoTelephonyService::~OFonoTelephonyService()
 
 void OFonoTelephonyService::initialize()
 {
-    // Create our OFono-specific overrides for the service interfaces
+    // Create our oFono-specific overrides for the service interfaces
 
     // If the modem does not exist, then tell clients via QServiceChecker.
     if (!supports < QServiceChecker > ())
@@ -131,102 +101,27 @@ void OFonoTelephonyService::initialize()
     //QModemService::initialize();
 }
 
-void OFonoTelephonyService::deviceStatusChange(const QString & status)
+void OFonoTelephonyService::poweredFinished(QOFonoDBusPendingCall & call)
 {
-    deviceStatusInitialized = true;
-    rf_functionality.deviceStatus(status);
-    network_registration.deviceStatus(status);
-    sim_info.deviceStatus(status);
-    sms_reader.deviceStatus(status);
-    phone_book.deviceStatus(status);
-}
-
-void OFonoTelephonyService::getDeviceStatusFinished(QOFonoDBusPendingCall & call)
-{
-    QOFonoDBusPendingReply < QString > reply = call;
+    QOFonoDBusPendingReply <> reply = call;
     if (!checkReply(reply)) {
         return;
     }
-    QString status = reply.value();
-    if (!deviceStatusInitialized) {
-        deviceStatusChange(reply.value());
-    }
-    if (status == "closed") {
-        QOFonoDBusPendingCall call = ofonoUsage.SetResourcePolicy("GSM", "enabled");
-        watchOFonoCall(call, this,
-                     SLOT(setResourcePolicyFinished(QOFonoDBusPendingCall &)));
-    }
+    QOFonoDBusPendingCall call2 =
+        oModem.SetProperty("Online", QDBusVariant(true));
+    watchOFonoCall(call2, this, SLOT(onlineFinished(QOFonoDBusPendingCall &)));
 }
 
-void OFonoTelephonyService::setResourcePolicyFinished(QOFonoDBusPendingCall & call)
+void OFonoTelephonyService::onlineFinished(QOFonoDBusPendingCall & call)
 {
     QOFonoDBusPendingReply <> reply = call;
-    checkReply(reply);
-}
-
-void OFonoTelephonyService::networkStatusChange(const QVariantMap & status)
-{
-    network_registration.networkStatusChange(status);
-}
-
-void OFonoTelephonyService::callStatusChange(int id, const QString & status,
-                                           const QVariantMap & properties)
-{
-    QString str = QString("id=%1, status=%2").arg(id).arg(status);
-    for (int i = 0; i < properties.count(); i++) {
-        QString key = properties.keys().at(i);
-        str += ", " + key + "=" + properties.value(key).toString();
-    }
-    qDebug() << "CallStatusChange" << str;
-
-    if (status == "INCOMING") {
-        // Incoming calls have to be created here
-        OFonoPhoneCall *call = new OFonoPhoneCall(this, NULL, "Voice", id);
-        call->setNumber(properties.value("peer").toString());
-        call->setOFonoStatus(status);
+    if (!checkReply(reply)) {
         return;
     }
-    // Check if it is an existing call
-    QList < QPhoneCallImpl * >list = call_provider.calls();
-    for (int i = 0; i < list.count(); i++) {
-        OFonoPhoneCall *call = static_cast < OFonoPhoneCall * >(list.at(i));
-        qDebug() << "call identifier=" << call->identifier() << ", call id=" <<
-            call->id;
-        if (call->id == id) {
-            call->setOFonoStatus(status);
-            return;
-        }
-    }
-
-    if (status == "RELEASE") {
-        return;                 // Released call can have id -1, it was not found in the loop but that's ok
-    }
-
-    qWarning() << "callStatusChange: unhandled status for new call" << status;
 }
 
-void OFonoTelephonyService::incomingUssd(const QString & mode,
-                                       const QString & message)
+void OFonoTelephonyService::netRegPropertyChanged(const QString & name,
+                                                  const QDBusVariant & value)
 {
-    qDebug() << "Incomming ussd", "mode=" + mode + ", message=" + message;
-    suppl_services.onIncomingUssd(mode, message);
-}
-
-void OFonoTelephonyService::incomingTextMessage(const QString & number,
-                                              const QString & timestamp,
-                                              const QString & contents)
-{
-    qDebug() << "incomingTextMessage number=" << number
-        << " timestamp=" << timestamp << " contents=" << contents;
-    sms_reader.incomingTextMessage(number, timestamp, contents);
-}
-
-void OFonoTelephonyService::incomingMessageReport(int reference,
-                                                const QString & status,
-                                                const QString & sender_number,
-                                                const QString & contents)
-{
-    qDebug() << "incomingMessageReport reference=" << reference
-        << " status=" << status << " sender_number=" << sender_number
-        << " contents=" << contents;
+    network_registration.netRegPropertyChanged(name, value);
 }

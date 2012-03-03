@@ -33,6 +33,7 @@ OFonoSimInfo::~OFonoSimInfo()
 
 void OFonoSimInfo::deviceStatus(QString status)
 {
+    /*
     qDebug() << "OFonoSimInfo::deviceStatus status=" << status;
 
     if (status == "alive-registered" || status == "alive-sim-ready") {
@@ -42,6 +43,7 @@ void OFonoSimInfo::deviceStatus(QString status)
     } else {
         setIdentity(QString());
     }
+    */
 }
 
 void OFonoSimInfo::getSimInfoFinished(QOFonoDBusPendingCall & call)

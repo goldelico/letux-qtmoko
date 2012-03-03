@@ -23,9 +23,6 @@
 #include <QtDBus>
 #include <qphonebook.h>
 #include "ofonoutil.h"
-#include <qofonopimcontact.h>
-#include <qofonopimcontacts.h>
-#include <qofonopimcontactquery.h>
 
 class OFonoTelephonyService;
 

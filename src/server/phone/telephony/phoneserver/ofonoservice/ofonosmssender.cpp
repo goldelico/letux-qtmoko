@@ -34,12 +34,13 @@ OFonoSMSSender::~OFonoSMSSender()
 void OFonoSMSSender::send( const QString& id, const QSMSMessage& msg )
 {
     qDebug() << "OFonoSMSSender::send" << "id=" << id << "recipient=" << msg.recipient() << "text=" << msg.text();
-    
+
+/*    
     QOFonoDBusPendingCall call = service->gsmSms.SendTextMessage(
         msg.recipient(), msg.text(), msg.statusReportRequested());
 
     watchOFonoCall(call, this, SLOT(sendTextMessageFinished(QOFonoDBusPendingCall &)));
-    smsId = id;
+    smsId = id; */
 }
 
 void OFonoSMSSender::sendTextMessageFinished(QOFonoDBusPendingCall & call)

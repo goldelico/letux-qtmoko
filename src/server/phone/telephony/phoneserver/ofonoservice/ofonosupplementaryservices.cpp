@@ -44,8 +44,9 @@ void OFonoSupplementaryServices::sendSupplementaryServiceData
         ( const QString& data )
 {
     qDebug() << "OFonoSupplementaryServices::sendSupplementaryServiceData data=" << data;
-    QOFonoDBusPendingCall call = service->gsmNet.SendUssdRequest(data);
+/*    QOFonoDBusPendingCall call = service->gsmNet.SendUssdRequest(data);
     watchOFonoCall(call, this, SLOT(sendUssdRequestFinished(QOFonoDBusPendingCall &)));
+    */
 }
 
 void OFonoSupplementaryServices::sendUssdRequestFinished(QOFonoDBusPendingCall & call)

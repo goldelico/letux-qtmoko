@@ -25,17 +25,26 @@
 #include <qmodemcallprovider.h>
 #include <qmodemsimtoolkit.h>
 #include <qbandselection.h>
-#include <qofonogsmnetwork.h>
-#include <qofonogsmcall.h>
-#include <qofonogsmdevice.h>
-#include <qofonogsmsms.h>
-#include <qofonopimmessages.h>
-#include <qofonopimmessagequery.h>
-#include <qofonopimcontact.h>
-#include <qofonopimcontacts.h>
-#include <qofonopimcontactquery.h>
-#include <qofonogsmsim.h>
-#include <qofonousage.h>
+
+#include <qofonoutil.h>
+#include <qofonomodem.h>
+#include <qofonocellbroadcast.h>
+#include <qofonodbuspendingreply.h>
+#include <qofonoobjectlist.h>
+#include <qofonosimmanager.h>
+#include <qofonovoicecallmanager.h>
+#include <qofonoconnectionmanager.h>
+#include <qofonophonebook.h>
+#include <qofonostringmap.h>
+#include <qofonodbusabstractinterface.h>
+#include <qofonomessagemanager.h>
+#include <qofonopushnotification.h>
+#include <qofonosupplementaryservices.h>
+#include <qofonodbuspendingcall.h>
+#include <qofononetworkregistration.h>
+#include <qofonoradiosettings.h>
+#include <qofonovoicecall.h>
+#include <qofononetworkoperator.h>
 
 #include "ofonophonecall.h"
 #include "ofonocallprovider.h"
@@ -54,17 +63,21 @@ class OFonoTelephonyService : public QTelephonyService
 {
     Q_OBJECT
 public:
-    OFonoTelephonyService(const QString & service, QObject * parent = 0);
+    OFonoTelephonyService(const QString & service, QString modemDbusPath,
+                          QObject * parent = 0);
     ~OFonoTelephonyService();
 
-    QOFonoGSMDevice gsmDev;
-    QOFonoGSMNetwork gsmNet;
-    QOFonoGSMCall gsmCall;
-    QOFonoGSMSMS gsmSms;
-    QOFonoGSMSIM gsmSim;
-    QOFonoPIMMessages pimMsg;
-    QOFonoPIMContacts pimContacts;
-    QOFonoUsage ofonoUsage;
+    OrgOfonoModemInterface oModem;
+    OrgOfonoCellBroadcastInterface oCellBroadcast;
+    OrgOfonoConnectionManagerInterface oConnMan;
+    OrgOfonoMessageManagerInterface oMessageManager;
+    OrgOfonoNetworkRegistrationInterface oNetReg;
+    OrgOfonoPhonebookInterface oPhoneBook;
+    OrgOfonoPushNotificationInterface oPushNotify;
+    OrgOfonoRadioSettingsInterface oRadio;
+    OrgOfonoSimManagerInterface oSim;
+    OrgOfonoSupplementaryServicesInterface oSuplServices;
+    OrgOfonoVoiceCallManagerInterface oVoiceCallManager;
 
     OFonoServiceChecker service_checker;
     OFonoRfFunctionality rf_functionality;
@@ -76,23 +89,13 @@ public:
     OFonoPhoneBook phone_book;
     OFonoSimInfo sim_info;
 
-    bool deviceStatusInitialized;
-
     void initialize();
 
 private slots:
-    void getDeviceStatusFinished(QOFonoDBusPendingCall &);
-    void setResourcePolicyFinished(QOFonoDBusPendingCall &);
-    void deviceStatusChange(const QString & status);
-    void networkStatusChange(const QVariantMap &);
-    void callStatusChange(int id, const QString & status,
-                          const QVariantMap & properties);
-    void incomingUssd(const QString & mode, const QString & message);
-    void incomingTextMessage(const QString & number, const QString & timestamp,
-                             const QString & contents);
-    void incomingMessageReport(int reference, const QString & status,
-                               const QString & sender_number,
-                               const QString & contents);
+    void poweredFinished(QOFonoDBusPendingCall &);
+    void onlineFinished(QOFonoDBusPendingCall &);
+    void netRegPropertyChanged(const QString & name,
+                               const QDBusVariant & value);
 };
 
 #endif
