@@ -27,6 +27,7 @@
 #include <qbandselection.h>
 
 #include <qofonoutil.h>
+#include <qofonoobject.h>
 #include <qofonomodem.h>
 #include <qofonocellbroadcast.h>
 #include <qofonodbuspendingreply.h>
