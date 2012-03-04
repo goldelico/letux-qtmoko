@@ -63,12 +63,7 @@ void OFonoRfFunctionality::forceLevelRequest()
         return;
     }
 
-    QOFonoDBusPendingReply < QVariantMap > reply =
-        service->oModem.GetProperties();
-    if (!checkReply(reply, true)) {
-        return;
-    }
-    QVariantMap properties = reply.value();
+    QVariantMap properties = service->modemProperties;
     bool online = properties.value("Online").toBool();
     setValue("level",
              online ? QPhoneRfFunctionality::Full : QPhoneRfFunctionality::

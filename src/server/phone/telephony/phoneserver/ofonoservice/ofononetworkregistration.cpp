@@ -53,16 +53,14 @@ static QTelephony::RegistrationState ofonoStatusToQt(QString status)
 
 static QTelephony::OperatorMode ofonoOpModeToQt(QString mode)
 {
-    if (mode == "automatic")    // automatic selection
+    if (mode == "auto")         // Network registration is performed automatically.
         return QTelephony::OperatorModeAutomatic;
-    if (mode == "manual")       // manual selection
+    if (mode == "auto-only")    // Network registration is performed automatically, and manual selection is disabled.
+        return QTelephony::OperatorModeAutomatic;
+    if (mode == "manual")       // Network operator is selected manually. If the operator is currently not selected, registration is not attempted.
         return QTelephony::OperatorModeManual;
-    if (mode == "manual;automatic") // manual first, then automatic,
-        return QTelephony::OperatorModeManualAutomatic;
-    if (mode == "unregister")   // manual unregister
-        return QTelephony::OperatorModeDeregister;
 
-    qWarning() << "unknown OFONO operator mode " << mode;
+    qWarning() << "unknown oFono operator mode " << mode;
     return QTelephony::OperatorModeAutomatic;
 }
 
@@ -82,7 +80,7 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
 void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
                                                     const QDBusVariant & value)
 {
-    if (name != "Online" || !value.variant().toBool()) {
+    if (name != "Interfaces" || !service->interfaceAvailable(&service->oNetReg)) {
         return;
     }
 
@@ -118,22 +116,16 @@ void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
 {
     qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
 
-    QString registration = "home";
-    QString mode = "automatic";
-    QString provider = "t-mobile";
-    QString display = "t-mobile";
-    QString act = "act";
-
-    updateInitialized(true);
-
     if (name == "Status") {
         updateRegistrationState(ofonoStatusToQt(value.variant().toString()));
-        return;
-    }
-    if (name == "Name") {
-        updateCurrentOperator(ofonoOpModeToQt(mode), value.variant().toString(),
-                              display, act);
-        return;
+        updateInitialized(true);
+    } else if (name == "Name" || name == "Mode" || name == "Technology") {
+        QVariantMap properties = service->netRegProperties;
+        QString mode = properties.value("Mode").toString();
+        QString provider = properties.value("Name").toString();;
+        QString technology = properties.value("Technology").toString();;
+        updateCurrentOperator(ofonoOpModeToQt(mode), provider, provider,
+                              technology);
     }
 }
 
