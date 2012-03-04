@@ -18,7 +18,7 @@
     <item>
      <widget class="QTabWidget" name="tabWidget">
       <property name="currentIndex">
-       <number>3</number>
+       <number>1</number>
       </property>
       <widget class="QWidget" name="tabInit">
        <attribute name="title">
@@ -41,6 +41,9 @@
            <string>Modems...</string>
           </property>
          </widget>
+        </item>
+        <item>
+         <widget class="QTextEdit" name="tbModemPropertyChanges"/>
         </item>
         <item>
          <widget class="QPushButton" name="bPowerOnModem">
@@ -133,6 +136,13 @@
          <widget class="QListWidget" name="lwCalls"/>
         </item>
         <item>
+         <widget class="QPushButton" name="bGetCalls">
+          <property name="text">
+           <string>Get calls</string>
+          </property>
+         </widget>
+        </item>
+        <item>
          <widget class="QLabel" name="lCallProperties">
           <property name="text">
            <string>Call properties...</string>
@@ -140,109 +150,18 @@
          </widget>
         </item>
         <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_5">
-          <item>
-           <widget class="QLineEdit" name="tbCallId">
-            <property name="text">
-             <string>Call ID:</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bRelease">
-            <property name="text">
-             <string>Release</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bActivateConference">
-            <property name="text">
-             <string>Activate
-Conference</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bActivateCall">
-            <property name="text">
-             <string>Activate</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_6">
-          <item>
-           <widget class="QPushButton" name="bReleaseAll">
-            <property name="text">
-             <string>Release
-All</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bReleaseHeld">
-            <property name="text">
-             <string>Release
-Held</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bJoin">
-            <property name="text">
-             <string>Join</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bHoldActive">
-            <property name="text">
-             <string>Hold active</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <layout class="QHBoxLayout" name="horizontalLayout_7">
-          <item>
-           <widget class="QLineEdit" name="tbTransferNumber">
-            <property name="text">
-             <string>608828973</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QPushButton" name="bTransfer">
-            <property name="text">
-             <string>Transfer</string>
-            </property>
-           </widget>
-          </item>
-         </layout>
-        </item>
-        <item>
-         <widget class="QLabel" name="lVoiceCallProperties">
+         <widget class="QPushButton" name="bAnswer">
           <property name="text">
-           <string>Properties</string>
-          </property>
-          <property name="wordWrap">
-           <bool>true</bool>
+           <string>Answer</string>
           </property>
          </widget>
         </item>
         <item>
-         <widget class="QPushButton" name="bListCalls">
+         <widget class="QPushButton" name="bHangup">
           <property name="text">
-           <string>List calls</string>
+           <string>Hangup</string>
           </property>
          </widget>
-        </item>
-        <item>
-         <widget class="QTextEdit" name="tbVoiceCallPropertyChanges"/>
         </item>
        </layout>
       </widget>

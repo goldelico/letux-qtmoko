@@ -36,6 +36,11 @@ Starting oFono
     dbus-send --print-reply --system --dest=org.ofono / org.freedesktop.DBus.Introspectable.Introspect > ofono.xml
     dbus-send --print-reply --system --dest=org.ofono /hso_0 org.freedesktop.DBus.Introspectable.Introspect >> ofono.xml
 
+  and similary after registering to network and making call:
+
+    dbus-send --print-reply --system --dest=org.ofono /hso_0/voicecall01 org.freedesktop.DBus.Introspectable.Introspect > /ofono-voicecall.xml
+    dbus-send --print-reply --system --dest=org.ofono /hso_0/operator/23001 org.freedesktop.DBus.Introspectable.Introspect > /ofono-operator.xml
+
 
 QT bindings for oFono
 =====================

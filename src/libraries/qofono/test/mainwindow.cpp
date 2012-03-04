@@ -20,6 +20,7 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
 {
     ui->setupUi(this);
 
+    connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(modemPropertyChanged(const QString, const QDBusVariant)));
     connect(&oNetReg, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
     connect(&oVoiceCallManager, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallManagerPropertyChanged(const QString, const QDBusVariant)));
     connect(&oVoiceCallManager, SIGNAL(CallAdded(const QDBusObjectPath &, const QVariantMap &)), this, SLOT(voiceCallAdded(const QDBusObjectPath &, const QVariantMap &)));
@@ -148,10 +149,19 @@ void MainWindow::refresh()
     }
     if(ui->tabVoiceCall->isVisible())
     {
-        QOFonoDBusPendingReply<QVariantMap> reply = oVoiceCallManager.GetProperties();
-        if(checkReply2(reply, false, true))
+        QListWidgetItem *item = ui->lwCalls->currentItem();
+        if(item == NULL)
         {
-            ui->lVoiceCallProperties->setText(variantMapToStr(reply.value()));
+            ui->lCallProperties->setText("");
+        }
+        else
+        {
+            OrgOfonoVoiceCallInterface oVoiceCall("org.ofono", item->text(), QDBusConnection::systemBus(), this);
+            QOFonoDBusPendingReply<QVariantMap> reply = oVoiceCall.GetProperties();
+            if(checkReply2(reply, false, true))
+            {
+                ui->lCallProperties->setText(variantMapToStr(reply.value()));
+            }
         }
     }
 
@@ -299,6 +309,11 @@ void MainWindow::on_bScan_clicked()
     }
 }
 
+void MainWindow::modemPropertyChanged(const QString &name, const QDBusVariant &value)
+{
+    ui->tbModemPropertyChanges->append(name + "->" + value.variant().toString());
+}
+
 void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &value)
 {
     ui->tbNetRegPropertyChanges->append(name + "->" + value.variant().toString());
@@ -306,16 +321,12 @@ void MainWindow::netRegPropertyChanged(const QString &name, const QDBusVariant &
 
 void MainWindow::voiceCallManagerPropertyChanged(const QString &name, const QDBusVariant &value)
 {
-    ui->tbVoiceCallPropertyChanges->append(name + "->" + value.variant().toString());
 }
 
 void MainWindow::on_bDial_clicked()
 {
     QOFonoDBusPendingReply<QDBusObjectPath> reply = oVoiceCallManager.Dial(ui->tbDialNum->text(), "");
-    if(checkReply2(reply, true, true))
-    {
-
-    }
+    checkReply2(reply, true, true);
 }
 
 void MainWindow::on_bHangupAll_clicked()
@@ -326,7 +337,9 @@ void MainWindow::on_bHangupAll_clicked()
 
 void MainWindow::voiceCallAdded(const QDBusObjectPath &path, const QVariantMap &properties)
 {
-    ui->lwCalls->addItem(path.path());
+    QListWidget *lw = ui->lwCalls;
+    lw->addItem(path.path());
+    lw->setCurrentRow(lw->count() - 1);
 }
 
 void MainWindow::voiceCallRemoved(const QDBusObjectPath &path)
@@ -342,4 +355,48 @@ void MainWindow::voiceCallRemoved(const QDBusObjectPath &path)
         }
     }
     qWarning() << "voiceCallRemoved: call not found " << path.path();
+}
+
+void MainWindow::on_lwCalls_currentItemChanged(QListWidgetItem* current, QListWidgetItem* previous)
+{
+    refresh();
+}
+
+void MainWindow::on_bAnswer_clicked()
+{
+    QListWidgetItem *item = ui->lwCalls->currentItem();
+    if(item == NULL)
+    {
+        return;
+    }
+    OrgOfonoVoiceCallInterface oVoiceCall("org.ofono", item->text(), QDBusConnection::systemBus(), this);
+    QOFonoDBusPendingReply<> reply = oVoiceCall.Answer();
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bHangup_clicked()
+{
+    QListWidgetItem *item = ui->lwCalls->currentItem();
+    if(item == NULL)
+    {
+        return;
+    }
+    OrgOfonoVoiceCallInterface oVoiceCall("org.ofono", item->text(), QDBusConnection::systemBus(), this);
+    QOFonoDBusPendingReply<> reply = oVoiceCall.Hangup();
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bGetCalls_clicked()
+{
+    QOFonoDBusPendingReply<QOFonoObjectList> reply = oVoiceCallManager.GetCalls();
+    if(checkReply2(reply, true, true))
+    {
+        QListWidget *lw = ui->lwCalls;
+        QOFonoObjectList list = reply.value();
+        lw->clear();
+        for(int i = 0; i < list.count(); i++)
+        {
+            lw->addItem(list.at(i).object.path());
+        }
+    }
 }
