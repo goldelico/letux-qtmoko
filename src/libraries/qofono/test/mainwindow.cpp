@@ -298,8 +298,6 @@ void MainWindow::on_bGetOperators_clicked()
     {
         showOFonoObjectList(reply.value(), "GetOperators");
     }
-    OrgOfonoNetworkOperatorInterface op("org.ofono", "/hso_0", QDBusConnection::systemBus(), this);
-    QOFonoDBusPendingReply<> reply = op.Register();
 }
 
 void MainWindow::on_bScan_clicked()

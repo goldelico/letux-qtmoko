@@ -21,8 +21,8 @@
 #include "ofonotelephonyservice.h"
 #include "ofonophonecall.h"
 
-OFonoCallProvider::OFonoCallProvider( OFonoTelephonyService * service )
-    : QPhoneCallProvider( service->service(), service )
+OFonoCallProvider::OFonoCallProvider(OFonoTelephonyService * service)
+:  QPhoneCallProvider(service->service(), service)
     , service(service)
 {
     setCallTypes(QStringList() << "Voice");
@@ -33,8 +33,8 @@ OFonoCallProvider::~OFonoCallProvider()
 }
 
 QPhoneCallImpl *OFonoCallProvider::create
-        ( const QString& identifier, const QString& callType )
+    (const QString & identifier, const QString & callType)
 {
     qDebug() << "OFonoCallProvider::create callType=" << callType;
-    return new OFonoPhoneCall( service, identifier, callType, -1 );
+    return new OFonoPhoneCall(service, identifier, callType, "");
 }

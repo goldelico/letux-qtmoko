@@ -22,11 +22,11 @@
 #include "ofonocallprovider.h"
 
 OFonoPhoneCall::OFonoPhoneCall
-        ( OFonoTelephonyService *service, const QString& identifier,
-          const QString& callType, int id )
-    : QPhoneCallImpl( &service->call_provider, identifier, callType )
-    , service(service)
-    , id(id)
+    (OFonoTelephonyService * service, const QString & identifier,
+     const QString & callType, QString path)
+:QPhoneCallImpl(&service->call_provider, identifier, callType)
+, service(service)
+, path(path)
 {
 }
 
@@ -34,65 +34,49 @@ OFonoPhoneCall::~OFonoPhoneCall()
 {
 }
 
-static QPhoneCall::State ofonoStatusToQt(QString ofonoStatus, bool hangupLocal, int & id)
+static QPhoneCall::State ofonoStatusToQt(QString ofonoStatus, bool hangupLocal)
 {
-    if(ofonoStatus == "INCOMING")     // The call is incoming (but not yet accepted)
+    if (ofonoStatus == "INCOMING")  // The call is incoming (but not yet accepted)
         return QPhoneCall::Incoming;
-    if(ofonoStatus == "OUTGOING")     // The call is outgoing (but not yet established)
+    if (ofonoStatus == "OUTGOING")  // The call is outgoing (but not yet established)
         return QPhoneCall::Dialing;
-    if(ofonoStatus == "ACTIVE")       // The call is the active call (you can talk),
+    if (ofonoStatus == "ACTIVE")    // The call is the active call (you can talk),
         return QPhoneCall::Connected;
-    if(ofonoStatus == "HELD")         // The call is being held
+    if (ofonoStatus == "HELD")  // The call is being held
         return QPhoneCall::Hold;
-    if(ofonoStatus == "RELEASE")      // The call has been released
-    {
-        id = 0;
+    if (ofonoStatus == "RELEASE")   // The call has been released
         return hangupLocal ? QPhoneCall::HangupLocal : QPhoneCall::HangupRemote;
-    }
-    
+
     qWarning() << "ofonoStatusToQt: unknown status " << ofonoStatus;
     return QPhoneCall::OtherFailure;
 }
 
 void OFonoPhoneCall::setOFonoStatus(QString ofonoStatus)
 {
-    setState(ofonoStatusToQt(ofonoStatus, false, id));
+    setState(ofonoStatusToQt(ofonoStatus, false));
 }
 
-void OFonoPhoneCall::dial( const QDialOptions& options )
+void OFonoPhoneCall::dial(const QDialOptions & options)
 {
     QString number = options.number();
-    setNumber( number );
-    
+    setNumber(number);
+
     qDebug() << "OFonoPhoneCall::dial(" << number << ")";
 
-/*    
-    // If the number starts with '*' or '#', then this is a request
-    // for a supplementary service, not an actual phone call.
-    // So we dial and then immediately hang up, allowing the network
-    // to send us the SS/USSD response when it is ready.
-    if ( number.startsWith("*") || number.startsWith("#") ) {
-        service->suppl_services.sendSupplementaryServiceData(number);
-        setState( QPhoneCall::ServiceHangup );
-        return;
-    }
-    
-    QOFonoDBusPendingCall call = service->gsmCall.Initiate(number, "voice");
-    watchOFonoCall(call, this, SLOT(initiateFinished(QOFonoDBusPendingCall &)));
+    QOFonoDBusPendingCall call = service->oVoiceCallManager.Dial(number, "");
+    watchOFonoCall(call, this, SLOT(dialFinished(QOFonoDBusPendingCall &)));
     setState(QPhoneCall::Dialing);
-    */
 }
 
-void OFonoPhoneCall::initiateFinished(QOFonoDBusPendingCall & call)
+void OFonoPhoneCall::dialFinished(QOFonoDBusPendingCall & call)
 {
-    QOFonoDBusPendingReply<int> reply = call;
-    if(checkReply(reply, "Initiate"))
-    {
-        id = reply.value();
+    QOFonoDBusPendingReply < QDBusObjectPath > reply = call;
+    if (checkReply(reply)) {
+        path = reply.value().path();
     }
 }
 
-void OFonoPhoneCall::hangup( QPhoneCall::Scope scope)
+void OFonoPhoneCall::hangup(QPhoneCall::Scope scope)
 {
     qDebug() << "OFonoPhoneCall::hangup()";
 
@@ -125,19 +109,19 @@ void OFonoPhoneCall::hold()
     checkReply(reply);*/
 }
 
-void OFonoPhoneCall::activate( QPhoneCall::Scope )
+void OFonoPhoneCall::activate(QPhoneCall::Scope)
 {
     qDebug() << "OFonoPhoneCall::activate()";
 /*    QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
     checkReply(reply);*/
 }
 
-void OFonoPhoneCall::tone( const QString& tones )
+void OFonoPhoneCall::tone(const QString & tones)
 {
     qDebug() << "OFonoPhoneCall::tone(" << tones << ")";
 }
 
-void OFonoPhoneCall::transfer( const QString& number )
+void OFonoPhoneCall::transfer(const QString & number)
 {
     qDebug() << "OFonoPhoneCall::transfer(" << number << ")";
 }
