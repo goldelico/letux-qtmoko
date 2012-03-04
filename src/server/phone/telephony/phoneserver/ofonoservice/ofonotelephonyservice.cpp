@@ -139,6 +139,7 @@ void OFonoTelephonyService::modemPropertyChanged(const QString & name,
 {
     qDebug() << "modemPropertyChanged " << name << "=" << value.variant();
     rf_functionality.modemPropertyChanged(name, value);
+    network_registration.modemPropertyChanged(name, value);
 }
 
 void OFonoTelephonyService::netRegPropertyChanged(const QString & name,

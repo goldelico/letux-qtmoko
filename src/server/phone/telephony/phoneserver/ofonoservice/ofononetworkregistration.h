@@ -30,18 +30,18 @@ class OFonoNetworkRegistration : public QNetworkRegistrationServer
 {
     Q_OBJECT
 public:
-    OFonoNetworkRegistration( OFonoTelephonyService * service );
+    OFonoNetworkRegistration(OFonoTelephonyService * service);
     ~OFonoNetworkRegistration();
 
-    OFonoTelephonyService * service;
+    OFonoTelephonyService *service;
 
-    void deviceStatus(QString status);
+    void modemPropertyChanged(const QString & name, const QDBusVariant & value);    // called by ofono telephony service when modem property changes
     void netRegPropertyChanged(const QString & name,
                                const QDBusVariant & value);
 
 public slots:
-    void setCurrentOperator( QTelephony::OperatorMode mode,
-                             const QString& id, const QString& technology );
+    void setCurrentOperator(QTelephony::OperatorMode mode,
+                            const QString & id, const QString & technology);
     void requestAvailableOperators();
 
 private slots:
@@ -49,4 +49,3 @@ private slots:
 };
 
 #endif
-

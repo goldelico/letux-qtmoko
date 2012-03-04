@@ -21,7 +21,8 @@
 #include "ofonotelephonyservice.h"
 #include "ofonoutil.h"
 
-OFonoNetworkRegistration::OFonoNetworkRegistration(OFonoTelephonyService * service)
+OFonoNetworkRegistration::OFonoNetworkRegistration(OFonoTelephonyService *
+                                                   service)
 :  QNetworkRegistrationServer(service->service(), service)
     , service(service)
 {
@@ -31,22 +32,22 @@ OFonoNetworkRegistration::~OFonoNetworkRegistration()
 {
 }
 
-static QTelephony::RegistrationState ofonoRegStateToQt(QString state)
+static QTelephony::RegistrationState ofonoStatusToQt(QString status)
 {
-    if (state == "home")        // registered to home network
+    if (status == "registered") // Registered to home network
         return QTelephony::RegistrationHome;
-    if (state == "unregistered")    // not registered, not trying
+    if (status == "unregistered")   // Not registered to any network
         return QTelephony::RegistrationNone;
-    if (state == "busy")        // not registered, but currently trying
+    if (status == "searching")  // Not registered, but searching
         return QTelephony::RegistrationSearching;
-    if (state == "denied")      // no permitted network available
+    if (status == "denied")     // Registration has been denied
         return QTelephony::RegistrationDenied;
-    if (state == "unknown")     // no idea
+    if (status == "unknown")    // Status is unknown
         return QTelephony::RegistrationUnknown;
-    if (state == "roaming")     // registered to foreign network
+    if (status == "roaming")    // Registered, but roaming
         return QTelephony::RegistrationRoaming;
 
-    qWarning() << "unknown OFONO registration state" << state;
+    qWarning() << "unknown oFono registration status" << status;
     return QTelephony::RegistrationNone;
 }
 
@@ -78,17 +79,32 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
     return QTelephony::OperatorUnavailable;
 }
 
-void OFonoNetworkRegistration::deviceStatus(QString status)
+void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
+                                                    const QDBusVariant & value)
 {
-/*    if (status == "alive-sim-ready") {
-        QOFonoDBusPendingCall call = service->gsmNet.Register();
-        watchOFonoCall(call, this, SLOT(registerFinished(QOFonoDBusPendingCall &)));
-    } else if (status == "alive-registered") {
-        QOFonoDBusPendingCall call = service->gsmNet.GetStatus();
-        watchOFonoCall(call, this,
-                     SLOT(getStatusFinished(QOFonoDBusPendingCall &)));
+    if (name != "Online" || !value.variant().toBool()) {
+        return;
     }
-    */
+
+    QOFonoDBusPendingReply < QVariantMap > reply =
+        service->oNetReg.GetProperties();
+    if (!checkReply(reply)) {
+        return;
+    }
+    QVariantMap properties = reply.value();
+
+    // Notfify about initial properties
+    QStringList keys = properties.keys();
+    for (int i = 0; i < keys.count(); i++) {
+        QString name = keys.at(i);
+        QVariant value = properties.value(name);
+        QDBusVariant dbusValue(value);
+        netRegPropertyChanged(name, dbusValue);
+    }
+
+    // Register to network
+    QOFonoDBusPendingCall call = service->oNetReg.Register();
+    watchOFonoCall(call, this, SLOT(registerFinished(QOFonoDBusPendingCall &)));
 }
 
 void OFonoNetworkRegistration::registerFinished(QOFonoDBusPendingCall & call)
@@ -98,20 +114,27 @@ void OFonoNetworkRegistration::registerFinished(QOFonoDBusPendingCall & call)
 }
 
 void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
-                               const QDBusVariant & value)
+                                                     const QDBusVariant & value)
 {
+    qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
+
     QString registration = "home";
     QString mode = "automatic";
     QString provider = "t-mobile";
     QString display = "t-mobile";
     QString act = "act";
 
-    qDebug() << "OFonoNetworkRegistration::networkStatusChange registration=" <<
-        registration << ", mode=" << mode << ", provider=" << provider;
-
     updateInitialized(true);
-    updateRegistrationState(ofonoRegStateToQt(registration));
-    updateCurrentOperator(ofonoOpModeToQt(mode), provider, display, act);
+
+    if (name == "Status") {
+        updateRegistrationState(ofonoStatusToQt(value.variant().toString()));
+        return;
+    }
+    if (name == "Name") {
+        updateCurrentOperator(ofonoOpModeToQt(mode), value.variant().toString(),
+                              display, act);
+        return;
+    }
 }
 
 void OFonoNetworkRegistration::setCurrentOperator
@@ -124,21 +147,21 @@ void OFonoNetworkRegistration::setCurrentOperator
 void OFonoNetworkRegistration::requestAvailableOperators()
 {
     /*QOFonoDBusPendingReply < QOFonoNetworkProviderList > reply =
-        service->gsmNet.ListProviders();
-    if (!checkReply(reply)) {
-        return;
-    }
-    QOFonoNetworkProviderList list = reply.value();
-    QList < QNetworkRegistration::AvailableOperator > opers;
-    for (int i = 0; i < list.count(); i++) {
-        QOFonoNetworkProvider provider = list.at(i);
-        QNetworkRegistration::AvailableOperator oper;
+       service->gsmNet.ListProviders();
+       if (!checkReply(reply)) {
+       return;
+       }
+       QOFonoNetworkProviderList list = reply.value();
+       QList < QNetworkRegistration::AvailableOperator > opers;
+       for (int i = 0; i < list.count(); i++) {
+       QOFonoNetworkProvider provider = list.at(i);
+       QNetworkRegistration::AvailableOperator oper;
 
-        oper.availability = ofonoOpStatusToQt(provider.status);
-        oper.name = provider.longname;
-        oper.id = provider.shortname;
-        oper.technology = provider.act;
-        opers.append(oper);
-    }
-    emit availableOperators(opers);*/
+       oper.availability = ofonoOpStatusToQt(provider.status);
+       oper.name = provider.longname;
+       oper.id = provider.shortname;
+       oper.technology = provider.act;
+       opers.append(oper);
+       }
+       emit availableOperators(opers); */
 }
