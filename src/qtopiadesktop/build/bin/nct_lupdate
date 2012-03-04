@@ -16,18 +16,22 @@ if ( $isWindows ) {
 
 
 use constant DEBUG => 0;
-my $silent = "-silent";
 
-# Usage: nct_lupdate [ -nowarn ] [ -depot path ] [ -content trtarget ] "lang1 lang2 ... langn" string_language files
+# Usage: nct_lupdate [ -nowarn ] [ -silent ] [ -depot path ] [ -content trtarget ] "lang1 lang2 ... langn" string_language files
 
 my $global = 0;
 my $depot;
 my $warn_on = 1;
+my $silent = "";
 my $content = 0;
 my $trtarget = "";
 if ( $ARGV[0] eq "-nowarn" ) {
     shift(@ARGV);
     $warn_on = 0;
+}
+if ( $ARGV[0] eq "-silent" ) {
+    shift(@ARGV);
+    $silent = "-silent";
 }
 if ( $ARGV[0] eq "-depot" ) {
     shift(@ARGV);
