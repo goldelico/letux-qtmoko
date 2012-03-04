@@ -25,6 +25,7 @@ my $warn_on = 1;
 my $silent = "";
 my $content = 0;
 my $trtarget = "";
+my $locations = "-locations none";
 if ( $ARGV[0] eq "-nowarn" ) {
     shift(@ARGV);
     $warn_on = 0;
@@ -216,7 +217,7 @@ for my $tsfile ( keys %contextinfo ) {
         print CPP "TRANSLATIONS += $filename\n";
     }
     close CPP;
-    my $cmd = "$HOST_QT_BINS/lupdate $silent $tmp.pro";
+    my $cmd = "$HOST_QT_BINS/lupdate $silent $locations $tmp.pro";
     print "nct_lupdate: $cmd\n";
     system($cmd);
 
@@ -236,7 +237,7 @@ for my $tsfile ( keys %contextinfo ) {
 	}
         print CPP "TRANSLATIONS += $filename\n";
         close CPP;
-        $cmd = "$HOST_QT_BINS/lupdate $silent -pluralonly $tmp.2.pro";
+        $cmd = "$HOST_QT_BINS/lupdate $silent $locations -pluralonly $tmp.2.pro";
         print "nct_lupdate: $cmd\n";
         system($cmd);
     }

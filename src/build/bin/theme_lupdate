@@ -18,6 +18,7 @@ if ( $isWindows ) {
 
 use constant DEBUG => 0;
 
+my $locations = "-locations none";
 my $silent = "";
 if ( $ARGV[0] eq "-silent" ) {
     shift(@ARGV);
@@ -85,7 +86,7 @@ for my $lang ( @LANGS ) {
     print CPP "TRANSLATIONS += $filename\n";
 }
 close CPP;
-my $cmd = "$HOST_QT_BINS/lupdate $silent $tmp.pro";
+my $cmd = "$HOST_QT_BINS/lupdate $silent $locations $tmp.pro";
 print "theme_lupdate: $cmd\n";
 system($cmd);
 
@@ -96,7 +97,7 @@ if ( $STRING_LANGUAGE ) {
     my $filename = $tsfile."-".$STRING_LANGUAGE.".ts";
     print CPP "TRANSLATIONS += $filename\n";
     close CPP;
-    $cmd = "$HOST_QT_BINS/lupdate $silent -pluralonly $tmp.pro";
+    $cmd = "$HOST_QT_BINS/lupdate $silent $locations -pluralonly $tmp.pro";
     print "theme_lupdate: $cmd\n";
     system($cmd);
 }
