@@ -78,7 +78,7 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
 }
 
 void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
-                                                    const QDBusVariant & value)
+                                                    const QDBusVariant &)
 {
     if (name != "Interfaces" || !service->interfaceAvailable(&service->oNetReg)) {
         return;
@@ -127,8 +127,10 @@ void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
 void OFonoNetworkRegistration::setCurrentOperator
     (QTelephony::OperatorMode, const QString & id, const QString &)
 {
-/*    QOFonoDBusPendingReply <> reply = service->gsmNet.RegisterWithProvider(id);
-    emit setCurrentOperatorResult(qTelResult(reply));*/
+    OrgOfonoNetworkOperatorInterface op("org.ofono", id,
+                                        QDBusConnection::systemBus(), this);
+    QOFonoDBusPendingReply <> reply = op.Register();
+    emit setCurrentOperatorResult(qTelResult(reply));
 }
 
 void OFonoNetworkRegistration::requestAvailableOperators()
@@ -156,7 +158,8 @@ void OFonoNetworkRegistration::requestAvailableOperators()
         }
 
         oper.availability = ofonoOpStatusToQt(properties["Status"].toString());
-        oper.name = oper.id = properties["Name"].toString();
+        oper.id = provider.object.path();
+        oper.name = properties["Name"].toString();
         oper.technology = technology;
 
         opers.append(oper);
