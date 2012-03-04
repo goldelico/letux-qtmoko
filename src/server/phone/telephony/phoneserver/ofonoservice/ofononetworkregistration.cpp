@@ -73,7 +73,7 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
     if (status == "forbidden")
         return QTelephony::OperatorForbidden;
 
-    qWarning() << "unknown OFONO operator status " << status;
+    qWarning() << "unknown oFono operator status " << status;
     return QTelephony::OperatorUnavailable;
 }
 
@@ -89,16 +89,11 @@ void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
     if (!checkReply(reply)) {
         return;
     }
-    QVariantMap properties = reply.value();
+    QVariantMap properties = service->netRegProperties = reply.value();
 
     // Notfify about initial properties
-    QStringList keys = properties.keys();
-    for (int i = 0; i < keys.count(); i++) {
-        QString name = keys.at(i);
-        QVariant value = properties.value(name);
-        QDBusVariant dbusValue(value);
-        netRegPropertyChanged(name, dbusValue);
-    }
+    netRegPropertyChanged("Name", QDBusVariant(properties.value("Name")));
+    netRegPropertyChanged("Status", QDBusVariant(properties.value("Status")));
 
     // Register to network
     QOFonoDBusPendingCall call = service->oNetReg.Register();
@@ -138,22 +133,33 @@ void OFonoNetworkRegistration::setCurrentOperator
 
 void OFonoNetworkRegistration::requestAvailableOperators()
 {
-    /*QOFonoDBusPendingReply < QOFonoNetworkProviderList > reply =
-       service->gsmNet.ListProviders();
-       if (!checkReply(reply)) {
-       return;
-       }
-       QOFonoNetworkProviderList list = reply.value();
-       QList < QNetworkRegistration::AvailableOperator > opers;
-       for (int i = 0; i < list.count(); i++) {
-       QOFonoNetworkProvider provider = list.at(i);
-       QNetworkRegistration::AvailableOperator oper;
+    QOFonoDBusPendingReply < QOFonoObjectList > reply =
+        service->oNetReg.GetOperators();
+    if (!checkReply(reply, false, true)) {
+        return;
+    }
 
-       oper.availability = ofonoOpStatusToQt(provider.status);
-       oper.name = provider.longname;
-       oper.id = provider.shortname;
-       oper.technology = provider.act;
-       opers.append(oper);
-       }
-       emit availableOperators(opers); */
+    QOFonoObjectList list = reply.value();
+    QList < QNetworkRegistration::AvailableOperator > opers;
+    for (int i = 0; i < list.count(); i++) {
+        QOFonoObject provider = list.at(i);
+        QVariantMap properties = provider.properties;
+        QNetworkRegistration::AvailableOperator oper;
+
+        QStringList techList = properties["Technologies"].toStringList();
+        QString technology;
+        for (int i = 0; i < techList.count(); i++) {
+            if (i > 0) {
+                technology.append(",");
+            }
+            technology += techList.at(i);
+        }
+
+        oper.availability = ofonoOpStatusToQt(properties["Status"].toString());
+        oper.name = oper.id = properties["Name"].toString();
+        oper.technology = technology;
+
+        opers.append(oper);
+    }
+    emit availableOperators(opers);
 }
