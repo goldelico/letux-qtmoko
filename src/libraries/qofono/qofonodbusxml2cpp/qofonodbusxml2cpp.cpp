@@ -609,8 +609,11 @@ static QByteArray qtTypeName(const QString &signature, const QDBusIntrospection:
             if(signature == "aa{sv}")
                 qttype = "QOFonoVariantMapList";
 
-            if(signature == "a(oa{sv})")
+            if(signature == "a(oa{sv})") {
                 qttype = "QOFonoObjectList";
+                if(!customTypes.contains("QOFonoObject"))
+                    customTypes.append("QOFonoObject");
+            }
         }
         if(!qttype.isEmpty())
         {

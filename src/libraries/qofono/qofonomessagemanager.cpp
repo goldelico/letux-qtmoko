@@ -18,6 +18,8 @@
 OrgOfonoMessageManagerInterface::OrgOfonoMessageManagerInterface(const QString &service, const QString &path, const QDBusConnection &connection, QObject *parent)
     : QOFonoDbusAbstractInterface(service, path, staticInterfaceName(), connection, parent)
 {
+    qRegisterMetaType<QOFonoObject>("QOFonoObject");
+    qDBusRegisterMetaType<QOFonoObject>();
     qRegisterMetaType<QOFonoObjectList>("QOFonoObjectList");
     qDBusRegisterMetaType<QOFonoObjectList>();
 }
