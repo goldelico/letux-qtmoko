@@ -43,6 +43,8 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
 , sms_reader(this)
 , phone_book(this)
 , sim_info(this)
+, modemProperties()
+, netRegProperties()
 {
     connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)),
             this,
@@ -56,7 +58,7 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
     if (!checkReply(reply, true)) {
         return;
     }
-    QVariantMap properties = reply.value();
+    QVariantMap properties = modemProperties = reply.value();
 
     // Notfify all interface about initial properties
     QStringList keys = properties.keys();
@@ -134,10 +136,22 @@ void OFonoTelephonyService::poweredFinished(QOFonoDBusPendingCall & call)
     }
 }
 
+// Returns false if interface is not yet available (e.g. netReg interface is
+// not available if modem is not powered or online). Returns true if the
+// interface is available and ready to use.
+bool OFonoTelephonyService::interfaceAvailable(QOFonoDbusAbstractInterface *
+                                               interface)
+{
+    QStringList interfaces = modemProperties["Interfaces"].toStringList();
+    return interfaces.contains(interface->interface());
+}
+
 void OFonoTelephonyService::modemPropertyChanged(const QString & name,
                                                  const QDBusVariant & value)
 {
     qDebug() << "modemPropertyChanged " << name << "=" << value.variant();
+    modemProperties[name] = value.variant();
+
     rf_functionality.modemPropertyChanged(name, value);
     network_registration.modemPropertyChanged(name, value);
 }
@@ -146,5 +160,7 @@ void OFonoTelephonyService::netRegPropertyChanged(const QString & name,
                                                   const QDBusVariant & value)
 {
     qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
+    netRegProperties[name] = value.variant();
+
     network_registration.netRegPropertyChanged(name, value);
 }

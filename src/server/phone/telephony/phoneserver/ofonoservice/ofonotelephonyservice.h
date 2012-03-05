@@ -27,6 +27,7 @@
 #include <qbandselection.h>
 
 #include <qofonoutil.h>
+#include <qofonoobject.h>
 #include <qofonomodem.h>
 #include <qofonocellbroadcast.h>
 #include <qofonodbuspendingreply.h>
@@ -89,7 +90,11 @@ public:
     OFonoPhoneBook phone_book;
     OFonoSimInfo sim_info;
 
+    QVariantMap modemProperties;
+    QVariantMap netRegProperties;
+    
     void initialize();
+    bool interfaceAvailable(QOFonoDbusAbstractInterface *interface);
 
 private slots:
     void poweredFinished(QOFonoDBusPendingCall &);

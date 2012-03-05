@@ -31,25 +31,25 @@ class OFonoPhoneCall : public QPhoneCallImpl
 {
     Q_OBJECT
 public:
-    OFonoPhoneCall( OFonoTelephonyService *service, const QString& identifier,
-                  const QString& callType, int id );
-    virtual ~OFonoPhoneCall();
+    OFonoPhoneCall(OFonoTelephonyService * service, const QString & identifier,
+                   const QString & callType, QString path);
+     virtual ~ OFonoPhoneCall();
 
     OFonoTelephonyService *service;
-    int id;
+    QString path;
 
-    void dial( const QDialOptions& options );
-    void hangup( QPhoneCall::Scope scope );
+    void dial(const QDialOptions & options);
+    void hangup(QPhoneCall::Scope scope);
     void accept();
     void hold();
-    void activate( QPhoneCall::Scope scope );
-    void tone( const QString& tones );
-    void transfer( const QString& number );
-    
+    void activate(QPhoneCall::Scope scope);
+    void tone(const QString & tones);
+    void transfer(const QString & number);
+
     void setOFonoStatus(QString ofonoStatus);
 
 public slots:
-    void initiateFinished(QOFonoDBusPendingCall & call);
+    void dialFinished(QOFonoDBusPendingCall & call);
 };
 
 #endif

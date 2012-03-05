@@ -53,16 +53,14 @@ static QTelephony::RegistrationState ofonoStatusToQt(QString status)
 
 static QTelephony::OperatorMode ofonoOpModeToQt(QString mode)
 {
-    if (mode == "automatic")    // automatic selection
+    if (mode == "auto")         // Network registration is performed automatically.
         return QTelephony::OperatorModeAutomatic;
-    if (mode == "manual")       // manual selection
+    if (mode == "auto-only")    // Network registration is performed automatically, and manual selection is disabled.
+        return QTelephony::OperatorModeAutomatic;
+    if (mode == "manual")       // Network operator is selected manually. If the operator is currently not selected, registration is not attempted.
         return QTelephony::OperatorModeManual;
-    if (mode == "manual;automatic") // manual first, then automatic,
-        return QTelephony::OperatorModeManualAutomatic;
-    if (mode == "unregister")   // manual unregister
-        return QTelephony::OperatorModeDeregister;
 
-    qWarning() << "unknown OFONO operator mode " << mode;
+    qWarning() << "unknown oFono operator mode " << mode;
     return QTelephony::OperatorModeAutomatic;
 }
 
@@ -75,14 +73,14 @@ static QTelephony::OperatorAvailability ofonoOpStatusToQt(QString status)
     if (status == "forbidden")
         return QTelephony::OperatorForbidden;
 
-    qWarning() << "unknown OFONO operator status " << status;
+    qWarning() << "unknown oFono operator status " << status;
     return QTelephony::OperatorUnavailable;
 }
 
 void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
-                                                    const QDBusVariant & value)
+                                                    const QDBusVariant &)
 {
-    if (name != "Online" || !value.variant().toBool()) {
+    if (name != "Interfaces" || !service->interfaceAvailable(&service->oNetReg)) {
         return;
     }
 
@@ -91,16 +89,11 @@ void OFonoNetworkRegistration::modemPropertyChanged(const QString & name,
     if (!checkReply(reply)) {
         return;
     }
-    QVariantMap properties = reply.value();
+    QVariantMap properties = service->netRegProperties = reply.value();
 
     // Notfify about initial properties
-    QStringList keys = properties.keys();
-    for (int i = 0; i < keys.count(); i++) {
-        QString name = keys.at(i);
-        QVariant value = properties.value(name);
-        QDBusVariant dbusValue(value);
-        netRegPropertyChanged(name, dbusValue);
-    }
+    netRegPropertyChanged("Name", QDBusVariant(properties.value("Name")));
+    netRegPropertyChanged("Status", QDBusVariant(properties.value("Status")));
 
     // Register to network
     QOFonoDBusPendingCall call = service->oNetReg.Register();
@@ -118,50 +111,58 @@ void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
 {
     qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
 
-    QString registration = "home";
-    QString mode = "automatic";
-    QString provider = "t-mobile";
-    QString display = "t-mobile";
-    QString act = "act";
-
-    updateInitialized(true);
-
     if (name == "Status") {
         updateRegistrationState(ofonoStatusToQt(value.variant().toString()));
-        return;
-    }
-    if (name == "Name") {
-        updateCurrentOperator(ofonoOpModeToQt(mode), value.variant().toString(),
-                              display, act);
-        return;
+        updateInitialized(true);
+    } else if (name == "Name" || name == "Mode" || name == "Technology") {
+        QVariantMap properties = service->netRegProperties;
+        QString mode = properties.value("Mode").toString();
+        QString provider = properties.value("Name").toString();;
+        QString technology = properties.value("Technology").toString();;
+        updateCurrentOperator(ofonoOpModeToQt(mode), provider, provider,
+                              technology);
     }
 }
 
 void OFonoNetworkRegistration::setCurrentOperator
     (QTelephony::OperatorMode, const QString & id, const QString &)
 {
-/*    QOFonoDBusPendingReply <> reply = service->gsmNet.RegisterWithProvider(id);
-    emit setCurrentOperatorResult(qTelResult(reply));*/
+    OrgOfonoNetworkOperatorInterface op("org.ofono", id,
+                                        QDBusConnection::systemBus(), this);
+    QOFonoDBusPendingReply <> reply = op.Register();
+    emit setCurrentOperatorResult(qTelResult(reply));
 }
 
 void OFonoNetworkRegistration::requestAvailableOperators()
 {
-    /*QOFonoDBusPendingReply < QOFonoNetworkProviderList > reply =
-       service->gsmNet.ListProviders();
-       if (!checkReply(reply)) {
-       return;
-       }
-       QOFonoNetworkProviderList list = reply.value();
-       QList < QNetworkRegistration::AvailableOperator > opers;
-       for (int i = 0; i < list.count(); i++) {
-       QOFonoNetworkProvider provider = list.at(i);
-       QNetworkRegistration::AvailableOperator oper;
+    QOFonoDBusPendingReply < QOFonoObjectList > reply =
+        service->oNetReg.GetOperators();
+    if (!checkReply(reply, false, true)) {
+        return;
+    }
 
-       oper.availability = ofonoOpStatusToQt(provider.status);
-       oper.name = provider.longname;
-       oper.id = provider.shortname;
-       oper.technology = provider.act;
-       opers.append(oper);
-       }
-       emit availableOperators(opers); */
+    QOFonoObjectList list = reply.value();
+    QList < QNetworkRegistration::AvailableOperator > opers;
+    for (int i = 0; i < list.count(); i++) {
+        QOFonoObject provider = list.at(i);
+        QVariantMap properties = provider.properties;
+        QNetworkRegistration::AvailableOperator oper;
+
+        QStringList techList = properties["Technologies"].toStringList();
+        QString technology;
+        for (int i = 0; i < techList.count(); i++) {
+            if (i > 0) {
+                technology.append(",");
+            }
+            technology += techList.at(i);
+        }
+
+        oper.availability = ofonoOpStatusToQt(properties["Status"].toString());
+        oper.id = provider.object.path();
+        oper.name = properties["Name"].toString();
+        oper.technology = technology;
+
+        opers.append(oper);
+    }
+    emit availableOperators(opers);
 }

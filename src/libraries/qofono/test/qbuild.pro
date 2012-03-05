@@ -40,7 +40,7 @@ SOURCES += main.cpp \
     ../qofonomodem.cpp \
     ../qofonovoicecall.cpp \
     ../qofononetworkoperator.cpp \
-    ../qofonoobjectlist.cpp
+    ../qofonoobject.cpp
 
 HEADERS += mainwindow.h \
     ofonoutil.h \
@@ -64,6 +64,7 @@ HEADERS += mainwindow.h \
     ../qofonomodem.h \
     ../qofonovoicecall.h \
     ../qofononetworkoperator.h \
+    ../qofonoobject.h \
     ../qofonoobjectlist.h
 
 FORMS += mainwindow.ui

@@ -1,4 +1,4 @@
-#include "qofonoobjectlist.h"
+#include "qofonoobject.h"
 
 QOFonoObject::QOFonoObject()
 {
@@ -21,4 +21,3 @@ const QDBusArgument &operator>>(const QDBusArgument &argument, QOFonoObject & va
     argument.endStructure();
     return argument;
 }
-
