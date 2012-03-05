@@ -36,7 +36,7 @@ OFonoRfFunctionality::~OFonoRfFunctionality()
 void OFonoRfFunctionality::modemPropertyChanged(const QString & name,
                                                 const QDBusVariant & value)
 {
-/*    if (name == "Powered") {
+    if (name == "Powered") {
         bool oldPowered = modemPowered;
         modemPowered = value.variant().toBool();
 
@@ -53,15 +53,14 @@ void OFonoRfFunctionality::modemPropertyChanged(const QString & name,
         }
         forceLevelRequest();
     }
-*/
 }
 
 void OFonoRfFunctionality::forceLevelRequest()
 {
-    setValue( "level", qVariantFromValue( Full ) );
+    setValue("level", qVariantFromValue(Full));
     emit levelChanged();
     return;
-    
+
 /*    
     qDebug() << "forceLevelRequest";
 
@@ -79,8 +78,7 @@ void OFonoRfFunctionality::forceLevelRequest()
 
 void OFonoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
 {
-/*    
-    qWarning() << "setLevel level=" << level;
+    qDebug() << "setLevel level=" << level;
 
     if (!modemPowered) {
         reqLevel = level;       // just remember the request
@@ -91,7 +89,7 @@ void OFonoRfFunctionality::setLevel(QPhoneRfFunctionality::Level level)
 
     QOFonoDBusPendingCall call =
         service->oModem.SetProperty("Online", QDBusVariant(online));
-    watchOFonoCall(call, this, SLOT(onlineFinished(QOFonoDBusPendingCall &)));*/
+    watchOFonoCall(call, this, SLOT(onlineFinished(QOFonoDBusPendingCall &)));
 }
 
 void OFonoRfFunctionality::onlineFinished(QOFonoDBusPendingCall & call)
