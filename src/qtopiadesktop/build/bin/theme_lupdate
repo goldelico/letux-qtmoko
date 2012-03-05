@@ -92,18 +92,19 @@ system($cmd);
 
 if ( $STRING_LANGUAGE ) {
     # Now strip out the languages and re-run lupdate for the string language with -pluralonly
-    open CPP, ">$tmp.pro" or die "Can't write $tmp.pro";
+    open CPP, ">$tmp.2.pro" or die "Can't write $tmp.2.pro";
     print CPP join("\n", @output)."\n";
     my $filename = $tsfile."-".$STRING_LANGUAGE.".ts";
     print CPP "TRANSLATIONS += $filename\n";
     close CPP;
-    $cmd = "$HOST_QT_BINS/lupdate $silent $locations -pluralonly $tmp.pro";
+    $cmd = "$HOST_QT_BINS/lupdate $silent $locations -pluralonly $tmp.2.pro";
     print "theme_lupdate: $cmd\n";
     system($cmd);
 }
 
 unlink $tmp;
 unlink "$tmp.pro";
+unlink "$tmp.2.pro";
 
 my $pageName = undef;
 sub parseFile
