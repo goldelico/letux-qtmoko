@@ -23,37 +23,50 @@
 
 OFonoPhoneCall::OFonoPhoneCall
     (OFonoTelephonyService * service, const QString & identifier,
-     const QString & callType, QString path)
+     const QString & callType, const QString & path)
 :QPhoneCallImpl(&service->call_provider, identifier, callType)
 , service(service)
 , oVoiceCall("org.ofono", path, QDBusConnection::systemBus(), this)
+, voiceCallProperties()
 {
+    registerPropertyChanged();
 }
 
 OFonoPhoneCall::~OFonoPhoneCall()
 {
 }
 
-static QPhoneCall::State ofonoStatusToQt(QString ofonoStatus, bool hangupLocal)
+static QPhoneCall::State ofonoStateToQt(QString ofonoStatus, bool hangupLocal)
 {
-    if (ofonoStatus == "INCOMING")  // The call is incoming (but not yet accepted)
-        return QPhoneCall::Incoming;
-    if (ofonoStatus == "OUTGOING")  // The call is outgoing (but not yet established)
-        return QPhoneCall::Dialing;
-    if (ofonoStatus == "ACTIVE")    // The call is the active call (you can talk),
+    if (ofonoStatus == "active")    // The call is active
         return QPhoneCall::Connected;
-    if (ofonoStatus == "HELD")  // The call is being held
+    if (ofonoStatus == "held")  // The call is on hold
         return QPhoneCall::Hold;
-    if (ofonoStatus == "RELEASE")   // The call has been released
+    if (ofonoStatus == "dialing")   // The call is being dialed
+        return QPhoneCall::Dialing;
+    if (ofonoStatus == "alerting")  // The remote party is being alerted
+        return QPhoneCall::Alerting;
+    if (ofonoStatus == "incoming")  // Incoming call in progress
+        return QPhoneCall::Incoming;
+    if (ofonoStatus == "waiting")   // Call is waiting
+        return QPhoneCall::Hold;
+    if (ofonoStatus == "disconnected")  // No further use of this object
         return hangupLocal ? QPhoneCall::HangupLocal : QPhoneCall::HangupRemote;
 
-    qWarning() << "ofonoStatusToQt: unknown status " << ofonoStatus;
+    qWarning() << "ofonoStateToQt: unknown status " << ofonoStatus;
     return QPhoneCall::OtherFailure;
 }
 
-void OFonoPhoneCall::setOFonoStatus(QString ofonoStatus)
+void OFonoPhoneCall::registerPropertyChanged()
 {
-    setState(ofonoStatusToQt(ofonoStatus, false));
+    connect(&oVoiceCall,
+            SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this,
+            SLOT(voiceCallPropertyChanged(const QString, const QDBusVariant)));
+}
+
+void OFonoPhoneCall::setOFonoState(QString ofonoStatus)
+{
+    setState(ofonoStateToQt(ofonoStatus, false));
 }
 
 void OFonoPhoneCall::dial(const QDialOptions & options)
@@ -73,11 +86,13 @@ void OFonoPhoneCall::dialFinished(QOFonoDBusPendingCall & call)
     QOFonoDBusPendingReply < QDBusObjectPath > reply = call;
     if (checkReply(reply)) {
         // Destruct old dbus interface and create new in the same place
-        oVoiceCall.~OrgOfonoVoiceCallInterface();
+        oVoiceCall. ~ OrgOfonoVoiceCallInterface();
         new(&oVoiceCall) OrgOfonoVoiceCallInterface("org.ofono",
                                                     reply.value().path(),
                                                     QDBusConnection::systemBus
                                                     (), this);
+        voiceCallProperties.clear();
+        registerPropertyChanged();
     }
 }
 
@@ -99,34 +114,46 @@ void OFonoPhoneCall::hangup(QPhoneCall::Scope scope)
 void OFonoPhoneCall::accept()
 {
     qDebug() << "OFonoPhoneCall::accept()";
-    QOFonoDBusPendingReply<> reply = oVoiceCall.Answer();
+    QOFonoDBusPendingReply <> reply = oVoiceCall.Answer();
     checkReply(reply);
 }
 
 void OFonoPhoneCall::hold()
 {
     qDebug() << "OFonoPhoneCall::hold()";
-    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.HoldAndAnswer();
+    QOFonoDBusPendingReply <> reply =
+        service->oVoiceCallManager.HoldAndAnswer();
     checkReply(reply);
 }
 
 void OFonoPhoneCall::activate(QPhoneCall::Scope)
 {
     qDebug() << "OFonoPhoneCall::activate()";
-    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.ReleaseAndAnswer();
+    QOFonoDBusPendingReply <> reply =
+        service->oVoiceCallManager.ReleaseAndAnswer();
     checkReply(reply);
 }
 
 void OFonoPhoneCall::tone(const QString & tones)
 {
     qDebug() << "OFonoPhoneCall::tone(" << tones << ")";
-    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.SendTones(tones);
-    checkReply(reply);    
+    QOFonoDBusPendingReply <> reply =
+        service->oVoiceCallManager.SendTones(tones);
+    checkReply(reply);
 }
 
 void OFonoPhoneCall::transfer(const QString & number)
 {
     qDebug() << "OFonoPhoneCall::transfer(" << number << ")";
-    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.Transfer();
+    QOFonoDBusPendingReply <> reply = service->oVoiceCallManager.Transfer();
     checkReply(reply);
+}
+
+void OFonoPhoneCall::voiceCallPropertyChanged(const QString & name,
+                                              const QDBusVariant & value)
+{
+    qDebug() << "voiceCallPropertyChanged " << name << "=" << value.variant();
+    if (name == "State") {
+        setOFonoState(value.variant().toString());
+    }
 }

@@ -33,11 +33,12 @@ class OFonoPhoneCall : public QPhoneCallImpl
     Q_OBJECT
 public:
     OFonoPhoneCall(OFonoTelephonyService * service, const QString & identifier,
-                   const QString & callType, QString path);
+                   const QString & callType, const QString & path);
      virtual ~ OFonoPhoneCall();
 
     OFonoTelephonyService *service;
     OrgOfonoVoiceCallInterface oVoiceCall;
+    QVariantMap voiceCallProperties;
 
     void dial(const QDialOptions & options);
     void hangup(QPhoneCall::Scope scope);
@@ -47,9 +48,12 @@ public:
     void tone(const QString & tones);
     void transfer(const QString & number);
 
-    void setOFonoStatus(QString ofonoStatus);
+    void registerPropertyChanged();
+    void setOFonoState(QString ofonoStatus);
 
 public slots:
+    void voiceCallPropertyChanged(const QString & name,
+                                  const QDBusVariant & value);
     void dialFinished(QOFonoDBusPendingCall & call);
 };
 

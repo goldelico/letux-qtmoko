@@ -45,6 +45,7 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
 , sim_info(this)
 , modemProperties()
 , netRegProperties()
+, voiceCallManagerProperties()
 {
     connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)),
             this,
@@ -53,6 +54,19 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
     connect(&oNetReg,
             SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this,
             SLOT(netRegPropertyChanged(const QString, const QDBusVariant)));
+
+    connect(&oVoiceCallManager,
+            SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this,
+            SLOT(voiceCallManagerPropertyChanged
+                 (const QString, const QDBusVariant)));
+
+    connect(&oVoiceCallManager,
+            SIGNAL(CallAdded(const QDBusObjectPath &, const QVariantMap &)),
+            this,
+            SLOT(voiceCallAdded(const QDBusObjectPath &, const QVariantMap &)));
+
+    connect(&oVoiceCallManager, SIGNAL(CallRemoved(const QDBusObjectPath &)),
+            this, SLOT(voiceCallRemoved(const QDBusObjectPath &)));
 
     QOFonoDBusPendingReply < QVariantMap > reply = oModem.GetProperties();
     if (!checkReply(reply, true)) {
@@ -163,4 +177,27 @@ void OFonoTelephonyService::netRegPropertyChanged(const QString & name,
     netRegProperties[name] = value.variant();
 
     network_registration.netRegPropertyChanged(name, value);
+}
+
+void OFonoTelephonyService::
+voiceCallManagerPropertyChanged(const QString & name,
+                                const QDBusVariant & value)
+{
+    qDebug() << "voiceCallManagerPropertyChanged " << name << "=" <<
+        value.variant();
+    voiceCallManagerProperties[name] = value.variant();
+}
+
+void OFonoTelephonyService::voiceCallAdded(const QDBusObjectPath & path,
+                                           const QVariantMap & properties)
+{
+    qDebug() << "voiceCallAdded" << path.path();
+    OFonoPhoneCall *call = new OFonoPhoneCall(this, NULL, "Voice", path.path());
+    call->setNumber(properties.value("LineIdentification").toString());
+    call->setOFonoState(properties.value("State").toString());
+}
+
+void OFonoTelephonyService::voiceCallRemoved(const QDBusObjectPath & path)
+{
+    qDebug() << "voiceCallRemoved" << path.path();
 }

@@ -92,15 +92,21 @@ public:
 
     QVariantMap modemProperties;
     QVariantMap netRegProperties;
-    
+    QVariantMap voiceCallManagerProperties;
+
     void initialize();
-    bool interfaceAvailable(QOFonoDbusAbstractInterface *interface);
+    bool interfaceAvailable(QOFonoDbusAbstractInterface * interface);
 
 private slots:
     void poweredFinished(QOFonoDBusPendingCall &);
     void modemPropertyChanged(const QString & name, const QDBusVariant & value);
     void netRegPropertyChanged(const QString & name,
                                const QDBusVariant & value);
+    void voiceCallManagerPropertyChanged(const QString & name,
+                                         const QDBusVariant & value);
+    void voiceCallAdded(const QDBusObjectPath & path,
+                        const QVariantMap & properties);
+    void voiceCallRemoved(const QDBusObjectPath & path);
 };
 
 #endif
