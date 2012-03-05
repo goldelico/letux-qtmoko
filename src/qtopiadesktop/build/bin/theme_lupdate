@@ -32,6 +32,8 @@ my $themecfg = shift(@ARGV) || usage();
 my $themedir = dirname($themecfg);
 my $themename;
 
+my $lupdate = "$HOST_QT_BINS/lupdate";
+
 #open/read theme configration
 my @themePages = ();
 open CONFIG, "$themecfg" or die "Can't read $themecfg";
@@ -86,9 +88,9 @@ for my $lang ( @LANGS ) {
     print CPP "TRANSLATIONS += $filename\n";
 }
 close CPP;
-my $cmd = "$HOST_QT_BINS/lupdate $silent $locations $tmp.pro";
-print "theme_lupdate: $cmd\n";
-system($cmd);
+my $args = "$silent $locations $tmp.pro";
+print "theme_lupdate: lupdate $args\n";
+system("$lupdate $args");
 
 if ( $STRING_LANGUAGE ) {
     # Now strip out the languages and re-run lupdate for the string language with -pluralonly
@@ -97,9 +99,9 @@ if ( $STRING_LANGUAGE ) {
     my $filename = $tsfile."-".$STRING_LANGUAGE.".ts";
     print CPP "TRANSLATIONS += $filename\n";
     close CPP;
-    $cmd = "$HOST_QT_BINS/lupdate $silent $locations -pluralonly $tmp.2.pro";
-    print "theme_lupdate: $cmd\n";
-    system($cmd);
+    $args = "$silent $locations -pluralonly $tmp.2.pro";
+    print "theme_lupdate: lupdate $args\n";
+    system("$lupdate $args");
 }
 
 unlink $tmp;
