@@ -23,6 +23,7 @@
 #include <QtDBus>
 #include <qphonecallprovider.h>
 #include <qtopialog.h>
+#include <qofonovoicecall.h>
 #include "ofonoutil.h"
 
 class OFonoTelephonyService;
@@ -36,7 +37,7 @@ public:
      virtual ~ OFonoPhoneCall();
 
     OFonoTelephonyService *service;
-    QString path;
+    OrgOfonoVoiceCallInterface oVoiceCall;
 
     void dial(const QDialOptions & options);
     void hangup(QPhoneCall::Scope scope);

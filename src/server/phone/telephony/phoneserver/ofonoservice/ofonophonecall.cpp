@@ -26,7 +26,7 @@ OFonoPhoneCall::OFonoPhoneCall
      const QString & callType, QString path)
 :QPhoneCallImpl(&service->call_provider, identifier, callType)
 , service(service)
-, path(path)
+, oVoiceCall("org.ofono", path, QDBusConnection::systemBus(), this)
 {
 }
 
@@ -72,7 +72,12 @@ void OFonoPhoneCall::dialFinished(QOFonoDBusPendingCall & call)
 {
     QOFonoDBusPendingReply < QDBusObjectPath > reply = call;
     if (checkReply(reply)) {
-        path = reply.value().path();
+        // Destruct old dbus interface and create new in the same place
+        oVoiceCall.~OrgOfonoVoiceCallInterface();
+        new(&oVoiceCall) OrgOfonoVoiceCallInterface("org.ofono",
+                                                    reply.value().path(),
+                                                    QDBusConnection::systemBus
+                                                    (), this);
     }
 }
 
@@ -80,48 +85,48 @@ void OFonoPhoneCall::hangup(QPhoneCall::Scope scope)
 {
     qDebug() << "OFonoPhoneCall::hangup()";
 
-/*    if(scope == QPhoneCall::CallOnly)
-    {
-        QOFonoDBusPendingReply<> reply = service->gsmCall.Release(id);
+    if (scope == QPhoneCall::CallOnly) {
+        QOFonoDBusPendingReply <> reply = oVoiceCall.Hangup();
+        checkReply(reply);
+    } else {
+        QOFonoDBusPendingReply <> reply =
+            service->oVoiceCallManager.HangupAll();
         checkReply(reply);
     }
-    else
-    {
-        // TODO: not sure if ReleaseAll() is ok
-        QOFonoDBusPendingReply<> reply = service->gsmCall.ReleaseAll();
-        checkReply(reply);
-    }
-    id = -1;
-    setState(QPhoneCall::HangupLocal); */
+    setState(QPhoneCall::HangupLocal);
 }
 
 void OFonoPhoneCall::accept()
 {
-/*    qDebug() << "OFonoPhoneCall::accept()";
-    QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply);*/
+    qDebug() << "OFonoPhoneCall::accept()";
+    QOFonoDBusPendingReply<> reply = oVoiceCall.Answer();
+    checkReply(reply);
 }
 
 void OFonoPhoneCall::hold()
 {
     qDebug() << "OFonoPhoneCall::hold()";
-/*    QOFonoDBusPendingReply<> reply = service->gsmCall.HoldActive();
-    checkReply(reply);*/
+    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.HoldAndAnswer();
+    checkReply(reply);
 }
 
 void OFonoPhoneCall::activate(QPhoneCall::Scope)
 {
     qDebug() << "OFonoPhoneCall::activate()";
-/*    QOFonoDBusPendingReply<> reply = service->gsmCall.Activate(id);
-    checkReply(reply);*/
+    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.ReleaseAndAnswer();
+    checkReply(reply);
 }
 
 void OFonoPhoneCall::tone(const QString & tones)
 {
     qDebug() << "OFonoPhoneCall::tone(" << tones << ")";
+    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.SendTones(tones);
+    checkReply(reply);    
 }
 
 void OFonoPhoneCall::transfer(const QString & number)
 {
     qDebug() << "OFonoPhoneCall::transfer(" << number << ")";
+    QOFonoDBusPendingReply<> reply = service->oVoiceCallManager.Transfer();
+    checkReply(reply);
 }
