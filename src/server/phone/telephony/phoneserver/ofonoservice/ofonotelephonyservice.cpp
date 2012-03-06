@@ -192,6 +192,9 @@ void OFonoTelephonyService::voiceCallAdded(const QDBusObjectPath & path,
                                            const QVariantMap & properties)
 {
     qDebug() << "voiceCallAdded" << path.path();
+    if (properties.value("State") == "dialing") {   // Dialed calls are already registered
+        return;
+    }
     OFonoPhoneCall *call = new OFonoPhoneCall(this, NULL, "Voice", path.path());
     call->setNumber(properties.value("LineIdentification").toString());
     call->setOFonoState(properties.value("State").toString());

@@ -110,8 +110,6 @@ void OFonoNetworkRegistration::registerFinished(QOFonoDBusPendingCall & call)
 void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
                                                      const QDBusVariant & value)
 {
-    qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
-
     if (name == "Strength") {
         signalProvider.setAvailability(QSignalSource::Available);
         signalProvider.setSignalStrength(value.variant().toInt());
