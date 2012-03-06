@@ -25,6 +25,7 @@ OFonoNetworkRegistration::OFonoNetworkRegistration(OFonoTelephonyService *
                                                    service)
 :  QNetworkRegistrationServer(service->service(), service)
     , service(service)
+    , signalProvider(service->service(), "modem", this)
 {
 }
 
@@ -111,7 +112,10 @@ void OFonoNetworkRegistration::netRegPropertyChanged(const QString & name,
 {
     qDebug() << "netRegPropertyChanged " << name << "=" << value.variant();
 
-    if (name == "Status") {
+    if (name == "Strength") {
+        signalProvider.setAvailability(QSignalSource::Available);
+        signalProvider.setSignalStrength(value.variant().toInt());
+    } else if (name == "Status") {
         updateRegistrationState(ofonoStatusToQt(value.variant().toString()));
         updateInitialized(true);
     } else if (name == "Name" || name == "Mode" || name == "Technology") {
