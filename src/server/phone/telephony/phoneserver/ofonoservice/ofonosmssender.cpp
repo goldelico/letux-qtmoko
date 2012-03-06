@@ -20,8 +20,8 @@
 #include "ofonosmssender.h"
 #include "ofonotelephonyservice.h"
 
-OFonoSMSSender::OFonoSMSSender( OFonoTelephonyService *service )
-    : QSMSSender( service->service(), service, QCommInterface::Server )
+OFonoSMSSender::OFonoSMSSender(OFonoTelephonyService * service)
+:  QSMSSender(service->service(), service, QCommInterface::Server)
     , service(service)
     , smsId()
 {
@@ -31,21 +31,21 @@ OFonoSMSSender::~OFonoSMSSender()
 {
 }
 
-void OFonoSMSSender::send( const QString& id, const QSMSMessage& msg )
+void OFonoSMSSender::send(const QString & id, const QSMSMessage & msg)
 {
-    qDebug() << "OFonoSMSSender::send" << "id=" << id << "recipient=" << msg.recipient() << "text=" << msg.text();
+    qDebug() << "OFonoSMSSender::send" << "id=" << id << "recipient=" <<
+        msg.recipient() << "text=" << msg.text();
 
-/*    
-    QOFonoDBusPendingCall call = service->gsmSms.SendTextMessage(
-        msg.recipient(), msg.text(), msg.statusReportRequested());
-
-    watchOFonoCall(call, this, SLOT(sendTextMessageFinished(QOFonoDBusPendingCall &)));
-    smsId = id; */
+    QOFonoDBusPendingCall call =
+        service->oMessageManager.SendMessage(msg.recipient(), msg.text());
+    watchOFonoCall(call, this,
+                   SLOT(sendMessageFinished(QOFonoDBusPendingCall &)));
+    smsId = id;
 }
 
-void OFonoSMSSender::sendTextMessageFinished(QOFonoDBusPendingCall & call)
+void OFonoSMSSender::sendMessageFinished(QOFonoDBusPendingCall & call)
 {
-    qDebug() << "sendTextMessageFinished";
-    QOFonoDBusPendingReply<int, QString> reply = call;
+    qDebug() << "sendMessageFinished";
+    QOFonoDBusPendingReply < QDBusObjectPath > reply = call;
     emit finished(smsId, qTelResult(reply));
 }
