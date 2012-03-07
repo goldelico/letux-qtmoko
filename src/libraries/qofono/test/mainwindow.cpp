@@ -25,6 +25,8 @@ MainWindow::MainWindow(QWidget *parent, Qt::WFlags) :
     connect(&oVoiceCallManager, SIGNAL(PropertyChanged(const QString, const QDBusVariant)), this, SLOT(voiceCallManagerPropertyChanged(const QString, const QDBusVariant)));
     connect(&oVoiceCallManager, SIGNAL(CallAdded(const QDBusObjectPath &, const QVariantMap &)), this, SLOT(voiceCallAdded(const QDBusObjectPath &, const QVariantMap &)));
     connect(&oVoiceCallManager, SIGNAL(CallRemoved(const QDBusObjectPath &)), this, SLOT(voiceCallRemoved(const QDBusObjectPath &)));
+    connect(&oMessageManager, SIGNAL(IncomingMessage(const QString &, const QVariantMap &)), this, SLOT(incomingMessage(const QString &, const QVariantMap &)));
+    connect(&oMessageManager, SIGNAL(ImmediateMessage(const QString &, const QVariantMap &)), this, SLOT(immediateMessage(const QString &, const QVariantMap &)));
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -81,6 +83,11 @@ QString ofonoObjectListToStr(QOFonoObjectList list)
         str.append(ofonoObjectToStr(list.at(i)));
     }
     return str;
+}
+
+void MainWindow::showOFonoObject(QOFonoObject o, QString caption)
+{
+    QMessageBox::information(this, caption, ofonoObjectToStr(o));
 }
 
 void MainWindow::showOFonoObjectList(QOFonoObjectList list, QString caption)
@@ -212,21 +219,16 @@ void MainWindow::on_bTransfer_clicked()
 {
 }
 
-void MainWindow::incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents)
+void MainWindow::incomingMessage(const QString & message, const QVariantMap & info)
 {
-    QMessageBox::information(this, "Incomming SMS",
-                             "From: " + number + "\n" +
-                             "Time: " + timestamp + "\n" +
-                             contents);
+    QMessageBox::information(this, "Incomming message",
+                             message + "\n\n" + variantMapToStr(info));
 }
 
-void MainWindow::incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents)
+void MainWindow::immediateMessage(const QString & message, const QVariantMap & info)
 {
-    QMessageBox::information(this, "SMS status report",
-                             "Reference: " + QString::number(reference) + "\n" +
-                             "Status: " + status + "\n" +
-                             "Sender number: " + sender_number + "\n" +
-                             contents);
+    QMessageBox::information(this, "Immediate message",
+                             message + "\n\n" + variantMapToStr(info));
 }
 
 void MainWindow::on_bSend_clicked()
@@ -398,5 +400,24 @@ void MainWindow::on_bGetCalls_clicked()
         {
             lw->addItem(list.at(i).object.path());
         }
+    }
+}
+
+void MainWindow::on_bGetMessages_clicked()
+{
+    QOFonoDBusPendingReply<QOFonoObjectList> reply = oMessageManager.GetMessages();
+    if(checkReply2(reply, false, true))
+    {
+        showOFonoObjectList(reply.value(), "GetMessages");
+    }
+}
+
+void MainWindow::on_bSendMessage_clicked()
+{
+    QOFonoDBusPendingReply<QDBusObjectPath> reply = oMessageManager.SendMessage(ui->tbSmsPhoneNumber->text(), ui->tbSmsContent->toPlainText());
+    if(checkReply2(reply, false, true))
+    {
+        qDebug() << reply.value().path();
+        QMessageBox::information(this, "SendMessage", reply.value().path());
     }
 }
