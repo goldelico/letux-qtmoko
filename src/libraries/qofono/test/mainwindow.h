@@ -79,6 +79,8 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bSimProperties_clicked();
+    void on_bImport_clicked();
     void on_bSendMessage_clicked();
     void on_bGetMessages_clicked();
     void on_bHangup_clicked();

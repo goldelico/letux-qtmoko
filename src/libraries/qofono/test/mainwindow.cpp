@@ -421,3 +421,58 @@ void MainWindow::on_bSendMessage_clicked()
         QMessageBox::information(this, "SendMessage", reply.value().path());
     }
 }
+
+void MainWindow::on_bImport_clicked()
+{
+    QOFonoDBusPendingReply<QString> reply = oPhoneBook.Import();
+    if(checkReply2(reply, false, true))
+    {
+        QString str = reply.value();
+        qDebug() << str;
+        QMessageBox::information(this, "Phonebook import", str);
+
+        int index = 0;
+        while((index = str.indexOf("\nFN:", index)) > 0)
+        {
+            index += 4;
+            int end = str.indexOf("\n", index) - 1;
+            if(end < 0)
+            {
+                break;
+            }
+            QString name = str.mid(index, end - index);
+            index = str.indexOf("TEL;TYPE=VOICE:+", index);
+            if(index < 0)
+            {
+                break;
+            }
+            index += 15;
+            end = str.indexOf("\n", index) - 1;
+            if(end < 0)
+            {
+                break;
+            }
+            QString number = str.mid(index, end - index);
+            qDebug() << "name=" << name << ", number=" << number;
+        }
+    }
+}
+
+void MainWindow::on_bSimProperties_clicked()
+{
+    QOFonoDBusPendingReply<QVariantMap> reply = oSim.GetProperties();
+    if(checkReply2(reply, false, true))
+    {
+        QVariantMap map = reply.value();
+        qDebug() << variantMapToStr(map);
+        showVariantMap(map, "Sim properties");
+        QStringList numbers = map.value("SubscriberNumbers").toStringList();
+        QString str;
+        for(int i = 0; i < numbers.count(); i++)
+        {
+            str.append(numbers.at(i) + "\n");
+        }
+        qDebug() << str;
+        QMessageBox::information(this, "SubscriberNumbers", str);
+    }
+}

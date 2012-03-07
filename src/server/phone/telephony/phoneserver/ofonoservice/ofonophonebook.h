@@ -34,13 +34,11 @@ public:
     ~OFonoPhoneBook();
 
     OFonoTelephonyService *service;
-    bool simReady;
     bool wantEntries;           // getEntries was called while sim was not ready yet
-    bool wantLimits;              // request limits was called while sim was not ready yet
-    int freeIndex;              // free index for new contact
+    bool wantLimits;            // request limits was called while sim was not ready yet
     int numUsed;                // number of used
 
-    void deviceStatus(QString status);  // called by ofono telephony service to report device status
+    void modemPropertyChanged(const QString & name, const QDBusVariant & value);    // called by ofono telephony service when modem property changes
 
 public slots:
     void getEntries(const QString & store);
@@ -56,10 +54,11 @@ public slots:
     void setFixedDialingState(bool enabled, const QString & pin2);
 
 private:
-     bool fixedDialingEnabled;
+    void import();
+    void emitLimits(const QString & store);
 
 private slots:
-    void retrievePhonebookFinished(QOFonoDBusPendingCall &);
+    void importFinished(QOFonoDBusPendingCall &);
 };
 
 #endif

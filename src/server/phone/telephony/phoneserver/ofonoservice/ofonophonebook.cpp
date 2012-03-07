@@ -23,11 +23,9 @@
 OFonoPhoneBook::OFonoPhoneBook(OFonoTelephonyService * service)
 :  QPhoneBook(service->service(), service, QCommInterface::Server)
     , service(service)
-    , simReady(false)
     , wantEntries(false)
     , wantLimits(false)
-    , freeIndex(-1)
-    , numUsed(0)
+    , numUsed(-1)
 {
 }
 
@@ -35,124 +33,118 @@ OFonoPhoneBook::~OFonoPhoneBook()
 {
 }
 
-void OFonoPhoneBook::deviceStatus(QString status)
+void OFonoPhoneBook::modemPropertyChanged(const QString & name,
+                                          const QDBusVariant &)
 {
-/*    bool oldReady = simReady;
-    simReady = (status == "alive-registered");
+    if (name != "Interfaces"
+        || !service->interfaceAvailable(&service->oPhoneBook)) {
+        return;
+    }
 
-    qDebug() << "OFonoPhoneBook::deviceStatus status=" << status << ", oldReady="
-        << oldReady << ", simReady=" << simReady;
+    if (wantEntries) {
+        import();
+    }
+    if (wantLimits) {
+        emitLimits("SM");
+    }
+}
 
-    if (simReady && oldReady != simReady) {
-        if (wantEntries) {
-            wantEntries = false;
-            getEntries("SM");
+void OFonoPhoneBook::import()
+{
+    QOFonoDBusPendingCall call = service->oPhoneBook.Import();
+    watchOFonoCall(call, this, SLOT(importFinished(QOFonoDBusPendingCall &)));
+}
+
+void OFonoPhoneBook::emitLimits(const QString & store)
+{
+    QPhoneBookLimits l;
+    l.setUsed(numUsed);
+    l.setFirstIndex(1);
+    l.setLastIndex(numUsed);
+    l.setNumberLength(1);
+    l.setTextLength(1);
+    emit limits(store, l);
+}
+
+void OFonoPhoneBook::importFinished(QOFonoDBusPendingCall & call)
+{
+    QOFonoDBusPendingReply < QString > reply = call;
+    if (!reply.isValid()) {
+        return;
+    }
+    QString str = reply.value();
+
+    int index = 0;
+    int entryIndex = 0;
+    numUsed = 0;
+    QList < QPhoneBookEntry > list;
+    while ((index = str.indexOf("\nFN:", index)) > 0) {
+        index += 4;
+        int end = str.indexOf("\n", index) - 1;
+        if (end < 0) {
+            break;
         }
-        if (wantLimits) {
-            wantLimits = false;
-            requestLimits("SM");
+        QString name = str.mid(index, end - index);
+        index = str.indexOf("TEL;TYPE=VOICE:", index);
+        if (index < 0) {
+            break;
         }
-    } */
+        index += 16;
+        end = str.indexOf("\n", index) - 1;
+        if (end < 0) {
+            break;
+        }
+        QString number = str.mid(index, end - index);
+
+        QPhoneBookEntry item;
+        item.setIndex(++entryIndex);
+        item.setNumber(number);
+        item.setText(name);
+        list.append(item);
+    }
+    qDebug() << "OFonoPhoneBook contacts imported count=" << list.count();
+    emit entries("SM", list);
+    emitLimits("SM");
 }
 
 void OFonoPhoneBook::getEntries(const QString & store)
 {
     qDebug() << "OFonoPhoneBook::getEntries store=" << store;
 
-/*    // We support only "SM" store
+    // We support only "SM" store
     if (store != "SM") {
         QList < QPhoneBookEntry > list;
         emit entries(store, list);
         return;
     }
 
-    if (!simReady) {
+    if (!service->interfaceAvailable(&service->oPhoneBook)) {
         wantEntries = true;
         return;
     }
-
-    QOFonoDBusPendingCall call =
-        service->gsmSim.RetrievePhonebook("contacts", 0, 65535);
-    watchOFonoCall(call, this,
-                 SLOT(retrievePhonebookFinished(QOFonoDBusPendingCall &))); */
-}
-
-void OFonoPhoneBook::retrievePhonebookFinished(QOFonoDBusPendingCall & call)
-{
-/*    QOFonoDBusPendingReply < QOFonoSIMEntryList > reply = call;
-
-    if (!checkReply(reply)) {
-        return;
-    }
-
-    QOFonoSIMEntryList pb = reply.value();
-    QList < QPhoneBookEntry > list;
-
-    qDebug() << "pb.count()=" << pb.count();
-    freeIndex = -1;
-    numUsed = pb.count();
-
-    for (int i = 0; i < pb.count(); i++) {
-        QOFonoSIMEntry entry = pb.at(i);
-
-        qDebug() << "entry i=" << i << ", index=" << entry.index << ", name=" <<
-            entry.name << ", number=" << entry.number;
-
-        QPhoneBookEntry item;
-        item.setIndex(entry.index);
-        item.setNumber(entry.number);
-        item.setText(entry.name);
-        list.append(item);
-
-        if (freeIndex < 0 || entry.index == freeIndex) {
-            freeIndex = entry.index + 1;
-        }
-    }
-    emit entries("SM", list); */
+    import();
 }
 
 void OFonoPhoneBook::add(const QPhoneBookEntry & entry, const QString & store,
-                       bool flush)
+                         bool flush)
 {
-/*    qDebug() << "OFonoPhoneBook::add entry.text()=" << entry.text() << "store=" <<
-        store << "flush=" << flush;
-
-    QOFonoDBusPendingReply <> reply =
-        service->gsmSim.StoreEntry("contacts", freeIndex, entry.text(),
-                                   entry.number());
-
-    checkReply(reply);
-    getEntries(store);*/
+    // oFono does not support adding contacts to sim
 }
 
 void OFonoPhoneBook::remove(uint index, const QString & store, bool flush)
 {
-/*    qDebug() << "OFonoPhoneBook::remove index=" << index << "store=" << store <<
-        "flush=" << flush;
-
-    QOFonoDBusPendingReply <> reply =
-        service->gsmSim.DeleteEntry("contacts", index);
-
-    checkReply(reply);
-    getEntries(store);*/
+    // oFono does not support removing contacts from sim
 }
 
-void OFonoPhoneBook::update(const QPhoneBookEntry & entry, const QString & store,
-                          bool flush)
+void OFonoPhoneBook::update(const QPhoneBookEntry & entry,
+                            const QString & store, bool flush)
 {
-    qDebug() << "OFonoPhoneBook::update entry.text()=" << entry.text() << "store="
-        << store << "flush=" << flush;
-
-/*    QOFonoDBusPendingReply <> reply =
-        service->gsmSim.StoreEntry("contacts", entry.index(), entry.text(),
-                                   entry.number());
-    checkReply(reply);
-    getEntries(store); */
+    // oFono does not support updating contacs on sim
 }
 
 void OFonoPhoneBook::flush(const QString & store)
 {
-    //getEntries(store);
+    // oFono can only read contacts on sim
 }
 
 void OFonoPhoneBook::setPassword(const QString &, const QString &)
@@ -169,35 +161,22 @@ void OFonoPhoneBook::requestLimits(const QString & store)
 {
     qDebug() << "OFonoPhoneBook::requestLimits store=" << store;
 
-/*    if (!simReady) {
+    if (!service->interfaceAvailable(&service->oPhoneBook) && numUsed < 0) {
         wantLimits = true;
         return;
     }
-
-    QOFonoDBusPendingReply < int, int, int >reply =
-        service->gsmSim.GetPhonebookInfo("contacts");
-
-    if (!checkReply(reply)) {
-        return;
-    }
-    QPhoneBookLimits l;
-    l.setUsed(numUsed);
-    l.setFirstIndex(1);
-    l.setLastIndex(reply.argumentAt(0).toInt());
-    l.setNumberLength(reply.argumentAt(1).toInt());
-    l.setTextLength(reply.argumentAt(2).toInt());
-    emit limits(store, l); */
+    emitLimits(store);
 }
 
 void OFonoPhoneBook::requestFixedDialingState()
 {
     qDebug() << "OFonoPhoneBook::requestFixedDialingState";
+    bool fixedDialingEnabled = false;
     emit fixedDialingState(fixedDialingEnabled);
 }
 
 void OFonoPhoneBook::setFixedDialingState(bool enabled, const QString &)
 {
     qDebug() << "OFonoPhoneBook::setFixedDialingState enabled=" << enabled;
-    fixedDialingEnabled = enabled;
     emit setFixedDialingStateResult(QTelephony::OK);
 }
