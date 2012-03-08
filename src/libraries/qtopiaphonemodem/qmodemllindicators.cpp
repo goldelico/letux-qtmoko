@@ -17,8 +17,8 @@
 **
 ****************************************************************************/
 
-#include <QFile.h>
-#include "llinidcators.h"
+#include <QFile>
+#include <qmodemllindicators.h>
 
 // Turn on/off led. Device can be "gta02" or "gta04".
 // GTA04: color can be "green" or "red" type can be "power" or "aux"
@@ -72,31 +72,22 @@ static void missedCallLedOff()
 
 #endif
 
-// Called on CallAdded oFono signal
-void llIndicatorsVoiceCallAdded()
+void llIndicatorsRinging()
 {
-    missedCallLedOn();
+    missedCallLedOn();          // consider the called missed now
 }
 
-// Called on CallRemoved oFono signal
-void llIndicatorsVoiceCallRemoved()
+void llIndicatorsDial()
 {
+    missedCallLedOff();         // clear missed call led - user should have noticed it when he is dialing call
 }
 
-// Called on OFonoPhoneCall.dial()
-void llIndicatorsVoiceCallDial()
+void llIndicatorsHangup()
 {
-    missedCallLedOff();           // clear missed call led - user should have noticed it when he is dialing call
+    missedCallLedOff();         // clear missed call led - user should have noticed it when he hangs up
 }
 
-// Called on OFonoPhoneCall.hangup()
-void llIndicatorsVoiceCallHangup()
+void llIndicatorsAccept()
 {
-    missedCallLedOff();           // clear missed call led - user should have noticed it when he hangs up
-}
-
-// Called on OFonoPhoneCall.accept()
-void llIndicatorsVoiceCallAccept()
-{
-    missedCallLedOff();           // clear missed call led when users accepts the call
+    missedCallLedOff();         // clear missed call led when users accepts the call
 }

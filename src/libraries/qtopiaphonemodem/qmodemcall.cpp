@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 #include <qmodemcall.h>
+#include <qmodemllindicators.h>
 #include <qserialiodevicemultiplexer.h>
 #include <qatchat.h>
 #include <qatutils.h>
@@ -135,6 +136,8 @@ QModemCall::~QModemCall()
 */
 void QModemCall::dial( const QDialOptions& options )
 {
+    llIndicatorsDial();
+    
     QString number = options.number();
     setNumber( number );
 
@@ -184,6 +187,8 @@ void QModemCall::dial( const QDialOptions& options )
 void QModemCall::hangup( QPhoneCall::Scope scope )
 {
     qLog(Modem) << "QModemCall::hangup()";
+    llIndicatorsHangup();
+    
     if ( state() == QPhoneCall::Connected ||
          state() == QPhoneCall::Dialing ||
          state() == QPhoneCall::Alerting ) {
@@ -286,6 +291,8 @@ void QModemCall::hangup( QPhoneCall::Scope scope )
 */
 void QModemCall::accept()
 {
+    llIndicatorsAccept();
+    
     // Bail out if this is not the currently registered incoming call.
     if ( state() != QPhoneCall::Incoming ) {
         qLog(Modem) << "QModemCall::accept(): Not the currently registered call";
