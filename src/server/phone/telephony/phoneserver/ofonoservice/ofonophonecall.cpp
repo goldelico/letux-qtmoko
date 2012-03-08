@@ -76,7 +76,6 @@ void OFonoPhoneCall::dial(const QDialOptions & options)
     setNumber(number);
 
     qDebug() << "OFonoPhoneCall::dial(" << number << ")";
-    llIndicatorsVoiceCallDial();
 
     // If the number starts with '*' or '#', then this is a request
     // for a supplementary service, not an actual phone call.

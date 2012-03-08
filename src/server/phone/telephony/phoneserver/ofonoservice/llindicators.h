@@ -24,18 +24,15 @@
 // incoming call or SMS.
 
 // Called on CallAdded oFono signal
-void llIndicatorsVoiceCallAdded();
-
-// Called on CallRemoved oFono signal
-void llIndicatorsVoiceCallRemoved();
-
-// Called on OFonoPhoneCall.dial()
-void llIndicatorsVoiceCallDial();
+void llIndicatorsIncomingVoiceCallAdded();
 
 // Called on OFonoPhoneCall.hangup()
 void llIndicatorsVoiceCallHangup();
 
 // Called on OFonoPhoneCall.accept()
 void llIndicatorsVoiceCallAccept();
+
+// Called user checks missed calls
+void llIndicatorsMissedCallsCleared();
 
 #endif

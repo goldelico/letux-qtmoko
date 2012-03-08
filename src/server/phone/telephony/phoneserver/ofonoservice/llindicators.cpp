@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 #include <QFile>
+#include <QDebug>
 #include "llindicators.h"
 
 // Turn on/off led. Device can be "gta02" or "gta04".
@@ -27,9 +28,10 @@ static void setLed(const char *device, const char *color,
                    const char *type, bool value)
 {
     char filename[255];
-    sprintf(filename, "/sys/class/leds/%s:%s:%s", device, color, type); // e.g. /sys/class/leds/gta04:green:power
+    sprintf(filename, "/sys/class/leds/%s:%s:%s/brightness", device, color, type); // e.g. /sys/class/leds/gta04:green:power
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning() << "setLed failed" << f.errorString();
         return;
     }
     f.write(value ? "255" : "0");
@@ -73,26 +75,21 @@ static void missedCallLedOff()
 #endif
 
 // Called on CallAdded oFono signal
-void llIndicatorsVoiceCallAdded()
+void llIndicatorsIncomingVoiceCallAdded()
 {
     missedCallLedOn();
 }
 
-// Called on CallRemoved oFono signal
-void llIndicatorsVoiceCallRemoved()
-{
-}
-
 // Called on OFonoPhoneCall.dial()
-void llIndicatorsVoiceCallDial()
+void llIndicatorsMissedCallsCleared()
 {
-    missedCallLedOff();           // clear missed call led - user should have noticed it when he is dialing call
+    missedCallLedOff();           // clear missed call led
 }
 
 // Called on OFonoPhoneCall.hangup()
 void llIndicatorsVoiceCallHangup()
 {
-    missedCallLedOff();           // clear missed call led - user should have noticed it when he hangs up
+    missedCallLedOff();           // clear missed call led when user hangs up
 }
 
 // Called on OFonoPhoneCall.accept()

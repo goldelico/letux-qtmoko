@@ -20,6 +20,7 @@
 #ifndef OFONOMODEMSERVICE_H
 #define OFONOMODEMSERVICE_H
 
+#include <qvaluespace.h>
 #include <qmodemservice.h>
 #include <qmodemcall.h>
 #include <qmodemcallprovider.h>
@@ -94,6 +95,8 @@ public:
     QVariantMap netRegProperties;
     QVariantMap voiceCallManagerProperties;
 
+    QValueSpaceItem phoneVs;
+
     void initialize();
     bool interfaceAvailable(QOFonoDbusAbstractInterface * interface);
 
@@ -107,6 +110,7 @@ private slots:
     void voiceCallAdded(const QDBusObjectPath & path,
                         const QVariantMap & properties);
     void voiceCallRemoved(const QDBusObjectPath & path);
+    void phoneVsChanged();
 };
 
 #endif

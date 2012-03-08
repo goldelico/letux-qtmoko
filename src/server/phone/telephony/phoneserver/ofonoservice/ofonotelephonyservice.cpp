@@ -47,7 +47,10 @@ oVoiceCallManager("org.ofono", modemDbusPath, QDBusConnection::systemBus(),
 , modemProperties()
 , netRegProperties()
 , voiceCallManagerProperties()
+, phoneVs("/Communications/Calls")
 {
+    connect(&phoneVs, SIGNAL(contentsChanged()), this, SLOT(phoneVsChanged()));
+
     connect(&oModem, SIGNAL(PropertyChanged(const QString, const QDBusVariant)),
             this,
             SLOT(modemPropertyChanged(const QString, const QDBusVariant)));
@@ -161,6 +164,15 @@ bool OFonoTelephonyService::interfaceAvailable(QOFonoDbusAbstractInterface *
     return interfaces.contains(interface->interface());
 }
 
+void OFonoTelephonyService::phoneVsChanged()
+{
+    int missedCalls = phoneVs.value("MissedCalls").toInt();
+    qDebug() << "phoneVsChanged missedCalls=" << missedCalls;
+    if (missedCalls == 0) {
+        llIndicatorsMissedCallsCleared();
+    }
+}
+
 void OFonoTelephonyService::modemPropertyChanged(const QString & name,
                                                  const QDBusVariant & value)
 {
@@ -193,18 +205,19 @@ void OFonoTelephonyService::voiceCallAdded(const QDBusObjectPath & path,
                                            const QVariantMap & properties)
 {
     qDebug() << "voiceCallAdded" << path.path();
-    llIndicatorsVoiceCallAdded();
 
-    if (properties.value("State") == "dialing") {   // Dialed calls are already registered
+    QString state = properties.value("State").toString();
+    if (state == "dialing") {   // Dialed calls are already registered
         return;
     }
+    llIndicatorsIncomingVoiceCallAdded();
+
     OFonoPhoneCall *call = new OFonoPhoneCall(this, NULL, "Voice", path.path());
     call->setNumber(properties.value("LineIdentification").toString());
-    call->setOFonoState(properties.value("State").toString());
+    call->setOFonoState(state);
 }
 
 void OFonoTelephonyService::voiceCallRemoved(const QDBusObjectPath & path)
 {
     qDebug() << "voiceCallRemoved" << path.path();
-    llIndicatorsVoiceCallRemoved();
 }

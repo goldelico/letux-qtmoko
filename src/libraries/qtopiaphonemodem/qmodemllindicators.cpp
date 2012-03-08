@@ -27,9 +27,10 @@ static void setLed(const char *device, const char *color,
                    const char *type, bool value)
 {
     char filename[255];
-    sprintf(filename, "/sys/class/leds/%s:%s:%s", device, color, type); // e.g. /sys/class/leds/gta04:green:power
+    sprintf(filename, "/sys/class/leds/%s:%s:%s/brightness", device, color, type); // e.g. /sys/class/leds/gta04:green:power
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning() << "setLed failed" << f.errorString();
         return;
     }
     f.write(value ? "255" : "0");
