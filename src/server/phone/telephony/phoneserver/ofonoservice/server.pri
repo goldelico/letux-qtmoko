@@ -19,7 +19,8 @@ HEADERS+=\
         ofonosmssender.h\
         ofonosmsreader.h\
         ofonosiminfo.h\
-        ofonophonebook.h
+        ofonophonebook.h \
+        llindicators.h
 
 SOURCES+=\
         ofonoutil.cpp\
@@ -34,5 +35,6 @@ SOURCES+=\
         ofonosmssender.cpp\
         ofonosmsreader.cpp\
         ofonosiminfo.cpp\
-        ofonophonebook.cpp
+        ofonophonebook.cpp\
+        llindicators.cpp
 

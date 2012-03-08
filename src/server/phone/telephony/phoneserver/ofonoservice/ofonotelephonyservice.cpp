@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 #include "ofonotelephonyservice.h"
+#include "llindicators.h"
 
 OFonoTelephonyService::OFonoTelephonyService(const QString & service,
                                              QString modemDbusPath,
@@ -192,6 +193,8 @@ void OFonoTelephonyService::voiceCallAdded(const QDBusObjectPath & path,
                                            const QVariantMap & properties)
 {
     qDebug() << "voiceCallAdded" << path.path();
+    llIndicatorsVoiceCallAdded();
+
     if (properties.value("State") == "dialing") {   // Dialed calls are already registered
         return;
     }
@@ -203,4 +206,5 @@ void OFonoTelephonyService::voiceCallAdded(const QDBusObjectPath & path,
 void OFonoTelephonyService::voiceCallRemoved(const QDBusObjectPath & path)
 {
     qDebug() << "voiceCallRemoved" << path.path();
+    llIndicatorsVoiceCallRemoved();
 }

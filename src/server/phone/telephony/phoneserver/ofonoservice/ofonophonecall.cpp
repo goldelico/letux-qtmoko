@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 
+#include "llindicators.h"
 #include "ofonophonecall.h"
 #include "ofonotelephonyservice.h"
 #include "ofonocallprovider.h"
@@ -75,6 +76,7 @@ void OFonoPhoneCall::dial(const QDialOptions & options)
     setNumber(number);
 
     qDebug() << "OFonoPhoneCall::dial(" << number << ")";
+    llIndicatorsVoiceCallDial();
 
     // If the number starts with '*' or '#', then this is a request
     // for a supplementary service, not an actual phone call.
@@ -109,6 +111,7 @@ void OFonoPhoneCall::dialFinished(QOFonoDBusPendingCall & call)
 void OFonoPhoneCall::hangup(QPhoneCall::Scope scope)
 {
     qDebug() << "OFonoPhoneCall::hangup()";
+    llIndicatorsVoiceCallHangup();
 
     if (scope == QPhoneCall::CallOnly) {
         QOFonoDBusPendingReply <> reply = oVoiceCall.Hangup();
@@ -124,6 +127,8 @@ void OFonoPhoneCall::hangup(QPhoneCall::Scope scope)
 void OFonoPhoneCall::accept()
 {
     qDebug() << "OFonoPhoneCall::accept()";
+    llIndicatorsVoiceCallAccept();
+
     QOFonoDBusPendingReply <> reply = oVoiceCall.Answer();
     checkReply(reply);
 }
