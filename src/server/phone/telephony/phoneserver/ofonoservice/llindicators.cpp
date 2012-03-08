@@ -17,8 +17,8 @@
 **
 ****************************************************************************/
 
-#include <QFile.h>
-#include "llinidcators.h"
+#include <QFile>
+#include "llindicators.h"
 
 // Turn on/off led. Device can be "gta02" or "gta04".
 // GTA04: color can be "green" or "red" type can be "power" or "aux"
