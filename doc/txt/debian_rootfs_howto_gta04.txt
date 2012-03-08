@@ -96,6 +96,7 @@ Step 4
 echo g_ether > /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
+echo ledtrig-timer >> /media/card/etc/modules
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
