@@ -18,6 +18,8 @@
 ****************************************************************************/
 
 #include <QFile>
+#include <QDebug>
+#include <qtopialog.h>
 #include <qmodemllindicators.h>
 
 // Turn on/off led. Device can be "gta02" or "gta04".
@@ -27,7 +29,7 @@ static void setLed(const char *device, const char *color,
                    const char *type, bool value)
 {
     char filename[255];
-    sprintf(filename, "/sys/class/leds/%s:%s:%s/brightness", device, color, type); // e.g. /sys/class/leds/gta04:green:power
+    sprintf(filename, "/sys/class/leds/%s:%s:%s/brightness", device, color, type);  // e.g. /sys/class/leds/gta04:green:power
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
         qWarning() << "setLed failed" << f.errorString();
@@ -73,22 +75,31 @@ static void missedCallLedOff()
 
 #endif
 
-void llIndicatorsRinging()
+// Called when ringing() function is called
+void QModemLLIndicators::Ringing()
 {
     missedCallLedOn();          // consider the called missed now
 }
 
-void llIndicatorsDial()
+// Called on QModemCall.hangup()
+void QModemLLIndicators::MissedCallsChanged(int num)
 {
-    missedCallLedOff();         // clear missed call led - user should have noticed it when he is dialing call
+    static int numMissed = 0;
+    qLog(Modem) << "MissedCallsChanged " << numMissed << "->" << num;
+    if (numMissed > 0 && num == 0) {
+        missedCallLedOff();     // clear missed call led
+    }
+    numMissed = num;
 }
 
-void llIndicatorsHangup()
+// Called on QModemCall.accept()
+void QModemLLIndicators::Hangup()
 {
     missedCallLedOff();         // clear missed call led - user should have noticed it when he hangs up
 }
 
-void llIndicatorsAccept()
+// Called user checks missed calls
+void QModemLLIndicators::Accept()
 {
     missedCallLedOff();         // clear missed call led when users accepts the call
 }

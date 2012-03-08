@@ -92,6 +92,7 @@ protected:
     void setUseDetectTimer(bool);
     bool useMissedTimer() const;
     void setUseMissedTimer(bool);
+    void llIndicatorsRinging();
 
 protected slots:
     virtual void resetModem();

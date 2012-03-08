@@ -976,3 +976,8 @@ bool QModemCallProvider::useMissedTimer() const
 {
     return d->useMisssedTimer;
 }
+
+void QModemCallProvider::llIndicatorsRinging()
+{
+    QModemLLIndicators::Ringing();
+}

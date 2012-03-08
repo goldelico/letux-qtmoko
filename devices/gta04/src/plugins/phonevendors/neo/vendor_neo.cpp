@@ -63,7 +63,7 @@ bool NeoCallProvider::hasRepeatingRings() const
 
 void NeoCallProvider::ringing(const QString &, const QString &, uint)
 {
-    llIndicatorsRinging();
+    llIndicatorsRinging();      // turn on green led
     doClcc();                   // start CLCC polling
 }
 

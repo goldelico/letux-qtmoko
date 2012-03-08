@@ -136,8 +136,6 @@ QModemCall::~QModemCall()
 */
 void QModemCall::dial( const QDialOptions& options )
 {
-    llIndicatorsDial();
-    
     QString number = options.number();
     setNumber( number );
 
@@ -187,7 +185,7 @@ void QModemCall::dial( const QDialOptions& options )
 void QModemCall::hangup( QPhoneCall::Scope scope )
 {
     qLog(Modem) << "QModemCall::hangup()";
-    llIndicatorsHangup();
+    QModemLLIndicators::Hangup();
     
     if ( state() == QPhoneCall::Connected ||
          state() == QPhoneCall::Dialing ||
@@ -291,7 +289,7 @@ void QModemCall::hangup( QPhoneCall::Scope scope )
 */
 void QModemCall::accept()
 {
-    llIndicatorsAccept();
+    QModemLLIndicators::Accept();
     
     // Bail out if this is not the currently registered incoming call.
     if ( state() != QPhoneCall::Incoming ) {

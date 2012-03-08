@@ -22,17 +22,13 @@
 
 // Low level device specific indicators. E.g. we can blink with leds on
 // incoming call or SMS.
-
-// Called when ringing() function is called
-void llIndicatorsRinging();
-
-// Called on QModemCall.dial()
-void llIndicatorsDial();
-
-// Called on QModemCall.hangup()
-void llIndicatorsHangup();
-
-// Called on QModemCall.accept()
-void llIndicatorsAccept();
+class QModemLLIndicators
+{
+public:
+    static void Ringing();
+    static void Hangup();
+    static void Accept();
+    static void MissedCallsChanged(int num);
+};
 
 #endif
