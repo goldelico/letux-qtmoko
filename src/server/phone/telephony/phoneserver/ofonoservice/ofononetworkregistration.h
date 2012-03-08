@@ -21,6 +21,7 @@
 #define OFONONETWORKREGISTRATION_H
 
 #include <QTimer>
+#include <QSignalSourceProvider>
 #include <qofonoutil.h>
 #include <qnetworkregistration.h>
 
@@ -34,6 +35,7 @@ public:
     ~OFonoNetworkRegistration();
 
     OFonoTelephonyService *service;
+    QSignalSourceProvider signalProvider;
 
     void modemPropertyChanged(const QString & name, const QDBusVariant & value);    // called by ofono telephony service when modem property changes
     void netRegPropertyChanged(const QString & name,

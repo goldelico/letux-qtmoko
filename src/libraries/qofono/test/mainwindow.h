@@ -61,6 +61,7 @@ private:
     void checkIface(QDBusAbstractInterface *iface);
     void showVariantMap(QVariantMap map, QString caption);
     void showVariantMapResult(QOFonoDBusPendingReply<QVariantMap> reply, QString caption);
+    void showOFonoObject(QOFonoObject o, QString caption);
     void showOFonoObjectList(QOFonoObjectList list, QString caption);
 
     template <class T, class T2, class T3>
@@ -78,6 +79,10 @@ Q_SIGNALS:
     void finished(QDBusPendingReply<> *reply);
 
 private slots:
+    void on_bSimProperties_clicked();
+    void on_bImport_clicked();
+    void on_bSendMessage_clicked();
+    void on_bGetMessages_clicked();
     void on_bHangup_clicked();
     void on_bGetCalls_clicked();
     void on_bAnswer_clicked();
@@ -119,9 +124,9 @@ private slots:
     void voiceCallAdded(const QDBusObjectPath &path, const QVariantMap &properties);
     void voiceCallRemoved(const QDBusObjectPath &path);
     void gsmCallStatusChange(int id, const QString &status, const QVariantMap &properties);
-    void incomingTextMessage(const QString &number, const QString &timestamp, const QString &contents);
-    void incomingMessageReport(int reference, const QString &status, const QString &sender_number, const QString &contents);
     void gsmMessageSizeFinished(QOFonoDBusPendingCall & call);
+    void incomingMessage(const QString & message, const QVariantMap & info);
+    void immediateMessage(const QString & message, const QVariantMap & info);
 };
 
 template <class T, class T2, class T3>

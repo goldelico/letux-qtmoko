@@ -76,6 +76,16 @@ void OFonoPhoneCall::dial(const QDialOptions & options)
 
     qDebug() << "OFonoPhoneCall::dial(" << number << ")";
 
+    // If the number starts with '*' or '#', then this is a request
+    // for a supplementary service, not an actual phone call.
+    // So we dial and then immediately hang up, allowing the network
+    // to send us the SS/USSD response when it is ready.
+    if (number.startsWith("*") || number.startsWith("#")) {
+        service->oSuplServices.Initiate(number);
+        setState(QPhoneCall::ServiceHangup);
+        return;
+    }
+
     QOFonoDBusPendingCall call = service->oVoiceCallManager.Dial(number, "");
     watchOFonoCall(call, this, SLOT(dialFinished(QOFonoDBusPendingCall &)));
     setState(QPhoneCall::Dialing);

@@ -30,18 +30,17 @@ class OFonoSMSSender : public QSMSSender
 {
     Q_OBJECT
 public:
-    OFonoSMSSender( OFonoTelephonyService * service );
+    OFonoSMSSender(OFonoTelephonyService * service);
     ~OFonoSMSSender();
 
-    OFonoTelephonyService * service;
-    QString smsId;                          // we can have just one pending call if we use watchOFonoCall() so this works
-    
+    OFonoTelephonyService *service;
+    QString smsId;              // we can have just one pending call if we use watchOFonoCall() so this works
+
 public slots:
-    void send( const QString& id, const QSMSMessage& msg );
+    void send(const QString & id, const QSMSMessage & msg);
 
 private slots:
-    void sendTextMessageFinished(QOFonoDBusPendingCall &);
+    void sendMessageFinished(QOFonoDBusPendingCall &);
 };
 
 #endif
-
