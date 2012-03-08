@@ -32,7 +32,7 @@ void llIndicatorsVoiceCallHangup();
 // Called on OFonoPhoneCall.accept()
 void llIndicatorsVoiceCallAccept();
 
-// Called user checks missed calls
-void llIndicatorsMissedCallsCleared();
+// Called when user checks missed calls
+void llIndicatorMissedCallsChanged(int num);
 
 #endif

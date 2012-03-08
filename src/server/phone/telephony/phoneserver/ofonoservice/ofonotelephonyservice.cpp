@@ -166,11 +166,8 @@ bool OFonoTelephonyService::interfaceAvailable(QOFonoDbusAbstractInterface *
 
 void OFonoTelephonyService::phoneVsChanged()
 {
-    int missedCalls = phoneVs.value("MissedCalls").toInt();
-    qDebug() << "phoneVsChanged missedCalls=" << missedCalls;
-    if (missedCalls == 0) {
-        llIndicatorsMissedCallsCleared();
-    }
+    int num = phoneVs.value("MissedCalls").toInt();
+    llIndicatorMissedCallsChanged(num);
 }
 
 void OFonoTelephonyService::modemPropertyChanged(const QString & name,

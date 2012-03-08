@@ -80,10 +80,15 @@ void llIndicatorsIncomingVoiceCallAdded()
     missedCallLedOn();
 }
 
-// Called on OFonoPhoneCall.dial()
-void llIndicatorsMissedCallsCleared()
+// Called when user checks missed calls
+void llIndicatorMissedCallsChanged(int num)
 {
-    missedCallLedOff();           // clear missed call led
+    static int numMissed = 0;
+    qDebug() << "MissedCallsChanged " << numMissed << "->" << num;
+    if (numMissed > 0 && num == 0) {
+        missedCallLedOff();     // clear missed call led
+    }
+    numMissed = num;
 }
 
 // Called on OFonoPhoneCall.hangup()
