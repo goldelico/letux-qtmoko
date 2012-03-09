@@ -30,6 +30,7 @@
 -add-module ui
 -add-module ipcomms
 -add-module fso
+-add-module ofono
 
 # Device config
 -add-displaysize 480x640

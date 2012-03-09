@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libxtst6 squeeze /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,ppp,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libmng1,libtiff4,libxtst6,sqlite3 squeeze /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -82,6 +82,7 @@ echo "deb http://cdn.debian.net/debian squeeze contrib" >> /media/card/etc/apt/s
 echo "deb http://cdn.debian.net/debian squeeze non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/ /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/apps /" >> /media/card/etc/apt/sources.list
 
 Step 4
 ======
@@ -124,6 +125,14 @@ nano /media/card/etc/bluetooth/audio.conf
   and uncomment SCORouting=PCM setting in [General]:
 
 SCORouting=PCM
+
+* Remove alsa-utils init scripts - we dont need them, we set correct alsa
+  state ourselves when qtmoko starts up:
+
+chroot /media/card
+update-rc.d -f alsa-utils remove
+exit
+
 
 Step 4.1 - DHCP server - not using now
 ======================================
@@ -271,12 +280,12 @@ Step 6.5 - omhacks
   and can't be used with > 2.6.34 kernels, so install from sid:
 
 chroot /media/card
-wget http://cdn.debian.net/debian/pool/main/o/omhacks/libomhacks0_0.15-1_armel.deb
-wget http://cdn.debian.net/debian/pool/main/o/omhacks/omhacks_0.15-1_armel.deb
-dpkg -i libomhacks0_0.15-1_armel.deb
-dpkg -i omhacks_0.15-1_armel.deb
-rm libomhacks0_0.15-1_armel.deb
-rm omhacks_0.15-1_armel.deb
+wget http://cdn.debian.net/debian/pool/main/o/omhacks/libomhacks0_0.16-1_armel.deb
+wget http://cdn.debian.net/debian/pool/main/o/omhacks/omhacks_0.16-1_armel.deb
+dpkg -i libomhacks0_0.16-1_armel.deb
+dpkg -i omhacks_0.16-1_armel.deb
+rm libomhacks0_0.16-1_armel.deb
+rm omhacks_0.16-1_armel.deb
 exit
 
 
@@ -294,7 +303,7 @@ Step 8 - install QtMoko
 
 * I use qemu armel host for building qtmoko package. It should be as simple as
 
-git checkout v33
+git checkout v38
 dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
@@ -314,11 +323,12 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
-dpkg -i qtmoko_34-1_armel.deb
-update-rc.d qtmoko defaults
-rm qtmoko_34-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/qtmoko-neo_39-1_armel.deb
+dpkg -i qtmoko-neo_39-1_armel.deb
+update-rc.d qtmoko-neo defaults
+rm qtmoko-neo_39-1_armel.deb
 exit
+killall qpe.sh  # recent versions start qtmoko after install, so kill it
 
 
 Step 9 - Linux kernel
@@ -330,7 +340,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout remotes/origin/qtmoko-v26 -b qtmoko-v26
+git checkout v2.6.34-gta02-qtmoko-v38
 
 * Create package in buildhost:
 
@@ -343,9 +353,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/qtmoko_34-1_armel.deb
-dpkg -i linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
-rm linux-image-2.6.34-qtmoko-gta02_v34-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/linux-image-2.6.34-qtmoko-gta02_v39-1_armel.deb
+dpkg -i linux-image-2.6.34-qtmoko-gta02_v39-1_armel.deb
+rm linux-image-2.6.34-qtmoko-gta02_v39-1_armel.deb
 exit
 
 * Create boot args and symlink for qi:
@@ -466,6 +476,16 @@ cd qi
 git checkout qtmoko-v28
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- CPU=s3c2442
 
+
+Step 13 - generate Packages.gz for debian repository
+====================================================
+
+* We have debian repository at http://qtmoko.sourceforge.net/debian/ After you
+  upload packages there (using filezilla, host is frs.sourceforge.net user is
+  radekp,qtmoko and directory is /home/project-web/qtmoko/htdocs/debian) you
+  have to generate Packages.gz:
+
+dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
 
 Boot speedup
 ============
