@@ -43,19 +43,16 @@ static bool setLed(const char *device, const char *color,
 
 static void missedCallLedOn()
 {
-    static bool blinkOk = false;
     setLed("gta04", "green", "power", "brightness", "255");
-    if (blinkOk) {
-        return;
-    }
-    blinkOk = setLed("gta04", "green", "power", "trigger", "timer") &&
-        setLed("gta04", "green", "power", "delay_off", "1024") &&
-        setLed("gta04", "green", "power", "delay_on", "1024");
+    setLed("gta04", "green", "power", "trigger", "timer");
+    setLed("gta04", "green", "power", "delay_off", "1024");
+    setLed("gta04", "green", "power", "delay_on", "1024");
 }
 
 static void missedCallLedOff()
 {
     setLed("gta04", "green", "power", "brightness", "0");
+    setLed("gta04", "green", "power", "trigger", "none");
 }
 
 #elif QT_QWS_NEO
