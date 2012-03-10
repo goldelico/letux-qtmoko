@@ -1,11 +1,14 @@
 #!/bin/sh
 . /opt/qtmoko/qpe.env
 
-if [ ! -d /dev/pts ]; then
-    # running on devtmpfs
-    mkdir -p /dev/pts
-    mount -t devpts none /dev/pts
-    modprobe joydev
+if [ "$(pidof udevd)" ] 
+then
+  echo 1
+  # running on udev
+else
+  # running on devtmpfs
+  wifi-poweron.sh &
+  echo 2
 fi
 
 # Power on modem on GTA04A4 and higher

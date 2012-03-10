@@ -152,6 +152,13 @@ void OFonoTelephonyService::poweredFinished(QOFonoDBusPendingCall & call)
     if (!checkReply(reply)) {
         return;
     }
+    // Disable UMTS to avoid modem usb disconnects. Check this for details:
+    // http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001563.html
+    QOFonoDBusPendingReply <> reply2 =
+        oRadio.SetProperty("TechnologyPreference", QDBusVariant("gsm"));
+    if (!checkReply(reply2)) {
+        qWarning() << "Failed to set TechnologyPreference to gsm";
+    }
 }
 
 // Returns false if interface is not yet available (e.g. netReg interface is

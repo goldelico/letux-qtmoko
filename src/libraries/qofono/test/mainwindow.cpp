@@ -171,6 +171,14 @@ void MainWindow::refresh()
             }
         }
     }
+    if(ui->tabRadio->isVisible())
+    {
+        QOFonoDBusPendingReply<QVariantMap> reply = oRadio.GetProperties();
+        if(checkReply2(reply, false, true))
+        {
+            ui->lRadio->setText(variantMapToStr(reply.value()));
+        }
+    }
 
     QTimer::singleShot(1000, this, SLOT(refresh()));
 }
@@ -475,4 +483,16 @@ void MainWindow::on_bSimProperties_clicked()
         qDebug() << str;
         QMessageBox::information(this, "SubscriberNumbers", str);
     }
+}
+
+void MainWindow::on_bDisableUmts_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oRadio.SetProperty("TechnologyPreference", QDBusVariant("gsm"));
+    checkReply2(reply, true, true);
+}
+
+void MainWindow::on_bEnableUmts_clicked()
+{
+    QOFonoDBusPendingReply<> reply = oRadio.SetProperty("TechnologyPreference", QDBusVariant("umts"));
+    checkReply2(reply, true, true);
 }

@@ -116,8 +116,10 @@ exit
 Step 4.1 - stable device nodes for UMTS
 =======================================
 
-* Modem device is by default on /dev/ttyHS3, but it can rename after
-  suspend/resume (for details see http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001515.html)
+* Modem device is by default on /dev/ttyHS3, but it can rename after modem
+  disconnect. For details see:
+    http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001515.html
+    http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001563.html
   We will use udev to create stable symlinks for us:
 
 cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
@@ -200,6 +202,13 @@ ln -s libts-0.0.so.0 libts-1.0.so.0
 
 cd /media/card/dev
 rm -rf .udev
+
+* Remove udev from startup scripts, we have devtmpfs in kernel and it's faster:
+
+chroot /media/card
+update-rc.d -f udev-mtab remove
+update-rc.d -f udev remove
+exit
 
 * Remove /etc/network/run and do make dir /etc/network/run
   Otherwise fstab mounting will fail for this directory
