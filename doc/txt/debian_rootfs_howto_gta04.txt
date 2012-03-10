@@ -422,6 +422,12 @@ Step 12 - jffs2
 
 * Same first 2 steps as with ubi (copy&delete /boot)
 
+* Create jffs2 image: 
+
+cd /media
+mkfs.jffs2 -o qtmoko-debian-gta04-nosum-v41.jffs2 -e 0x20000 -n -d/media/card
+sumtool -n -e 0x20000 -p -i qtmoko-debian-gta04-nosum-v41.jffs2 -o qtmoko-debian-gta04-v41.jffs2
+
 * Create tarbal for NAND:
 
 tar -czvf ../qtmoko-debian-nand.tar.gz .
