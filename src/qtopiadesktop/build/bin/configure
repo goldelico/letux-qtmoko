@@ -554,7 +554,7 @@ set_optvar("version", +{
     "config_pri" => "QTOPIA_VERSION=%{qtopia}\n".
                     "free_package:QTOPIA_LICENSE=\"GPL v2\"\n".
                     "else:QTOPIA_LICENSE=Commercial\n".
-                    "QTOPIA_MAINTAINER=\"Nokia, Qt Software (www.trolltech.com)\"",
+                    "QTOPIA_MAINTAINER=\"QtMoko project (www.qtmoko.org)\"",
 });
 set_optvar("page_size", +{
     "type" => "placeholder",
