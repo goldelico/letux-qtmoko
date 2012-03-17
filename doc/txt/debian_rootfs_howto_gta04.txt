@@ -414,7 +414,7 @@ vol_flags=autoresize
 __END__
 
 
-mkfs.ubifs -q -r /media/card -m 2048 -e 131072 -c 4044 -o ubifs.img
+mkfs.ubifs -r /media/card -m 2048 -e 131072 -c 4044 -o ubifs.img
 ubinize -o qtmoko-debian-gta04-v41.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
 rm ubifs.img
 
