@@ -1804,7 +1804,7 @@ if ( opt("qbuild") ) {
             if ( !$ok || !defined($HOST_QT) ) {
                 die <<END
 There was an error building Qt. configure cannot continue.
-If your system's package manager does not provide Qt 4 development libraries
+If your system\'s package manager does not provide Qt 4 development libraries
 please see the Guide to Configuring and Building Qt Extended for information
 on how to build Qt from the included source.
 END
@@ -1815,7 +1815,7 @@ END
             die <<END;
 Qt Extended requires Qt 4.3 or higher to be installed.
 You must have qmake in your PATH.
-If your system's package manager does not provide Qt 4 development libraries
+If your system\'s package manager does not provide Qt 4 development libraries
 please see the Guide to Configuring and Building Qt Extended for information
 on how to build Qt from the included source.
 
@@ -2058,7 +2058,7 @@ if ( !opt("platform") ) {
 	    opt("platform") = "macx-g++";
 	} else {
             die <<END;
-ERROR: Can't autodetect the host platform. Host = $^O.
+ERROR: Can\'t autodetect the host platform. Host = $^O.
 Please explicitly set a -platform parameter.
 END
 	}
@@ -5129,7 +5129,7 @@ sub bootstrap_qt
     }
     if ( !$qt_platform ) {
         die <<END;
-ERROR: Can't autodetect the host platform. Host = $^O.
+ERROR: Can\'t autodetect the host platform. Host = $^O.
 Please explicitly set a -platform parameter.
 END
     }
