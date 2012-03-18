@@ -2613,7 +2613,7 @@ if ( opt("font") ) {
         my $filename = basename($file);
 
         FONTSPEC: for my $fontspec ( @$fontref ) {
-            if ( $fontspec eq $filename ) {
+            if ( $filename =~ /$fontspec/ ) {
                 DEBUG and print "FILE $file matches $fontspec\n";
                 push(@fonts, $file);
                 $fontref_handled{$fontspec} = 1;
