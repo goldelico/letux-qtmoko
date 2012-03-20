@@ -365,8 +365,8 @@ Step 10 - release tarball
 cd /media/card
 tar -czvf ../qtmoko-debian-gta04-v41.tar.gz .
 
-Step 11 - make ubifs images - not using yet
-===========================================
+Step 11 - make ubifs image
+==========================
 
 * Delete contents of boot, because for NAND it's not needed:
 
@@ -418,8 +418,19 @@ mkfs.ubifs -r /media/card -m 2048 -e 129024 -c 2047 -o ubifs.img
 ubinize -o qtmoko-debian-gta04-v41.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
 rm ubifs.img
 
-Step 12 - jffs2
-===============
+* To install it on the device you need to boot from SD and:
+
+flash_eraseall /dev/mtd4
+ubiformat /dev/mtd4 -f /qtmoko-debian-gta04-v41.ubi
+
+* To check that it's mountable:
+
+ubiattach /dev/ubi_ctrl -m 4
+mount -t ubifs ubi0:rootfs /mnt/ubifs/
+
+
+Step 12 - jffs2 - not using anymore
+===================================
 
 * Same first 2 steps as with ubi (copy&delete /boot)
 
