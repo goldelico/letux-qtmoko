@@ -407,14 +407,14 @@ cat > ubinize.cfg <<__END__
 mode=ubi
 image=ubifs.img
 vol_id=0
-vol_size=530055168
+vol_size=200MiB
 vol_type=dynamic
 vol_name=rootfs
 vol_flags=autoresize
 __END__
 
 
-mkfs.ubifs -r /media/card -m 2048 -e 131072 -c 4044 -o ubifs.img
+mkfs.ubifs -r /media/card -m 2048 -e 129024 -c 2047 -o ubifs.img
 ubinize -o qtmoko-debian-gta04-v41.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
 rm ubifs.img
 
