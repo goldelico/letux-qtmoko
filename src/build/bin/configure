@@ -1793,13 +1793,13 @@ END
     # We use QBuild most of the time but we need qmake to bootstrap QBuild
     $HOST_QMAKE = fixpath("$HOST_QT_BINS/qmake");
     $TARGET_QMAKE = fixpath("$QPEDIR/bin/qbuild")." -script";
-    if ( $ok ) {
-        if ( $qtVersionStr[0] != $hostQtVersionStr[0] || $qtVersionStr[1] != $hostQtVersionStr[1] ) {
-            $ok = 0;
-            push(@msg, "Found Qt ".$hostQtVersionStr[0].".".$hostQtVersionStr[1]." while expecting Qt ".
-                       $qtVersionStr[0].".".$qtVersionStr[1].".");
-        }
-    }
+    #if ( $ok ) {
+    #    if ( $qtVersionStr[0] != $hostQtVersionStr[0] || $qtVersionStr[1] != $hostQtVersionStr[1] ) {
+    #        $ok = 0;
+    #        push(@msg, "Found Qt ".$hostQtVersionStr[0].".".$hostQtVersionStr[1]." while expecting Qt ".
+    #                   $qtVersionStr[0].".".$qtVersionStr[1].".");
+    #    }
+    #}
     if ( $ok ) {
         $ok = configtest("system_qt", "env", "QMAKE=$HOST_QMAKE MAKE=".opt_resolve("make")." QPEDIR=$QPEDIR", "hacks", "norunwithvars");
         if ( !$ok ) {
