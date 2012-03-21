@@ -40,3 +40,4 @@
 
 -D _FORTIFY_SOURCE=0
 -rtti
+-force-build-qt
