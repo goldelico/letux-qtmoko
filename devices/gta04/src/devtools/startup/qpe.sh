@@ -1,9 +1,15 @@
 #!/bin/sh
 . /opt/qtmoko/qpe.env
 
+if [ ! -d /dev/pts ]; then
+    # mount pts so that terminal and ssh work (only needed when using devtmpfs)
+    mkdir -p /dev/pts
+    mount -t devpts none /dev/pts
+    modprobe joydev
+fi
+
 if [ "$(pidof udevd)" ] 
 then
-  echo 1
   # running on udev
 else
   # running on devtmpfs
