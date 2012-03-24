@@ -8,13 +8,9 @@ if [ ! -d /dev/pts ]; then
     modprobe joydev
 fi
 
-if [ "$(pidof udevd)" ] 
-then
-  # running on udev
-else
+if [ ! "$(pidof udevd)" ]; then
   # running on devtmpfs
   wifi-poweron.sh &
-  echo 2
 fi
 
 # Power on modem on GTA04A4 and higher
