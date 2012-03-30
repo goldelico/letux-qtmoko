@@ -93,7 +93,7 @@ Step 4
   between mass storage, ppp_generic is not needed for people not using GPRS,
   joydev is used in qtmaze for accelerometers, hso is for UMTS.
 
-echo g_ether > /media/card/etc/modules
+echo "g_ether dev_addr=09:0l:de:11:c0:04" > /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 echo ledtrig-timer >> /media/card/etc/modules
