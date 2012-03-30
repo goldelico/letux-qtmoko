@@ -203,13 +203,6 @@ ln -s libts-0.0.so.0 libts-1.0.so.0
 cd /media/card/dev
 rm -rf .udev
 
-* Remove udev from startup scripts, we have devtmpfs in kernel and it's faster:
-
-chroot /media/card
-update-rc.d -f udev-mtab remove
-update-rc.d -f udev remove
-exit
-
 * Remove /etc/network/run and do make dir /etc/network/run
   Otherwise fstab mounting will fail for this directory
 

@@ -31,7 +31,7 @@
 
 #define QPE_NEED_CALIBRATION
 
-#define QTOPIA_PHONE_DEVICE "/dev/ttyHS3"
+#define QTOPIA_PHONE_DEVICE "/dev/ttyHS_Application"
 //#define QTOPIA_PHONE_VENDOR "ficgta01"
 
 #ifdef Q_WS_QWS
