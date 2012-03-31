@@ -401,7 +401,7 @@ void AudioDeviceConnectionStatus::setRemoteDevice(const QBluetoothAddress &addr)
 void AudioDeviceConnectionStatus::updateConnectionStatus()
 {
     QBluetoothAudioGateway *gateway = connectedGateway();
-    bool a2dpConnected = QFile::exists("/etc/asound.conf");
+    bool a2dpConnected = QFile::exists("/home/root/.asoundrc");
     if (gateway || a2dpConnected) {
         if (gateway == m_headsetGateway) {
             m_connectionStatusLabel->setText(tr("Connected to headset."));
@@ -500,8 +500,8 @@ bool AudioDeviceConnectionStatus::connectA2dp(QString addr, QString & log)
     bool defaultDev = (QMessageBox::question(this, tr("A2DP"), tr("Make bluetooth default device?"), QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes);
     QString slave = (defaultDev ? "bluetooth" : "dmix");
          
-    // Create asound.conf
-    QFile f("/etc/asound.conf");
+    // Create .asoundrc
+    QFile f("/home/root/.asoundrc");
     if(!f.open(QFile::WriteOnly)) {
         log += "failed to open " + f.fileName();
         return false;
@@ -600,7 +600,7 @@ void AudioDeviceConnectionStatus::clickedDisconnect()
     m_waitWidget->show();
     
     QBluetoothAudioGateway *gateway = connectedGateway();
-    QFile f("/etc/asound.conf");
+    QFile f("/home/root/.asoundrc");
     bool a2dpConnected = f.exists();
     if (gateway) {
         gateway->disconnect();
