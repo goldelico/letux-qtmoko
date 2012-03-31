@@ -122,6 +122,11 @@ QProcess *voicePs = NULL;
 
 static bool gsmVoiceStop()
 {
+    // Move back alsa config (used e.g. by blueooth a2dp sound)
+    if(QFile::exists("/home/root/.asoundrc.tmp")) {
+        QFile::rename("/home/root/.asoundrc.tmp", "/home/root/.asoundrc");
+    }
+
     if (voicePs == NULL) {
         return true;
     }
@@ -140,6 +145,11 @@ static bool gsmVoiceStart()
 {
     gsmVoiceStop();
 
+    // Move away alsa config (used e.g. by blueooth a2dp sound)
+    if(QFile::exists("/home/root/.asoundrc")) {
+        QFile::rename("/home/root/.asoundrc", "/home/root/.asoundrc.tmp");
+    }
+    
     voicePs = new QProcess();
 
     // Dump output always to stderr if audio logging is enabled
