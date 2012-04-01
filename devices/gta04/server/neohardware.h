@@ -45,17 +45,12 @@ public:
     ~NeoHardware();
 
 private:
-    QValueSpaceObject vsoPortableHandsfree;
-    QValueSpaceObject vsoUsbCable;
-    QValueSpaceObject vsoNeoHardware;
-    QtopiaIpcAdaptor adaptor;
-    QtopiaIpcAdaptor audioMgr;
     QPowerSourceProvider ac;
     QPowerSourceProvider battery;
     QTcpSocket ueventSocket;
     int timerId;
     bool hasSmartBattery;
-    bool updateCable;
+    bool updateAc;
     bool updateBattery;
     void timerEvent(QTimerEvent *);
     

@@ -93,15 +93,11 @@ static QByteArray readFile(const char *path)
 
 NeoHardware::NeoHardware()
 :
-vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
-    , vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
-    , adaptor("QPE/NeoHardware", this)
-    , audioMgr("QPE/AudioStateManager", this)
-    , ac(QPowerSource::Wall, "PrimaryAC", this)
+ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , ueventSocket(this)
     , timerId(0)
-    , updateCable(true)
+    , updateAc(true)
     , updateBattery(true)
 {
     qLog(Hardware) << "gta04 hardware";
@@ -112,13 +108,10 @@ vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
         connect(&ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
     }
 
-    vsoPortableHandsfree.setAttribute("Present", false);
-    vsoPortableHandsfree.sync();
-
     hasSmartBattery =
         QFile::exists("/sys/class/power_supply/bq27000-battery/status");
 
-    timerId = startTimer(5 * 1000);
+    timerId = startTimer(1);
 }
 
 NeoHardware::~NeoHardware()
@@ -130,14 +123,16 @@ void NeoHardware::timerEvent(QTimerEvent *)
     killTimer(timerId);
     timerId = 0;
 
-    if (updateCable) {
-        updateCable = false;
+    if (updateAc) {
+        updateAc = false;
 
         QByteArray twlStatus =
             readFile("/sys/class/power_supply/twl4030_usb/status");
-        vsoUsbCable.setAttribute("cableConnected",
-                                 !twlStatus.contains("Discharging"));
-        vsoUsbCable.sync();
+        if (twlStatus.contains("Not charging")) {
+            ac.setAvailability(QPowerSource::NotAvailable);
+        } else {
+            ac.setAvailability(QPowerSource::Available);
+        }
     }
     if (updateBattery) {
         updateBattery = false;
@@ -170,8 +165,7 @@ void NeoHardware::uevent()
     if (ueventSocket.read(buffer, UEVENT_BUFFER_SIZE) <= 0) {
         return;
     }
-    qLog(Hardware) << "uevent: " << buffer;
-    updateCable |= (strstr(buffer, "twl4030") != NULL);
+    updateAc |= (strstr(buffer, "twl4030") != NULL);
     updateBattery |= (strstr(buffer, "bq27000-battery") != NULL);
     if (timerId == 0) {
         timerId = startTimer(100);
@@ -181,6 +175,6 @@ void NeoHardware::uevent()
 void NeoHardware::shutdownRequested()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
-                                                  ShutdownSystem);
+    QtopiaServerApplication::instance()->
+        shutdown(QtopiaServerApplication::ShutdownSystem);
 }
