@@ -57,11 +57,10 @@
 
 QTOPIA_TASK(NeoHardware, NeoHardware);
 
-
 NeoHardware::NeoHardware()
-    : vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
-      vsoUsbCable("/Hardware/UsbGadget"),
-      vsoNeoHardware("/Hardware/Neo")
+:  
+vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
+vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
 {
     struct sockaddr_nl snl;
     adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
@@ -75,16 +74,18 @@ NeoHardware::NeoHardware()
 
     int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
     if (hotplug_sock == -1) {
-        qLog(Hardware) << "error getting uevent socket: "<< strerror(errno);
+        qLog(Hardware) << "error getting uevent socket: " << strerror(errno);
     } else {
-       if ( bind(hotplug_sock, (struct sockaddr *) &snl, sizeof(struct sockaddr_nl)) < 0) {
-         qLog(Hardware) << "uevent bind failed: "<< strerror(errno);
-         hotplug_sock = -1;
-       }else {
-         ueventSocket = new QTcpSocket(this);
-         ueventSocket->setSocketDescriptor(hotplug_sock);
-         connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
-       }
+        if (bind
+            (hotplug_sock, (struct sockaddr *)&snl,
+             sizeof(struct sockaddr_nl)) < 0) {
+            qLog(Hardware) << "uevent bind failed: " << strerror(errno);
+            hotplug_sock = -1;
+        } else {
+            ueventSocket = new QTcpSocket(this);
+            ueventSocket->setSocketDescriptor(hotplug_sock);
+            connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+        }
     }
 
     cableConnected(getCableStatus());
@@ -94,7 +95,6 @@ NeoHardware::NeoHardware()
 
 // Handle Audio State Changes
     audioMgr = new QtopiaIpcAdaptor("QPE/AudioStateManager", this);
-
 
     QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
                               this, SLOT(headphonesInserted(bool)));
@@ -110,71 +110,81 @@ NeoHardware::~NeoHardware()
 
 char *NeoHardware::findAttribute(char *buf, int len, const char *token)
 {
-int pos=0;
+    int pos = 0;
 
-  while (pos<len)
-  {
-    if(strncmp(&buf[pos],token,strlen(token))==0)
-	return(&buf[pos+strlen(token)]);
-    pos=pos+strlen(&buf[pos])+1;
-  }
-  return(buf);
+    while (pos < len) {
+        if (strncmp(&buf[pos], token, strlen(token)) == 0)
+            return (&buf[pos + strlen(token)]);
+        pos = pos + strlen(&buf[pos]) + 1;
+    }
+    return (buf);
 }
 
 void NeoHardware::uevent()
 {
 #define UEVENT_BUFFER_SIZE 1024
-char buffer[UEVENT_BUFFER_SIZE];
-char *value;
+    char buffer[UEVENT_BUFFER_SIZE];
+    char *value;
 
-  int bytesAvail = ueventSocket->bytesAvailable();
-  int readCount = UEVENT_BUFFER_SIZE;
-  if (bytesAvail < readCount)
-      readCount = bytesAvail;
-  ueventSocket->read(&buffer[0],readCount);
-  
-  //printf("uevent %s\n", buffer);
-  
-  if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/usb")==0)
-  {
-    qLog(PowerManagement)<<"usb change event";
-    cableConnected(getCableStatus());
-  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/ac")==0)
-  {
-    qLog(PowerManagement)<<"ac change event";
-    cableConnected(getCableStatus());
-  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/adapter")==0)
-  {
-    value=findAttribute(buffer,readCount,"POWER_SUPPLY_ONLINE=");
-    qLog(PowerManagement)<<"power_supply change event; online="<<value;
-  }else if(strcmp(buffer,"change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/hdq/bq27000-battery.0/power_supply/battery")==0)
-  {
-    value=findAttribute(buffer,readCount,"POWER_SUPPLY_CAPACITY=");
-    qLog(PowerManagement)<<"battery change event charge%="<<value<<"%";
-  }else if(strcmp(buffer,"change@/class/switch/headset")==0)
-  {
-    value=findAttribute(buffer,readCount,"SWITCH_STATE=");
-    qDebug()<<"headset change event, switch_state="<<value;
-  }
+    int bytesAvail = ueventSocket->bytesAvailable();
+    int readCount = UEVENT_BUFFER_SIZE;
+    if (bytesAvail < readCount)
+        readCount = bytesAvail;
+    ueventSocket->read(&buffer[0], readCount);
+
+    //printf("uevent %s\n", buffer);
+
+    if (strcmp
+        (buffer,
+         "change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/usb")
+        == 0) {
+        qLog(PowerManagement) << "usb change event";
+        cableConnected(getCableStatus());
+    } else
+        if (strcmp
+            (buffer,
+             "change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/ac")
+            == 0) {
+        qLog(PowerManagement) << "ac change event";
+        cableConnected(getCableStatus());
+    } else
+        if (strcmp
+            (buffer,
+             "change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-mbc.0/power_supply/adapter")
+            == 0) {
+        value = findAttribute(buffer, readCount, "POWER_SUPPLY_ONLINE=");
+        qLog(PowerManagement) << "power_supply change event; online=" << value;
+    } else
+        if (strcmp
+            (buffer,
+             "change@/devices/platform/s3c2440-i2c/i2c-0/0-0073/hdq/bq27000-battery.0/power_supply/battery")
+            == 0) {
+        value = findAttribute(buffer, readCount, "POWER_SUPPLY_CAPACITY=");
+        qLog(PowerManagement) << "battery change event charge%=" << value <<
+            "%";
+    } else if (strcmp(buffer, "change@/class/switch/headset") == 0) {
+        value = findAttribute(buffer, readCount, "SWITCH_STATE=");
+        qDebug() << "headset change event, switch_state=" << value;
+    }
 }
 
 void NeoHardware::findHardwareVersion()
 {
-    QFile cpuinfo( "/proc/cpuinfo");
+    QFile cpuinfo("/proc/cpuinfo");
     QString inStr;
     cpuinfo.open(QIODevice::ReadOnly | QIODevice::Text);
     QTextStream in(&cpuinfo);
     QString line;
     do {
-        line  = in.readLine();
-        if (line.contains("Hardware") ){
+        line = in.readLine();
+        if (line.contains("Hardware")) {
             QStringList token = line.split(":");
             inStr = token.at(1).simplified();
         }
     } while (!line.isNull());
 
     cpuinfo.close();
-    qLog(Hardware)<<"Neo"<< inStr;
+    qLog(Hardware) << "Neo" << inStr;
 
     vsoNeoHardware.setAttribute("Device", inStr);
     vsoNeoHardware.sync();
@@ -182,7 +192,7 @@ void NeoHardware::findHardwareVersion()
 
 void NeoHardware::headphonesInserted(bool b)
 {
-    qLog(Hardware)<< __PRETTY_FUNCTION__ << b;
+    qLog(Hardware) << __PRETTY_FUNCTION__ << b;
     vsoPortableHandsfree.setAttribute("Present", b);
     vsoPortableHandsfree.sync();
     if (b) {
@@ -193,41 +203,44 @@ void NeoHardware::headphonesInserted(bool b)
         audioMgr->send("setProfile(QByteArray)", mode);
     }
 
-
 }
 
 void NeoHardware::cableConnected(bool b)
 {
-    qLog(Hardware)<< __PRETTY_FUNCTION__ << b;
+    qLog(Hardware) << __PRETTY_FUNCTION__ << b;
     vsoUsbCable.setAttribute("cableConnected", b);
     vsoUsbCable.sync();
 }
 
 void NeoHardware::shutdownRequested()
 {
-    qLog(PowerManagement)<< __PRETTY_FUNCTION__;
+    qLog(PowerManagement) << __PRETTY_FUNCTION__;
 
-    QFile powerFile("/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio.0/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on");
+    QFile
+        powerFile
+        ("/sys/devices/platform/s3c2440-i2c/i2c-0/0-0073/pcf50633-gpio.0/reg-fixed-voltage.1/gta02-pm-gsm.0/power_on");
     QFile btPower("/sys/devices/platform/gta02-pm-bt.0/power_on");
 
-    if( !powerFile.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning()<<"File not opened";
+    if (!powerFile.
+        open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning() << "File not opened";
     } else {
         QTextStream out(&powerFile);
         out << "0";
         powerFile.close();
     }
 
-        if( !btPower.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning()<<"File not opened";
+    if (!btPower.
+        open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+        qWarning() << "File not opened";
     } else {
         QTextStream out(&btPower);
-        out <<  "0";
+        out << "0";
         powerFile.close();
     }
 
-
-    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::ShutdownSystem);
+    QtopiaServerApplication::instance()->
+        shutdown(QtopiaServerApplication::ShutdownSystem);
 }
 
 bool NeoHardware::getCableStatus()
@@ -247,5 +260,4 @@ bool NeoHardware::getCableStatus()
     return (charge != ("Discharging"));
 }
 
-#endif // QT_QWS_GTA04
-
+#endif                          // QT_QWS_GTA04
