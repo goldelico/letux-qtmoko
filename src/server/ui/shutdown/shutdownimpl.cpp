@@ -25,10 +25,45 @@
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <QtopiaChannel>
+#include <QDir>
+#include <QFile>
 
 #include <stdio.h>
 
 using namespace Ui;
+
+// Enables gta04 initramfs menu
+static void enableBootmenu()
+{
+    QFile::remove("/boot/gta04-init/bootdev");
+}
+
+// Disables gta04 initramfs menu
+static void disableBootmenu()
+{
+    // Find out if root is on NAND
+    QFile f("/proc/mounts");
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        return;
+    }
+    QByteArray mounts = f.readAll();
+    f.close();
+    bool rootOnNand = mounts.contains(" / ubifs");
+    
+    // Write bootdev according to what we are running on
+    QFile bootdev("/boot/gta04-init/bootdev");
+    if(!bootdev.open(QIODevice::WriteOnly)) {
+        return;
+    }
+    if(rootOnNand) {
+        bootdev.write("nand\n");
+    } else {
+        bootdev.write("sd\n");
+    }
+    bootdev.close();
+
+}
 
 ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
     : QDialog( parent, fl )
@@ -50,6 +85,14 @@ ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
     QPushButton *sb = Shutdown::shutdown;
     sb->hide();
 #endif
+
+    // Bootmenu on GTA04, described here: https://github.com/radekp/gta04-init
+    bool hasBootmenu = QDir("/boot/gta04-init").exists();
+    bootmenuCheck->setVisible(hasBootmenu);
+    if(hasBootmenu) {
+        disableBootmenu();  // normally we want the bootmenu disabled
+    }
+    connect(bootmenuCheck, SIGNAL(stateChanged(int)), this, SLOT(bootmenuStateChanged(int)));
 }
 
 void ShutdownImpl::rebootClicked()
@@ -102,6 +145,15 @@ void ShutdownImpl::timeout()
         close();
     } else {
         progressBar->setValue( progress );
+    }
+}
+
+void ShutdownImpl::bootmenuStateChanged(int state)
+{
+    if(state == Qt::Checked) {
+        enableBootmenu();
+    } else {
+        disableBootmenu();
     }
 }
 

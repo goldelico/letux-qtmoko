@@ -39,6 +39,8 @@ signals:
 private slots:
 //    void cancelClicked();
     void timeout();
+    void bootmenuStateChanged(int);
+    
 public slots:
     void rebootClicked();
     void quitClicked();
