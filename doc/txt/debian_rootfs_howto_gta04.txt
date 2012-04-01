@@ -314,12 +314,13 @@ make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
 find  GTA04/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
 
-Step 9.2 - Remove bluetooth from init scripts until it works good
-=================================================================
+Step 9.2 - Setup bluetooth uarts
+================================
 
-chroot /media/card
-update-rc.d -f bluetooth remove
-exit
+* Bluetooth is on /dev/ttyO0 serial port and we need to run hciattach to have
+  bluetooth working. For more info see http://projects.goldelico.com/p/gta04-kernel/page/Wireless/
+
+echo "-s 115200 /dev/ttyO0 any 115200 flow" > /media/card/etc/bluetooth/uart
 
 
 Step 9.3 - Install libts from lindi
