@@ -60,7 +60,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Restart Qt Extended</string>
+            <string>Restart QtMoko</string>
            </property>
           </widget>
          </item>
@@ -79,7 +79,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Shutdown Qt Extended</string>
+            <string>Shutdown QtMoko</string>
            </property>
           </widget>
          </item>
