@@ -57,12 +57,37 @@
 QTOPIA_TASK(NeoHardware, NeoHardware);
 
 NeoHardware::NeoHardware()
-:  
+:
+
+
 vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
 vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
 {
     adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
     qLog(Hardware) << "gta04 hardware";
+
+    struct sockaddr_nl snl;
+    memset(&snl, 0x00, sizeof(struct sockaddr_nl));
+    snl.nl_family = AF_NETLINK;
+    snl.nl_pid = getpid();
+    snl.nl_groups = 1;
+    snl.nl_groups = 0x1;
+
+    int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+    if (hotplug_sock == -1) {
+        qLog(Hardware) << "error getting uevent socket: " << strerror(errno);
+    } else {
+        if (bind
+            (hotplug_sock, (struct sockaddr *)&snl,
+             sizeof(struct sockaddr_nl)) < 0) {
+            qLog(Hardware) << "uevent bind failed: " << strerror(errno);
+            hotplug_sock = -1;
+        } else {
+            ueventSocket = new QTcpSocket(this);
+            ueventSocket->setSocketDescriptor(hotplug_sock);
+            connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+        }
+    }
 
     cableConnected(getCableStatus());
 
@@ -107,19 +132,34 @@ void NeoHardware::cableConnected(bool b)
 void NeoHardware::shutdownRequested()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QtopiaServerApplication::instance()->
-        shutdown(QtopiaServerApplication::ShutdownSystem);
+    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
+                                                  ShutdownSystem);
+}
+
+#define UEVENT_BUFFER_SIZE 1024
+
+void NeoHardware::uevent()
+{
+    char buffer[UEVENT_BUFFER_SIZE];
+    int readCount = ueventSocket->read(buffer, UEVENT_BUFFER_SIZE);
+    //fprintf(stderr, "uevent=%s\n", buffer);
+    if(strstr(buffer, "twl4030")) {
+        cableConnected(getCableStatus());
+    }
+    else if(strstr(buffer, "bq27000-battery")) {
+    }
 }
 
 bool NeoHardware::getCableStatus()
 {
-    qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QFile f("/sys/class/power_supply/twl4030_usb/status");
-    if(!f.open(QIODevice::ReadOnly)) {
-        qLog(PowerManagement) << "getCableStatus failed " << f.errorString();
-        return true;
+    if (!f.open(QIODevice::ReadOnly)) {
+        qLog(PowerManagement) << "twl status file open failed " <<
+            f.errorString();
     }
     QByteArray content = f.readAll();
     f.close();
+    qLog(PowerManagement) << __PRETTY_FUNCTION__ << content;
     return (!content.contains("Discharging"));
+
 }

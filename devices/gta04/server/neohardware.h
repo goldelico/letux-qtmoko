@@ -48,12 +48,14 @@ private:
     QValueSpaceObject vsoNeoHardware;
     QtopiaIpcAdaptor *adaptor;
     QtopiaIpcAdaptor *audioMgr;
-
+    QTcpSocket *ueventSocket;
+    
 private slots:
     void headphonesInserted(bool);
     void cableConnected(bool);
     void shutdownRequested();
     bool getCableStatus();
+    void uevent();
 };
 
 #endif
