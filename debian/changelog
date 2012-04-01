@@ -1,3 +1,20 @@
+qtmoko (43-1) unstable; urgency=low
+
+  * temporary logging goes to ramdisk
+  * fixed mac address of usb0 to make network-manager happy
+  * if modem uart stops working, restart QtMoko
+  * using udev again for fixed modem uart device node
+  * higher volumes for gsmearpiece state
+  * speex echo cancellation
+  * using .asoundrc for A2DP configuration
+  * move away .asoundrc before starting voice routing program
+  * added evopedia application (Mossroy)
+  * shutdown dialog has option to show bootmenu
+  * bluetooth now works out of the box
+  * fixed and cleaned up battery and ac on gta04
+
+ -- Radek Polak <psonek2@seznam.cz>  Sun, 01 Apr 2012 23:41:00 +0100
+
 qtmoko (42-1) unstable; urgency=low
 
   * ntpdate is now installed as part of rootfs image (Yann Dirson)
