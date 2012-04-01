@@ -25,7 +25,7 @@
 #include <QLabel>
 #include <QDesktopWidget>
 #include <QProcess>
-#include <QtopiaIpcAdaptor>
+#include <QPowerSourceProvider>
 
 #include <qcontentset.h>
 #include <qtopiaapplication.h>
@@ -56,16 +56,9 @@
 
 QTOPIA_TASK(NeoHardware, NeoHardware);
 
-NeoHardware::NeoHardware()
-:
-
-
-vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
-vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
+// Setup netlink socket for watching usb cable and battery events
+static int openNetlink()
 {
-    adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
-    qLog(Hardware) << "gta04 hardware";
-
     struct sockaddr_nl snl;
     memset(&snl, 0x00, sizeof(struct sockaddr_nl));
     snl.nl_family = AF_NETLINK;
@@ -73,60 +66,116 @@ vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
     snl.nl_groups = 1;
     snl.nl_groups = 0x1;
 
-    int hotplug_sock = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
-    if (hotplug_sock == -1) {
+    int fd = socket(PF_NETLINK, SOCK_DGRAM, NETLINK_KOBJECT_UEVENT);
+    if (fd == -1) {
         qLog(Hardware) << "error getting uevent socket: " << strerror(errno);
-    } else {
-        if (bind
-            (hotplug_sock, (struct sockaddr *)&snl,
-             sizeof(struct sockaddr_nl)) < 0) {
-            qLog(Hardware) << "uevent bind failed: " << strerror(errno);
-            hotplug_sock = -1;
-        } else {
-            ueventSocket = new QTcpSocket(this);
-            ueventSocket->setSocketDescriptor(hotplug_sock);
-            connect(ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
-        }
+        return -1;
     }
+    if (bind(fd, (struct sockaddr *)&snl, sizeof(struct sockaddr_nl)) < 0) {
+        qLog(Hardware) << "uevent bind failed: " << strerror(errno);
+        return -1;
+    }
+    return fd;
+}
 
-    cableConnected(getCableStatus());
+static QByteArray readFile(const char *path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qLog(PowerManagement) << "file open failed" << path << ":" <<
+            f.errorString();
+        return QByteArray();
+    }
+    QByteArray content = f.readAll();
+    f.close();
+    return content;
+}
+
+NeoHardware::NeoHardware()
+:
+vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
+    , vsoUsbCable("/Hardware/UsbGadget"), vsoNeoHardware("/Hardware/Neo")
+    , adaptor("QPE/NeoHardware", this)
+    , audioMgr("QPE/AudioStateManager", this)
+    , ac(QPowerSource::Wall, "PrimaryAC", this)
+    , battery(QPowerSource::Battery, "NeoBattery", this)
+    , ueventSocket(this)
+    , timerId(0)
+    , updateCable(true)
+    , updateBattery(true)
+{
+    qLog(Hardware) << "gta04 hardware";
+
+    int netlinkFd = openNetlink();
+    if (netlinkFd >= 0) {
+        ueventSocket.setSocketDescriptor(netlinkFd);
+        connect(&ueventSocket, SIGNAL(readyRead()), this, SLOT(uevent()));
+    }
 
     vsoPortableHandsfree.setAttribute("Present", false);
     vsoPortableHandsfree.sync();
 
-    // Handle Audio State Changes
-    audioMgr = new QtopiaIpcAdaptor("QPE/AudioStateManager", this);
+    hasSmartBattery =
+        QFile::exists("/sys/class/power_supply/bq27000-battery/status");
 
-    QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
-                              this, SLOT(headphonesInserted(bool)));
-
-    QtopiaIpcAdaptor::connect(adaptor, MESSAGE(cableConnected(bool)),
-                              this, SLOT(cableConnected(bool)));
+    timerId = startTimer(5 * 1000);
 }
 
 NeoHardware::~NeoHardware()
 {
 }
 
-void NeoHardware::headphonesInserted(bool b)
+void NeoHardware::timerEvent(QTimerEvent *)
 {
-    qLog(Hardware) << __PRETTY_FUNCTION__ << b;
-    vsoPortableHandsfree.setAttribute("Present", b);
-    vsoPortableHandsfree.sync();
-    if (b) {
-        QByteArray mode("Headphone");
-        audioMgr->send("setProfile(QByteArray)", mode);
-    } else {
-        QByteArray mode("MediaSpeaker");
-        audioMgr->send("setProfile(QByteArray)", mode);
+    killTimer(timerId);
+    timerId = 0;
+
+    if (updateCable) {
+        updateCable = false;
+
+        QByteArray twlStatus =
+            readFile("/sys/class/power_supply/twl4030_usb/status");
+        vsoUsbCable.setAttribute("cableConnected",
+                                 !twlStatus.contains("Discharging"));
+        vsoUsbCable.sync();
+    }
+    if (updateBattery) {
+        updateBattery = false;
+
+        QString chargingStr =
+            readFile("/sys/class/power_supply/bq27000-battery/status");
+        QString capacityStr =
+            readFile("/sys/class/power_supply/bq27000-battery/capacity");
+        int capacity = capacityStr.toInt();
+
+        battery.setCharging(chargingStr.contains("Charging"));
+
+        if (capacity > 0) {
+            battery.setCharge(capacity);
+        }
+
+        if (chargingStr == "Discharging") {
+            QString time =
+                readFile
+                ("/sys/class/power_supply/bq27000-battery/time_to_empty_now");
+            battery.setTimeRemaining(time.toInt() / 60);
+        }
     }
 }
 
-void NeoHardware::cableConnected(bool b)
+#define UEVENT_BUFFER_SIZE 1024
+void NeoHardware::uevent()
 {
-    qLog(Hardware) << __PRETTY_FUNCTION__ << b;
-    vsoUsbCable.setAttribute("cableConnected", b);
-    vsoUsbCable.sync();
+    char buffer[1024];
+    if (ueventSocket.read(buffer, UEVENT_BUFFER_SIZE) <= 0) {
+        return;
+    }
+    qLog(Hardware) << "uevent: " << buffer;
+    updateCable |= (strstr(buffer, "twl4030") != NULL);
+    updateBattery |= (strstr(buffer, "bq27000-battery") != NULL);
+    if (timerId == 0) {
+        timerId = startTimer(100);
+    }
 }
 
 void NeoHardware::shutdownRequested()
@@ -134,32 +183,4 @@ void NeoHardware::shutdownRequested()
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
                                                   ShutdownSystem);
-}
-
-#define UEVENT_BUFFER_SIZE 1024
-
-void NeoHardware::uevent()
-{
-    char buffer[UEVENT_BUFFER_SIZE];
-    int readCount = ueventSocket->read(buffer, UEVENT_BUFFER_SIZE);
-    //fprintf(stderr, "uevent=%s\n", buffer);
-    if(strstr(buffer, "twl4030")) {
-        cableConnected(getCableStatus());
-    }
-    else if(strstr(buffer, "bq27000-battery")) {
-    }
-}
-
-bool NeoHardware::getCableStatus()
-{
-    QFile f("/sys/class/power_supply/twl4030_usb/status");
-    if (!f.open(QIODevice::ReadOnly)) {
-        qLog(PowerManagement) << "twl status file open failed " <<
-            f.errorString();
-    }
-    QByteArray content = f.readAll();
-    f.close();
-    qLog(PowerManagement) << __PRETTY_FUNCTION__ << content;
-    return (!content.contains("Discharging"));
-
 }

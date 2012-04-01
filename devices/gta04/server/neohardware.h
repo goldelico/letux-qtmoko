@@ -24,6 +24,8 @@
 #include <QObject>
 #include <QProcess>
 #include <QTcpSocket>
+#include <QtopiaIpcAdaptor>
+#include <QPowerSourceProvider>
 
 #include <qvaluespace.h>
 #include <linux/input.h>
@@ -46,15 +48,19 @@ private:
     QValueSpaceObject vsoPortableHandsfree;
     QValueSpaceObject vsoUsbCable;
     QValueSpaceObject vsoNeoHardware;
-    QtopiaIpcAdaptor *adaptor;
-    QtopiaIpcAdaptor *audioMgr;
-    QTcpSocket *ueventSocket;
+    QtopiaIpcAdaptor adaptor;
+    QtopiaIpcAdaptor audioMgr;
+    QPowerSourceProvider ac;
+    QPowerSourceProvider battery;
+    QTcpSocket ueventSocket;
+    int timerId;
+    bool hasSmartBattery;
+    bool updateCable;
+    bool updateBattery;
+    void timerEvent(QTimerEvent *);
     
-private slots:
-    void headphonesInserted(bool);
-    void cableConnected(bool);
+private Q_SLOTS:
     void shutdownRequested();
-    bool getCableStatus();
     void uevent();
 };
 
