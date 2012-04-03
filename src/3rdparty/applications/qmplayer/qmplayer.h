@@ -22,6 +22,7 @@
 #include <QStringList>
 #include <QTimer>
 #include <QMenuBar>
+#include <QMainWindow>
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
@@ -131,6 +132,13 @@ private slots:
     void uReadyRead();
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
+};
+
+class QMplayerMainWindow : public QMainWindow
+{
+public:
+    QMplayerMainWindow(QWidget *parent = 0, Qt::WFlags f = 0);
+    ~QMplayerMainWindow();
 };
 
 #endif // QMPLAYER_H

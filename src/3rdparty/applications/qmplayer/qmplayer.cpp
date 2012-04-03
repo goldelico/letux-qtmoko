@@ -1,12 +1,14 @@
 #include "qmplayer.h"
 #include <QDebug>
 
+QMplayerMainWindow *mainWin;
+
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
-    softm = QSoftMenuBar::menuFor(this);
+    softm = QSoftMenuBar::menuFor(mainWin);
     rmMpAction = softm->addAction(tr("Remove mplayer"), this, SLOT(removeMplayer()));
     rmDlAction = softm->addAction(tr("Remove youtube-dl"), this, SLOT(removeYoutubeDl()));
     rmFlvAction = softm->addAction(tr("Remove FLV videos"), this, SLOT(removeFlv()));
@@ -160,7 +162,7 @@ void QMplayer::sTimerEvent()
                 QMessageBox::critical(this, tr("qmplayer"), tr("Installation of youtube-dl has failed"));
         }
     }
-    if (!uok) close();
+    if (!uok) mainWin->close();
 }
 
 void QMplayer::closeEvent(QCloseEvent *event)
@@ -590,7 +592,7 @@ void QMplayer::backClicked()
 {
     if(screen == QMplayer::ScreenInit)
     {
-        close();
+        mainWin->close();
     }
     else if(screen == QMplayer::ScreenPlay)
     {
@@ -610,7 +612,7 @@ void QMplayer::backClicked()
     }
     else if(screen == QMplayer::ScreenTube)
     {
-        close();
+        mainWin->close();
     }
     else if(screen == ScreenEncodingInProgress)
     {
@@ -1438,7 +1440,7 @@ void QMplayer::playerStopped()
     else if (tube && !ufinished)
         showScreen(QMplayer::ScreenTube);
     else
-        close();
+        mainWin->close();
 }
 
 void QMplayer::setRes(int xy)
@@ -1736,7 +1738,7 @@ void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
     if (ufname == "")
     {
         QMessageBox::critical(this, tr("qmplayer"), tr("youtube-dl has not returned name of downloaded file"));
-        close();
+        mainWin->close();
     }
     else
     {
@@ -1751,4 +1753,23 @@ void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
 void QMplayer::setDlText()
 {
     label->setText(tr("Downloading video from Youtube") + "\n" + ufname);
+}
+
+QMplayerMainWindow::QMplayerMainWindow(QWidget *parent, Qt::WFlags f)
+        : QMainWindow(parent, f)
+{
+#ifdef QTOPIA
+    this->setWindowState(Qt::WindowMaximized);
+#else
+    resize(640, 480);
+#endif
+    Q_UNUSED(f);
+
+    mainWin = this;
+    setCentralWidget(new QMplayer(this));
+}
+
+QMplayerMainWindow::~QMplayerMainWindow()
+{
+
 }

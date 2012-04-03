@@ -2,7 +2,7 @@
 
 #include "qmplayer.h"
 #include <qtopiaapplication.h>
-QTOPIA_ADD_APPLICATION(QTOPIA_TARGET,QMplayer)
+QTOPIA_ADD_APPLICATION(QTOPIA_TARGET,QMplayerMainWindow)
 QTOPIA_MAIN
 
 #else
@@ -13,7 +13,7 @@ QTOPIA_MAIN
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    QMplayer w;
+    QMplayerMainWindow w;
     w.show();
     return a.exec();
 }
