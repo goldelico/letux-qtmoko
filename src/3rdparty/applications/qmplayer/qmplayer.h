@@ -23,6 +23,7 @@
 #include <QTimer>
 #include <QMenuBar>
 #include <QMainWindow>
+#include <QPainter>
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
@@ -133,6 +134,32 @@ private slots:
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
 };
+
+// This is fullscreen dialog displayed when mplayer application is running. We need
+// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
+// damaged by Qtopia redraws.
+class QMplayerFullscreen : public QWidget
+{
+    Q_OBJECT
+
+public:
+    QMplayerFullscreen();
+    void showScreen();
+
+signals:
+    void deactivated();
+    void keyPress(QKeyEvent *);
+    void keyRelease(QKeyEvent *);
+
+protected:
+    bool event(QEvent *);
+    void paintEvent(QPaintEvent *);
+    void keyPressEvent(QKeyEvent *);
+    void keyReleaseEvent(QKeyEvent *);
+    void resizeEvent(QResizeEvent *);
+    void enterFullScreen();
+};
+
 
 class QMplayerMainWindow : public QMainWindow
 {
