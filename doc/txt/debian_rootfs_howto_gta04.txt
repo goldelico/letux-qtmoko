@@ -320,7 +320,7 @@ Step 9.2 - Setup bluetooth uarts
 * Bluetooth is on /dev/ttyO0 serial port and we need to run hciattach to have
   bluetooth working. For more info see http://projects.goldelico.com/p/gta04-kernel/page/Wireless/
 
-echo "-s 3000000 /dev/ttyO0 any 3000000 flow" > /media/card/etc/bluetooth/uart
+echo "-s 115200 /dev/ttyO0 any 3000000 flow" > /media/card/etc/bluetooth/uart
 
 
 Step 9.3 - Install libts from lindi
