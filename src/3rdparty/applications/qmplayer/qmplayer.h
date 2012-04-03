@@ -36,6 +36,38 @@
 
 #define NUM_MENU_ITEMS 3
 
+
+// This is fullscreen dialog displayed when mplayer application is running. We need
+// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
+// damaged by Qtopia redraws.
+class QMplayerFullscreen : public QWidget
+{
+    Q_OBJECT
+
+public:
+    QMplayerFullscreen();
+    void showScreen();
+
+signals:
+    void deactivated();
+    void pause();
+    void volumeUp();
+    void volumeDown();
+
+protected:
+    bool event(QEvent *);
+    void paintEvent(QPaintEvent *);
+    void resizeEvent(QResizeEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void enterFullScreen();
+
+private:
+    int downX;
+    int lastX;
+};
+
 class QMplayer : public QWidget
 {
     Q_OBJECT
@@ -65,6 +97,7 @@ private:
     int delTmpFiles;
     bool abort;
     int useBluetooth;
+    QMplayerFullscreen fs;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -133,33 +166,10 @@ private slots:
     void uReadyRead();
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void pauseMplayer();
+    void volumeUp();
+    void volumeDown();
 };
-
-// This is fullscreen dialog displayed when mplayer application is running. We need
-// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
-// damaged by Qtopia redraws.
-class QMplayerFullscreen : public QWidget
-{
-    Q_OBJECT
-
-public:
-    QMplayerFullscreen();
-    void showScreen();
-
-signals:
-    void deactivated();
-    void keyPress(QKeyEvent *);
-    void keyRelease(QKeyEvent *);
-
-protected:
-    bool event(QEvent *);
-    void paintEvent(QPaintEvent *);
-    void keyPressEvent(QKeyEvent *);
-    void keyReleaseEvent(QKeyEvent *);
-    void resizeEvent(QResizeEvent *);
-    void enterFullScreen();
-};
-
 
 class QMplayerMainWindow : public QMainWindow
 {

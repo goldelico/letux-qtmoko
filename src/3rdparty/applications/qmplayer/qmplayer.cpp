@@ -5,6 +5,7 @@ QMplayerMainWindow *mainWin;
 
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
+    , fs()
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
@@ -55,6 +56,11 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addWidget(lineEdit);
     layout->addWidget(progress);
     layout->addLayout(buttonLayout);
+
+    connect(&fs, SIGNAL(deactivated()), this, SLOT(pauseMplayer()));
+    connect(&fs, SIGNAL(pause()), this, SLOT(pauseMplayer()));
+    connect(&fs, SIGNAL(volumeUp()), this, SLOT(volumeUp()));
+    connect(&fs, SIGNAL(volumeDown()), this, SLOT(volumeDown()));
 
     maxScanLevel = 0;
     delTmpFiles = -1;
@@ -246,6 +252,15 @@ static QListWidgetItem *getDirItem(QListView *lw, QString dir)
     return res;
 }
 
+void QMplayer::pauseMplayer()
+{
+    if(processRunning(process))
+    {
+        process->write(" ");
+    }
+    showScreen(QMplayer::ScreenStopped);
+}
+
 void QMplayer::mousePressEvent(QMouseEvent *event)
 {
     Q_UNUSED(event);
@@ -397,11 +412,7 @@ void QMplayer::okClicked()
     }
     else if(screen == QMplayer::ScreenPlay)
     {
-        if(processRunning(process))
-        {
-            process->write(" ");
-        }
-        showScreen(QMplayer::ScreenStopped);
+        pauseMplayer();
     }
     else if(screen == QMplayer::ScreenStopped)
     {
@@ -624,6 +635,22 @@ void QMplayer::backClicked()
     }
 }
 
+void QMplayer::volumeDown()
+{
+    if(processRunning(process))
+    {
+        process->write("9");
+    }
+}
+
+void QMplayer::volumeUp()
+{
+    if(processRunning(process))
+    {
+        process->write("0");
+    }
+}
+
 void QMplayer::upClicked()
 {
     if(processRunning(process))
@@ -634,7 +661,7 @@ void QMplayer::upClicked()
         }
         else
         {
-            process->write("0");
+            volumeUp();
         }
     }
 }
@@ -649,7 +676,7 @@ void QMplayer::downClicked()
         }
         else
         {
-            process->write("9");
+            volumeDown();
         }
     }
 }
@@ -715,6 +742,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bDown->setText(tr("Vol down"));
             break;
         case QMplayer::ScreenFullscreen:
+            fs.showScreen();
 #ifdef QTOPIA
             setRes(320240);
 #endif
@@ -1767,7 +1795,8 @@ void QMplayer::setDlText()
     label->setText(tr("Downloading video from Youtube") + "\n" + ufname);
 }
 
-QMplayerFullscreen::QMplayerFullscreen()
+QMplayerFullscreen::QMplayerFullscreen() : QWidget()
+    ,downX(-1)
 {
 }
 
@@ -1799,20 +1828,38 @@ bool QMplayerFullscreen::event(QEvent *event)
 
 void QMplayerFullscreen::paintEvent(QPaintEvent *)
 {
-    QPainter p(this);
-    p.drawText(this->rect(), Qt::AlignCenter, tr("press AUX to leave"));
-}
-
-void QMplayerFullscreen::keyPressEvent(QKeyEvent *e)
-{
-}
-
-void QMplayerFullscreen::keyReleaseEvent(QKeyEvent *e)
-{
 }
 
 void QMplayerFullscreen::resizeEvent(QResizeEvent *)
 {
+}
+
+void QMplayerFullscreen::mousePressEvent(QMouseEvent * e)
+{
+    downX = lastX = e->x();
+}
+
+void QMplayerFullscreen::mouseReleaseEvent(QMouseEvent * e)
+{
+    if(abs(e->x() - downX) < 64)
+    {
+        emit pause();
+    }
+}
+
+void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
+{
+    int delta = e->x() - lastX;
+    if(delta > 64) {
+        emit volumeUp();
+    }
+    else if(delta < 64) {
+        emit volumeDown();
+    }
+    else {
+        return;
+    }
+    lastX = e->x();
 }
 
 void QMplayerFullscreen::enterFullScreen()
