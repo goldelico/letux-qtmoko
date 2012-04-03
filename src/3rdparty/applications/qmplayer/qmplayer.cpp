@@ -58,7 +58,6 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addLayout(buttonLayout);
 
     connect(&fs, SIGNAL(deactivated()), this, SLOT(pauseMplayer()));
-    connect(&fs, SIGNAL(pause()), this, SLOT(pauseMplayer()));
     connect(&fs, SIGNAL(volumeUp()), this, SLOT(volumeUp()));
     connect(&fs, SIGNAL(volumeDown()), this, SLOT(volumeDown()));
 
@@ -260,6 +259,7 @@ void QMplayer::pauseMplayer()
     }
     fs.hide();
     showScreen(QMplayer::ScreenStopped);
+    QTimer::singleShot(1000, this, SLOT(update()));
 }
 
 void QMplayer::mousePressEvent(QMouseEvent *event)
@@ -741,6 +741,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Full screen"));
             bUp->setText(tr("Vol up"));
             bDown->setText(tr("Vol down"));
+            startTimer(10);
             break;
         case QMplayer::ScreenFullscreen:
             fs.showScreen();
@@ -782,6 +783,21 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             progress->setMaximum(100);
             progress->setValue(0);
             break;
+    }
+}
+
+void QMplayer::timerEvent(QTimerEvent * e)
+{
+    if(screen != QMplayer::ScreenPlay)
+    {
+        killTimer(e->timerId());
+    }
+    else
+    {
+        bOk->update();
+        bBack->update();
+        bUp->update();
+        bDown->update();
     }
 }
 
@@ -1828,6 +1844,8 @@ bool QMplayerFullscreen::event(QEvent *event)
 
 void QMplayerFullscreen::paintEvent(QPaintEvent *)
 {
+    QPainter p(this);
+    p.drawText(this->rect(), Qt::AlignCenter, tr("click to leave fullscreen\nslide left/right to adjust volume"));
 }
 
 void QMplayerFullscreen::resizeEvent(QResizeEvent *)
@@ -1843,7 +1861,7 @@ void QMplayerFullscreen::mouseReleaseEvent(QMouseEvent * e)
 {
     if(abs(e->x() - downX) < 64)
     {
-        emit pause();
+        hide();
     }
 }
 
@@ -1853,7 +1871,7 @@ void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
     if(delta > 64) {
         emit volumeUp();
     }
-    else if(delta < 64) {
+    else if(delta < -64) {
         emit volumeDown();
     }
     else {
