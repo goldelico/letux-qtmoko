@@ -908,11 +908,17 @@ bool QMplayer::startMencoder(QString srcFile, QString dstFile)
     args.append("-lavcopts");
     args.append("vcodec=mpeg4:vhq:vbitrate=300:acodec=ac3");
     args.append("-vf");
+#ifdef QT_QWS_NEO
     args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
+#else
+    args.append("scale=640:480,eq2=1.2:0.5:-0.25,rotate=2");
+#endif
     args.append("-oac");
     args.append("lavc");
+#ifdef QT_QWS_NEO
     args.append("-ofps");
     args.append("15");
+#endif
     args.append("-o");
     args.append(dstFile);
 
@@ -1445,7 +1451,7 @@ void QMplayer::playerStopped()
 
 void QMplayer::setRes(int xy)
 {
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
     if(xy == 320240 || xy == 640480)
     {
         QFile f("/sys/class/lcd/jbt6k74-lcd/device/resolution");
@@ -1473,7 +1479,7 @@ void QMplayer::setRes(int xy)
 
 bool QMplayer::installMplayer()
 {
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
     if(QMessageBox::question(this, tr("qmplayer"),
             tr("Install glamo mplayer (YES) or distribution mplayer (NO)?"),
             QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
@@ -1502,7 +1508,13 @@ bool QMplayer::installMplayer()
         f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
         f.close();
     }
-
+#elif QT_QWS_GTA04
+    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
+    QDir("/home/root").mkdir(".mplayer");
+    QFile f("/home/root/.mplayer/config");
+    f.open(QFile::WriteOnly);
+    f.write("vo=fbdev2\nao=alsa\n[default]\nafm=ffmpeg\nvfm=ffmpeg\nvf=scale=480:640\nsws=0\nframedrop=1");
+    f.close();
 #else
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
     return false;
