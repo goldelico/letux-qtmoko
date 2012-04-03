@@ -258,6 +258,7 @@ void QMplayer::pauseMplayer()
     {
         process->write(" ");
     }
+    fs.hide();
     showScreen(QMplayer::ScreenStopped);
 }
 
@@ -1811,7 +1812,6 @@ bool QMplayerFullscreen::event(QEvent *event)
 #ifdef QTOPIA
     if(event->type() == QEvent::WindowDeactivate)
     {
-        pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
         lower();
         emit deactivated();
     }
