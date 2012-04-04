@@ -22,6 +22,9 @@
 #include <QStringList>
 #include <QTimer>
 #include <QMenuBar>
+#include <QMainWindow>
+#include <QPainter>
+#include <QDesktopWidget>
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
@@ -33,6 +36,42 @@
 #endif
 
 #define NUM_MENU_ITEMS 3
+
+
+// This is fullscreen dialog displayed when mplayer application is running. We need
+// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
+// damaged by Qtopia redraws.
+class QMplayerFullscreen : public QWidget
+{
+    Q_OBJECT
+
+public:
+    QPixmap pixmap;
+    bool capturePixmap;
+    QMplayerFullscreen();
+
+public slots:
+    void showScreen();
+
+signals:
+    void deactivated();
+    void pause();
+    void volumeUp();
+    void volumeDown();
+
+protected:
+    bool event(QEvent *);
+    void paintEvent(QPaintEvent *);
+    void resizeEvent(QResizeEvent *);
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+    void mouseMoveEvent(QMouseEvent *);
+    void enterFullScreen();
+
+private:
+    int downX;
+    int lastX;
+};
 
 class QMplayer : public QWidget
 {
@@ -46,8 +85,8 @@ public:
     {
         ScreenInit,
         ScreenScan,
-        ScreenPlay,
         ScreenFullscreen,
+        ScreenPausing,
         ScreenStopped,
         ScreenDownload,
         ScreenConnect,
@@ -63,6 +102,7 @@ private:
     int delTmpFiles;
     bool abort;
     int useBluetooth;
+    QMplayerFullscreen fs;
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -114,7 +154,7 @@ private:
     bool isPlaylist(QString fileName);
 
 protected:
-    void mousePressEvent(QMouseEvent * event);
+    void paintEvent(QPaintEvent *);
     void closeEvent(QCloseEvent *event);
 
 private slots:
@@ -131,6 +171,17 @@ private slots:
     void uReadyRead();
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
+    void pauseMplayer();
+    void finishPause();
+    void volumeUp();
+    void volumeDown();
+};
+
+class QMplayerMainWindow : public QMainWindow
+{
+public:
+    QMplayerMainWindow(QWidget *parent = 0, Qt::WFlags f = 0);
+    ~QMplayerMainWindow();
 };
 
 #endif // QMPLAYER_H

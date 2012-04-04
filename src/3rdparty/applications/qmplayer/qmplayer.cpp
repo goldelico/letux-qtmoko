@@ -1,12 +1,15 @@
 #include "qmplayer.h"
 #include <QDebug>
 
+QMplayerMainWindow *mainWin;
+
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
+    , fs()
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
-    softm = QSoftMenuBar::menuFor(this);
+    softm = QSoftMenuBar::menuFor(mainWin);
     rmMpAction = softm->addAction(tr("Remove mplayer"), this, SLOT(removeMplayer()));
     rmDlAction = softm->addAction(tr("Remove youtube-dl"), this, SLOT(removeYoutubeDl()));
     rmFlvAction = softm->addAction(tr("Remove FLV videos"), this, SLOT(removeFlv()));
@@ -53,6 +56,10 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addWidget(lineEdit);
     layout->addWidget(progress);
     layout->addLayout(buttonLayout);
+
+    connect(&fs, SIGNAL(deactivated()), this, SLOT(pauseMplayer()));
+    connect(&fs, SIGNAL(volumeUp()), this, SLOT(volumeUp()));
+    connect(&fs, SIGNAL(volumeDown()), this, SLOT(volumeDown()));
 
     maxScanLevel = 0;
     delTmpFiles = -1;
@@ -160,7 +167,16 @@ void QMplayer::sTimerEvent()
                 QMessageBox::critical(this, tr("qmplayer"), tr("Installation of youtube-dl has failed"));
         }
     }
-    if (!uok) close();
+    if (!uok) mainWin->close();
+}
+
+void QMplayer::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    if(fs.pixmap.width() > 0)
+    {
+        p.drawPixmap(0, 0, fs.pixmap);
+    }
 }
 
 void QMplayer::closeEvent(QCloseEvent *event)
@@ -244,13 +260,27 @@ static QListWidgetItem *getDirItem(QListView *lw, QString dir)
     return res;
 }
 
-void QMplayer::mousePressEvent(QMouseEvent *event)
+void QMplayer::pauseMplayer()
 {
-    Q_UNUSED(event);
-    if(screen == QMplayer::ScreenFullscreen)
+    if(screen == ScreenPausing)
     {
-        showScreen(QMplayer::ScreenPlay);
+        return;     // pausing already in progress
     }
+    if(processRunning(process))
+    {
+        process->write(" ");
+    }
+    fs.hide();
+    showScreen(QMplayer::ScreenPausing);
+    QTimer::singleShot(500, &fs, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
+    QTimer::singleShot(750, &fs, SLOT(hide()));
+    QTimer::singleShot(1000, this, SLOT(finishPause()));
+}
+
+void QMplayer::finishPause()
+{
+    update();
+    showScreen(ScreenStopped);
 }
 
 void QMplayer::okClicked()
@@ -393,26 +423,18 @@ void QMplayer::okClicked()
             }
         }
     }
-    else if(screen == QMplayer::ScreenPlay)
-    {
-        if(processRunning(process))
-        {
-            process->write(" ");
-        }
-        showScreen(QMplayer::ScreenStopped);
-    }
     else if(screen == QMplayer::ScreenStopped)
     {
         if(processRunning(process))
         {
             process->write(" ");
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
             // Workaround unpause not working for alsa out in mplayer glamo.
             // We send left key to make mplayer start playing.
             process->write("\x1b""[D");
 #endif
         }
-        showScreen(QMplayer::ScreenPlay);
+        showScreen(QMplayer::ScreenFullscreen);
     }
     else if(screen == QMplayer::ScreenConnect)
     {
@@ -590,11 +612,7 @@ void QMplayer::backClicked()
 {
     if(screen == QMplayer::ScreenInit)
     {
-        close();
-    }
-    else if(screen == QMplayer::ScreenPlay)
-    {
-        showScreen(QMplayer::ScreenFullscreen);
+        mainWin->close();
     }
     else if(screen == QMplayer::ScreenStopped)
     {
@@ -610,7 +628,7 @@ void QMplayer::backClicked()
     }
     else if(screen == QMplayer::ScreenTube)
     {
-        close();
+        mainWin->close();
     }
     else if(screen == ScreenEncodingInProgress)
     {
@@ -619,6 +637,22 @@ void QMplayer::backClicked()
     else
     {
         abort = true;
+    }
+}
+
+void QMplayer::volumeDown()
+{
+    if(processRunning(process))
+    {
+        process->write("9");
+    }
+}
+
+void QMplayer::volumeUp()
+{
+    if(processRunning(process))
+    {
+        process->write("0");
     }
 }
 
@@ -632,7 +666,7 @@ void QMplayer::upClicked()
         }
         else
         {
-            process->write("0");
+            volumeUp();
         }
     }
 }
@@ -647,7 +681,7 @@ void QMplayer::downClicked()
         }
         else
         {
-            process->write("9");
+            volumeDown();
         }
     }
 }
@@ -678,15 +712,15 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 
     // Disable suspend if enter these screens and enable if leave
     enableDisableSuspend(ScreenEncodingInProgress, scr, screen);
-    enableDisableSuspend(ScreenPlay, scr, screen);
+    enableDisableSuspend(ScreenFullscreen, scr, screen);
 
     this->screen = scr;
 
     lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenEncoding);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
-    bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
+    bUp->setVisible(scr == QMplayer::ScreenStopped);
+    bDown->setVisible(scr == QMplayer::ScreenStopped);
     label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     lineEdit->setVisible(scr == QMplayer::ScreenConnect);
     progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
@@ -706,16 +740,15 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bBack->setText(tr("Quit"));
             encodingItem->setText(tr("Encode"));
             break;
-        case QMplayer::ScreenPlay:
-            bOk->setText(tr("Pause"));
-            bBack->setText(tr("Full screen"));
-            bUp->setText(tr("Vol up"));
-            bDown->setText(tr("Vol down"));
-            break;
         case QMplayer::ScreenFullscreen:
+            fs.capturePixmap = true;
+            fs.showScreen();
 #ifdef QTOPIA
             setRes(320240);
 #endif
+            break;
+        case QMplayer::ScreenPausing:
+            fs.capturePixmap = false;
             break;
         case QMplayer::ScreenStopped:
             bOk->setText("Play");
@@ -906,11 +939,17 @@ bool QMplayer::startMencoder(QString srcFile, QString dstFile)
     args.append("-lavcopts");
     args.append("vcodec=mpeg4:vhq:vbitrate=300:acodec=ac3");
     args.append("-vf");
+#ifdef QT_QWS_NEO
     args.append("scale=320:240,eq2=1.2:0.5:-0.25,rotate=2");
+#else
+    args.append("scale=640:480,eq2=1.2:0.5:-0.25,rotate=2");
+#endif
     args.append("-oac");
     args.append("lavc");
+#ifdef QT_QWS_NEO
     args.append("-ofps");
     args.append("15");
+#endif
     args.append("-o");
     args.append(dstFile);
 
@@ -1350,8 +1389,6 @@ void QMplayer::newConnection()
 
 void QMplayer::play(QStringList & args)
 {
-    showScreen(QMplayer::ScreenPlay);
-
     if(useBluetooth < 0)
     {
         QFile f("/home/root/.asoundrc");
@@ -1368,6 +1405,8 @@ void QMplayer::play(QStringList & args)
         args.insert(0, "alsa:device=bluetooth");
         args.insert(0, "-ao");
     }
+
+    showScreen(QMplayer::ScreenFullscreen);
 
     PLAY:
 
@@ -1438,12 +1477,12 @@ void QMplayer::playerStopped()
     else if (tube && !ufinished)
         showScreen(QMplayer::ScreenTube);
     else
-        close();
+        mainWin->close();
 }
 
 void QMplayer::setRes(int xy)
 {
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
     if(xy == 320240 || xy == 640480)
     {
         QFile f("/sys/class/lcd/jbt6k74-lcd/device/resolution");
@@ -1471,7 +1510,7 @@ void QMplayer::setRes(int xy)
 
 bool QMplayer::installMplayer()
 {
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
     if(QMessageBox::question(this, tr("qmplayer"),
             tr("Install glamo mplayer (YES) or distribution mplayer (NO)?"),
             QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes)
@@ -1500,7 +1539,13 @@ bool QMplayer::installMplayer()
         f.write("vo=fbdev\n\n[default]\nafm=ffmpeg\nvfm=ffmpeg\n");
         f.close();
     }
-
+#elif QT_QWS_GTA04
+    QProcess::execute("raptor", QStringList() << "-u" << "-i" << "mplayer");
+    QDir("/home/root").mkdir(".mplayer");
+    QFile f("/home/root/.mplayer/config");
+    f.open(QFile::WriteOnly);
+    f.write("vo=fbdev2\nao=alsa\n[default]\nafm=ffmpeg\nvfm=ffmpeg\nvf=scale=480:640\nsws=0\nframedrop=1");
+    f.close();
 #else
     QMessageBox::critical(this, tr("qmplayer"), tr("You must install mplayer"));
     return false;
@@ -1736,7 +1781,7 @@ void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
     if (ufname == "")
     {
         QMessageBox::critical(this, tr("qmplayer"), tr("youtube-dl has not returned name of downloaded file"));
-        close();
+        mainWin->close();
     }
     else
     {
@@ -1751,4 +1796,114 @@ void QMplayer::uFinished(int exitCode, QProcess::ExitStatus exitStatus)
 void QMplayer::setDlText()
 {
     label->setText(tr("Downloading video from Youtube") + "\n" + ufname);
+}
+
+QMplayerFullscreen::QMplayerFullscreen() : QWidget()
+    ,downX(-1)
+{
+}
+
+void QMplayerFullscreen::showScreen()
+{
+    showMaximized();
+    enterFullScreen();
+}
+
+bool QMplayerFullscreen::event(QEvent *event)
+{
+#ifdef QTOPIA
+    if(event->type() == QEvent::WindowDeactivate)
+    {
+        if(capturePixmap) {
+            pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
+        }
+        lower();
+        emit deactivated();
+    }
+    else if(event->type() == QEvent::WindowActivate)
+    {
+        QString title = windowTitle();
+        setWindowTitle(QLatin1String("_allow_on_top_"));
+        raise();
+        setWindowTitle(title);
+    }
+#endif
+    return QWidget::event(event);
+}
+
+void QMplayerFullscreen::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    if(capturePixmap)
+    {
+        // This is when we are playing
+        p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\nslide to adjust volume"));
+    }
+    else
+    {
+        // This is when we just want the softmenubar repainted
+        p.fillRect(this->rect(), Qt::black);
+    }
+}
+
+void QMplayerFullscreen::resizeEvent(QResizeEvent *)
+{
+}
+
+void QMplayerFullscreen::mousePressEvent(QMouseEvent * e)
+{
+    downX = lastX = e->x();
+}
+
+void QMplayerFullscreen::mouseReleaseEvent(QMouseEvent * e)
+{
+    if(abs(e->x() - downX) < 64)
+    {
+        hide();
+    }
+}
+
+void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
+{
+    int delta = e->x() - lastX;
+    if(delta > 32) {
+        emit volumeUp();
+    }
+    else if(delta < -32) {
+        emit volumeDown();
+    }
+    else {
+        return;
+    }
+    lastX = e->x();
+}
+
+void QMplayerFullscreen::enterFullScreen()
+{
+#ifdef QTOPIA
+    // Show editor view in full screen
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    setWindowState(Qt::WindowFullScreen);
+    raise();
+#endif
+}
+
+
+QMplayerMainWindow::QMplayerMainWindow(QWidget *parent, Qt::WFlags f)
+        : QMainWindow(parent, f)
+{
+#ifdef QTOPIA
+    this->setWindowState(Qt::WindowMaximized);
+#else
+    resize(640, 480);
+#endif
+    Q_UNUSED(f);
+
+    mainWin = this;
+    setCentralWidget(new QMplayer(this));
+}
+
+QMplayerMainWindow::~QMplayerMainWindow()
+{
+
 }
