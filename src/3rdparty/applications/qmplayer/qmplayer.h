@@ -24,6 +24,7 @@
 #include <QMenuBar>
 #include <QMainWindow>
 #include <QPainter>
+#include <QDesktopWidget>
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
@@ -45,6 +46,7 @@ class QMplayerFullscreen : public QWidget
     Q_OBJECT
 
 public:
+    QPixmap pixmap;
     QMplayerFullscreen();
     void showScreen();
 
@@ -148,6 +150,7 @@ private:
     bool isPlaylist(QString fileName);
 
 protected:
+    void paintEvent(QPaintEvent *);
     void closeEvent(QCloseEvent *event);
 
 private slots:

@@ -170,6 +170,15 @@ void QMplayer::sTimerEvent()
     if (!uok) mainWin->close();
 }
 
+void QMplayer::paintEvent(QPaintEvent *)
+{
+    QPainter p(this);
+    if(fs.pixmap.width() > 0)
+    {
+        p.drawPixmap(0, 0, fs.pixmap);
+    }
+}
+
 void QMplayer::closeEvent(QCloseEvent *event)
 {
     QWidget::closeEvent(event);
@@ -407,7 +416,7 @@ void QMplayer::okClicked()
         if(processRunning(process))
         {
             process->write(" ");
-#ifdef QTOPIA
+#ifdef QT_QWS_NEO
             // Workaround unpause not working for alsa out in mplayer glamo.
             // We send left key to make mplayer start playing.
             process->write("\x1b""[D");
@@ -1789,6 +1798,7 @@ bool QMplayerFullscreen::event(QEvent *event)
 #ifdef QTOPIA
     if(event->type() == QEvent::WindowDeactivate)
     {
+        pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
         lower();
         emit deactivated();
     }
@@ -1806,7 +1816,7 @@ bool QMplayerFullscreen::event(QEvent *event)
 void QMplayerFullscreen::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
-    p.drawText(this->rect(), Qt::AlignCenter, tr("click to leave fullscreen\nslide left/right to adjust volume"));
+    p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\nslide to adjust volume"));
 }
 
 void QMplayerFullscreen::resizeEvent(QResizeEvent *)
