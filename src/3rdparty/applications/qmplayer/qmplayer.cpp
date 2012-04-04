@@ -262,13 +262,25 @@ static QListWidgetItem *getDirItem(QListView *lw, QString dir)
 
 void QMplayer::pauseMplayer()
 {
+    if(screen == ScreenPausing)
+    {
+        return;     // pausing already in progress
+    }
     if(processRunning(process))
     {
         process->write(" ");
     }
     fs.hide();
-    showScreen(QMplayer::ScreenStopped);
-    QTimer::singleShot(1000, this, SLOT(update()));
+    showScreen(QMplayer::ScreenPausing);
+    QTimer::singleShot(500, &fs, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
+    QTimer::singleShot(750, &fs, SLOT(hide()));
+    QTimer::singleShot(1000, this, SLOT(finishPause()));
+}
+
+void QMplayer::finishPause()
+{
+    update();
+    showScreen(ScreenStopped);
 }
 
 void QMplayer::okClicked()
@@ -729,10 +741,14 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             encodingItem->setText(tr("Encode"));
             break;
         case QMplayer::ScreenFullscreen:
+            fs.capturePixmap = true;
             fs.showScreen();
 #ifdef QTOPIA
             setRes(320240);
 #endif
+            break;
+        case QMplayer::ScreenPausing:
+            fs.capturePixmap = false;
             break;
         case QMplayer::ScreenStopped:
             bOk->setText("Play");
@@ -1798,7 +1814,9 @@ bool QMplayerFullscreen::event(QEvent *event)
 #ifdef QTOPIA
     if(event->type() == QEvent::WindowDeactivate)
     {
-        pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
+        if(capturePixmap) {
+            pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
+        }
         lower();
         emit deactivated();
     }
@@ -1816,7 +1834,16 @@ bool QMplayerFullscreen::event(QEvent *event)
 void QMplayerFullscreen::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
-    p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\nslide to adjust volume"));
+    if(capturePixmap)
+    {
+        // This is when we are playing
+        p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\nslide to adjust volume"));
+    }
+    else
+    {
+        // This is when we just want the softmenubar repainted
+        p.fillRect(this->rect(), Qt::black);
+    }
 }
 
 void QMplayerFullscreen::resizeEvent(QResizeEvent *)
@@ -1839,10 +1866,10 @@ void QMplayerFullscreen::mouseReleaseEvent(QMouseEvent * e)
 void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
 {
     int delta = e->x() - lastX;
-    if(delta > 64) {
+    if(delta > 32) {
         emit volumeUp();
     }
-    else if(delta < -64) {
+    else if(delta < -32) {
         emit volumeDown();
     }
     else {

@@ -47,7 +47,10 @@ class QMplayerFullscreen : public QWidget
 
 public:
     QPixmap pixmap;
+    bool capturePixmap;
     QMplayerFullscreen();
+
+public slots:
     void showScreen();
 
 signals:
@@ -83,6 +86,7 @@ public:
         ScreenInit,
         ScreenScan,
         ScreenFullscreen,
+        ScreenPausing,
         ScreenStopped,
         ScreenDownload,
         ScreenConnect,
@@ -168,6 +172,7 @@ private slots:
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
     void pauseMplayer();
+    void finishPause();
     void volumeUp();
     void volumeDown();
 };
