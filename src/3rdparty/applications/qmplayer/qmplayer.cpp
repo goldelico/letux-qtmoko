@@ -262,15 +262,6 @@ void QMplayer::pauseMplayer()
     QTimer::singleShot(1000, this, SLOT(update()));
 }
 
-void QMplayer::mousePressEvent(QMouseEvent *event)
-{
-    Q_UNUSED(event);
-    if(screen == QMplayer::ScreenFullscreen)
-    {
-        showScreen(QMplayer::ScreenPlay);
-    }
-}
-
 void QMplayer::okClicked()
 {
     if(screen == QMplayer::ScreenInit || screen == QMplayer::ScreenEncoding)
@@ -411,10 +402,6 @@ void QMplayer::okClicked()
             }
         }
     }
-    else if(screen == QMplayer::ScreenPlay)
-    {
-        pauseMplayer();
-    }
     else if(screen == QMplayer::ScreenStopped)
     {
         if(processRunning(process))
@@ -426,7 +413,7 @@ void QMplayer::okClicked()
             process->write("\x1b""[D");
 #endif
         }
-        showScreen(QMplayer::ScreenPlay);
+        showScreen(QMplayer::ScreenFullscreen);
     }
     else if(screen == QMplayer::ScreenConnect)
     {
@@ -606,10 +593,6 @@ void QMplayer::backClicked()
     {
         mainWin->close();
     }
-    else if(screen == QMplayer::ScreenPlay)
-    {
-        showScreen(QMplayer::ScreenFullscreen);
-    }
     else if(screen == QMplayer::ScreenStopped)
     {
         process->write("q");
@@ -708,15 +691,15 @@ void QMplayer::showScreen(QMplayer::Screen scr)
 
     // Disable suspend if enter these screens and enable if leave
     enableDisableSuspend(ScreenEncodingInProgress, scr, screen);
-    enableDisableSuspend(ScreenPlay, scr, screen);
+    enableDisableSuspend(ScreenFullscreen, scr, screen);
 
     this->screen = scr;
 
     lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenEncoding);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
-    bUp->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
-    bDown->setVisible(scr == QMplayer::ScreenPlay || scr == QMplayer::ScreenStopped);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
+    bUp->setVisible(scr == QMplayer::ScreenStopped);
+    bDown->setVisible(scr == QMplayer::ScreenStopped);
     label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     lineEdit->setVisible(scr == QMplayer::ScreenConnect);
     progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
@@ -735,13 +718,6 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             bOk->setText(">");
             bBack->setText(tr("Quit"));
             encodingItem->setText(tr("Encode"));
-            break;
-        case QMplayer::ScreenPlay:
-            bOk->setText(tr("Pause"));
-            bBack->setText(tr("Full screen"));
-            bUp->setText(tr("Vol up"));
-            bDown->setText(tr("Vol down"));
-            startTimer(10);
             break;
         case QMplayer::ScreenFullscreen:
             fs.showScreen();
@@ -783,21 +759,6 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             progress->setMaximum(100);
             progress->setValue(0);
             break;
-    }
-}
-
-void QMplayer::timerEvent(QTimerEvent * e)
-{
-    if(screen != QMplayer::ScreenPlay)
-    {
-        killTimer(e->timerId());
-    }
-    else
-    {
-        bOk->update();
-        bBack->update();
-        bUp->update();
-        bDown->update();
     }
 }
 
@@ -1403,8 +1364,6 @@ void QMplayer::newConnection()
 
 void QMplayer::play(QStringList & args)
 {
-    showScreen(QMplayer::ScreenPlay);
-
     if(useBluetooth < 0)
     {
         QFile f("/home/root/.asoundrc");
@@ -1421,6 +1380,8 @@ void QMplayer::play(QStringList & args)
         args.insert(0, "alsa:device=bluetooth");
         args.insert(0, "-ao");
     }
+
+    showScreen(QMplayer::ScreenFullscreen);
 
     PLAY:
 

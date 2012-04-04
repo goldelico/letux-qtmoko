@@ -80,7 +80,6 @@ public:
     {
         ScreenInit,
         ScreenScan,
-        ScreenPlay,
         ScreenFullscreen,
         ScreenStopped,
         ScreenDownload,
@@ -147,10 +146,8 @@ private:
     void setDlText();
     QString getEncFilename(QString srcFile, QString dstIdentifier);
     bool isPlaylist(QString fileName);
-    void timerEvent(QTimerEvent *);
 
 protected:
-    void mousePressEvent(QMouseEvent * event);
     void closeEvent(QCloseEvent *event);
 
 private slots:
