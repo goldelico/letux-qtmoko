@@ -38,35 +38,50 @@
 #define NUM_MENU_ITEMS 3
 
 
-// This is fullscreen dialog displayed when mplayer application is running. We need
-// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
-// damaged by Qtopia redraws.
+
+// This is simple fullscreen widget used for refreshing softmenu bar and top
+// bar. It's also base for the playing full screen widget
 class QMplayerFullscreen : public QWidget
 {
     Q_OBJECT
 
 public:
-    QPixmap pixmap;
-    bool capturePixmap;
     QMplayerFullscreen();
+    bool clicked;
+    bool capturePixmap;
+    QPixmap pixmap;
+
+signals:
+    void deactivated();
 
 public slots:
     void showScreen();
 
+protected:
+    bool event(QEvent *);
+    void enterFullScreen();
+};
+
+// This is fullscreen dialog displayed when mplayer application is running. We need
+// to avoid any Qtopia drawing when mplayer is running so that it's screen is not
+// damaged by Qtopia redraws.
+class QMplayerFullscreenPlay : public QMplayerFullscreen
+{
+    Q_OBJECT
+
+public:
+    QMplayerFullscreenPlay();
+
 signals:
-    void deactivated();
     void pause();
     void volumeUp();
     void volumeDown();
 
 protected:
-    bool event(QEvent *);
     void paintEvent(QPaintEvent *);
-    void resizeEvent(QResizeEvent *);
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
-    void enterFullScreen();
 
 private:
     int downX;
@@ -86,7 +101,6 @@ public:
         ScreenInit,
         ScreenScan,
         ScreenFullscreen,
-        ScreenPausing,
         ScreenStopped,
         ScreenDownload,
         ScreenConnect,
@@ -102,7 +116,8 @@ private:
     int delTmpFiles;
     bool abort;
     int useBluetooth;
-    QMplayerFullscreen fs;
+    QMplayerFullscreenPlay fsPlay;      // fulscreen used for playing
+    QMplayerFullscreen fsRefresh;       // fullscreen used to refresh upper bar and softmenubar
     QVBoxLayout* layout;
     QHBoxLayout* buttonLayout;
     QListWidget* lw;
@@ -148,7 +163,6 @@ private:
     void console(QString s);
     bool youtubeDl();
     bool runCmd(QString cmd, int maxp=0);
-    void playerStopped();
     void setDlText();
     QString getEncFilename(QString srcFile, QString dstIdentifier);
     bool isPlaylist(QString fileName);
@@ -171,7 +185,8 @@ private slots:
     void uReadyRead();
     void mencoderReadyRead();
     void uFinished(int exitCode, QProcess::ExitStatus exitStatus);
-    void pauseMplayer();
+    void handleFsDeactivate();
+    void stopMplayer();
     void finishPause();
     void volumeUp();
     void volumeDown();

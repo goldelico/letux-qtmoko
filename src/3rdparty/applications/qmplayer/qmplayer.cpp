@@ -5,7 +5,8 @@ QMplayerMainWindow *mainWin;
 
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
-    , fs()
+    , fsPlay()
+    , fsRefresh()
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
@@ -57,9 +58,9 @@ QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     layout->addWidget(progress);
     layout->addLayout(buttonLayout);
 
-    connect(&fs, SIGNAL(deactivated()), this, SLOT(pauseMplayer()));
-    connect(&fs, SIGNAL(volumeUp()), this, SLOT(volumeUp()));
-    connect(&fs, SIGNAL(volumeDown()), this, SLOT(volumeDown()));
+    connect(&fsPlay, SIGNAL(deactivated()), this, SLOT(handleFsDeactivate()));
+    connect(&fsPlay, SIGNAL(volumeUp()), this, SLOT(volumeUp()));
+    connect(&fsPlay, SIGNAL(volumeDown()), this, SLOT(volumeDown()));
 
     maxScanLevel = 0;
     delTmpFiles = -1;
@@ -173,9 +174,9 @@ void QMplayer::sTimerEvent()
 void QMplayer::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
-    if(fs.pixmap.width() > 0)
+    if(fsPlay.pixmap.width() > 0)
     {
-        p.drawPixmap(0, 0, fs.pixmap);
+        p.drawPixmap(0, 0, fsPlay.pixmap);
     }
 }
 
@@ -260,21 +261,25 @@ static QListWidgetItem *getDirItem(QListView *lw, QString dir)
     return res;
 }
 
-void QMplayer::pauseMplayer()
+void QMplayer::handleFsDeactivate()
 {
-    if(screen == ScreenPausing)
-    {
-        return;     // pausing already in progress
-    }
     if(processRunning(process))
     {
+#ifdef QT_QWS_GTA04
+        if(!fsPlay.clicked) {     // user did not press pause, so e.g. incomming call triggered this
+            stopMplayer();        // quit mplayer so that it does not block sound card e.g. when someone
+            return;               // this might be not needed when we have HW sound routing or mixing on GTA04
+        }
+#endif
         process->write(" ");
+        process->waitForBytesWritten(1000);
     }
-    fs.hide();
-    showScreen(QMplayer::ScreenPausing);
-    QTimer::singleShot(500, &fs, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
-    QTimer::singleShot(750, &fs, SLOT(hide()));
-    QTimer::singleShot(1000, this, SLOT(finishPause()));
+    if(fsPlay.clicked) {
+        fsPlay.hide();
+    }
+    QTimer::singleShot(200, &fsRefresh, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
+    QTimer::singleShot(250, &fsRefresh, SLOT(hide()));
+    QTimer::singleShot(300, this, SLOT(finishPause()));
 }
 
 void QMplayer::finishPause()
@@ -608,6 +613,14 @@ connect:
     return true;
 }
 
+void QMplayer::stopMplayer()
+{
+    process->write("q");
+    process->waitForFinished(4000);
+    delete(process);
+    process = NULL;
+}
+
 void QMplayer::backClicked()
 {
     if(screen == QMplayer::ScreenInit)
@@ -616,11 +629,7 @@ void QMplayer::backClicked()
     }
     else if(screen == QMplayer::ScreenStopped)
     {
-        process->write("q");
-        process->waitForFinished(4000);
-        delete(process);
-        process = NULL;
-        playerStopped();
+        stopMplayer();
     }
     else if(screen == QMplayer::ScreenConnect)
     {
@@ -741,14 +750,11 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             encodingItem->setText(tr("Encode"));
             break;
         case QMplayer::ScreenFullscreen:
-            fs.capturePixmap = true;
-            fs.showScreen();
+            fsPlay.capturePixmap = true;
+            fsPlay.showScreen();
 #ifdef QTOPIA
             setRes(320240);
 #endif
-            break;
-        case QMplayer::ScreenPausing:
-            fs.capturePixmap = false;
             break;
         case QMplayer::ScreenStopped:
             bOk->setText("Play");
@@ -1180,7 +1186,6 @@ void QMplayer::newConnection()
     QString host = "";
     QFile file;
     bool sendFile = false;
-    int itemIndex = 0;
 
     for(;;)
     {
@@ -1280,7 +1285,6 @@ void QMplayer::newConnection()
                     filename.append('/');
                 }
                 filename.append(path);
-                itemIndex = i;
                 break;
             }
         }
@@ -1467,11 +1471,10 @@ void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
         showScreen(ScreenInit);
         return;
     }
-    playerStopped();
-}
 
-void QMplayer::playerStopped()
-{
+    QTimer::singleShot(100, &fsRefresh, SLOT(showScreen()));    // refresh taskbar and softmenu bar
+    QTimer::singleShot(200, &fsRefresh, SLOT(hide()));
+
     if (mpgui)
         showScreen(QMplayer::ScreenInit);
     else if (tube && !ufinished)
@@ -1799,12 +1802,14 @@ void QMplayer::setDlText()
 }
 
 QMplayerFullscreen::QMplayerFullscreen() : QWidget()
-    ,downX(-1)
+  , clicked(false)
+  , capturePixmap(false)
 {
 }
 
 void QMplayerFullscreen::showScreen()
 {
+    clicked = false;
     showMaximized();
     enterFullScreen();
 }
@@ -1831,7 +1836,22 @@ bool QMplayerFullscreen::event(QEvent *event)
     return QWidget::event(event);
 }
 
-void QMplayerFullscreen::paintEvent(QPaintEvent *)
+void QMplayerFullscreen::enterFullScreen()
+{
+#ifdef QTOPIA
+    // Show editor view in full screen
+    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
+    setWindowState(Qt::WindowFullScreen);
+    raise();
+#endif
+}
+
+QMplayerFullscreenPlay::QMplayerFullscreenPlay() : QMplayerFullscreen()
+{
+}
+
+
+void QMplayerFullscreenPlay::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
     if(capturePixmap)
@@ -1846,24 +1866,21 @@ void QMplayerFullscreen::paintEvent(QPaintEvent *)
     }
 }
 
-void QMplayerFullscreen::resizeEvent(QResizeEvent *)
-{
-}
-
-void QMplayerFullscreen::mousePressEvent(QMouseEvent * e)
+void QMplayerFullscreenPlay::mousePressEvent(QMouseEvent * e)
 {
     downX = lastX = e->x();
 }
 
-void QMplayerFullscreen::mouseReleaseEvent(QMouseEvent * e)
+void QMplayerFullscreenPlay::mouseReleaseEvent(QMouseEvent * e)
 {
     if(abs(e->x() - downX) < 64)
     {
+        clicked = true;
         hide();
     }
 }
 
-void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
+void QMplayerFullscreenPlay::mouseMoveEvent(QMouseEvent * e)
 {
     int delta = e->x() - lastX;
     if(delta > 32) {
@@ -1877,17 +1894,6 @@ void QMplayerFullscreen::mouseMoveEvent(QMouseEvent * e)
     }
     lastX = e->x();
 }
-
-void QMplayerFullscreen::enterFullScreen()
-{
-#ifdef QTOPIA
-    // Show editor view in full screen
-    setWindowFlags(windowFlags() | Qt::WindowStaysOnTopHint);
-    setWindowState(Qt::WindowFullScreen);
-    raise();
-#endif
-}
-
 
 QMplayerMainWindow::QMplayerMainWindow(QWidget *parent, Qt::WFlags f)
         : QMainWindow(parent, f)
