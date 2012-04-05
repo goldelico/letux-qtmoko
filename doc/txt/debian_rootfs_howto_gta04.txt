@@ -93,10 +93,15 @@ Step 4
   between mass storage, ppp_generic is not needed for people not using GPRS,
   joydev is used in qtmaze for accelerometers, hso is for UMTS.
 
-echo "g_ether dev_addr=09:01:de:11:c0:04" > /media/card/etc/modules
+echo g_ether > /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 echo ledtrig-timer >> /media/card/etc/modules
+
+* Make the MAC address of g_ether fixed instead of random, so that network
+  manager can be configured:
+  
+echo "options g_ether host_addr=46:0d:9e:67:69:eb dev_addr=b6:c8:ab:ac:44:7f" >> /media/card/etc/modprobe.d/options
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
