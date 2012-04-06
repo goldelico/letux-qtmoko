@@ -287,14 +287,14 @@ void QMplayer::handleFsDeactivate()
     }
     else {
         fsPlay.hide();
-        showScreen(ScreenStopped);
+        showScreen(ScreenPaused);
     }
 }
 
 void QMplayer::finishPause()
 {
     update();
-    showScreen(ScreenStopped);
+    showScreen(ScreenPaused);
 }
 
 void QMplayer::okClicked()
@@ -437,7 +437,7 @@ void QMplayer::okClicked()
             }
         }
     }
-    else if(screen == QMplayer::ScreenStopped)
+    else if(screen == QMplayer::ScreenPaused)
     {
         if(processRunning(process))
         {
@@ -640,7 +640,7 @@ void QMplayer::backClicked()
     {
         mainWin->close();
     }
-    else if(screen == QMplayer::ScreenStopped)
+    else if(screen == QMplayer::ScreenPaused)
     {
         stopMplayer();
     }
@@ -682,7 +682,7 @@ void QMplayer::upClicked()
 {
     if(processRunning(process))
     {
-        if(screen == QMplayer::ScreenStopped)
+        if(screen == QMplayer::ScreenPaused)
         {
             process->write("\x1b""[A ");
         }
@@ -697,7 +697,7 @@ void QMplayer::downClicked()
 {
     if(processRunning(process))
     {
-        if(screen == QMplayer::ScreenStopped)
+        if(screen == QMplayer::ScreenPaused)
         {
             process->write("\x1b""[B ");
         }
@@ -739,10 +739,10 @@ void QMplayer::showScreen(QMplayer::Screen scr)
     this->screen = scr;
 
     lw->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenEncoding);
-    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
-    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenStopped || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
-    bUp->setVisible(scr == QMplayer::ScreenStopped);
-    bDown->setVisible(scr == QMplayer::ScreenStopped);
+    bOk->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPaused || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenEncoding);
+    bBack->setVisible(scr == QMplayer::ScreenInit || scr == QMplayer::ScreenPaused || scr == QMplayer::ScreenScan || scr == QMplayer::ScreenConnect  || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
+    bUp->setVisible(scr == QMplayer::ScreenPaused);
+    bDown->setVisible(scr == QMplayer::ScreenPaused);
     label->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenConnect || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
     lineEdit->setVisible(scr == QMplayer::ScreenConnect);
     progress->setVisible(scr == QMplayer::ScreenScan || scr == QMplayer::ScreenDownload || scr == QMplayer::ScreenTube || scr == QMplayer::ScreenCmd || scr == ScreenEncodingInProgress);
@@ -768,7 +768,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             setRes(320240);
 #endif
             break;
-        case QMplayer::ScreenStopped:
+        case QMplayer::ScreenPaused:
             bOk->setText("Play");
             bBack->setText(tr("Back"));
             bUp->setText(tr(">>"));

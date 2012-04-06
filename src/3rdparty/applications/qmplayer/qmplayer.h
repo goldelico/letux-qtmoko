@@ -100,7 +100,7 @@ public:
         ScreenInit,
         ScreenScan,
         ScreenFullscreen,
-        ScreenStopped,
+        ScreenPaused,
         ScreenDownload,
         ScreenConnect,
         ScreenTube,
