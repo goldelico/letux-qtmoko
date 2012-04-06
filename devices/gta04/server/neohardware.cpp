@@ -126,12 +126,12 @@ void NeoHardware::timerEvent(QTimerEvent *)
     if (updateAc) {
         updateAc = false;
 
-        QByteArray twlStatus =
-            readFile("/sys/class/power_supply/twl4030_usb/status");
-        if (twlStatus.contains("Not charging")) {
-            ac.setAvailability(QPowerSource::NotAvailable);
-        } else {
+        QByteArray twlVbus =
+            readFile("/sys/bus/platform/devices/twl4030_usb/vbus");
+        if (twlVbus.contains("on")) {
             ac.setAvailability(QPowerSource::Available);
+        } else {
+            ac.setAvailability(QPowerSource::NotAvailable);
         }
     }
     if (updateBattery) {
