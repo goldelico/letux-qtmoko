@@ -48,7 +48,6 @@ class QMplayerFullscreen : public QWidget
 public:
     QMplayerFullscreen();
     bool clicked;
-    bool capturePixmap;
     QPixmap pixmap;
 
 signals:

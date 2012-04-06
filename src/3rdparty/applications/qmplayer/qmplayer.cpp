@@ -5,6 +5,7 @@ QMplayerMainWindow *mainWin;
 
 QMplayer::QMplayer(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
+    , screen(ScreenInit)
     , fsPlay()
     , fsRefresh()
 {
@@ -263,10 +264,15 @@ static QListWidgetItem *getDirItem(QListView *lw, QString dir)
 
 void QMplayer::handleFsDeactivate()
 {
+    if(screen != ScreenFullscreen)
+    {
+        return;
+    }
     if(processRunning(process))
     {
 #ifdef QT_QWS_GTA04
         if(!fsPlay.clicked) {     // user did not press pause, so e.g. incomming call triggered this
+            fsPlay.hide();
             stopMplayer();        // quit mplayer so that it does not block sound card e.g. when someone
             return;               // this might be not needed when we have HW sound routing or mixing on GTA04
         }
@@ -275,11 +281,14 @@ void QMplayer::handleFsDeactivate()
         process->waitForBytesWritten(1000);
     }
     if(fsPlay.clicked) {
-        fsPlay.hide();
+        QTimer::singleShot(200, &fsRefresh, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
+        QTimer::singleShot(250, &fsRefresh, SLOT(hide()));
+        QTimer::singleShot(300, this, SLOT(finishPause()));
     }
-    QTimer::singleShot(200, &fsRefresh, SLOT(showScreen()));   // these two lines refresh taskbar and softmenu bar
-    QTimer::singleShot(250, &fsRefresh, SLOT(hide()));
-    QTimer::singleShot(300, this, SLOT(finishPause()));
+    else {
+        fsPlay.hide();
+        showScreen(ScreenStopped);
+    }
 }
 
 void QMplayer::finishPause()
@@ -615,6 +624,10 @@ connect:
 
 void QMplayer::stopMplayer()
 {
+    if(process == NULL)
+    {
+        return;
+    }
     process->write("q");
     process->waitForFinished(4000);
     delete(process);
@@ -750,7 +763,6 @@ void QMplayer::showScreen(QMplayer::Screen scr)
             encodingItem->setText(tr("Encode"));
             break;
         case QMplayer::ScreenFullscreen:
-            fsPlay.capturePixmap = true;
             fsPlay.showScreen();
 #ifdef QTOPIA
             setRes(320240);
@@ -1475,8 +1487,9 @@ void QMplayer::processFinished(int exitCode, QProcess::ExitStatus exitStatus)
     QTimer::singleShot(100, &fsRefresh, SLOT(showScreen()));    // refresh taskbar and softmenu bar
     QTimer::singleShot(200, &fsRefresh, SLOT(hide()));
 
-    if (mpgui)
+    if (mpgui) {
         showScreen(QMplayer::ScreenInit);
+    }
     else if (tube && !ufinished)
         showScreen(QMplayer::ScreenTube);
     else
@@ -1803,7 +1816,6 @@ void QMplayer::setDlText()
 
 QMplayerFullscreen::QMplayerFullscreen() : QWidget()
   , clicked(false)
-  , capturePixmap(false)
 {
 }
 
@@ -1819,7 +1831,7 @@ bool QMplayerFullscreen::event(QEvent *event)
 #ifdef QTOPIA
     if(event->type() == QEvent::WindowDeactivate)
     {
-        if(capturePixmap) {
+        if(clicked) {
             pixmap = QPixmap::grabWindow(QApplication::desktop()->winId());
         }
         lower();
@@ -1854,16 +1866,7 @@ QMplayerFullscreenPlay::QMplayerFullscreenPlay() : QMplayerFullscreen()
 void QMplayerFullscreenPlay::paintEvent(QPaintEvent *)
 {
     QPainter p(this);
-    if(capturePixmap)
-    {
-        // This is when we are playing
-        p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\nslide to adjust volume"));
-    }
-    else
-    {
-        // This is when we just want the softmenubar repainted
-        p.fillRect(this->rect(), Qt::black);
-    }
+    p.drawText(this->rect(), Qt::AlignCenter, tr("click to pause\n\nslide to adjust volume"));
 }
 
 void QMplayerFullscreenPlay::mousePressEvent(QMouseEvent * e)
