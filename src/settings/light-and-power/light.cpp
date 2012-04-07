@@ -308,6 +308,9 @@ void LightSettings::powerTypeChanged(int index)
         newMode = &externalMode;
     else if(index == 2)
         newMode = &lockMode;
+    
+    /* enable lock intervals to be specified in seconds */
+    b->interval_suspend->setSingleStep(index == 2 ? 1 : 10);
 
     /*  store everytime (so we can store from accept)   */
     currentMode->intervalDim = b->interval_dim->value();
