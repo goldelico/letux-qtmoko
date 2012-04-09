@@ -357,6 +357,13 @@ cat > /media/card/etc/resolv.conf <<__END__
 nameserver 8.8.8.8
 __END__
 
+Step 9.7 - boot logo
+====================
+
+* gta04-init displays this logo on boot:
+
+cd /media/card/boot
+wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/sd.bmp
 
 Step 10 - release tarball
 =========================
@@ -367,9 +374,11 @@ tar -czvf ../qtmoko-debian-gta04-v41.tar.gz .
 Step 11 - make ubifs image
 ==========================
 
-* Delete contents of boot, because for NAND it's not needed:
+* Download logo for NAND boot:
 
-rm -rf /media/card/boot/*
+cd /media/card/boot/
+rm -f logo.bmp
+wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/nand.bmp
 
 * Remove doc and stuff that is not needed and makes NAND image slower:
 
