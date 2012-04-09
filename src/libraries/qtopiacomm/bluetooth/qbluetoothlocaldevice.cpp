@@ -39,6 +39,7 @@
 #include <QDBusArgument>
 #include <QSet>
 #include <QDebug>
+#include <QProcess>
 
 #include <stdio.h>
 #include <string.h>
@@ -1231,7 +1232,11 @@ QBluetoothReply<bool> QBluetoothLocalDevice::discoverable() const
  */
 bool QBluetoothLocalDevice::setConnectable()
 {
+#ifdef QT_QWS_GTA04
+    return QProcess::execute("rfkill", QStringList() << "unblock" << "bluetooth") == 0;
+#else
     return m_data->setPropertyAsync("Powered", true, SLOT(asyncReply(QDBusMessage)));
+#endif
 }
 
 /*!
@@ -1257,7 +1262,11 @@ QBluetoothReply<bool> QBluetoothLocalDevice::connectable() const
  */
 bool QBluetoothLocalDevice::turnOff()
 {
-    return m_data->setPropertyAsync("Powered", false, SLOT(asyncReply(QDBusMessage)));   
+ #ifdef QT_QWS_GTA04
+    return QProcess::execute("rfkill", QStringList() << "block" << "bluetooth") == 0;
+#else
+    return m_data->setPropertyAsync("Powered", false, SLOT(asyncReply(QDBusMessage)));
+#endif
 }
 
 /*!
