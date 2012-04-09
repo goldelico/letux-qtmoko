@@ -36,13 +36,13 @@ using namespace Ui;
 // Enables gta04 initramfs menu
 static void enableBootmenu()
 {
-    QFile::remove("/boot/gta04-init/bootdev");
+    QFile::remove("/media/p1/gta04-init/bootdev");
 }
 
 // Disables gta04 initramfs menu
 static void disableBootmenu()
 {
-    QFile::copy("/boot/gta04-init/lastbootdev", "/boot/gta04-init/bootdev");
+    QFile::copy("/media/p1/gta04-init/lastbootdev", "/media/p1/gta04-init/bootdev");
 }
 
 static QString bootTo(int index, QStringList & distroList)
@@ -62,7 +62,7 @@ static QString bootTo(int index, QStringList & distroList)
         return "invalid index";
     }
 
-    QFile lastDev("/boot/gta04-init/lastbootdev");
+    QFile lastDev("/media/p1/gta04-init/lastbootdev");
     if(!lastDev.open(QIODevice::ReadOnly)) {
         return lastDev.fileName() + " open failed: " + lastDev.errorString();
     }
@@ -78,7 +78,7 @@ static QString bootTo(int index, QStringList & distroList)
     
     content = content + " /distros/" + distroList.at(index).toLatin1();
 
-    QFile bootDev("/boot/gta04-init/bootdev");
+    QFile bootDev("/media/p1/gta04-init/bootdev");
     if(!bootDev.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
         return bootDev.fileName() + " open failed: " + bootDev.errorString();
     }
@@ -114,7 +114,7 @@ ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
 #endif
 
     // Bootmenu on GTA04, described here: https://github.com/radekp/gta04-init
-    bool hasBootmenu = QDir("/boot/gta04-init").exists();
+    bool hasBootmenu = QDir("/media/p1/gta04-init").exists();
     bootmenuCombo->setVisible(hasBootmenu);
     if(hasBootmenu) {
         disableBootmenu();  // normally we want the bootmenu disabled
