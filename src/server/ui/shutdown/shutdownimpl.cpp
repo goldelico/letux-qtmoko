@@ -27,6 +27,7 @@
 #include <QtopiaChannel>
 #include <QDir>
 #include <QFile>
+#include <QMessageBox>
 
 #include <stdio.h>
 
@@ -41,28 +42,54 @@ static void enableBootmenu()
 // Disables gta04 initramfs menu
 static void disableBootmenu()
 {
-    // Find out if root is on NAND
-    QFile f("/proc/mounts");
-    if(!f.open(QIODevice::ReadOnly))
-    {
-        return;
-    }
-    QByteArray mounts = f.readAll();
-    f.close();
-    bool rootOnNand = mounts.contains(" / ubifs");
-    
-    // Write bootdev according to what we are running on
-    QFile bootdev("/boot/gta04-init/bootdev");
-    if(!bootdev.open(QIODevice::WriteOnly)) {
-        return;
-    }
-    if(rootOnNand) {
-        bootdev.write("nand\n");
-    } else {
-        bootdev.write("sd\n");
-    }
-    bootdev.close();
+    QFile::copy("/boot/gta04-init/lastbootdev", "/boot/gta04-init/bootdev");
+}
 
+static QString bootTo(int index, QStringList & distroList)
+{
+    if(index == 0) {
+        disableBootmenu();
+        return "";
+    }
+    
+    if(index == 1) {
+        enableBootmenu();
+        return "";
+    }
+    index -= 2;
+    
+    if(index < 0 || index > distroList.count()) {
+        return "invalid index";
+    }
+
+    QFile lastDev("/boot/gta04-init/lastbootdev");
+    if(!lastDev.open(QIODevice::ReadOnly)) {
+        return lastDev.fileName() + " open failed: " + lastDev.errorString();
+    }
+    QByteArray content = lastDev.readAll();
+    lastDev.close();
+    
+    for(int i = 0; i < content.count(); i++) {
+        if(content.at(i) <= 32) {
+            content = content.left(i);
+            break;
+        }
+    }
+    
+    content = content + " /distros/" + distroList.at(index).toLatin1();
+
+    QFile bootDev("/boot/gta04-init/bootdev");
+    if(!bootDev.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return bootDev.fileName() + " open failed: " + bootDev.errorString();
+    }
+
+    if(bootDev.write(content) != content.count()) {
+        bootDev.close();
+        return bootDev.errorString();
+    }
+
+    bootDev.close();
+    return "";
 }
 
 ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
@@ -88,11 +115,15 @@ ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
 
     // Bootmenu on GTA04, described here: https://github.com/radekp/gta04-init
     bool hasBootmenu = QDir("/boot/gta04-init").exists();
-    bootmenuCheck->setVisible(hasBootmenu);
+    bootmenuCombo->setVisible(hasBootmenu);
     if(hasBootmenu) {
         disableBootmenu();  // normally we want the bootmenu disabled
+        
+        QDir d("/distros");
+        distroList = d.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+        bootmenuCombo->addItems(distroList);
     }
-    connect(bootmenuCheck, SIGNAL(stateChanged(int)), this, SLOT(bootmenuStateChanged(int)));
+    connect(bootmenuCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(bootmenuIndexChanged(int)));
 }
 
 void ShutdownImpl::rebootClicked()
@@ -148,12 +179,11 @@ void ShutdownImpl::timeout()
     }
 }
 
-void ShutdownImpl::bootmenuStateChanged(int state)
+void ShutdownImpl::bootmenuIndexChanged(int index)
 {
-    if(state == Qt::Checked) {
-        enableBootmenu();
-    } else {
-        disableBootmenu();
+    QString err = bootTo(index, distroList);
+    if(err.length() > 0) {
+        qWarning() << "Boot selection failed: " << err;
     }
 }
 
