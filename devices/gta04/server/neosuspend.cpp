@@ -18,15 +18,18 @@
 **
 ****************************************************************************/
 
+#include <stdio.h>
+#include <stdlib.h>
+
+#include <QFile>
+#include <QTimer>
+#include <QProcess>
+#include <QDateTime>
+#include <QPowerSource>
+#include <QDesktopWidget>
 #include <QtopiaIpcAdaptor>
 #include <QtopiaIpcEnvelope>
 #include <QtopiaServiceRequest>
-#include <QPowerSource>
-#include <QProcess>
-#include <stdio.h>
-#include <stdlib.h>
-#include <QDesktopWidget>
-#include <QTimer>
 
 #include "systemsuspend.h"
 
@@ -39,13 +42,13 @@
 class NeoSuspend : public SystemSuspendHandler
 {
 public:
-
     NeoSuspend();
     virtual bool canSuspend() const;
     virtual bool suspend();
     virtual bool wake();
 private:
      QProcess resumeScript;
+     QDateTime suspendTime;
 };
 
 QTOPIA_DEMAND_TASK(NeoSuspend, NeoSuspend);
@@ -79,6 +82,8 @@ bool NeoSuspend::suspend()
 
     QProcess::execute("before-suspend.sh");
 
+    suspendTime = QDateTime::currentDateTime();
+    
     QFile powerStateFile("/sys/power/state");
     if (!powerStateFile.
         open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
@@ -91,8 +96,30 @@ bool NeoSuspend::suspend()
     return true;
 }
 
+static void writeFile(const char * path, const char * content)
+{
+    QFile f(path);
+    if(!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return;
+    }
+    f.write(content);
+    f.close();
+}
+
 bool NeoSuspend::wake()
 {
+    // Check if resume was too fast. If yes, it might be GPS which wakes the
+    // device up and prevents suspend. As a workaround we try to turn the gps
+    // off. For more info see:
+    // http://lists.goldelico.com/pipermail/gta04-owner/2012-April/002184.html
+    QDateTime now = QDateTime::currentDateTime();
+    int secs = suspendTime.secsTo(now);
+    if(secs < 10) {
+        qLog(PowerManagement) << "Resume was too fast, trying to turn off gps";
+        writeFile("/sys/devices/virtual/gpio/gpio145/value", "0");
+        writeFile("/sys/devices/virtual/gpio/gpio145/value", "1");
+    }
+    
 #ifdef Q_WS_QWS
     QWSServer::instance()->refresh();
 #endif
