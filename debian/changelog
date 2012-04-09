@@ -1,3 +1,19 @@
+qtmoko (44-1) unstable; urgency=low
+
+  * using 115200 as initial speed for bluetooth uart
+  * qmplayer can now play in fullscreen and pause on incoming call
+  * enabled default suspend interval on battery (3 minutes)
+  * you can set 1s interval in locked mode
+  * usb mac address should be now really fixed
+  * detecting cable using vbus sysfs node
+  * added logos for sd card and nand boot
+  * implemented rebooting to other distro
+  * turing on/off bluetooth with rfkill on gta04
+  * after boot bluetooth is now turned off on gta04
+  * workarounded bug with gps preventing suspend on gta04
+
+ -- Radek Polak <psonek2@seznam.cz>  Mon, 09 Apr 2012 23:53:00 +0100
+
 qtmoko (43-1) unstable; urgency=low
 
   * temporary logging goes to ramdisk
