@@ -303,9 +303,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.3-qtmoko-gta04_44-1_armel.deb
-dpkg -i linux-image-3.3-qtmoko-gta04_44-1_armel.deb
-rm linux-image-3.3-qtmoko-gta04_44-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.2-qtmoko-gta04_44-1_armel.deb
+dpkg -i linux-image-3.2-qtmoko-gta04_44-1_armel.deb
+rm linux-image-3.2-qtmoko-gta04_44-1_armel.deb
 exit
 
 
