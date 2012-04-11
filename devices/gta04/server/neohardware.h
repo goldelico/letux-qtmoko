@@ -48,15 +48,12 @@ private:
     QPowerSourceProvider ac;
     QPowerSourceProvider battery;
     QTcpSocket ueventSocket;
-    int timerId;
     bool hasSmartBattery;
-    bool updateAc;
-    bool updateBattery;
-    void timerEvent(QTimerEvent *);
-    
-private Q_SLOTS:
+
+private slots:
     void shutdownRequested();
     void uevent();
+    void updateStatus();
 };
 
 #endif

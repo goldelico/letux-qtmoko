@@ -1191,6 +1191,9 @@ bool QBluetoothLocalDevice::setName(const QString &name)
 */
 bool QBluetoothLocalDevice::setDiscoverable(uint timeout)
 {
+ #ifdef QT_QWS_GTA04
+    QProcess::execute("rfkill", QStringList() << "unblock" << "bluetooth");
+#endif
     m_data->m_discovTo = timeout;
     return m_data->setPropertyAsync("Discoverable", true, SLOT(asyncDiscoverableChange(QDBusMessage)));
 }

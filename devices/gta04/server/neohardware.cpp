@@ -96,9 +96,6 @@ NeoHardware::NeoHardware()
 ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , ueventSocket(this)
-    , timerId(0)
-    , updateAc(true)
-    , updateBattery(true)
 {
     qLog(Hardware) << "gta04 hardware";
 
@@ -111,50 +108,39 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     hasSmartBattery =
         QFile::exists("/sys/class/power_supply/bq27000-battery/status");
 
-    timerId = startTimer(1);
+    QTimer::singleShot(1, this, SLOT(updateStatus()));
 }
 
 NeoHardware::~NeoHardware()
 {
 }
 
-void NeoHardware::timerEvent(QTimerEvent *)
+void NeoHardware::updateStatus()
 {
-    killTimer(timerId);
-    timerId = 0;
-
-    if (updateAc) {
-        updateAc = false;
-
-        QByteArray twlVbus =
-            readFile("/sys/bus/platform/devices/twl4030_usb/vbus");
-        if (twlVbus.contains("on")) {
-            ac.setAvailability(QPowerSource::Available);
-        } else {
-            ac.setAvailability(QPowerSource::NotAvailable);
-        }
+    QByteArray twlVbus = readFile("/sys/bus/platform/devices/twl4030_usb/vbus");
+    if (twlVbus.contains("on")) {
+        ac.setAvailability(QPowerSource::Available);
+    } else {
+        ac.setAvailability(QPowerSource::NotAvailable);
     }
-    if (updateBattery) {
-        updateBattery = false;
 
-        QString chargingStr =
-            readFile("/sys/class/power_supply/bq27000-battery/status");
-        QString capacityStr =
-            readFile("/sys/class/power_supply/bq27000-battery/capacity");
-        int capacity = capacityStr.toInt();
+    QString chargingStr =
+        readFile("/sys/class/power_supply/bq27000-battery/status");
+    QString capacityStr =
+        readFile("/sys/class/power_supply/bq27000-battery/capacity");
+    int capacity = capacityStr.toInt();
 
-        battery.setCharging(chargingStr.contains("Charging"));
+    battery.setCharging(chargingStr.contains("Charging"));
 
-        if (capacity > 0) {
-            battery.setCharge(capacity);
-        }
+    if (capacity > 0) {
+        battery.setCharge(capacity);
+    }
 
-        if (chargingStr == "Discharging") {
-            QString time =
-                readFile
-                ("/sys/class/power_supply/bq27000-battery/time_to_empty_now");
-            battery.setTimeRemaining(time.toInt() / 60);
-        }
+    if (chargingStr.contains("Discharging")) {
+        QString time =
+            readFile
+            ("/sys/class/power_supply/bq27000-battery/time_to_empty_now");
+        battery.setTimeRemaining(time.toInt() / 60);
     }
 }
 
@@ -165,10 +151,11 @@ void NeoHardware::uevent()
     if (ueventSocket.read(buffer, UEVENT_BUFFER_SIZE) <= 0) {
         return;
     }
-    updateAc |= (strstr(buffer, "twl4030") != NULL);
-    updateBattery |= (strstr(buffer, "bq27000-battery") != NULL);
-    if (timerId == 0) {
-        timerId = startTimer(100);
+    if (strstr(buffer, "twl4030") || strstr(buffer, "bq27000-battery")) {
+        QTimer::singleShot(1000, this, SLOT(updateStatus()));   // vbus updates < 1s
+        QTimer::singleShot(2000, this, SLOT(updateStatus()));   // but sometimes needs 2s when changing on->off
+        QTimer::singleShot(10000, this, SLOT(updateStatus()));  // battery charging needs 10s
+        QTimer::singleShot(20000, this, SLOT(updateStatus()));  // try also after 20s in case status at 10s was not yet correct
     }
 }
 
