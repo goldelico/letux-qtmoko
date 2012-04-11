@@ -14,7 +14,7 @@ if [ ! "$(pidof udevd)" ]; then
 fi
 
 # Saves power in suspend
-bt-poweroff.sh &
+rfkill block bluetooth &
 
 # Power on modem on GTA04A4 and higher
 if [ -f /sys/class/gpio/gpio186/value ];
