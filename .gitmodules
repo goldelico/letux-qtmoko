@@ -112,3 +112,6 @@
 [submodule "src/3rdparty/applications/gta04-gsm-voice-routing"]
 	path = src/3rdparty/applications/gta04-gsm-voice-routing
 	url = git://github.com/radekp/gta04-gsm-voice-routing.git
+[submodule "src/3rdparty/games/qfreecell"]
+	path = src/3rdparty/games/qfreecell
+	url = git://github.com/radekp/qfreecell.git
