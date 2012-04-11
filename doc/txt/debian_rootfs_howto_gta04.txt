@@ -366,6 +366,25 @@ Step 9.7 - boot logo
 cd /media/card/boot
 wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/sd.bmp
 
+Step 9.8 - directory for multiboot
+==================================
+
+* QtMoko can use gta04-init to boot other distibutions in /distros
+  subdirectory. Create this dir and write instructions how to use it:
+
+mkdir /media/card/distros
+cat > /media/card/distros/README <<__END__
+This directory can contain other distributions and you can boot to them. Simply
+create subdirectory here and unpack distribution tarball here. E.g:
+
+    mkdir SHR
+    cd SHR
+    tar xzvpf /path/to/shr-rootfs.tar.gz
+
+Now press POWER, select the distribution from combo box and press "Restart Device"
+__END__
+
+
 Step 10 - release tarball
 =========================
 
