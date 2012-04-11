@@ -1,6 +1,9 @@
 #include "qmplayer.h"
 #include <QDebug>
 
+#include <sys/time.h>
+#include <sys/resource.h>
+
 QMplayerMainWindow *mainWin;
 
 QMplayer::QMplayer(QWidget * parent, Qt::WFlags f)
@@ -260,7 +263,6 @@ void QMplayer::handleFsDeactivate()
         QTimer::singleShot(250, &fsRefresh, SLOT(hide()));
         QTimer::singleShot(300, this, SLOT(finishPause()));
     } else {
-        fsPlay.hide();
         showScreen(ScreenPaused);
     }
 }
@@ -631,6 +633,7 @@ void QMplayer::showScreen(QMplayer::Screen scr)
     // Full screen -> normal
     if (screen == QMplayer::ScreenFullscreen) {
         setRes(640480);
+        fsPlay.hide();
     }
     // Disable suspend if enter these screens and enable if leave
     enableDisableSuspend(ScreenEncodingInProgress, scr, screen);
@@ -804,10 +807,11 @@ int QMplayer::scanDir(QString const &path, int level, int maxLevel, int min,
             if (fileName.contains(".qmplayer.")) {
                 if (delTmpFiles < 0) {
                     delTmpFiles =
-                        (QMessageBox::
-                         question(this, "qmplayer",
-                                  tr("Delete qmplayer temporary files?"),
-                                  QMessageBox::Yes | QMessageBox::No) ==
+                        (QMessageBox::question(this, "qmplayer",
+                                               tr
+                                               ("Delete qmplayer temporary files?"),
+                                               QMessageBox::
+                                               Yes | QMessageBox::No) ==
                          QMessageBox::Yes);
                 }
                 if (delTmpFiles) {
@@ -1265,9 +1269,9 @@ void QMplayer::play(QStringList & args)
         args.insert(0, "-ao");
     }
 
-    showScreen(QMplayer::ScreenFullscreen);
-
 PLAY:
+
+    showScreen(QMplayer::ScreenFullscreen);
 
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this,
@@ -1275,27 +1279,30 @@ PLAY:
     process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start("mplayer", args, QIODevice::ReadWrite);
 
-    if (!process->waitForStarted(5000)) {
-        delete(process);
-        process = NULL;
-
-        if (QMessageBox::question(this, tr("qmplayer"),
-                                  tr
-                                  ("Program MPlayer must be downloaded. Please make sure you have internet connection and press yes to confirm download"),
-                                  QMessageBox::Yes,
-                                  QMessageBox::No) == QMessageBox::Yes) {
-            showScreen(QMplayer::ScreenDownload);
-            if (installMplayer()) {
-                QMessageBox::information(this, tr("qmplayer"),
-                                         tr("MPlayer installed sucessfully"));
-                goto PLAY;
-            }
-            QMessageBox::warning(this, tr("qmplayer"),
-                                 tr("Failed to install MPlayer"));
-            showScreen(QMplayer::ScreenInit);
-        }
+    if (process->waitForStarted(5000)) {
+        setpriority(PRIO_PROCESS, process->pid(), -5);
         return;
     }
+
+    delete(process);
+    process = NULL;
+    showScreen(QMplayer::ScreenInit);
+
+    if (QMessageBox::
+        question(this, tr("qmplayer"),
+                 tr
+                 ("Program MPlayer must be downloaded. Please make sure you have internet connection and press yes to confirm download"),
+                 QMessageBox::Yes, QMessageBox::No) == QMessageBox::No) {
+        return;
+    }
+    showScreen(QMplayer::ScreenDownload);
+    if (installMplayer()) {
+        QMessageBox::information(this, tr("qmplayer"),
+                                 tr("MPlayer installed sucessfully"));
+        goto PLAY;
+    }
+    QMessageBox::warning(this, tr("qmplayer"), tr("Failed to install MPlayer"));
+    showScreen(QMplayer::ScreenInit);
 }
 
 void QMplayer::encode(QString filename)
@@ -1365,11 +1372,11 @@ void QMplayer::setRes(int xy)
 bool QMplayer::installMplayer()
 {
 #ifdef QT_QWS_NEO
-    if (QMessageBox::question(this, tr("qmplayer"),
-                              tr
-                              ("Install glamo mplayer (YES) or distribution mplayer (NO)?"),
-                              QMessageBox::Yes,
-                              QMessageBox::No) == QMessageBox::Yes) {
+    if (QMessageBox::
+        question(this, tr("qmplayer"),
+                 tr
+                 ("Install glamo mplayer (YES) or distribution mplayer (NO)?"),
+                 QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes) {
         QDir("/home/root").mkdir(".mplayer");
         QFile f("/home/root/.mplayer/config");
         f.open(QFile::WriteOnly);
@@ -1429,11 +1436,10 @@ bool QMplayer::installYoutubeDl()
 void QMplayer::removeMplayer()
 {
 #ifdef QTOPIA
-    if (QMessageBox::question(this, tr("qmplayer"),
-                              tr
-                              ("You are about to remove mplayer. Are you sure?"),
-                              QMessageBox::Yes,
-                              QMessageBox::No) == QMessageBox::Yes) {
+    if (QMessageBox::
+        question(this, tr("qmplayer"),
+                 tr("You are about to remove mplayer. Are you sure?"),
+                 QMessageBox::Yes, QMessageBox::No) == QMessageBox::Yes) {
         bool res = runCmd("rm /usr/bin/mplayer", 10)
             && runCmd("rm /home/root/.mplayer/config", 10);
         runCmd("apt-get remove mplayer");
