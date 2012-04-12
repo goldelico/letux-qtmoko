@@ -253,7 +253,7 @@ Step 8 - install QtMoko
 
 * I use qemu armel host for building qtmoko package. It should be as simple as
 
-git checkout v39_gta04
+git checkout v44_gta04
 dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
@@ -428,7 +428,7 @@ rootfs  /                auto    defaults,no_chk_data_crc,bulk_read 0 1
 
 * Create config for ubinize and create the resulting image:
 
-cd /root
+cd /media
 
 cat > ubinize.cfg <<__END__
 [ubifs]
