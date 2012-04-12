@@ -54,8 +54,6 @@ KeyboardInputMethod::KeyboardInputMethod(QObject *parent)
 KeyboardInputMethod::~KeyboardInputMethod()
 {
     delete input;
-    while(!keyboardActionDescriptionList.isEmpty())
-        delete keyboardActionDescriptionList.takeLast();
 }
 
 QWidget *KeyboardInputMethod::inputWidget( QWidget *parent )
