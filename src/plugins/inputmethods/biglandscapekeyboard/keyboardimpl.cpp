@@ -81,13 +81,13 @@ QIcon KeyboardInputMethod::icon() const
 
 QString KeyboardInputMethod::name() const
 {
-    return qApp->translate( "InputMethods", "Keyboard" );
+    return qApp->translate( "InputMethods", "LandscapeKeyboard" );
 //    return qApp->translate( "InputMethods", "Opti" );
 }
 
 QString KeyboardInputMethod::identifier() const
 {
-    return "Keyboard";
+    return "LandscapeKeyboard";
 }
 
 QString KeyboardInputMethod::version() const
