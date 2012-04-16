@@ -17,10 +17,7 @@ fi
 rfkill block bluetooth &
 
 # Power on modem on GTA04A4 and higher
-if [ -f /sys/class/gpio/gpio186/value ];
-then
-   echo 1 >/sys/class/gpio/gpio186/value
-fi
+modem-poweron.sh
 
 rm -f /dev/input/mice
 echo '1' > /proc/sys/kernel/printk
