@@ -56,7 +56,8 @@ static QString convertToHidden(const QString & essid)
 
 WirelessScan::WirelessScan(const QString & ifaceName, bool whileDown,
                            QObject * parent)
-:  QObject(parent), iface(ifaceName), sockfd(-1), scanWhileDown(whileDown),
+:  
+QObject(parent), iface(ifaceName), sockfd(-1), scanWhileDown(whileDown),
 ifaceDown(false)
 {
 }
@@ -336,8 +337,8 @@ bool WirelessScan::startScanning()
     if (showExtendedLog && qtopiaLogEnabled("Network")) {
         qLog(Network) << "driver on interface" << iface << "supports WE version"
             << range.we_version_source;
-        qLog(Network) << "compiled with WE version" << range.
-            we_version_compiled;
+        qLog(Network) << "compiled with WE version" <<
+            range.we_version_compiled;
         showExtendedLog = false;
     }
 
@@ -777,17 +778,17 @@ void WirelessScan::readData(unsigned char *data, int length, int weVersion,
                     if (!(qual->updated & IW_QUAL_LEVEL_INVALID)) {
                         int range_max = qMax((int)range->max_qual.level, 255);
                         net.setData(WirelessNetwork::Signal,
-                                    QString().
-                                    setNum(((double)qual->level -
-                                            0x100) / range_max + 1, 'f', 2));
+                                    QString().setNum(((double)qual->level -
+                                                      0x100) / range_max + 1,
+                                                     'f', 2));
                         //level.data = QString::number(qual->level - 0x100) + QChar(' ') + tr("dBm", "unit for signal strength");
                     }
                     if (!(qual->updated & IW_QUAL_NOISE_INVALID)) {
                         int range_max = qMax((int)range->max_qual.noise, 255);
                         net.setData(WirelessNetwork::Noise,
-                                    QString().
-                                    setNum(((double)qual->noise -
-                                            0x100) / range_max + 1, 'f', 2));
+                                    QString().setNum(((double)qual->noise -
+                                                      0x100) / range_max + 1,
+                                                     'f', 2));
                         //noise.data = QString::number(qual->noise - 0x100) + QChar(' ') + tr("dBm", "unit for signal strength");
                     }
                 }
@@ -863,10 +864,10 @@ void WirelessScan::readData(unsigned char *data, int length, int weVersion,
 
     if (qLogEnabled(Network)) {
         foreach(WirelessNetwork n, entries) {
-            qLog(Network) << "#### Found" << n.
-                data(WirelessNetwork::ESSID) << n.
-                data(WirelessNetwork::AP) << n.data(WirelessNetwork::Security).
-                toString();
+            qLog(Network) << "#### Found" << n.data(WirelessNetwork::
+                                                    ESSID) <<
+                n.data(WirelessNetwork::AP) << n.
+                data(WirelessNetwork::Security).toString();
             //net.dump();
         }
     }
@@ -987,8 +988,8 @@ void WSearchPage::initUI()
     currentNetwork = new QLabel(this);
     currentNetwork->setWordWrap(true);
     currentNetwork->setTextFormat(Qt::RichText);
-    currentNetwork->
-        setText(tr("Connection state:\n<center><b>not connected</b></center>"));
+    currentNetwork->setText(tr
+                            ("Connection state:\n<center><b>not connected</b></center>"));
     vbox->addWidget(currentNetwork);
 
     QFrame *seperator = new QFrame(this);
@@ -1117,8 +1118,8 @@ void WSearchPage::loadKnownNetworks()
         QString key3 = cfg.value("WirelessKey_3").toString();
         QString key4 = cfg.value("WirelessKey_4").toString();
         item->setData(EncryptKeyRole,
-                      QString("%1@%2@%3@%4").arg(key1).arg(key2).arg(key3).
-                      arg(key4));
+                      QString("%1@%2@%3@%4").arg(key1).arg(key2).
+                      arg(key3).arg(key4));
         item->setData(SelectedEncryptKeyRole,
                       cfg.value("SelectedKey", "PP").toString());
         item->setData(NickNameRole, cfg.value("Nickname").toString());
@@ -1177,12 +1178,11 @@ void WSearchPage::stateChanged(QtopiaNetworkInterface::Status newState,
                 essid.replace(QString("<"), QString("&lt;"));
                 essid.replace(QString(">"), QString("&gt;"));
 
-                currentNetwork->
-                    setText(QString
-                            (tr
-                             ("Connection state:\n<center>Connected to <b>%1</b></center>",
-                              "1=network name"))
-                            .arg(essid));
+                currentNetwork->setText(QString
+                                        (tr
+                                         ("Connection state:\n<center>Connected to <b>%1</b></center>",
+                                          "1=network name"))
+                                        .arg(essid));
                 updateActions(netList->currentItem(), 0);   //update all actions
             }
         }
@@ -1196,9 +1196,8 @@ void WSearchPage::stateChanged(QtopiaNetworkInterface::Status newState,
             break;
         }
     default:
-        currentNetwork->
-            setText(tr
-                    ("Connection state:\n<center><b>not connected</b></center>"));
+        currentNetwork->setText(tr
+                                ("Connection state:\n<center><b>not connected</b></center>"));
         return;
     }
 }
@@ -1272,8 +1271,7 @@ void WSearchPage::saveKnownNetworks()
             if (v.isValid())
                 keys =
                     item->data(EncryptKeyRole).toString().split(QChar('@'),
-                                                                QString::
-                                                                KeepEmptyParts);
+                                                                QString::KeepEmptyParts);
             else
                 keys << "" << "" << "" << "";   //add 4 empty keys
             for (int j = keys.count() - 1; j >= 0; j--)
@@ -1418,8 +1416,8 @@ void WSearchPage::connectToNetwork()
         {
             if (item->data(MacAddressRole).toString() ==
                 scanEngine->currentAccessPoint()) {
-                qLog(Network) << "Already connected to" << item->
-                    data(ESSIDRole);
+                qLog(Network) << "Already connected to" <<
+                    item->data(ESSIDRole);
                 return;
             }
             QString currentESSID = scanEngine->currentESSID();
@@ -1440,12 +1438,11 @@ void WSearchPage::connectToNetwork()
     }
 
     qLog(Network) << "Connecting to" << newESSID;
-    currentNetwork->
-        setText(QString
-                (tr
-                 ("Connection state:\n<center>Connecting to <b>%1</b></center>",
-                  "1=network name"))
-                .arg(item->data(ESSIDRole).toString()));
+    currentNetwork->setText(QString
+                            (tr
+                             ("Connection state:\n<center>Connecting to <b>%1</b></center>",
+                              "1=network name"))
+                            .arg(item->data(ESSIDRole).toString()));
 
     QtopiaNetwork::startInterface(config, QVariant(newESSID));
 }
@@ -1516,11 +1513,10 @@ void WSearchPage::updateKnownNetworkList(const WirelessNetwork & record,
     if (tmp.isValid())
         item->setIcon(QIcon(qualityToImage(tmp.toString(), securedNet)));
     else
-        item->
-            setIcon(QIcon
-                    (qualityToImage
-                     (record.data(WirelessNetwork::Signal).toString(),
-                      securedNet)));
+        item->setIcon(QIcon
+                      (qualityToImage
+                       (record.data(WirelessNetwork::Signal).toString(),
+                        securedNet)));
 
     bool ok;
     int rate = record.data(WirelessNetwork::BitRate).toInt(&ok);
@@ -1574,8 +1570,7 @@ void WSearchPage::showAllNetworks()
             net.data(WirelessNetwork::ESSID).toString();
 
         //delete "no known network item"
-        if (netList->count() == 1 &&
-            netList->item(0)
+        if (netList->count() == 1 && netList->item(0)
             && netList->item(0)->data(MacAddressRole).toString() == "INVALID") {
             netList->clear();
         }
@@ -1630,24 +1625,24 @@ void WSearchPage::updateConnectivity()
     QStringList foundEssids;
 
     // Update netList so that available networks are first
-    for(int i = 0; i < results.count(); i++) {
+    for (int i = 0; i < results.count(); i++) {
         WirelessNetwork net = results.at(i);
         QString mac = net.data(WirelessNetwork::AP).toString();
         QString essid = net.data(WirelessNetwork::ESSID).toString();
         foundMacs.append(mac);
         foundEssids.append(essid);
-        
+
         int j;
         QListWidgetItem *item = NULL;
-        for(j = 0 ; j < netList->count(); j++) {
+        for (j = 0; j < netList->count(); j++) {
             item = netList->item(j);
             const QString itemEssid = item->data(ESSIDRole).toString();
-            if(essid == itemEssid)
+            if (essid == itemEssid)
                 break;
             item = NULL;
         }
-        
-        if(item == NULL) {
+
+        if (item == NULL) {
             item = new QListWidgetItem();
             item->setData(ESSIDRole, essid);
 
@@ -1658,14 +1653,13 @@ void WSearchPage::updateConnectivity()
 
             tmp = net.data(WirelessNetwork::Quality);
             if (tmp.isValid())
-                item->
-                    setIcon(QIcon(qualityToImage(tmp.toString(), securedNet)));
+                item->setIcon(QIcon
+                              (qualityToImage(tmp.toString(), securedNet)));
             else
-                item->
-                    setIcon(QIcon
-                            (qualityToImage
-                             (net.data(WirelessNetwork::Signal).toString(),
-                              securedNet)));
+                item->setIcon(QIcon
+                              (qualityToImage
+                               (net.data(WirelessNetwork::Signal).toString(),
+                                securedNet)));
 
             bool ok;
             int rate = net.data(WirelessNetwork::BitRate).toInt(&ok);
@@ -1677,8 +1671,7 @@ void WSearchPage::updateConnectivity()
             }
             item->setText(essid);
             item->setData(MacAddressRole, net.data(WirelessNetwork::AP));
-        }
-        else {
+        } else {
             netList->takeItem(j);   // move network in range to the beginning
         }
         netList->insertItem(0, item);
@@ -1925,11 +1918,10 @@ void ChooseNetworkUI::updateView()
         if (tmp.isValid())
             item->setIcon(QIcon(qualityToImage(tmp.toString(), securedNet)));
         else
-            item->
-                setIcon(QIcon
-                        (qualityToImage
-                         (net.data(WirelessNetwork::Signal).toString(),
-                          securedNet)));
+            item->setIcon(QIcon
+                          (qualityToImage
+                           (net.data(WirelessNetwork::Signal).toString(),
+                            securedNet)));
 
         bool ok;
         int rate = net.data(WirelessNetwork::BitRate).toInt(&ok);
