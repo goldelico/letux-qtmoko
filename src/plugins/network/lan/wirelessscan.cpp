@@ -950,7 +950,7 @@ static const int WPAEnterpriseRole = Qt::UserRole + 22;
 WSearchPage::WSearchPage(const QString & c, QWidget * parent, Qt::WFlags flags)
 :QWidget(parent, flags), config(c), scanEngine(0),
 state(QtopiaNetworkInterface::Unknown), currentSelection(0), isRestart(false),
-listSum(0), changingPriority(false)
+changingPriority(false)
 {
     // itemDescription is used to generate translations
     Q_UNUSED(itemDescription);
@@ -1628,55 +1628,30 @@ void WSearchPage::updateConnectivity()
     QList < WirelessNetwork > results = scanEngine->results();
     QStringList foundMacs;
     QStringList foundEssids;
-    quint16 newSum = 0;
-    foreach(WirelessNetwork net, results) {
+
+    // Update netList so that available networks are first
+    for(int i = 0; i < results.count(); i++) {
+        WirelessNetwork net = results.at(i);
         QString mac = net.data(WirelessNetwork::AP).toString();
         QString essid = net.data(WirelessNetwork::ESSID).toString();
         foundMacs.append(mac);
         foundEssids.append(essid);
-        newSum ^=
-            qChecksum((const char *)(essid.constData()), essid.length() * 2);
-        if (newSum == 0) {
-            newSum = 1;         // in 1/65535 cases we force list update
+        
+        int j;
+        QListWidgetItem *item = NULL;
+        for(j = 0 ; j < netList->count(); j++) {
+            item = netList->item(j);
+            const QString itemEssid = item->data(ESSIDRole).toString();
+            if(essid == itemEssid)
+                break;
+            item = NULL;
         }
-    }
-
-    // Update list only when something changed
-    if (newSum != listSum) {
-        listSum = newSum;
-
-        netList->clear();
-
-        const bool showHidden = filterHidden->isChecked();
-
-        QListWidgetItem *item;
-        if (!results.count()) {
-            item = new QListWidgetItem(netList);
-            netList->setSelectionMode(QAbstractItemView::NoSelection);
-            item->setText(tr("<No WLAN found>"));
-            item->setTextAlignment(Qt::AlignCenter);
-        }
-
-        QVariant tmp;
-        QString essid;
-        QHash < QString, int >essidExist;
-        foreach(WirelessNetwork net, results) {
-            essid = net.data(WirelessNetwork::ESSID).toString();
-
-            if (!showHidden && essid == "<hidden>")
-                continue;
-
-            if (essid != "<hidden>") {
-                if (essidExist[essid] < 1)
-                    essidExist[essid]++;
-                else
-                    continue;   //don't show several APs with same essid
-            }
-
-            item = new QListWidgetItem(netList);
+        
+        if(item == NULL) {
+            item = new QListWidgetItem();
             item->setData(ESSIDRole, essid);
 
-            tmp = net.data(WirelessNetwork::Encoding).toString();
+            QVariant tmp = net.data(WirelessNetwork::Encoding).toString();
             bool securedNet = false;
             if (tmp.toString() != WirelessScan::tr("off"))
                 securedNet = true;
@@ -1703,7 +1678,12 @@ void WSearchPage::updateConnectivity()
             item->setText(essid);
             item->setData(MacAddressRole, net.data(WirelessNetwork::AP));
         }
+        else {
+            netList->takeItem(j);   // move network in range to the beginning
+        }
+        netList->insertItem(0, item);
     }
+
     // network is a match if
     // a) essid is not hidden and mac and essid match or
     // b) essid is not hidden and essid matches or
