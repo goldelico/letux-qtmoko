@@ -101,7 +101,7 @@ public:
     qreal courseAccuracy() const;
     void setCourseAccuracy(qreal accuracy);
 
-    static QWhereaboutsUpdate fromNmea(const QByteArray &nmea, PositionFixStatus *fixStatus = 0);
+    static QWhereaboutsUpdate fromNmea(const QByteArray &nmea, PositionFixStatus *fixStatus = 0, int *numSatellites = 0);
 
 private:
     QWhereaboutsUpdatePrivate *d;
