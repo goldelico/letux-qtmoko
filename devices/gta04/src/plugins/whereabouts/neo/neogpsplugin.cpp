@@ -21,9 +21,9 @@
 
 #include <QFile>
 #include <QSettings>
-#include <QSocketNotifier>
 #include <QDebug>
 
+#include <QTimer>
 #include <QWhereabouts>
 #include <QNmeaWhereabouts>
 #include <QMessageBox>
@@ -35,6 +35,7 @@
 */
 NeoGpsPlugin::NeoGpsPlugin(QObject *parent)
     : QWhereaboutsPlugin(parent)
+    , hasData(-1)
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
     system("/opt/qtmoko/bin/gps-poweron.sh");
@@ -42,7 +43,8 @@ NeoGpsPlugin::NeoGpsPlugin(QObject *parent)
 
 NeoGpsPlugin::~NeoGpsPlugin()
 {
-    system("/opt/qtmoko/bin/gps-poweroff.sh");
+    if(hasData)
+        system("/opt/qtmoko/bin/gps-poweroff.sh");
 }
 
 QWhereabouts *NeoGpsPlugin::create(const QString &source)
@@ -72,11 +74,34 @@ QWhereabouts *NeoGpsPlugin::create(const QString &source)
 
     // QFile does not emit readyRead(), so we must call
     // newDataAvailable() when necessary
-    QSocketNotifier *notifier = new QSocketNotifier(sourceFile->handle(), QSocketNotifier::Read, this);
+    notifier = new QSocketNotifier(sourceFile->handle(), QSocketNotifier::Read, this);
     connect(notifier, SIGNAL(activated(int)),
               whereabouts, SLOT(newDataAvailable()));
 
+    // Check after 3s if we had any data on the port
+    connect(notifier, SIGNAL(activated(int)),
+              this, SLOT(newDataAvailable()));
+
+    QTimer::singleShot(3000, this, SLOT(hasDataTimeout()));
+              
     return whereabouts;
+}
+
+void NeoGpsPlugin::newDataAvailable()
+{
+    hasData = 1;    
+    disconnect(notifier, SIGNAL(activated(int)),
+               this, SLOT(newDataAvailable()));
+}
+
+void NeoGpsPlugin::hasDataTimeout()
+{
+    if(hasData == 1)
+        return;
+
+    hasData = 0;
+    system("/opt/qtmoko/bin/gps-poweron.sh");
+    QTimer::singleShot(3000, this, SLOT(hasDataTimeout()));
 }
 
 QTOPIA_EXPORT_PLUGIN(NeoGpsPlugin)

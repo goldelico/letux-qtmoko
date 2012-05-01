@@ -20,6 +20,7 @@
 #ifndef NEOGPSPLUGIN_H
 #define NEOGPSPLUGIN_H
 
+#include <QSocketNotifier>
 #include <QWhereaboutsPlugin>
 
 class QWhereabouts;
@@ -32,6 +33,14 @@ public:
     ~NeoGpsPlugin();
 
     virtual QWhereabouts *create(const QString &source);
+
+private:
+    int hasData;                // 1, we have data from serial port, 0 serial does not produce any data, -1 means that 3s timeout not finished yet
+    QSocketNotifier *notifier;
+
+private slots:
+    void newDataAvailable();
+    void hasDataTimeout();
 };
 
 #endif
