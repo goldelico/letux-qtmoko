@@ -16,6 +16,9 @@ class MainWindow : public QMainWindow
    MainWindow(QWidget *parent=0, Qt::WindowFlags f=0);
    ~MainWindow();
 
+  public slots:
+    void setDocument(const QString &);
+   
   private slots:
     void finished(QObject *session);
     void addSession(const char *name);

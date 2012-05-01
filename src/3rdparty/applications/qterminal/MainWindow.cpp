@@ -76,6 +76,11 @@ MainWindow::~MainWindow()
 
 }
 
+void MainWindow::setDocument(const QString & filename)
+{
+    qDebug() << "qterminal setDocument() " << filename;
+}
+
 void MainWindow::addSession(const char *name)
 {
 
