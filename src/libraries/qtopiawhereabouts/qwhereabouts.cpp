@@ -21,15 +21,25 @@
 
 #include <QSettings>
 #include <QStringList>
+#include <qvaluespace.h>
 
 class QWhereaboutsPrivate
 {
 public:
+    QWhereaboutsPrivate(QWhereabouts *parent);
     QWhereabouts::UpdateMethods methods;
     QWhereabouts::State state;
     int interval;
     QWhereaboutsUpdate lastUpdate;
+    QValueSpaceObject gpsVso;
+    int numSatellites;
 };
+
+QWhereaboutsPrivate::QWhereaboutsPrivate(QWhereabouts *parent)
+    : gpsVso("/Gps", parent)
+    , numSatellites(-1)
+{
+}
 
 
 /*!
@@ -97,7 +107,7 @@ public:
 */
 QWhereabouts::QWhereabouts(UpdateMethods updateMethods, QObject *parent)
     : QObject(parent),
-      d(new QWhereaboutsPrivate)
+      d(new QWhereaboutsPrivate(this))
 {
     d->methods = updateMethods;
     d->state = QWhereabouts::NotAvailable;
@@ -134,12 +144,32 @@ void QWhereabouts::startUpdates(int msec)
 
 /*!
     Sets the current state to \a state and emits stateChanged() if
-    necessary.
+    necessary. Parameter \a numSatellites is number of satellites in view or
+    -1 if gps is off.
 */
-void QWhereabouts::setState(State state)
+void QWhereabouts::setState(State state, int numSatellites)
 {
+    // Fix numSatellites to match the state
+    if(state == QWhereabouts::Available ||
+        state == QWhereabouts::PositionFixAcquired) {
+        if(numSatellites < 0) {
+            if(d->numSatellites >= 0)
+                numSatellites = d->numSatellites;   // use last know number
+            else
+                numSatellites = 0;
+        }
+    } else if(numSatellites >= 0) {
+        numSatellites = -1;     // no satellites in in NotAvailable and Initializing state
+    }
+
+    if(d->numSatellites != numSatellites) {
+        d->gpsVso.setAttribute("NumSatellites", numSatellites);
+        d->numSatellites = numSatellites;
+    }
+
     if (d->state != state) {
         d->state = state;
+        d->gpsVso.setAttribute("State", state);
         emit stateChanged(state);
     }
 }
@@ -150,6 +180,14 @@ void QWhereabouts::setState(State state)
 QWhereabouts::State QWhereabouts::state() const
 {
     return d->state;
+}
+
+/*!
+    Returns number of satellites in view or -1 if gps is off.
+*/
+int QWhereabouts::numSatellites() const
+{
+    return d->numSatellites;
 }
 
 /*!

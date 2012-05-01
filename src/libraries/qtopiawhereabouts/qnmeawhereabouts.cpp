@@ -35,12 +35,13 @@ void QNmeaRealTimeReader::sourceReadyRead()
 {
     QWhereaboutsUpdate update;
     QWhereaboutsUpdate::PositionFixStatus fixStatus = QWhereaboutsUpdate::FixStatusUnknown;
+    int numSatellites;
 
     char buf[1024];
     m_proxy->m_source->readLine(buf, sizeof(buf));
-    update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus);
+    update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus, &numSatellites);
     if (!update.isNull())
-        m_proxy->notifyNewUpdate(&update, fixStatus);
+        m_proxy->notifyNewUpdate(&update, fixStatus, numSatellites);
 }
 
 
@@ -87,15 +88,17 @@ bool QNmeaSimulatedReader::setFirstDateTime()
     // find the first update with date and time both valid
     QWhereaboutsUpdate update;
     QWhereaboutsUpdate::PositionFixStatus fixStatus;
+    int numSatellites;
     while (m_proxy->m_source->bytesAvailable() > 0) {
         char buf[1024];
         if (m_proxy->m_source->readLine(buf, sizeof(buf)) <= 0)
             continue;
-        update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus);
+        update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus, &numSatellites);
         if (update.updateDateTime().isValid()) {
             QWhereaboutsUpdateInfo info;
             info.update = update;
             info.status = fixStatus;
+            info.numSatellites = numSatellites;
             m_pendingUpdatesInfo.enqueue(info);
             return true;
         }
@@ -109,7 +112,7 @@ void QNmeaSimulatedReader::simulatePendingUpdate()
         // will be dequeued in processNextSentence()
         QWhereaboutsUpdateInfo &pendingUpdate = m_pendingUpdatesInfo.head();
         if (pendingUpdate.update.coordinate().type() != QWhereaboutsCoordinate::InvalidCoordinate)
-            m_proxy->notifyNewUpdate(&pendingUpdate.update, pendingUpdate.status);
+            m_proxy->notifyNewUpdate(&pendingUpdate.update, pendingUpdate.status, pendingUpdate.numSatellites);
     }
 
     processNextSentence();
@@ -128,13 +131,14 @@ void QNmeaSimulatedReader::processNextSentence()
     // we can calculate when the update should be emitted)
     QWhereaboutsUpdate update;
     QWhereaboutsUpdate::PositionFixStatus fixStatus;
+    int numSatellites;
     while (!update.updateTime().isValid()) {
         if (m_proxy->m_source->bytesAvailable() <= 0)
             return;
         char buf[1024];
         if (m_proxy->m_source->readLine(buf, sizeof(buf)) <= 0)
             continue;
-        update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus);
+        update = QWhereaboutsUpdate::fromNmea(QByteArray(buf), &fixStatus, &numSatellites);
     }
 
     // see when it should be emitted (i.e. time from last update to this one)
@@ -147,6 +151,7 @@ void QNmeaSimulatedReader::processNextSentence()
     QWhereaboutsUpdateInfo info;
     info.update = update;
     info.status = fixStatus;
+    info.numSatellites = numSatellites;
     m_pendingUpdatesInfo.enqueue(info);
     m_currTimerId = startTimer(timeToNextUpdate);
 }
@@ -293,7 +298,7 @@ void QNmeaWhereaboutsPrivate::requestUpdate()
         prepareSourceDevice();
 }
 
-void QNmeaWhereaboutsPrivate::notifyNewUpdate(QWhereaboutsUpdate *update, QWhereaboutsUpdate::PositionFixStatus fixStatus)
+void QNmeaWhereaboutsPrivate::notifyNewUpdate(QWhereaboutsUpdate *update, QWhereaboutsUpdate::PositionFixStatus fixStatus, int numSatellites)
 {
     QDate date = update->updateDate();
     if (date.isValid()) {
@@ -307,10 +312,10 @@ void QNmeaWhereaboutsPrivate::notifyNewUpdate(QWhereaboutsUpdate *update, QWhere
 
     switch (fixStatus) {
         case QWhereaboutsUpdate::FixNotAcquired:
-            m_whereabouts->setState(QWhereabouts::Available);
+            m_whereabouts->setState(QWhereabouts::Available, numSatellites);
             break;
         case QWhereaboutsUpdate::FixAcquired:
-            m_whereabouts->setState(QWhereabouts::PositionFixAcquired);
+            m_whereabouts->setState(QWhereabouts::PositionFixAcquired, numSatellites);
             break;
         default:
             break;

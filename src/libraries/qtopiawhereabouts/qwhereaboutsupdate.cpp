@@ -639,7 +639,8 @@ static bool qwhereaboutsupdate_isChecksumValid(const QByteArray &sentence)
 /*!
     Returns the parsed form of the NMEA data in \a nmea and sets \a fixStatus
     and \a numSatellites according to the parsed data. Returns a null update if
-    \a nmea could not be parsed, or if it has an invalid checksum.
+    \a nmea could not be parsed, or if it has an invalid checksum. The value of
+    \a numSatellites is -1 if NMEA data didn't contain satellite info.
 
     This function is able to parse \c GGA, \c GLL, \c RMC, \c VTG and \c ZDA
     sentences.
@@ -659,6 +660,10 @@ QWhereaboutsUpdate QWhereaboutsUpdate::fromNmea(const QByteArray &nmea, Position
 {
     int posn = 0;
     QWhereaboutsUpdate update;
+    
+    if(numSatellites)
+        *numSatellites = -1;
+    
     while (posn < nmea.length()) {
         // Extract the next line from the NMEA data.
         int end = nmea.indexOf('\n', posn);

@@ -52,6 +52,7 @@ public:
 
     UpdateMethods updateMethods() const;
     State state() const;
+    int numSatellites() const;
 
     void setUpdateInterval(int interval);
     int updateInterval() const;
@@ -66,7 +67,7 @@ public slots:
     virtual void requestUpdate() = 0;
 
 protected:
-    void setState(State state);
+    void setState(State state, int numSatellites = -1);
     void emitUpdated(const QWhereaboutsUpdate &update);
 
 signals:
