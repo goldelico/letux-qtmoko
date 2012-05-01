@@ -37,7 +37,11 @@
         <status name="wifi" imageon="wifi-enabled.svg" on="expr:@/Network/Interfaces/Wifi/State == 2" />
       </exclusive>
       <exclusive rect="30.65%,0,9%x0">
-        <status name="gps" imageon="wifi-enabled.svg" on="expr:@/Gps/NumSatellites > -1" />
+        <text outline="#000000" color="#FFFFFF" bold="yes" align="hcenter,vcenter" size="5" >expr:@/Gps/NumSatellites</text>
+      </exclusive>
+      <exclusive rect="20.65%,0,9%x0">
+        <status name="gps" imageon="gps-on.svg" on="expr:@/Gps/State == 2" active="expr:@/Gps/State == 2"/>
+        <status name="gps" imageon="gps-fix.svg" on="expr:@/Gps/State == 3" active="expr:@/Gps/State == 3"/>
       </exclusive>
       <exclusive rect="63%,0,9%x0">
         <status name="messages" imageon="messages.svg" on="expr:@/Communications/Messages/NewMessages > 0" active="expr:@/Communications/Messages/NewMessages > 0"/>
