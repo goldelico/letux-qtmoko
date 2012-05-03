@@ -68,7 +68,29 @@ MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags f)
   }
 #endif
   connect(tabs,SIGNAL(currentChanged(int)), this, SLOT(currentChanged(int)));
-  newSession();
+  
+   if(QApplication::argc() == 1)
+       addSession("Shell", QString(), QStringList());
+   else {
+       QString cmd = "/bin/bash";
+       QStringList args;
+       
+       // Parse arguments and make cmd and args for launched process
+       // These 2 cases should be handled:
+       //
+       // qterminal -c ls /
+       // qterminal /path/to/script.sh
+       //
+       for(int i = 1; i < QApplication::argc(); i++) {
+           QString arg = QApplication::argv()[i];
+           if(i == 1 && arg != "-c") {
+                cmd = arg;                  // e.g. qterminal /path/to/script.sh
+                continue;
+           }
+           args.append(QApplication::argv()[i]);
+       }       
+       addSession("Shell", cmd, args);
+   }
 }
 
 MainWindow::~MainWindow()
@@ -76,17 +98,17 @@ MainWindow::~MainWindow()
 
 }
 
-void MainWindow::setDocument(const QString & filename)
-{
-    qDebug() << "qterminal setDocument() " << filename;
-}
+//void MainWindow::setDocument(const QString & filename)
+//{
+//    qDebug() << "qterminal setDocument() " << filename;
+//}
 
-void MainWindow::addSession(const char *name)
+void MainWindow::addSession(const char *name, QString cmd, QStringList args)
 {
 
   TerminalDisplay *display = new TerminalDisplay();
   Profile *profile = new Profile(name);
-  Session *session = new Session(*profile);
+  Session *session = new Session(*profile, cmd, args);
   const ColorScheme* colorScheme = ColorSchemeManager::instance()->findColorScheme(profile->colorScheme());
   //TODO Temporary settings used here
   display->setBellMode(0);
@@ -171,7 +193,7 @@ void MainWindow::newSession()
 {
   //QString title = tr("Shell n.")+QString::number(_sessionCount+1);
   QString title = tr("Shell");
-  addSession(title.toLatin1().constData());
+  addSession(title.toLatin1().constData(), QString(), QStringList());
 }
 
 void MainWindow::closeSession()

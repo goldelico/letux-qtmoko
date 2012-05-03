@@ -70,7 +70,7 @@ public:
    * falls back to using the program specified in the SHELL environment
    * variable.
    */
-  Session(Profile prof);
+  Session(Profile prof, QString cmd, QStringList args);
   ~Session();
 
   /**
