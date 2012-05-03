@@ -34,7 +34,7 @@
         <status name="bluetooth" imageon="bluetooth-visible.svg" on="expr:@/Communications/Bluetooth/LocalDevice/Visible" active="expr:@/Communications/Bluetooth/LocalDevice/Visible"/>
       </exclusive>
       <exclusive rect="40.65%,0,9%x0">
-        <status name="wifi" imageon="wifi-enabled.svg" on="expr:@/Network/Interfaces/Wifi/State == 2" />
+        <status name="wifi" imageon="wifi-enabled.svg" on="expr:@/Network/Interfaces/Wifi/State == 2" active="expr:@/Network/Interfaces/Wifi/State == 2" onclick="message=QPE/Application/qterminal,setDocument(QString),/opt/qtmoko/bin/ping.sh" />
       </exclusive>
       <exclusive rect="30.65%,0,9%x0">
         <text outline="#000000" color="#FFFFFF" bold="yes" align="hcenter,vcenter" size="5" >expr:@/Gps/NumSatellites</text>
