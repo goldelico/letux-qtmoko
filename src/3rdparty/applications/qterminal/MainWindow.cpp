@@ -98,12 +98,12 @@ MainWindow::~MainWindow()
 
 }
 
-//void MainWindow::setDocument(const QString & filename)
-//{
-//    qDebug() << "qterminal setDocument() " << filename;
-//}
+void MainWindow::setDocument(const QString & filename)
+{
+    addSession(filename.toLatin1().constData(), filename, QStringList());
+}
 
-void MainWindow::addSession(const char *name, QString cmd, QStringList args)
+void MainWindow::addSession(const char *name, const QString & cmd, QStringList args)
 {
 
   TerminalDisplay *display = new TerminalDisplay();
