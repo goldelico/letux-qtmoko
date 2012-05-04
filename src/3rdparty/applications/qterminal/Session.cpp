@@ -62,7 +62,7 @@
 
 int Session::lastSessionId = 0;
 
-Session::Session(Profile prof) :
+Session::Session(Profile prof, QString cmd, QStringList args) :
     _shellProcess(0)
    , _emulation(0)
    , _monitorActivity(false)
@@ -84,7 +84,7 @@ Session::Session(Profile prof) :
     _sessionId = ++lastSessionId;
 
     //create teletype for I/O with shell process
-    _shellProcess = new MyPty(prof);
+    _shellProcess = new MyPty(prof, cmd, args);
 
     //create emulation backend
     _emulation = new Vt102Emulation();

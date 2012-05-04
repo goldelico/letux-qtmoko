@@ -21,7 +21,7 @@ class MainWindow : public QMainWindow
    
   private slots:
     void finished(QObject *session);
-    void addSession(const char *name);
+    void addSession(const char *name, const QString & cmd, QStringList args);
     void currentChanged(int index);
     void newSession();
     void closeSession();

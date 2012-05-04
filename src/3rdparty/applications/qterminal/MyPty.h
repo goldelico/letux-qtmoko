@@ -39,7 +39,7 @@ class MyPty : public IOLayer
     Q_OBJECT
 public:
 
-    MyPty(const Profile&);
+    MyPty(const Profile&, QString cmd, QStringList args);
     ~MyPty();
 
 
@@ -60,7 +60,7 @@ public:
       instance before starting the execution of the client.
     */
     int start();
-    int run(const char* pgm, QStringList & args , const char* term, int addutmp);
+    int run(QString cmd, QStringList args);
     bool open();
     void close();
     void reload( const Profile& );
@@ -111,6 +111,8 @@ private:
     QSize _size;
 
     QString m_cmd;
+    QStringList args;
+
     EnvironmentMap m_env;
 };
 
