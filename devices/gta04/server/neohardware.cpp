@@ -96,6 +96,7 @@ NeoHardware::NeoHardware()
 ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , ueventSocket(this)
+    , timer(this)
 {
     qLog(Hardware) << "gta04 hardware";
 
@@ -108,6 +109,9 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     hasSmartBattery =
         QFile::exists("/sys/class/power_supply/bq27000-battery/status");
 
+    connect(&timer, SIGNAL(timeout()), this, SLOT(updateStatus()));
+    timer.start(30 * 1000);
+    
     QTimer::singleShot(1, this, SLOT(updateStatus()));
 }
 
