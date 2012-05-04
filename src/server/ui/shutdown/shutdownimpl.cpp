@@ -62,21 +62,27 @@ static QString bootTo(int index, QStringList & distroList)
         return "invalid index";
     }
 
-    QFile lastDev("/media/p1/gta04-init/lastbootdev");
-    if(!lastDev.open(QIODevice::ReadOnly)) {
-        return lastDev.fileName() + " open failed: " + lastDev.errorString();
+    QByteArray content = distroList.at(index).toLatin1();
+
+    if(content.startsWith("mmcblk0p")) {   // booting from partition
+        content = "/dev/" + content;
     }
-    QByteArray content = lastDev.readAll();
-    lastDev.close();
-    
-    for(int i = 0; i < content.count(); i++) {
-        if(content.at(i) <= 32) {
-            content = content.left(i);
-            break;
+    else {                                 // booting from dir
+        QFile lastDev("/media/p1/gta04-init/lastbootdev");      // read current partition (last booted)
+        if(!lastDev.open(QIODevice::ReadOnly)) {
+            return lastDev.fileName() + " open failed: " + lastDev.errorString();
         }
+        QByteArray device = lastDev.readAll();
+        lastDev.close();
+        
+        for(int i = 0; i < device.count(); i++) {               // remove directory after /dev/mmcblk0p2
+            if(device.at(i) <= 32) {
+                device = device.left(i);
+                break;
+            }
+        }
+        content = device + " /distros/" + content;
     }
-    
-    content = content + " /distros/" + distroList.at(index).toLatin1();
 
     QFile bootDev("/media/p1/gta04-init/bootdev");
     if(!bootDev.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
@@ -121,6 +127,11 @@ ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
         
         QDir d("/distros");
         distroList = d.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+
+        QDir dev("/dev");
+        QStringList partList = dev.entryList(QStringList() << "mmcblk0p*", QDir::System);
+        distroList << partList;
+        
         bootmenuCombo->addItems(distroList);
     }
     connect(bootmenuCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(bootmenuIndexChanged(int)));
