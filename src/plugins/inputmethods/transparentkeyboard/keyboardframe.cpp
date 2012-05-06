@@ -112,7 +112,7 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QRect mwr = QApplication::desktop()->availableGeometry();
     QFont fnt = QApplication::font();
 
-    qreal maxPixHeight = mwr.height()/(30); // 3rd of screen, 5 rows, fontHeight being half a row height;
+    qreal maxPixHeight = mwr.height()/(10); // 5 rows, fontHeight being half a row height;
     qreal maxPointHeight = (maxPixHeight*72)/logicalDpiY();
 
     fnt.setPointSizeF(qMin(maxPointHeight, fnt.pointSizeF()));
@@ -435,7 +435,6 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
 */
 void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
 {
-    const bool threeD = false;
     QColor keycolor = palette().button().color();
     QColor keycolor_pressed = palette().mid().color();
     QColor keycolor_lo = palette().dark().color();
@@ -443,8 +442,6 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
     QColor textcolor = palette().text().color();
     
     textcolor.setAlpha(128);
-
-    int margin = threeD ? 1 : 0;
 
 //    p.fillRect( 0, , kw-1, keyHeight-2, keycolor_pressed );
 
@@ -497,38 +494,13 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
 
                     if (!blank) {
                         if ( pressed )
-                            p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor_pressed );
-
-                        if ( threeD ) {
-                            p.setPen(pressed ? keycolor_lo : keycolor_hi);
-                            p.drawLine( x, y+1, x, y+keyHeight-2 );
-                            p.drawLine( x+1, y+1, x+1, y+keyHeight-3 );
-                            p.drawLine( x+1, y+1, x+1+kw-2, y+1 );
-                        } else if ( j == 0 ) {
-                            p.setPen(pressed ? keycolor_hi : keycolor_lo);
-                            p.drawLine( x, y, x+kw, y );
-                        }
-
-                        // right
-                        p.setPen(pressed ? keycolor_hi : keycolor_lo);
-                        p.drawLine( x+kw-1, y, x+kw-1, y+keyHeight-2 );
-
-                        if ( threeD ) {
-                            p.setPen(keycolor_lo.light());
-                            p.drawLine( x+kw-2, y+keyHeight-2, x+kw-2, y+1 );
-                            p.drawLine( x+kw-2, y+keyHeight-2, x+1, y+keyHeight-2 );
-                        }
+                            p.fillRect( x, y, kw, keyHeight-1, keycolor_pressed );
 
                         if (pic && !pic->isNull()) {
                             p.drawPixmap( x + 1, y + 2, *pic );
                         } else {
                             p.setPen(textcolor);
                             p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
-                        }
-
-                        if ( threeD ) {
-                            p.setPen(keycolor_hi);
-                            p.drawLine( x, y, x+kw-1, y );
                         }
                     } else {
                         p.fillRect( x, y, kw, keyHeight, keycolor );
