@@ -120,7 +120,7 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
 
     QPalette pal(palette());
     QColor col(Qt::lightGray);
-    col.setAlpha(192);
+    col.setAlpha(0);
     pal.setColor(QPalette::Background, col);
     setPalette(pal);
     setAutoFillBackground(true);
@@ -456,6 +456,8 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
     QColor keycolor_lo = palette().dark().color();
     QColor keycolor_hi = palette().light().color();
     QColor textcolor = palette().text().color();
+    
+    textcolor.setAlpha(128);
 
     int margin = threeD ? 1 : 0;
 
@@ -511,8 +513,6 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                     if (!blank) {
                         if ( pressed )
                             p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor_pressed );
-                        else
-                            p.fillRect( x+margin, y+margin, kw-margin, keyHeight-margin-1, keycolor );
 
                         if ( threeD ) {
                             p.setPen(pressed ? keycolor_lo : keycolor_hi);
@@ -755,13 +755,7 @@ void KeyboardFrame::clearHighlight()
 
 QSize KeyboardFrame::sizeHint() const
 {
-    QFontMetrics fm=fontMetrics();
-    int keyHeight = fm.lineSpacing()+2;
-
-    if (useOptiKeys)
-        keyHeight += 1;
-
-    return QSize( 320, keyHeight * 5 + picks->sizeHint().height() + 1 );
+    return QSize( 320, 480 );
 }
 
 

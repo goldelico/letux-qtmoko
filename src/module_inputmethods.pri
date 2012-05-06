@@ -6,6 +6,7 @@
 #        plugins/inputmethods/keyboard \
         plugins/inputmethods/fingerkeyboard \
         plugins/inputmethods/dockedkeyboard \
+        plugins/inputmethods/transparentkeyboard \
         3rdparty/plugins/inputmethods/pkim \
         plugins/inputmethods/biglandscapekeyboard
 
