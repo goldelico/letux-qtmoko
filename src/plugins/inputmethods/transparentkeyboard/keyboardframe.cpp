@@ -158,7 +158,10 @@ void KeyboardFrame::showEvent(QShowEvent *e)
     qwsServer->sendIMQuery ( Qt::ImMicroFocus );
 
     QRect mwr = QApplication::desktop()->availableGeometry();
-
+    if(mwr.width() <= 480)
+        mwr.setHeight(480);  // hack - make it larger
+    setGeometry(mwr);
+    
     releaseKeyboard();
     int ph = picks->sizeHint().height();
 
@@ -168,12 +171,13 @@ void KeyboardFrame::showEvent(QShowEvent *e)
     keyHeight = (height()-ph)/5;
     int nk;
     if ( useOptiKeys ) {
-        nk = 15;
+        nk = 10;
     } else if ( useLargeKeys ) {
         nk = 15;
     } else {
         nk = 19;
     }
+    
     defaultKeyWidth = width()/nk;
     xoffs = (width()-defaultKeyWidth*nk)/2;
     QFrame::showEvent(e);
@@ -197,7 +201,7 @@ void KeyboardFrame::resizeEvent(QResizeEvent*)
     keyHeight = (height()-ph)/5;
     int nk;
     if ( useOptiKeys ) {
-        nk = 15;
+        nk = 10;
     } else if ( useLargeKeys ) {
         nk = 15;
     } else {
@@ -263,42 +267,6 @@ void  KeyboardConfig::generateText(const QString &s)
 
  */
 
-static const uchar * const keyboard_opti[5] = {
-    (const uchar *const) "\001\223\003\240\002\20\002\41\002\26\002\62\002\56\002\45\002\54\003\200\001\223\002\226\002\235\002\234\002\236",
-    (const uchar *const) "\001\223\003\201\004\207\002\30\002\24\002\43\004\207\003\203\001\223\006\002\002\065",
-    (const uchar *const) "\001\223\003\202\002\60\002\37\002\23\002\22\002\36\002\21\002\55\003\203\001\223\006\005\002\055",
-    (const uchar *const) "\001\223\003\205\004\207\002\27\002\61\002\40\004\207\003\204\001\223\006\010\002\014",
-    (const uchar *const) "\001\223\003\206\002\44\002\31\002\57\002\42\002\46\002\25\002\207\003\204\001\223\002\013\002\064\002\015\002\230"
-};
-
-/* Original keyboard - it has huge SPACE, small BACKSPACE and no arrows if not
- * expanded.
-
-static const uchar * const keyboard_standard[5] = {
-
-#ifdef USE_SMALL_BACKSPACE
-    (const uchar *const)"\002\240\002`\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\002\200\002\223\002\215\002\216\002\217",
-#else
-    (const uchar *const)"\002\051\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\004\200\002\223\002\215\002\216\002\217",
-#endif
-    //~ + 123...+ BACKSPACE //+ INSERT + HOME + PGUP
-
-    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\001\224\002\223\002\221\002\220\002\222",
-    //TAB + qwerty..  + backslash //+ DEL + END + PGDN
-
-    (const uchar *const)"\004\202\002a\002s\002d\002f\002g\002h\002j\002k\002l\002;\002'\004\203",
-    //CAPS + asdf.. + RETURN
-
-    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.\002/\005\204\002\223\002\223\002\211",
-    //SHIFT + zxcv... //+ UP
-
-    (const uchar *const)"\003\205\003\206\022\207\003\206\003\205\002\223\002\212\002\213\002\214"
-    //CTRL + ALT + SPACE //+ LEFT + DOWN + RIGHT
-
-};
-
-*/
-
 /* Keyboard layout shamelessly stolen from SHR
 
 ` 1 2 3 4 5 6 7 8 9 0 - = <---
@@ -309,12 +277,29 @@ CtrlAlSPACE < > ^ _ PuPdHoEnEs
 
 */
 static const uchar * const keyboard_standard[5] = {
-
     (const uchar *const)"\002`\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\004\200"                         "\002\223\002\215\002\216\002\217",
-    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\001\224"                "\002\223\002\221\002\220\002\222",
+    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\001\225"                "\002\223\002\221\002\220\002\222",
     (const uchar *const)"\004\202\002a\002s\002d\002f\002g\002h\002j\002k\002l\002;\002'\004\203",
     (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.\002/\002\215\003\221"                        "\002\223\002\223\002\211",
     (const uchar *const)"\004\205\002\206\006\207\002\212\002\214\002\211\002\213\002\217\002\222\002\216\002\220\002\240"  "\002\223\002\212\002\213\002\214"
+};
+
+
+/* Keyboard layout for SMS/mails
+
+1 2 3 4 5 6 7 8 9 0
+q w e r t y u i o p
+a s d f g h j k l <===
+SHIF z x c v b n m , .
+> SPACE < > ^ _    <--
+
+*/
+static const uchar * const keyboard_opti[5] = {
+    (const uchar *const)"\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020",
+    (const uchar *const)"\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p",
+    (const uchar *const)"\002a\002s\002d\002f\002g\002h\002j\002k\002l\004\203",
+    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.",
+    (const uchar *const)"\002\225\006\207\002\212\002\214\002\211\002\213\004\200"
 };
 
 
@@ -755,7 +740,10 @@ void KeyboardFrame::clearHighlight()
 
 QSize KeyboardFrame::sizeHint() const
 {
-    return QSize( 320, 480 );
+    QRect mwr = QApplication::desktop()->availableGeometry();
+    if(mwr.width() <= 480)
+        mwr.setHeight(480);  // hack - make it larger
+    return mwr.size();
 }
 
 
