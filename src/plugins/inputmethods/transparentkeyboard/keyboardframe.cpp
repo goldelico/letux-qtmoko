@@ -33,6 +33,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QMenu>
+#include <QStyle>
 #include <QSoftMenuBar>
 
 #include <qtopialog.h>
@@ -153,12 +154,7 @@ KeyboardFrame::~KeyboardFrame()
 void KeyboardFrame::showEvent(QShowEvent *e)
 {
     qwsServer->sendIMQuery ( Qt::ImMicroFocus );
-
-    QRect mwr = QApplication::desktop()->availableGeometry();
-    if(mwr.width() <= 480)
-        mwr.setHeight(480);  // hack - make it larger
-    setGeometry(mwr);
-    
+    setGeometry(geometryHint());
     releaseKeyboard();
     int ph = picks->sizeHint().height();
 
@@ -433,12 +429,11 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
 void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
 {
     QColor keycolor_pressed = palette().mid().color();
-    QColor keycolor = palette().shadow().color();
+    QColor backcolor = palette().shadow().color();
     QColor textcolor = palette().light().color();
     
-    keycolor.setAlpha(196);
-    
-//    p.fillRect( 0, , kw-1, keyHeight-2, keycolor_pressed );
+    backcolor.setAlpha(196);    
+    p.fillRect(clip, backcolor);
 
     for ( int j = 0; j < 5; j++ ) {
         int y = j * keyHeight + picks->height() + 1;
@@ -490,8 +485,6 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                     if (!blank) {
                         if ( pressed )
                             p.fillRect( x, y, kw, keyHeight-1, keycolor_pressed );
-                        else
-                            p.fillRect( x, y, kw, keyHeight-1, keycolor );
 
                         if (pic && !pic->isNull()) {
                             p.drawPixmap( x + 1, y + 2, *pic );
@@ -718,15 +711,22 @@ void KeyboardFrame::clearHighlight()
     }
 }
 
+QRect KeyboardFrame::geometryHint() const
+{
+    QRect r = QApplication::desktop()->availableGeometry();
+    if(r.width() <= 480)
+        r.setHeight(480);  // hack - make it larger
+
+    int sb = style()->pixelMetric(QStyle::PM_ScrollBarExtent) +
+             style()->pixelMetric(QStyle::PM_LayoutRightMargin);
+    r.setWidth(r.width() - sb);
+    return r;
+}
 
 QSize KeyboardFrame::sizeHint() const
 {
-    QRect mwr = QApplication::desktop()->availableGeometry();
-    if(mwr.width() <= 480)
-        mwr.setHeight(480);  // hack - make it larger
-    return mwr.size();
+    return geometryHint().size();
 }
-
 
 void KeyboardFrame::resetState()
 {

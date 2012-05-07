@@ -89,6 +89,7 @@ public:
 
     void setMode(int mode) { useOptiKeys = mode; }
 
+    QRect geometryHint() const;
     QSize sizeHint() const;
 
     bool obscures( const QPoint &point );
