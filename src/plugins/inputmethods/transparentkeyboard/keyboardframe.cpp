@@ -112,10 +112,11 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QRect mwr = QApplication::desktop()->availableGeometry();
     QFont fnt = QApplication::font();
 
-    qreal maxPixHeight = mwr.height()/(10); // 5 rows, fontHeight being half a row height;
-    qreal maxPointHeight = (maxPixHeight*72)/logicalDpiY();
+    qreal pixHeight = mwr.height()/32;
+    qreal pointHeight = (pixHeight*72)/logicalDpiY();
 
-    fnt.setPointSizeF(qMin(maxPointHeight, fnt.pointSizeF()));
+    fnt.setPointSizeF(pointHeight);
+    fnt.setBold(true);
     setFont(fnt);
 
     QPalette pal(palette());
@@ -442,7 +443,9 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
     QColor textcolor = palette().text().color();
     
     textcolor.setAlpha(128);
-
+    keycolor_lo.setAlpha(128);
+    keycolor_hi.setAlpha(128);
+    
 //    p.fillRect( 0, , kw-1, keyHeight-2, keycolor_pressed );
 
     for ( int j = 0; j < 5; j++ ) {
@@ -499,8 +502,10 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                         if (pic && !pic->isNull()) {
                             p.drawPixmap( x + 1, y + 2, *pic );
                         } else {
-                            p.setPen(textcolor);
+                            p.setPen(keycolor_lo);
                             p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
+                            p.setPen(keycolor_hi);
+                            p.drawText( x + 1, y + 2, kw, keyHeight-2, Qt::AlignCenter, s );
                         }
                     } else {
                         p.fillRect( x, y, kw, keyHeight, keycolor );
@@ -520,6 +525,16 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 {
     clearHighlight(); // typing fast?
 
+    struct timespec tp;
+    clock_gettime(CLOCK_MONOTONIC, &tp);
+
+    ignorePress = (1000 * (tp.tv_sec - pressTime.tv_sec) +
+        (tp.tv_nsec - pressTime.tv_nsec) / 1000000) < 100;
+
+    pressTime = tp;
+    if(ignorePress)
+        return;
+    
     int i2 = ((e->x() - xoffs) * 2) / defaultKeyWidth;
     int j = (e->y() - picks->height()) / keyHeight;
 
@@ -632,6 +647,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 
 void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
 {
+    if(ignorePress)
+        return;
+
     repeatTimer->stop();
     if ( pressTid == 0 )
         clearHighlight();

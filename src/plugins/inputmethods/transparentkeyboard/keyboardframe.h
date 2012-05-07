@@ -20,6 +20,7 @@
 #ifndef KEYBOARDFRAME_H
 #define KEYBOARDFRAME_H
 
+#include <time.h>
 #include "pickboardcfg.h"
 #include "pickboardpicks.h"
 #include <QDebug>
@@ -149,6 +150,8 @@ private:
 
     int pressTid;
     bool pressed;
+    struct timespec pressTime;      // last time key was pressed
+    bool ignorePress;               // used to ignore too fast presses
 
     bool microFocusPending;
     bool showPending;
