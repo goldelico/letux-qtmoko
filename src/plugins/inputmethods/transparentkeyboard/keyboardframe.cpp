@@ -266,19 +266,19 @@ void  KeyboardConfig::generateText(const QString &s)
 
 /* Keyboard layout shamelessly stolen from SHR
 
-` 1 2 3 4 5 6 7 8 9 0 - = <---
-TABq w e r t y u i o p [ ] \ >
-CAP a s d f g h j k l ; ' <===
-SHIF z x c v b n m , . / InDel
-CtrlAlSPACE < > ^ _ PuPdHoEnEs
+Esc 1 2 3 4 5 6 7 8 9 0 - = <---
+TABq w e r t y u i o p [ ] \ Del
+CAP a s d f g h j k l ; ' <=====
+SHIF z x c v b n m , . / `   Ins
+>  CtrlAltSPACE < > ^ _ PuPdHoEn
 
 */
 static const uchar * const keyboard_standard[5] = {
-    (const uchar *const)"\002`\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\004\200"                         "\002\223\002\215\002\216\002\217",
-    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\001\225"                "\002\223\002\221\002\220\002\222",
+    (const uchar *const)"\002\240\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\004\200",
+    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\003\221",
     (const uchar *const)"\004\202\002a\002s\002d\002f\002g\002h\002j\002k\002l\002;\002'\004\203",
-    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.\002/\002\215\003\221"                        "\002\223\002\223\002\211",
-    (const uchar *const)"\004\205\002\206\006\207\002\212\002\214\002\211\002\213\002\217\002\222\002\216\002\220\002\240"  "\002\223\002\212\002\213\002\214"
+    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.\002/\002`\002\215",
+    (const uchar *const)"\004\225\003\205\002\206\005\207\002\212\002\214\002\211\002\213\002\217\002\222\002\216\002\220"
 };
 
 
