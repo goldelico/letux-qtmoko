@@ -108,17 +108,13 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
-    // need to restrict font for screen height()
     QRect mwr = QApplication::desktop()->availableGeometry();
-    QFont fnt = QApplication::font();
-
     qreal pixHeight = mwr.height()/32;
     qreal pointHeight = (pixHeight*72)/logicalDpiY();
-
+    
+    QFont fnt = QApplication::font();
     fnt.setPointSizeF(pointHeight);
-    fnt.setBold(true);
-    setFont(fnt);
-
+    
     QPalette pal(palette());
     QColor col(Qt::lightGray);
     col.setAlpha(0);
@@ -172,7 +168,7 @@ void KeyboardFrame::showEvent(QShowEvent *e)
     keyHeight = (height()-ph)/5;
     int nk;
     if ( useOptiKeys ) {
-        nk = 10;
+        nk = 7;
     } else if ( useLargeKeys ) {
         nk = 15;
     } else {
@@ -202,7 +198,7 @@ void KeyboardFrame::resizeEvent(QResizeEvent*)
     keyHeight = (height()-ph)/5;
     int nk;
     if ( useOptiKeys ) {
-        nk = 10;
+        nk = 7;
     } else if ( useLargeKeys ) {
         nk = 15;
     } else {
@@ -296,11 +292,11 @@ SHIF z x c v b n m , .
 
 */
 static const uchar * const keyboard_opti[5] = {
-    (const uchar *const)"\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020",
-    (const uchar *const)"\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p",
-    (const uchar *const)"\002a\002s\002d\002f\002g\002h\002j\002k\002l\004\203",
-    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.",
-    (const uchar *const)"\002\225\006\207\002\212\002\214\002\211\002\213\004\200"
+    (const uchar *const)"\002a\002b\002c\002d\002e\002f\004\200",
+    (const uchar *const)"\002g\002h\002i\002j\002k\002l\004\200",
+    (const uchar *const)"\002m\002n\002o\002p\002q\002r\004\203",
+    (const uchar *const)"\002s\002t\002u\002v\002w\002x\004\203",
+    (const uchar *const)"\002\225\006\207\002y\002z\002,\002."
 };
 
 
@@ -436,15 +432,11 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
 */
 void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
 {
-    QColor keycolor = palette().button().color();
     QColor keycolor_pressed = palette().mid().color();
-    QColor keycolor_lo = palette().dark().color();
-    QColor keycolor_hi = palette().light().color();
-    QColor textcolor = palette().text().color();
+    QColor keycolor = palette().shadow().color();
+    QColor textcolor = palette().light().color();
     
-    textcolor.setAlpha(128);
-    keycolor_lo.setAlpha(128);
-    keycolor_hi.setAlpha(128);
+    keycolor.setAlpha(196);
     
 //    p.fillRect( 0, , kw-1, keyHeight-2, keycolor_pressed );
 
@@ -498,17 +490,16 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                     if (!blank) {
                         if ( pressed )
                             p.fillRect( x, y, kw, keyHeight-1, keycolor_pressed );
+                        else
+                            p.fillRect( x, y, kw, keyHeight-1, keycolor );
 
                         if (pic && !pic->isNull()) {
                             p.drawPixmap( x + 1, y + 2, *pic );
                         } else {
-                            p.setPen(keycolor_lo);
+                            p.setFont(font());
+                            p.setPen(textcolor);
                             p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
-                            p.setPen(keycolor_hi);
-                            p.drawText( x + 1, y + 2, kw, keyHeight-2, Qt::AlignCenter, s );
                         }
-                    } else {
-                        p.fillRect( x, y, kw, keyHeight, keycolor );
                     }
                 }
 
