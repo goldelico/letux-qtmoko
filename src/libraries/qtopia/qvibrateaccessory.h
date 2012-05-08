@@ -38,7 +38,7 @@ public:
 
 public slots:
     virtual void setVibrateOnRing( const bool value );
-    virtual void setVibrateNow( const bool value );
+    virtual void setVibrateNow( const bool value, quint16 strength = 0xffff, int timeoutMs = 0 );
 
 signals:
     void vibrateOnRingModified();
@@ -58,7 +58,7 @@ protected:
 
 public slots:
     void setVibrateOnRing( const bool value );
-    void setVibrateNow( const bool value );
+    void setVibrateNow( const bool value, quint16 strength = 0xffff, int timeoutMs = 0 );
 
 };
 

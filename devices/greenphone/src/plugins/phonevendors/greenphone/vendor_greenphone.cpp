@@ -1283,7 +1283,7 @@ GreenphoneVibrateAccessory::~GreenphoneVibrateAccessory()
 #define OMEGA_VIBRATE_ON        0xc0043901
 #define OMEGA_VIBRATE_OFF       0xc0043902
 
-void GreenphoneVibrateAccessory::setVibrateNow( const bool value )
+void GreenphoneVibrateAccessory::setVibrateNow( const bool value, quint16 strength, int timeoutMs )
 {
     int fd = ::open( "/dev/omega_vibrator", O_RDWR );
     if ( fd < 0 ) {

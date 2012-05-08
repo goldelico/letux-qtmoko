@@ -302,7 +302,7 @@ void NeoVibrateAccessory::setVibrateOnRing(const bool value)
     setVibrateNow(value);
 }
 
-void NeoVibrateAccessory::setVibrateNow(const bool value)
+void NeoVibrateAccessory::setVibrateNow(const bool value, quint16 strength, int timeoutMs)
 {
     struct input_event event;
 

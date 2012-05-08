@@ -114,12 +114,14 @@ void QVibrateAccessory::setVibrateOnRing( const bool value )
 
 /*!
     Turns the vibrate device on if \a value is true; otherwise it is turned off.
+    Parameters \a strength affects vibration strength in range 1..0xffff. The vibration
+    can optionally stop after \a timeoutMs milliseconds.
 
     \sa vibrateNow()
 */
-void QVibrateAccessory::setVibrateNow( const bool value )
+void QVibrateAccessory::setVibrateNow( const bool value, quint16 strength, int timeoutMs )
 {
-    invoke( SLOT(setVibrateNow(bool)), value );
+    invoke( SLOT(setVibrateNow(bool, quint16, int)), value, strength, timeoutMs );
 }
 
 /*!
@@ -208,8 +210,10 @@ void QVibrateAccessoryProvider::setVibrateOnRing( const bool value )
     call this implementation to update the client's view of the vibrateNow
     state.
 */
-void QVibrateAccessoryProvider::setVibrateNow( const bool value )
+void QVibrateAccessoryProvider::setVibrateNow( const bool value, quint16 strength, int timeoutMs )
 {
     setValue( "vibrateNow", value );
+    setValue( "strength", strength );
+    setValue( "timeoutMs", timeoutMs );
     emit vibrateNowModified();
 }

@@ -35,6 +35,7 @@
 #include <QMenu>
 #include <QStyle>
 #include <QSoftMenuBar>
+#include <QVibrateAccessory>
 
 #include <qtopialog.h>
 
@@ -518,6 +519,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     ignorePress = (1000 * (tp.tv_sec - pressTime.tv_sec) +
         (tp.tv_nsec - pressTime.tv_nsec) / 1000000) < 100;
 
+    QVibrateAccessory vib;
+    vib.setVibrateNow( true );    
+        
     pressTime = tp;
     if(ignorePress)
         return;

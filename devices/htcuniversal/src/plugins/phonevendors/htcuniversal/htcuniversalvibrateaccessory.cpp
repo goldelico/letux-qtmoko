@@ -39,7 +39,7 @@ void HtcuniversalVibrateAccessory::setVibrateOnRing(const bool value)
   setVibrateNow(value);
 }
 
-void HtcuniversalVibrateAccessory::setVibrateNow(const bool value)
+void HtcuniversalVibrateAccessory::setVibrateNow(const bool value, quint16 strength, int timeoutMs)
 {
   QFile trigger("/sys/class/leds/htcuniversal:vibra/trigger");
   trigger.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate);
