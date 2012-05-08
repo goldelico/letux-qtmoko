@@ -244,7 +244,7 @@ static int openRumble()
 }
 
 // Upload vibrate effect, returns effect id or -1 on error
-static qint16 uploadEffect(int fd)
+static qint16 uploadEffect(int fd, quint16 strength, int timeoutMs)
 {
     struct ff_effect e;
 
@@ -254,9 +254,9 @@ static qint16 uploadEffect(int fd)
     e.direction = 0;
     e.trigger.button = 0;
     e.trigger.interval = 0;
-    e.replay.length = 5000;
+    e.replay.length = timeoutMs ? timeoutMs : 3000;
     e.replay.delay = 0;
-    e.u.rumble.strong_magnitude = 0xFFFF;
+    e.u.rumble.strong_magnitude = strength;
     e.u.rumble.weak_magnitude = 0;
 
     // Write the event
@@ -302,11 +302,11 @@ void NeoVibrateAccessory::setVibrateOnRing(const bool value)
     setVibrateNow(value);
 }
 
-void NeoVibrateAccessory::setVibrateNow(const bool value, quint16 strength, int timeoutMs)
+void NeoVibrateAccessory::setVibrateNow(const bool value, int strength, int timeoutMs)
 {
     struct input_event event;
 
-    qLog(Modem) << "setVibrateNow " << value;
+    qLog(Modem) << "setVibrateNow " << value << ", strength=" << strength << ", timeoutMs=" << timeoutMs;
 
     if (value && rumbleFd < 0)
         rumbleFd = openRumble();
@@ -315,7 +315,7 @@ void NeoVibrateAccessory::setVibrateNow(const bool value, quint16 strength, int 
         return;
 
     if (value && effectId < 0)
-        effectId = uploadEffect(rumbleFd);
+        effectId = uploadEffect(rumbleFd, (quint16)(strength), timeoutMs);
 
     if (effectId < 0)
         return;

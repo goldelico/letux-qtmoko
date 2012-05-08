@@ -35,7 +35,6 @@
 #include <QMenu>
 #include <QStyle>
 #include <QSoftMenuBar>
-#include <QVibrateAccessory>
 
 #include <qtopialog.h>
 
@@ -102,7 +101,7 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QFrame(parent, f), shift(false), lock(false), ctrl(false),
     alt(false), useLargeKeys(true), useOptiKeys(0), pressedKey(-1),
     unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
-    positionTop(true)
+    vib(), positionTop(true)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
@@ -519,12 +518,11 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     ignorePress = (1000 * (tp.tv_sec - pressTime.tv_sec) +
         (tp.tv_nsec - pressTime.tv_nsec) / 1000000) < 100;
 
-    QVibrateAccessory vib;
-    vib.setVibrateNow( true );    
-        
     pressTime = tp;
     if(ignorePress)
         return;
+
+    vib.setVibrateNow(true, 0xafff, 64);
     
     int i2 = ((e->x() - xoffs) * 2) / defaultKeyWidth;
     int j = (e->y() - picks->height()) / keyHeight;
@@ -640,6 +638,8 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
 {
     if(ignorePress)
         return;
+    
+    //vib.setVibrateNow(false);
 
     repeatTimer->stop();
     if ( pressTid == 0 )

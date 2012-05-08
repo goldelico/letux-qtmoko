@@ -24,6 +24,7 @@
 #include "pickboardcfg.h"
 #include "pickboardpicks.h"
 #include <QDebug>
+#include <QVibrateAccessory>
 
 class QTimer;
 
@@ -153,6 +154,8 @@ private:
     bool pressed;
     struct timespec pressTime;      // last time key was pressed
     bool ignorePress;               // used to ignore too fast presses
+
+    QVibrateAccessory vib;
 
     bool microFocusPending;
     bool showPending;

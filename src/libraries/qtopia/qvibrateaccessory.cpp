@@ -119,9 +119,9 @@ void QVibrateAccessory::setVibrateOnRing( const bool value )
 
     \sa vibrateNow()
 */
-void QVibrateAccessory::setVibrateNow( const bool value, quint16 strength, int timeoutMs )
+void QVibrateAccessory::setVibrateNow( const bool value, int strength, int timeoutMs )
 {
-    invoke( SLOT(setVibrateNow(bool, quint16, int)), value, strength, timeoutMs );
+    invoke( SLOT(setVibrateNow(bool, int, int)), value, strength, timeoutMs );
 }
 
 /*!
@@ -210,7 +210,7 @@ void QVibrateAccessoryProvider::setVibrateOnRing( const bool value )
     call this implementation to update the client's view of the vibrateNow
     state.
 */
-void QVibrateAccessoryProvider::setVibrateNow( const bool value, quint16 strength, int timeoutMs )
+void QVibrateAccessoryProvider::setVibrateNow( const bool value, int strength, int timeoutMs )
 {
     setValue( "vibrateNow", value );
     setValue( "strength", strength );
