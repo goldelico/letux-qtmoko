@@ -52,7 +52,7 @@ public slots:
                           uint modemIdentifier = 0);
 
 protected:
-    QTimer clccTimer;
+     QTimer clccTimer;
     NeoModemService *modemService;
     bool hasRepeatingRings() const;
 
@@ -79,6 +79,22 @@ private slots:
     void reset();
     void suspend();
     void wake();
+};
+
+class NeoVibrateAccessory : public QVibrateAccessoryProvider
+{
+    Q_OBJECT
+public:
+    NeoVibrateAccessory(QModemService * service);
+    ~NeoVibrateAccessory();
+
+public slots:
+    void setVibrateNow(const bool value);
+    void setVibrateOnRing(const bool value);
+
+private:
+    int rumbleFd;
+    qint16 effectId;
 };
 
 #endif

@@ -24,12 +24,13 @@
 #include <qmodemllindicators.h>
 #include <QProcess>
 #include <QTimer>
-#include <stdio.h>
-#include <stdlib.h>
 #include <QFile>
 #include <QTextStream>
 #include <QSettings>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <linux/input.h>
 #include <alsa/asoundlib.h>
 
 #include <qmodemcallvolume.h>
@@ -163,6 +164,9 @@ void NeoModemService::initialize()
         setCallProvider(new NeoCallProvider(this));
     }
 
+    if (!supports < QVibrateAccessory > ())
+        addInterface(new NeoVibrateAccessory(this));
+
     QModemService::initialize();
 
     // Disable signal and battery polling, just do initial signal check
@@ -186,7 +190,7 @@ void NeoModemService::suspend()
 {
     qLog(Modem) << " Gta04ModemService::suspend()";
     //chat("AT_OSQI=0");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
-    
+
     primaryAtChat()->suspend();
     QSerialIODevice *port = multiplexer()->channel("primary");
     port->close();
@@ -197,11 +201,11 @@ void NeoModemService::suspend()
 void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
-    
+
     QSerialIODevice *port = multiplexer()->channel("primary");
     port->open(QIODevice::ReadWrite);
     primaryAtChat()->resume();
-    
+
     //primaryAtChat()->resume();
     //chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
@@ -226,4 +230,107 @@ QString NeoModemService::decodeOperatorName(QString name)
         str[i] = QChar(num);
     }
     return str;
+}
+
+// Open GTA04 vibrate device
+static int openRumble()
+{
+    int fd = open("/dev/input/rumble", O_RDWR);
+    if (fd > 0)
+        return fd;
+
+    perror("rumble open");
+    return -1;
+}
+
+// Upload vibrate effect, returns effect id or -1 on error
+static qint16 uploadEffect(int fd)
+{
+    struct ff_effect e;
+
+    // Define the new event
+    e.type = FF_RUMBLE;
+    e.id = -1;
+    e.direction = 0;
+    e.trigger.button = 0;
+    e.trigger.interval = 0;
+    e.replay.length = 5000;
+    e.replay.delay = 0;
+    e.u.rumble.strong_magnitude = 0xFFFF;
+    e.u.rumble.weak_magnitude = 0;
+
+    // Write the event
+    if (ioctl(fd, EVIOCSFF, &e) == -1) {
+        perror("rumble upload");
+        return -1;
+    }
+    return e.id;
+}
+
+static void removeEffect(int &fd, qint16 & effectId, bool closeFd)
+{
+    if (fd < 0)
+        return;
+
+    if (effectId >= 0 && ioctl(fd, EVIOCRMFF, effectId) == -1)
+        perror("rumble remove");
+    effectId = -1;
+
+    if (closeFd) {
+        close(fd);
+        fd = -1;
+    }
+}
+
+NeoVibrateAccessory::NeoVibrateAccessory(QModemService * service)
+:  QVibrateAccessoryProvider(service->service(), service)
+    , rumbleFd(-1)
+    , effectId(-1)
+{
+    setSupportsVibrateOnRing(true);
+    setSupportsVibrateNow(true);
+}
+
+NeoVibrateAccessory::~NeoVibrateAccessory()
+{
+    removeEffect(rumbleFd, effectId, true);
+}
+
+void NeoVibrateAccessory::setVibrateOnRing(const bool value)
+{
+    qLog(Modem) << "setVibrateOnRing " << value;
+    setVibrateNow(value);
+}
+
+void NeoVibrateAccessory::setVibrateNow(const bool value)
+{
+    struct input_event event;
+
+    qLog(Modem) << "setVibrateNow " << value;
+
+    if (value && rumbleFd < 0)
+        rumbleFd = openRumble();
+
+    if (rumbleFd < 0)
+        return;
+
+    if (value && effectId < 0)
+        effectId = uploadEffect(rumbleFd);
+
+    if (effectId < 0)
+        return;
+
+    // Play/stop the effect
+    event.type = EV_FF;
+    event.code = effectId;
+    event.value = (value ? 1 : 0);
+
+    if (write(rumbleFd, (const void *)&event, sizeof(event)) == -1) {
+        perror("rumble write");
+    }
+
+    if (!value)
+        removeEffect(rumbleFd, effectId, true);
+
+    QVibrateAccessoryProvider::setVibrateNow(value);
 }
