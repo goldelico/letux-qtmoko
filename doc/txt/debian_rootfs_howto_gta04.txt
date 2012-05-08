@@ -128,9 +128,9 @@ Step 4.1 - stable device nodes for UMTS
     http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001563.html
   We will use udev to create stable symlinks for us:
 
-cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_\$attr{hsotype}", OPTIONS+="string_escape=replace"
-__END__
+cd /media/card/etc/udev/rules.d
+wget https://raw.github.com/radekp/linux-2.6/v3.3-gta04-qtmoko-v45/GTA04/udev-rules/hso.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.3-gta04-qtmoko-v45/GTA04/udev-rules/input.rules
 
 Step 4.2 - charging udev rules
 ==============================
@@ -324,7 +324,7 @@ Step 9.1 - Linux kernel cross compiling - not using anymore for releases
 
 * If you want to cross compile kernel and make uboot image on PC:
 
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm gta04a3_nodebug_defconfig
+make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm gta04_qtmoko_defconfig
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm uImage
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules
 make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
