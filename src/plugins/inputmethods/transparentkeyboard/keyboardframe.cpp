@@ -491,7 +491,10 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                         } else {
                             p.setFont(font());
                             p.setPen(textcolor);
-                            p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
+                            if(pressed)
+                                p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignTop | Qt::AlignHCenter, s );
+                            else
+                                p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
                         }
                     }
                 }
