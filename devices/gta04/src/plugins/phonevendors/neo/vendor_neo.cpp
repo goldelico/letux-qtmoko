@@ -306,7 +306,7 @@ void NeoVibrateAccessory::setVibrateNow(const bool value, int timeoutMs, int str
 {
     struct input_event event;
 
-    qLog(Modem) << "setVibrateNow " << value << ", timeoutMs=" << timeoutMs << ", strength=" << strength;
+    //qLog(Modem) << "setVibrateNow " << value << ", timeoutMs=" << timeoutMs << ", strength=" << strength;
 
     if (value && rumbleFd < 0)
         rumbleFd = openRumble();
