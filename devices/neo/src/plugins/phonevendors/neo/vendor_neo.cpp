@@ -817,7 +817,7 @@ void NeoVibrateAccessory::setVibrateOnRing( const bool value )
     setVibrateNow(value);
 }
 
-void NeoVibrateAccessory::setVibrateNow( const bool value, int strength, int timeoutMs )
+void NeoVibrateAccessory::setVibrateNow( const bool value, int timeoutMs, int strength )
 {
     qLog(Modem)<<"setVibrateNow "<<value;
     QString vibFile("/sys/class/leds/gta02::vibrator");

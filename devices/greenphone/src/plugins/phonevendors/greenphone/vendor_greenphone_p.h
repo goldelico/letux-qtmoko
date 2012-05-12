@@ -217,7 +217,7 @@ public:
     ~GreenphoneVibrateAccessory();
 
 public slots:
-    void setVibrateNow( const bool value, int strength = 0xffff, int timeoutMs = 0 );
+    void setVibrateNow( const bool value, int timeoutMs = 0, int strength = 0xffff );
 };
 
 class GreenphoneServiceNumbers : public QModemServiceNumbers

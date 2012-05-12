@@ -89,7 +89,7 @@ public:
     ~NeoVibrateAccessory();
 
 public slots:
-    void setVibrateNow(const bool value, int strength = 0xffff, int timeoutMs = 0);
+    void setVibrateNow(const bool value, int timeoutMs = 0, int strength = 0xffff);
     void setVibrateOnRing(const bool value);
 
 private:

@@ -522,7 +522,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     if(ignorePress)
         return;
 
-    vib.setVibrateNow(true, 0xafff, 64);
+    vib.setVibrateNow(true, 64, 0xffff);
     
     int i2 = ((e->x() - xoffs) * 2) / defaultKeyWidth;
     int j = (e->y() - picks->height()) / keyHeight;
