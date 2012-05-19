@@ -33,6 +33,7 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QMenu>
+#include <QFile>
 #include <QStyle>
 #include <QSoftMenuBar>
 
@@ -97,11 +98,124 @@ static SpecialMap specialM[] = {
     {   0,                      0,      NULL,    NULL, 0}
 };
 
+// Add keys from svg file to list. The keys are in form id="key_a" where a is
+// letter or can be number (key code).
+static void addKeys(const QString & svgFile, QStringList & keyList)
+{
+    QFile f(svgFile);
+    if(!f.open(QIODevice::ReadOnly))
+    {
+        qWarning() << "failed to open kbd file " << svgFile;
+        return;
+    }
+    QByteArray line;
+    for(;;)
+    {
+        line = f.readLine();
+        if(line.isEmpty())
+            break;
+
+        int start = line.indexOf("id=\"key_");
+        if(start < 0)
+            continue;
+
+        int end = line.indexOf('"', start + 8);
+        if(end < 0)
+            continue;
+
+        QString key = line.mid(start + 8, end - start - 8);
+        qDebug() << "key=" << key;
+        keyList.append(key);
+    }
+    f.close();
+}
+
+// Return name of the element in svg for given key
+static QString elemId(KeyInfo *ki)
+{
+    QString res("key_");
+    for(int i = 0; i < 3; i++) {
+        QChar ch = ki->id[i];
+        if(ch == 0)
+            break;
+        res += ch;
+    }
+    return res;
+}
+
+// Fill screen resolution independent properties
+static bool fillLayout(const QString & svgFile, KeyLayout *layout)
+{
+    // Make key list
+    QStringList keyIds;
+    addKeys(svgFile, keyIds);
+    int count = layout->numKeys = keyIds.count();
+    if(count == 0) {
+        qWarning() << "fillLayout: no keys found";
+        return false;
+    }
+
+    QSvgRenderer *svg = layout->svg = new QSvgRenderer(svgFile);
+    KeyInfo *keys = layout->keys = (KeyInfo *)(malloc(sizeof(KeyInfo) * count));
+    if(keys == NULL) {
+        qWarning() << "fillLayout: keys null";
+        return false;
+    }
+    memset((void*)(keys), 0, sizeof(KeyInfo) * count);
+
+    KeyInfo *ki = keys;
+    for(int i = 0; i < keyIds.count(); i++)
+    {
+        QString id = keyIds.at(i);
+        if(id.length() > 3)
+            id = id.left(3);
+        memset(ki->id, 0, sizeof(ki->id));
+        memcpy(ki->id, id.constData(), id.length() * 2);
+
+        ki->rectSvg = svg->boundsOnElement(elemId(ki));
+        if(id.count() == 1) {
+            ki->unicode = id.at(0).unicode();
+            ki->qcode = ki->unicode;
+        }
+        if(i == 0)
+            layout->rectSvg = ki->rectSvg;
+        else
+            layout->rectSvg = layout->rectSvg.united(ki->rectSvg);
+        ki++;
+    }
+    return true;
+}
+
+// Compute key positions on the screen
+static void placeKeys(KeyLayout *layout, float w, float h)
+{
+    KeyInfo *ki = layout->keys;
+    QRectF lr = layout->rectSvg;    // layout rectangle
+    for(int i = 0; i < layout->numKeys; i++)
+    {
+        QRectF kr = ki->rectSvg;        // key rectangle on svg
+        QRectF *ks = &(ki->rectScr);       // key rectangle on screen
+
+        ks->setLeft((w * (kr.left() - lr.left())) / lr.width());
+        ks->setTop((h * (kr.top() - lr.top())) / lr.height());
+        ks->setWidth((w * ki->rectSvg.width()) / lr.width());
+        ks->setHeight((h * ki->rectSvg.height()) / lr.height());
+
+        QPixmap px = ki->pic = QPixmap(ks->width(), ks->height());
+
+        QPainter p(&px);
+        p.fillRect(*ks, Qt::white);
+        layout->svg->render(&p, elemId(ki), QRectF(0, 0, 48, 48));
+
+        ki++;
+    }
+}
+
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QFrame(parent, f), shift(false), lock(false), ctrl(false),
     alt(false), useLargeKeys(true), useOptiKeys(0), pressedKey(-1),
     unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
-    vib(), positionTop(true)
+    vib(), positionTop(true), pixS(64, 64)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
@@ -136,6 +250,25 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     picks = new KeyboardPicks( this );
     picks->initialise();
 
+    QSvgRenderer svg(QString("/qwerty.svg"), this);
+    
+    
+    curLayout = 0;
+    numLayouts = 1;
+    fillLayout("/qwerty.svg", &layouts[0]);
+    placeKeys(&layouts[0], width(), height());
+
+    QColor backcolor = palette().shadow().color();
+    backcolor.setAlpha(196);
+
+    QPainter p(&pixS);
+    p.fillRect(QRect(0, 0, 64, 64), backcolor);
+    svg.render(&p, "key_s", QRectF(0, 0, 48, 48));
+    
+    qDebug() << "key_s " << svg.boundsOnElement("key_s");
+    qDebug() << "key_d " << svg.boundsOnElement("key_d");
+    qDebug() << "key_f " << svg.boundsOnElement("key_f");
+    
     repeatTimer = new QTimer( this );
     connect( repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()) );
 
@@ -202,6 +335,8 @@ void KeyboardFrame::resizeEvent(QResizeEvent*)
     }
     defaultKeyWidth = width()/nk;
     xoffs = (width()-defaultKeyWidth*nk)/2;
+    
+    placeKeys(&layouts[curLayout], width(), height());
 }
 
 
@@ -414,9 +549,31 @@ int KeyboardFrame::getKey( int &w, int j ) {
 
 void KeyboardFrame::paintEvent(QPaintEvent* e)
 {
-    QPainter painter(this);
-    painter.setClipRect(e->rect());
-    drawKeyboard( painter, e->rect() );
+    QPainter p(this);
+    
+    KeyInfo *ki = layouts[0].keys;
+    for(int i = 0; i < layouts[curLayout].numKeys; i++)
+    {
+        QRectF kr = ki->rectSvg;        // key rectangle on svg
+        layouts[0].svg->render(&p, elemId(ki), ki->rectScr);
+
+        ki++;
+    }
+    
+    p.drawLine(0, 0, 100, 100);
+/*    p.drawPixmap(0, 0, pixS);
+    
+    QSvgRenderer svg(QString("/qwerty.svg"));
+    svg.render(&p, "R", QRectF(100, 100, 48, 48));
+    svg.render(&p, "test", QRectF(150, 150, 48, 48));
+    svg.render(&p, "key_a", QRectF(150, 200, 48, 48));
+    svg.render(&p, "key_s", QRectF(200, 200, 48, 48));
+    svg.render(&p, "key_d", QRectF(250, 200, 48, 48));
+    svg.render(&p, "key_f", QRectF(300, 200, 48, 48));
+    svg.render(&p, "key_g", QRectF(350, 200, 48, 48));*/
+    
+    //painter.setClipRect(e->rect());
+    //drawKeyboard( painter, e->rect() );
     //picks->dc->draw( &painter );
 }
 

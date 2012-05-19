@@ -25,6 +25,8 @@
 #include "pickboardpicks.h"
 #include <QDebug>
 #include <QVibrateAccessory>
+#include <QSvgRenderer>
+#include <QPixmap>
 
 class QTimer;
 
@@ -60,6 +62,25 @@ public:
     KeyboardConfig *dc;
 };
 
+struct KeyInfo {
+    int qcode;
+    ushort unicode;
+    QRectF rectSvg;     // bounding rectangle in SVG
+    QRectF rectScr;     // bounding rectangle on screen
+    QPixmap pic;
+    QChar id[3];        // key id - max 3 chars
+};
+
+struct KeyLayout
+{
+    int numKeys;
+    KeyInfo *keys;      // pointer to first key info
+    QSvgRenderer *svg;
+    QRectF rectSvg;
+};
+
+#define MAX_LAYOUTS 5
+
 /*
     KeyboardFrame is the primary widget for the Keyboard inputmethod.
     It is responsible for marshalling pickboards for displaying the pickboard,
@@ -69,7 +90,7 @@ public:
     expected to be re-routed through Keyboard in the future.
 */
 
-class KeyboardFrame : public QFrame // was QFrame
+class KeyboardFrame : public QFrame
 {
     Q_OBJECT
 public:
@@ -163,6 +184,11 @@ private:
     bool positionTop;
 
     QTimer *repeatTimer;
+    QPixmap pixS;
+    
+    int numLayouts;                 // number of currently loaded layouts
+    int curLayout;                  // current layout
+    KeyLayout layouts[MAX_LAYOUTS];
 };
 
 #endif
