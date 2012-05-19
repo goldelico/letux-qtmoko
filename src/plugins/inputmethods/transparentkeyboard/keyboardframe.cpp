@@ -52,50 +52,43 @@ typedef struct SpecialMap {
     int qcode;
     ushort unicode;
     const char * label;
-    const char * picName;
-    QPixmap *pic;
 };
 
 static SpecialMap specialM[] = {
-    {   Qt::Key_Backspace,      8,      "<",     "backspace", 0 },
-    {   Qt::Key_Tab,            9,      "Tab",   NULL, 0}, // No tr
-    {   Qt::Key_CapsLock,       0xffff, "Caps",  NULL, 0 }, // No tr
-    {   Qt::Key_Return,         13,     "Ret",   NULL, 0 }, // No tr
-    {   Qt::Key_Shift,          0xffff, "Shift", NULL, 0 }, // No tr
-    {   Qt::Key_Control,        0xffff, "Ctrl",  NULL, 0 }, // No tr
-    {   Qt::Key_Alt,            0xffff, "Alt",   NULL, 0 }, // No tr
-    {   Qt::Key_Space,          ' ',    "",      NULL, 0 },
-    {   BackSlash,              43,     "\\",    NULL, 0 },
-
-    // Need images?
-    {   Qt::Key_Up,             0xffff, "^",     "uparrow", 0 },
-    {   Qt::Key_Left,           0xffff, "<",     "leftarrow", 0 },
-    {   Qt::Key_Down,           0xffff, "v",     "downarrow", 0 },
-    {   Qt::Key_Right,          0xffff, ">",     "rightarrow", 0 },
-    {   Qt::Key_Insert,         0xffff, "I",     "insert", 0 },
-    {   Qt::Key_Home,           0xffff, "H",     "home", 0 },
-    {   Qt::Key_PageUp,         0xffff, "U",     "pageup", 0 },
-    {   Qt::Key_End,            0xffff, "E",     "end", 0 },
-    {   Qt::Key_Delete,         0xffff, "X",     "delete", 0 },
-    {   Qt::Key_PageDown,       0xffff, "D",     "pagedown", 0 },
-    {   Blank,                  0,      " ",     NULL, 0 },
-    {   Expand,                 0xffff, "->",    "expand", 0 },
-    {   Opti,                   0xffff, "#",     NULL, 0 },
-    {   ResetDict,              0xffff, "R",     NULL, 0 },
-
+    {   Qt::Key_Backspace,      8,      "bsp"},
+    {   Qt::Key_Tab,            9,      "tab"},
+    {   Qt::Key_CapsLock,       0xffff, "cap"},
+    {   Qt::Key_Return,         13,     "ret"},
+    {   Qt::Key_Shift,          0xffff, "shi"},
+    {   Qt::Key_Control,        0xffff, "ctr"},
+    {   Qt::Key_Alt,            0xffff, "alt"},
+    {   Qt::Key_Space,          ' ',    "spa"},
+    {   BackSlash,              43,     "bsl"},
+    {   Qt::Key_Up,             0xffff, "up"},
+    {   Qt::Key_Left,           0xffff, "lef"},
+    {   Qt::Key_Down,           0xffff, "dow"},
+    {   Qt::Key_Right,          0xffff, "rig"},
+    {   Qt::Key_Insert,         0xffff, "ins"},
+    {   Qt::Key_Home,           0xffff, "hom"},
+    {   Qt::Key_PageUp,         0xffff, "pgu"},
+    {   Qt::Key_End,            0xffff, "pgd"},
+    {   Qt::Key_Delete,         0xffff, "del"},
+    {   Qt::Key_PageDown,       0xffff, "pgd"},
+    {   Blank,                  0,      " "},
+    {   Expand,                 0xffff, "exp"},
+    {   Opti,                   0xffff, "opt"},
     // number pad stuff
-    {   Divide,                 0,      "/",     NULL, 0 },
-    {   Multiply,               0,      "*",     NULL, 0 },
-    {   Add,                    0,      "+",     NULL, 0 },
-    {   Subtract,               0,      "-",     NULL, 0 },
-    {   Decimal,                0,      ".",     NULL, 0 },
-    {   Equal,                  0,      "=",     NULL, 0 },
-    {   Percent,                0,      "%",     NULL, 0 },
-    {   Sqrt,                   0,      "^1/2",  NULL, 0 },
-    {   Inverse,                0,      "1/x",   NULL, 0 },
-
-    {   Escape,                 27,     "ESC",   "escape", 0 },
-    {   0,                      0,      NULL,    NULL, 0}
+    {   Divide,                 0,      "div"},
+    {   Multiply,               0,      "mul"},
+    {   Add,                    0,      "add"},
+    {   Subtract,               0,      "sub"},
+    {   Decimal,                0,      "dec"},
+    {   Equal,                  0,      "eq"},
+    {   Percent,                0,      "per"},
+    {   Sqrt,                   0,      "sqr"},
+    {   Inverse,                0,      "inv"},
+    {   Escape,                 27,     "esc"},
+    {   0,                      0,      NULL}
 };
 
 // Add keys from svg file to list. The keys are in form id="key_a" where a is
@@ -237,22 +230,9 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     setPalette(pal);
     setAutoFillBackground(true);
 
-    int specialIndex=0;
-    while  (specialM[specialIndex].qcode != 0 ){
-        if (specialM[specialIndex].picName != NULL) {
-            QString pName = QString(":image/keyboard/") + specialM[specialIndex].picName;
-            specialM[specialIndex].pic = new QPixmap(pName);
-        }else{
-        }
-        specialIndex++;
-    }
-
     picks = new KeyboardPicks( this );
     picks->initialise();
 
-    QSvgRenderer svg(QString("/qwerty.svg"), this);
-    
-    
     curLayout = 0;
     numLayouts = 1;
     fillLayout("/qwerty.svg", &layouts[0]);
@@ -261,14 +241,6 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QColor backcolor = palette().shadow().color();
     backcolor.setAlpha(196);
 
-    QPainter p(&pixS);
-    p.fillRect(QRect(0, 0, 64, 64), backcolor);
-    svg.render(&p, "key_s", QRectF(0, 0, 48, 48));
-    
-    qDebug() << "key_s " << svg.boundsOnElement("key_s");
-    qDebug() << "key_d " << svg.boundsOnElement("key_d");
-    qDebug() << "key_f " << svg.boundsOnElement("key_f");
-    
     repeatTimer = new QTimer( this );
     connect( repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()) );
 
@@ -277,11 +249,6 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
 
 KeyboardFrame::~KeyboardFrame()
 {
-    int specialIndex=0;
-    while  (specialM[specialIndex].qcode != 0 ){
-        delete specialM[specialIndex].pic;
-        specialIndex++;
-    }
 }
 
 void KeyboardFrame::showEvent(QShowEvent *e)
@@ -603,12 +570,9 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                     QString s;
                     bool pressed = (k == pressedKey);
                     bool blank = (k == 0223);
-                    QPixmap *pic = 0;
 
                     if ( k >= 0x80 ) {
                         s = specialM[k - 0x80].label;
-
-                        pic = specialM[k - 0x80].pic;
 
                         if ( k == ShiftCode ) {
                             pressed = shift;
@@ -643,16 +607,12 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
                         if ( pressed )
                             p.fillRect( x, y, kw, keyHeight-1, keycolor_pressed );
 
-                        if (pic && !pic->isNull()) {
-                            p.drawPixmap( x + 1, y + 2, *pic );
-                        } else {
                             p.setFont(font());
                             p.setPen(textcolor);
                             if(pressed)
                                 p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignTop | Qt::AlignHCenter, s );
                             else
                                 p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
-                        }
                     }
                 }
 
@@ -777,6 +737,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
         key_down = true;
     }
     pressedKey = k;
+    qDebug() << "pressedKey=" << pressedKey;
     pressedKeyRect = keyrect;
     repaint(keyrect);
     if ( pressTid )
