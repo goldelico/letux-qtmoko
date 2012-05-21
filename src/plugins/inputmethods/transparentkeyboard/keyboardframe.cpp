@@ -3,6 +3,7 @@
 ** This file is part of the Qt Extended Opensource Package.
 **
 ** Copyright (C) 2009 Trolltech ASA.
+** Copyright (C) 2012 Radek Polak <psonek2@seznam.cz>
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -93,7 +94,7 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
     memset((void *)(keys), 0, sizeof(KeyInfo) * count);
 
     KeyInfo *ki = keys;
-    for (int i = 0; i < keyIds.count(); i++) {
+    for (int i = 0; i < count; i++) {
         QString id = keyIds.at(i);
         bool ok;
         ki->qcode = id.toInt(&ok, 16);
@@ -107,6 +108,28 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
             layout->rectSvg = layout->rectSvg.united(ki->rectSvg);
         ki++;
     }
+    
+    // Order keys by y
+    bool ok;
+    do
+    {
+        ok = true;
+        ki = keys;
+        for(int i = 1; i < count; i++)
+        {
+            KeyInfo *next = ki + 1;
+            if(next->rectSvg.top() < ki->rectSvg.top())
+            {
+                ok = false;
+                KeyInfo tmp = *next;
+                *next = *ki;
+                *ki = tmp;
+            }
+            ki++;
+        }
+        qDebug() << "sort" << ok;
+    } while(!ok);
+    
     return true;
 }
 
@@ -124,11 +147,11 @@ static void placeKeys(KeyLayout * layout, float w, float h)
         ks->setWidth((w * ki->rectSvg.width()) / lr.width());
         ks->setHeight((h * ki->rectSvg.height()) / lr.height());
 
-        QPixmap px = ki->pic = QPixmap(ks->width(), ks->height());
+        //QPixmap px = ki->pic = QPixmap(ks->width(), ks->height());
 
-        QPainter p(&px);
-        p.fillRect(*ks, Qt::white);
-        layout->svg->render(&p, elemId(ki), QRectF(0, 0, 48, 48));
+        //QPainter p(&px);
+        //p.fillRect(*ks, Qt::white);
+        //layout->svg->render(&p, elemId(ki), QRectF(0, 0, 48, 48));
 
         ki++;
     }
@@ -227,7 +250,7 @@ KeyboardFrame::~KeyboardFrame()
 
         KeyInfo *ki = layouts[i].keys;
         while (layouts[i].numKeys--) {
-            ki->pic = NULL;     // TODO: does this free pixmap data?
+            //ki->pic = NULL;     // TODO: does this free pixmap data?
             ki++;
         }
         free(layouts[i].keys);
@@ -268,8 +291,10 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
     for (int i = 0; i < layouts[curLayout].numKeys; i++) {
         
         QRectF rect = ki->rectScr;
-        if(ki == pressedKey)
+        if(ki == pressedKey) {
             rect.moveTop(rect.top() - rect.height() / 2);
+            p.fillRect(rect, Qt::black);
+        }
         
         layouts[0].svg->render(&p, elemId(ki), rect);
         ki++;

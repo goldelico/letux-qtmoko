@@ -3,6 +3,7 @@
 ** This file is part of the Qt Extended Opensource Package.
 **
 ** Copyright (C) 2009 Trolltech ASA.
+** Copyright (C) 2012 Radek Polak <psonek2@seznam.cz>
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -35,7 +36,7 @@ struct KeyInfo
     int qcode;                  // value from Qt::Key or unicode value
     QRectF rectSvg;             // bounding rectangle in SVG
     QRectF rectScr;             // bounding rectangle on screen
-    QPixmap pic;
+    //QPixmap pic;
 };
 
 struct KeyLayout
