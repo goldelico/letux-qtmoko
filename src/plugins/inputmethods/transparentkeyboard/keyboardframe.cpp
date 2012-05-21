@@ -139,7 +139,8 @@ static void placeKeys(KeyLayout *layout, float w, float h)
     }
 }
 
-// Return ASCII/unicode value for given KeyInfo
+// Return ASCII/unicode value for given KeyInfo. For special keys like shift,
+// ctrl and alt return -1
 static int getKeyChar(KeyInfo *ki)
 {
     switch(ki->qcode)
@@ -148,13 +149,34 @@ static int getKeyChar(KeyInfo *ki)
         case Qt::Key_Tab: return 9;
         case Qt::Key_Return: return 13;
         case Qt::Key_Escape: return 27;
+        case Qt::Key_Shift:
+        case Qt::Key_Alt:
+        case Qt::Key_Control:
+        case Qt::Key_Mode_switch: return -1;
         default: return ki->qcode;
     }
 }
 
+static void setModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
+{
+    mods |= mod;
+}
+
+static void clearModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
+{
+    mods &= ~mod;
+}
+
+static void toggleModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
+{
+    if(mods & mod)
+        clearModifier(mods, mod);
+    else
+        setModifier(mods, mod);
+}
+
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
-    QFrame(parent, f), shift(false), lock(false), ctrl(false),
-    alt(false), useLargeKeys(true), useOptiKeys(0), pressedKey(-1),
+    QFrame(parent, f), pressedKey(-1),
     unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
     vib(), positionTop(true), pixS(64, 64)
 {
@@ -304,26 +326,26 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     bool key_down = false;
     unicode = getKeyChar(ki);
     qkeycode = k;
-    if ( k >= 0x80 ) {
-        if ( k == Qt::Key_Shift ) {
-            shift = !shift;
-            keyrect = rect();
-        } else if ( k == Qt::Key_Alt ){
-            alt = !alt;
-        } else if ( k == Qt::Key_CapsLock ) {
-            lock = !lock;
-            keyrect = rect();
-        } else if ( k == Qt::Key_Control ) {
-            qDebug() << "ctrl pressed";
-            unicode = -1;
-            ctrl = !ctrl;
-        } else if ( k == Qt::Key_Mode_switch) {
-            useOptiKeys = !useOptiKeys;
-            resizeEvent(0);
-            repaint( ); // need it to clear first
-        } else {
-            //qkeycode = specialM[ k - 0x80 ].qcode;
-            //unicode = specialM[ k - 0x80 ].unicode;
+    if ( unicode == -1 ) {
+        
+        switch(k)
+        {
+            case Qt::Key_Shift:
+                toggleModifier(modifiers, Qt::ShiftModifier);
+                break;
+                
+            case Qt::Key_Alt:
+                toggleModifier(modifiers, Qt::AltModifier);
+                break;
+                
+            case Qt::Key_Control:
+                toggleModifier(modifiers, Qt::ControlModifier);
+                unicode = -1;
+                break;
+                
+            case Qt::Key_Mode_switch:
+                break;
+            
         }
     } else {
         //due to the way the keyboard is defined, we know that
@@ -346,24 +368,14 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
         }*/
     }
     if  ( unicode != -1 ) {
-        if ( ctrl && unicode >= 'a' && unicode <= 'z' )
+        if ( (modifiers & Qt::ControlModifier) && unicode >= 'a' && unicode <= 'z' )
             unicode = unicode - 'a'+1;
-
-        modifiers = Qt::NoModifier;
-        if (shift) {
-            modifiers |= Qt::ShiftModifier;
-            keyrect = rect();
-        }
-        if (ctrl)
-            modifiers |= Qt::ControlModifier;
-        if (alt)
-            modifiers |= Qt::AltModifier;
 
         qLog(Input) << "keypressed: code=" << unicode;
 
         qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, false );
 
-	clearMods();
+        modifiers = Qt::NoModifier;
 
         key_down = true;
     }
@@ -387,12 +399,9 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
 {
     if(ignorePress)
         return;
-    
-    //vib.setVibrateNow(false);
 
     repeatTimer->stop();
     if ( pressTid == 0 )
-        clearHighlight();
 #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
     if ( unicode != -1 || qkeycode != 0) {
         qLog(Input) << "keyrelease: code=" << unicode;
@@ -407,8 +416,6 @@ void KeyboardFrame::timerEvent(QTimerEvent* e)
     if ( e->timerId() == pressTid ) {
         killTimer(pressTid);
         pressTid = 0;
-        if ( !pressed )
-            clearHighlight();
     }
 }
 
@@ -419,22 +426,6 @@ void KeyboardFrame::repeat()
         qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, true );
     } else
         repeatTimer->stop();
-}
-
-void KeyboardFrame::clearMod(int modindex) {
-}
-
-void KeyboardFrame::clearMods()
-{
-    shift = alt = ctrl = false;
-}
-
-void KeyboardFrame::clearHighlight()
-{
-    if ( pressedKey >= 0 ) {
-        pressedKey = -1;
-        repaint(pressedKeyRect);
-    }
 }
 
 QRect KeyboardFrame::geometryHint() const
@@ -456,10 +447,6 @@ QSize KeyboardFrame::sizeHint() const
 
 void KeyboardFrame::resetState()
 {
-    shift = false;
-    lock = false;
-    ctrl = false;
-    alt = false;
     pressedKey = -1;
     unicode = -1;
     qkeycode = 0;

@@ -79,8 +79,6 @@ public:
 
     void hideEvent ( QHideEvent * );
 
-    void setMode(int mode) { useOptiKeys = mode; }
-
     QRect geometryHint() const;
     QSize sizeHint() const;
 
@@ -115,25 +113,8 @@ private slots:
     void repeat();
 
 private:
-    int keycode( int i2, int j, const uchar **keyboard, QRect *repaintrect );
-    int getKey( int &w, int j = -1 );
-    void clearHighlight();
-    void clearMod(int mod);
-    void clearMods();
-
-    uint shift:1;
-    uint lock:1;
-    uint ctrl:1;
-    uint alt:1;
-    uint useLargeKeys:1;
-    uint useOptiKeys:1;
-
     int pressedKey;
     QRect pressedKeyRect;
-
-    int keyHeight;
-    int defaultKeyWidth;
-    int xoffs;
 
     int unicode;
     int qkeycode;
