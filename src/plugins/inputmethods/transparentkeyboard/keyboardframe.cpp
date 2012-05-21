@@ -24,12 +24,9 @@
 #endif
 #include <qpainter.h>
 #include <qfontmetrics.h>
-#include <qtimer.h>
 #include <ctype.h>
 #include <qtopialog.h>
 
-#include <QPaintEvent>
-#include <QMouseEvent>
 #include <QPalette>
 #include <QApplication>
 #include <QDesktopWidget>
@@ -37,6 +34,7 @@
 #include <QFile>
 #include <QStyle>
 #include <QSoftMenuBar>
+#include <QMouseEvent>
 
 // Add keys from svg file to list. The keys in svg are in form id="key_xxx"
 // where xxx is hex value from Qt::Key or unicode value of given key.
@@ -176,9 +174,14 @@ static void toggleModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers m
 }
 
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
-    QFrame(parent, f), pressedKey(NULL), pressedChar(-1),
-    modifiers(Qt::NoModifier), pressTid(0),
-    vib(), positionTop(true)
+    QFrame(parent, f)
+    , repeatTimer(this)
+    , vib()
+    , pressedKey(NULL)
+    , pressedChar(-1)
+    , modifiers(Qt::NoModifier)
+    , pressTid(0)
+    , positionTop(true)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
@@ -207,8 +210,7 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QColor backcolor = palette().shadow().color();
     backcolor.setAlpha(196);
 
-    repeatTimer = new QTimer( this );
-    connect( repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()) );
+    connect(&repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()));
 
     emit needsPositionConfirmation();
 }
@@ -291,10 +293,8 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     for(;;)
     {
         if(ki->rectScr.contains(e->x(), e->y()))
-        {
-            qLog(Input) << "pressedKi=" << ki->qcode;
             break;
-        }
+
         ki++;
         if(--num <= 0)      // key not found
             return;
@@ -348,6 +348,8 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 
         qwsServer->processKeyEvent( pressedChar, ki->qcode, modifiers, true, false );
         modifiers = Qt::NoModifier;
+        
+        repeatTimer.start( 500 );
     }
     repaint();
     if ( pressTid )
@@ -362,7 +364,7 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
     if(ignorePress)
         return;
 
-    repeatTimer->stop();
+    repeatTimer.stop();
     if ( pressTid == 0 )
 #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
     if (pressedKey) {
@@ -383,10 +385,10 @@ void KeyboardFrame::timerEvent(QTimerEvent* e)
 void KeyboardFrame::repeat()
 {
     if ( pressedKey && pressedChar > 0) {
-        repeatTimer->start( 150 );
+        repeatTimer.start( 150 );
         qwsServer->processKeyEvent( pressedChar, pressedKey->qcode, modifiers, true, true );
     } else
-        repeatTimer->stop();
+        repeatTimer.stop();
 }
 
 QRect KeyboardFrame::geometryHint() const
@@ -415,7 +417,7 @@ void KeyboardFrame::resetState()
         killTimer(pressTid);
         pressTid = 0;
     };
-    repeatTimer->stop();
+    repeatTimer.stop();
 }
 
 

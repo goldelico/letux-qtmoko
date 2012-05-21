@@ -26,16 +26,9 @@
 #include <QSvgRenderer>
 #include <QPixmap>
 #include <QFrame>
+#include <QTimer>
 
 #define MAX_LAYOUTS 5
-
-class QTimer;
-
-enum currentPosition
-{
-    Top,
-    Bottom
-};
 
 struct KeyInfo {
     int qcode;          // value from Qt::Key or unicode value
@@ -68,31 +61,21 @@ public:
     virtual ~KeyboardFrame();
 
     void resetState();
-
     void mousePressEvent(QMouseEvent*);
     void mouseReleaseEvent(QMouseEvent*);
     void resizeEvent(QResizeEvent*);
     void showEvent(QShowEvent*);
     void paintEvent(QPaintEvent* e);
     void timerEvent(QTimerEvent* e);
-    void drawKeyboard(QPainter &p, const QRect& clip, int key = -1);
-
     void hideEvent ( QHideEvent * );
-
     QRect geometryHint() const;
     QSize sizeHint() const;
-
     bool obscures( const QPoint &point );
-
-    void focusInEvent ( QFocusEvent *e){
-    Q_UNUSED(e);
-    qWarning() << "Warning: keyboard got focus";
+    void focusInEvent ( QFocusEvent *) {
+        qWarning() << "Warning: keyboard got focus";
     };
-
-    bool filter(int /*unicode*/, int /*keycode*/, int /*modifiers*/,
-                        bool /*isPress*/, bool /*autoRepeat*/){return false;};
-
-    bool filter(const QPoint &, int /*state*/, int /*wheel*/){return false;};
+    bool filter(int, int, int, bool, bool) {return false;};
+    bool filter(const QPoint &, int, int) {return false;};
 
 signals:
     void needsPositionConfirmation();
@@ -102,34 +85,21 @@ signals:
 public slots:
     void swapPosition();
 
-protected:
-//    void reset(){QWSInputMethod::reset();};
-//    void updateHandler(int type){};
-//    void mouseHandler(int pos, int state){};
-//    void queryResponse(int property, const QVariant&){};
-
-
 private slots:
     void repeat();
 
 private:
+    QTimer repeatTimer;
+    QVibrateAccessory vib;
+
     KeyInfo *pressedKey;            // currently pressed key or NULL
     int pressedChar;                // unicode value of pressed key
     Qt::KeyboardModifiers modifiers;
 
     int pressTid;
-    struct timespec pressTime;      // last time key was pressed
-    bool ignorePress;               // used to ignore too fast presses
-
-    QVibrateAccessory vib;
-
-    bool microFocusPending;
-    bool showPending;
-
     bool positionTop;
-
-    QTimer *repeatTimer;
-    
+    struct timespec pressTime;      // last time key was pressed
+    bool ignorePress;               // used to ignore too fast presses    
     int numLayouts;                 // number of currently loaded layouts
     int curLayout;                  // current layout
     KeyLayout layouts[MAX_LAYOUTS];
