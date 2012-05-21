@@ -176,9 +176,9 @@ static void toggleModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers m
 }
 
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
-    QFrame(parent, f), pressedKey(-1),
-    unicode(-1), qkeycode(0), modifiers(Qt::NoModifier), pressTid(0), pressed(false),
-    vib(), positionTop(true), pixS(64, 64)
+    QFrame(parent, f), pressedKey(NULL), pressedChar(-1),
+    modifiers(Qt::NoModifier), pressTid(0),
+    vib(), positionTop(true)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
@@ -263,30 +263,10 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
     for(int i = 0; i < layouts[curLayout].numKeys; i++)
     {
 //        qDebug() << "pressedKey=" << pressedKey << ", ki->qcode=" << ki->qcode;
-        if(pressedKey >= 0 && pressedKey != ki->qcode)
-            continue;
-        
         QRectF kr = ki->rectSvg;        // key rectangle on svg
         layouts[0].svg->render(&p, elemId(ki), ki->rectScr);
-
         ki++;
     }
-    
-    p.drawLine(0, 0, 100, 100);
-/*    p.drawPixmap(0, 0, pixS);
-    
-    QSvgRenderer svg(QString("/qwerty.svg"));
-    svg.render(&p, "R", QRectF(100, 100, 48, 48));
-    svg.render(&p, "test", QRectF(150, 150, 48, 48));
-    svg.render(&p, "key_a", QRectF(150, 200, 48, 48));
-    svg.render(&p, "key_s", QRectF(200, 200, 48, 48));
-    svg.render(&p, "key_d", QRectF(250, 200, 48, 48));
-    svg.render(&p, "key_f", QRectF(300, 200, 48, 48));
-    svg.render(&p, "key_g", QRectF(350, 200, 48, 48));*/
-    
-    //painter.setClipRect(e->rect());
-    //drawKeyboard( painter, e->rect() );
-    //picks->dc->draw( &painter );
 }
 
 void KeyboardFrame::mousePressEvent(QMouseEvent *e)
@@ -320,15 +300,11 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
             return;
     }
 
-    QRect keyrect;
-    int k = ki->qcode;
-
-    bool key_down = false;
-    unicode = getKeyChar(ki);
-    qkeycode = k;
-    if ( unicode == -1 ) {
+    pressedKey = ki;
+    pressedChar = getKeyChar(ki);
+    if ( pressedChar == -1 ) {
         
-        switch(k)
+        switch(ki->qcode)
         {
             case Qt::Key_Shift:
                 toggleModifier(modifiers, Qt::ShiftModifier);
@@ -340,7 +316,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
                 
             case Qt::Key_Control:
                 toggleModifier(modifiers, Qt::ControlModifier);
-                unicode = -1;
                 break;
                 
             case Qt::Key_Mode_switch:
@@ -367,30 +342,17 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
             unicode = k;
         }*/
     }
-    if  ( unicode != -1 ) {
-        if ( (modifiers & Qt::ControlModifier) && unicode >= 'a' && unicode <= 'z' )
-            unicode = unicode - 'a'+1;
+    if  ( pressedChar != -1 ) {
+        if ( (modifiers & Qt::ControlModifier) && pressedChar >= 'a' && pressedChar <= 'z' )
+            pressedChar = pressedChar - 'a' + 1;
 
-        qLog(Input) << "keypressed: code=" << unicode;
-
-        qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, false );
-
+        qwsServer->processKeyEvent( pressedChar, ki->qcode, modifiers, true, false );
         modifiers = Qt::NoModifier;
-
-        key_down = true;
     }
-    pressedKey = k;
-    qDebug() << "pressedKey=" << pressedKey;
-    pressedKeyRect = keyrect;
-    repaint(keyrect);
+    repaint();
     if ( pressTid )
         killTimer(pressTid);
     pressTid = startTimer(80);
-    pressed = true;
-    if(key_down)
-    {
-        repeatTimer->start( 500 );
-    };
     emit needsPositionConfirmation();
 }
 
@@ -403,12 +365,11 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
     repeatTimer->stop();
     if ( pressTid == 0 )
 #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-    if ( unicode != -1 || qkeycode != 0) {
-        qLog(Input) << "keyrelease: code=" << unicode;
-        qwsServer->processKeyEvent( unicode, qkeycode, modifiers, false, false );
+    if (pressedKey) {
+        qwsServer->processKeyEvent( pressedChar, pressedKey->qcode, modifiers, false, false );
     }
 #endif
-    pressed = false;
+    pressedKey = NULL;
 }
 
 void KeyboardFrame::timerEvent(QTimerEvent* e)
@@ -421,9 +382,9 @@ void KeyboardFrame::timerEvent(QTimerEvent* e)
 
 void KeyboardFrame::repeat()
 {
-    if ( pressed && (unicode != -1 || qkeycode != 0)) {
+    if ( pressedKey && pressedChar > 0) {
         repeatTimer->start( 150 );
-        qwsServer->processKeyEvent( unicode, qkeycode, modifiers, true, true );
+        qwsServer->processKeyEvent( pressedChar, pressedKey->qcode, modifiers, true, true );
     } else
         repeatTimer->stop();
 }
@@ -447,17 +408,14 @@ QSize KeyboardFrame::sizeHint() const
 
 void KeyboardFrame::resetState()
 {
-    pressedKey = -1;
-    unicode = -1;
-    qkeycode = 0;
+    pressedKey = NULL;
+    pressedChar = -1;
     modifiers = Qt::NoModifier;
-    pressed = false;
     if ( pressTid ) {
         killTimer(pressTid);
         pressTid = 0;
     };
     repeatTimer->stop();
-
 }
 
 

@@ -113,15 +113,11 @@ private slots:
     void repeat();
 
 private:
-    int pressedKey;
-    QRect pressedKeyRect;
-
-    int unicode;
-    int qkeycode;
+    KeyInfo *pressedKey;            // currently pressed key or NULL
+    int pressedChar;                // unicode value of pressed key
     Qt::KeyboardModifiers modifiers;
 
     int pressTid;
-    bool pressed;
     struct timespec pressTime;      // last time key was pressed
     bool ignorePress;               // used to ignore too fast presses
 
@@ -133,7 +129,6 @@ private:
     bool positionTop;
 
     QTimer *repeatTimer;
-    QPixmap pixS;
     
     int numLayouts;                 // number of currently loaded layouts
     int curLayout;                  // current layout
