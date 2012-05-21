@@ -63,12 +63,10 @@ public:
 };
 
 struct KeyInfo {
-    int qcode;
-    ushort unicode;
+    int qcode;          // value from Qt::Key or unicode value
     QRectF rectSvg;     // bounding rectangle in SVG
     QRectF rectScr;     // bounding rectangle on screen
     QPixmap pic;
-    QChar id[3];        // key id - max 3 chars
 };
 
 struct KeyLayout

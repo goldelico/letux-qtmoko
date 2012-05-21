@@ -126,14 +126,7 @@ static void addKeys(const QString & svgFile, QStringList & keyList)
 // Return name of the element in svg for given key
 static QString elemId(KeyInfo *ki)
 {
-    QString res("key_");
-    for(int i = 0; i < 3; i++) {
-        QChar ch = ki->id[i];
-        if(ch == 0)
-            break;
-        res += ch;
-    }
-    return res;
+    return "key_" + QString::number(ki->qcode, 16);
 }
 
 // Fill screen resolution independent properties
@@ -160,16 +153,12 @@ static bool fillLayout(const QString & svgFile, KeyLayout *layout)
     for(int i = 0; i < keyIds.count(); i++)
     {
         QString id = keyIds.at(i);
-        if(id.length() > 3)
-            id = id.left(3);
-        memset(ki->id, 0, sizeof(ki->id));
-        memcpy(ki->id, id.constData(), id.length() * 2);
-
+        bool ok;
+        ki->qcode = id.toInt(&ok, 16);
+        if(!ok)
+            qWarning() << "key id=" << id << " must be hex number";
+        
         ki->rectSvg = svg->boundsOnElement(elemId(ki));
-        if(id.count() == 1) {
-            ki->unicode = id.at(0).unicode();
-            ki->qcode = ki->unicode;
-        }
         if(i == 0)
             layout->rectSvg = ki->rectSvg;
         else
@@ -521,6 +510,10 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
     KeyInfo *ki = layouts[0].keys;
     for(int i = 0; i < layouts[curLayout].numKeys; i++)
     {
+//        qDebug() << "pressedKey=" << pressedKey << ", ki->qcode=" << ki->qcode;
+        if(pressedKey >= 0 && pressedKey != ki->qcode)
+            continue;
+        
         QRectF kr = ki->rectSvg;        // key rectangle on svg
         layouts[0].svg->render(&p, elemId(ki), ki->rectScr);
 
@@ -640,18 +633,35 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
         return;
 
     vib.setVibrateNow(true, 32);
+
+    KeyInfo *ki = layouts[curLayout].keys;
+    int num = layouts[curLayout].numKeys;
+    for(;;)
+    {
+        if(ki->rectScr.contains(e->x(), e->y()))
+        {
+            qDebug() << "pressedKi=" << ki->qcode;
+            break;
+        }
+        ki++;
+        if(--num <= 0)      // key not found
+            return;
+    }
+    
     
     int i2 = ((e->x() - xoffs) * 2) / defaultKeyWidth;
     int j = (e->y() - picks->height()) / keyHeight;
 
     QRect keyrect;
-    int k = keycode( i2, j, (const uchar **)((useOptiKeys) ? keyboard_opti : keyboard_standard), &keyrect );
+    //int k = keycode( i2, j, (const uchar **)((useOptiKeys) ? keyboard_opti : keyboard_standard), &keyrect );
+    
+    int k = ki->qcode;
 
     bool key_down = false;
     unicode = -1;
     qkeycode = 0;
     if ( k >= 0x80 ) {
-        if ( k == ShiftCode ) {
+        if ( k == Qt::Key_Shift ) {
             shift = !shift;
             keyrect = rect();
         } else if ( k == AltCode ){
