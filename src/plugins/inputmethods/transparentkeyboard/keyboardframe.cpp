@@ -117,7 +117,6 @@ static void addKeys(const QString & svgFile, QStringList & keyList)
             continue;
 
         QString key = line.mid(start + 8, end - start - 8);
-        qDebug() << "key=" << key;
         keyList.append(key);
     }
     f.close();
