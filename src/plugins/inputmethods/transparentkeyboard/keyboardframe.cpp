@@ -192,6 +192,19 @@ static void placeKeys(KeyLayout *layout, float w, float h)
     }
 }
 
+// Return ASCII value for given Qt::Key
+static int getKeyChar(KeyInfo *ki)
+{
+    switch(ki->qcode)
+    {
+        case Qt::Key_Backspace: return 8;
+        case Qt::Key_Tab: return 9;
+        case Qt::Key_Return: return 13;
+        case Qt::Key_Escape: return 27;
+        default: return ki->qcode;
+    }
+}
+
 KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     QFrame(parent, f), shift(false), lock(false), ctrl(false),
     alt(false), useLargeKeys(true), useOptiKeys(0), pressedKey(-1),
@@ -619,8 +632,7 @@ void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
 
 void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 {
-    clearHighlight(); // typing fast?
-
+    // Ingore too fast clicks - this filters out some touchscreen errors
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
 
@@ -631,62 +643,56 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     if(ignorePress)
         return;
 
+    // Vibrate
     vib.setVibrateNow(true, 32);
 
+    // Find pressed key
     KeyInfo *ki = layouts[curLayout].keys;
     int num = layouts[curLayout].numKeys;
     for(;;)
     {
         if(ki->rectScr.contains(e->x(), e->y()))
         {
-            qDebug() << "pressedKi=" << ki->qcode;
+            qLog(Input) << "pressedKi=" << ki->qcode;
             break;
         }
         ki++;
         if(--num <= 0)      // key not found
             return;
     }
-    
-    
-    int i2 = ((e->x() - xoffs) * 2) / defaultKeyWidth;
-    int j = (e->y() - picks->height()) / keyHeight;
 
     QRect keyrect;
-    //int k = keycode( i2, j, (const uchar **)((useOptiKeys) ? keyboard_opti : keyboard_standard), &keyrect );
-    
     int k = ki->qcode;
 
     bool key_down = false;
-    unicode = -1;
-    qkeycode = 0;
+    unicode = getKeyChar(ki);
+    qkeycode = k;
     if ( k >= 0x80 ) {
         if ( k == Qt::Key_Shift ) {
             shift = !shift;
             keyrect = rect();
-        } else if ( k == AltCode ){
+        } else if ( k == Qt::Key_Alt ){
             alt = !alt;
-        } else if ( k == CapsCode ) {
+        } else if ( k == Qt::Key_CapsLock ) {
             lock = !lock;
             keyrect = rect();
-        } else if ( k == CtrlCode ) {
+        } else if ( k == Qt::Key_Control ) {
+            qDebug() << "ctrl pressed";
+            unicode = -1;
             ctrl = !ctrl;
-        } else if ( k == 0224 /* Expand */ ) {
-            useLargeKeys = !useLargeKeys;
-            resizeEvent(0);
-            repaint( ); // need it to clear first
-        } else if ( k == 0225 /* Opti/Toggle */ ) {
+        } else if ( k == Qt::Key_Mode_switch) {
             useOptiKeys = !useOptiKeys;
             resizeEvent(0);
             repaint( ); // need it to clear first
         } else {
-            qkeycode = specialM[ k - 0x80 ].qcode;
-            unicode = specialM[ k - 0x80 ].unicode;
+            //qkeycode = specialM[ k - 0x80 ].qcode;
+            //unicode = specialM[ k - 0x80 ].unicode;
         }
     } else {
         //due to the way the keyboard is defined, we know that
         //k is within the ASCII range, and can be directly mapped to
         //a qkeycode; except letters, which are all uppercase
-        qkeycode = toupper(k);
+        /*qkeycode = toupper(k);
         if ( shift^lock ) {
             if ( !isalpha( k ) ) {
             for ( unsigned i = 0; i < sizeof(shiftMap)/sizeof(ShiftMap); i++ )
@@ -700,7 +706,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
             }
         } else {
             unicode = k;
-        }
+        }*/
     }
     if  ( unicode != -1 ) {
         if ( ctrl && unicode >= 'a' && unicode <= 'z' )
