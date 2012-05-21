@@ -266,9 +266,12 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
 
     KeyInfo *ki = layouts[0].keys;
     for (int i = 0; i < layouts[curLayout].numKeys; i++) {
-//        qDebug() << "pressedKey=" << pressedKey << ", ki->qcode=" << ki->qcode;
-        QRectF kr = ki->rectSvg;    // key rectangle on svg
-        layouts[0].svg->render(&p, elemId(ki), ki->rectScr);
+        
+        QRectF rect = ki->rectScr;
+        if(ki == pressedKey)
+            rect.moveTop(rect.top() - rect.height() / 2);
+        
+        layouts[0].svg->render(&p, elemId(ki), rect);
         ki++;
     }
 }
@@ -374,6 +377,7 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
         }
 #endif
     pressedKey = NULL;
+    repaint();
 }
 
 void KeyboardFrame::timerEvent(QTimerEvent * e)
