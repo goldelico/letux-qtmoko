@@ -41,24 +41,22 @@
 static void addKeys(const QString & svgFile, QStringList & keyList)
 {
     QFile f(svgFile);
-    if(!f.open(QIODevice::ReadOnly))
-    {
+    if (!f.open(QIODevice::ReadOnly)) {
         qWarning() << "failed to open kbd file " << svgFile;
         return;
     }
     QByteArray line;
-    for(;;)
-    {
+    for (;;) {
         line = f.readLine();
-        if(line.isEmpty())
+        if (line.isEmpty())
             break;
 
         int start = line.indexOf("id=\"key_");
-        if(start < 0)
+        if (start < 0)
             continue;
 
         int end = line.indexOf('"', start + 8);
-        if(end < 0)
+        if (end < 0)
             continue;
 
         QString key = line.mid(start + 8, end - start - 8);
@@ -68,42 +66,42 @@ static void addKeys(const QString & svgFile, QStringList & keyList)
 }
 
 // Return name of the element in svg for given key
-static QString elemId(KeyInfo *ki)
+static QString elemId(KeyInfo * ki)
 {
     return "key_" + QString::number(ki->qcode, 16);
 }
 
 // Fill screen resolution independent properties
-static bool fillLayout(const QString & svgFile, KeyLayout *layout)
+static bool fillLayout(const QString & svgFile, KeyLayout * layout)
 {
     // Make key list
     QStringList keyIds;
     addKeys(svgFile, keyIds);
     int count = layout->numKeys = keyIds.count();
-    if(count == 0) {
+    if (count == 0) {
         qWarning() << "fillLayout: no keys found";
         return false;
     }
 
     QSvgRenderer *svg = layout->svg = new QSvgRenderer(svgFile);
-    KeyInfo *keys = layout->keys = (KeyInfo *)(malloc(sizeof(KeyInfo) * count));
-    if(keys == NULL) {
+    KeyInfo *keys = layout->keys =
+        (KeyInfo *) (malloc(sizeof(KeyInfo) * count));
+    if (keys == NULL) {
         qWarning() << "fillLayout: keys null";
         return false;
     }
-    memset((void*)(keys), 0, sizeof(KeyInfo) * count);
+    memset((void *)(keys), 0, sizeof(KeyInfo) * count);
 
     KeyInfo *ki = keys;
-    for(int i = 0; i < keyIds.count(); i++)
-    {
+    for (int i = 0; i < keyIds.count(); i++) {
         QString id = keyIds.at(i);
         bool ok;
         ki->qcode = id.toInt(&ok, 16);
-        if(!ok)
+        if (!ok)
             qWarning() << "key id=" << id << " must be hex number";
-        
+
         ki->rectSvg = svg->boundsOnElement(elemId(ki));
-        if(i == 0)
+        if (i == 0)
             layout->rectSvg = ki->rectSvg;
         else
             layout->rectSvg = layout->rectSvg.united(ki->rectSvg);
@@ -113,14 +111,13 @@ static bool fillLayout(const QString & svgFile, KeyLayout *layout)
 }
 
 // Compute key positions on the screen
-static void placeKeys(KeyLayout *layout, float w, float h)
+static void placeKeys(KeyLayout * layout, float w, float h)
 {
     KeyInfo *ki = layout->keys;
     QRectF lr = layout->rectSvg;    // layout rectangle
-    for(int i = 0; i < layout->numKeys; i++)
-    {
-        QRectF kr = ki->rectSvg;        // key rectangle on svg
-        QRectF *ks = &(ki->rectScr);       // key rectangle on screen
+    for (int i = 0; i < layout->numKeys; i++) {
+        QRectF kr = ki->rectSvg;    // key rectangle on svg
+        QRectF *ks = &(ki->rectScr);    // key rectangle on screen
 
         ks->setLeft((w * (kr.left() - lr.left())) / lr.width());
         ks->setTop((h * (kr.top() - lr.top())) / lr.height());
@@ -139,19 +136,24 @@ static void placeKeys(KeyLayout *layout, float w, float h)
 
 // Return ASCII/unicode value for given KeyInfo. For special keys like shift,
 // ctrl and alt return -1
-static int getKeyChar(KeyInfo *ki)
+static int getKeyChar(KeyInfo * ki)
 {
-    switch(ki->qcode)
-    {
-        case Qt::Key_Backspace: return 8;
-        case Qt::Key_Tab: return 9;
-        case Qt::Key_Return: return 13;
-        case Qt::Key_Escape: return 27;
-        case Qt::Key_Shift:
-        case Qt::Key_Alt:
-        case Qt::Key_Control:
-        case Qt::Key_Mode_switch: return -1;
-        default: return ki->qcode;
+    switch (ki->qcode) {
+    case Qt::Key_Backspace:
+        return 8;
+    case Qt::Key_Tab:
+        return 9;
+    case Qt::Key_Return:
+        return 13;
+    case Qt::Key_Escape:
+        return 27;
+    case Qt::Key_Shift:
+    case Qt::Key_Alt:
+    case Qt::Key_Control:
+    case Qt::Key_Mode_switch:
+        return -1;
+    default:
+        return ki->qcode;
     }
 }
 
@@ -160,21 +162,23 @@ static void setModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
     mods |= mod;
 }
 
-static void clearModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
+static void clearModifier(Qt::KeyboardModifiers & mods,
+                          Qt::KeyboardModifiers mod)
 {
     mods &= ~mod;
 }
 
-static void toggleModifier(Qt::KeyboardModifiers & mods, Qt::KeyboardModifiers mod)
+static void toggleModifier(Qt::KeyboardModifiers & mods,
+                           Qt::KeyboardModifiers mod)
 {
-    if(mods & mod)
+    if (mods & mod)
         clearModifier(mods, mod);
     else
         setModifier(mods, mod);
 }
 
-KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
-    QFrame(parent, f)
+KeyboardFrame::KeyboardFrame(QWidget * parent, Qt::WFlags f):
+QFrame(parent, f)
     , repeatTimer(this)
     , vib()
     , pressedKey(NULL)
@@ -185,17 +189,18 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setPalette(QPalette(QColor(220,220,220))); // Gray
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setPalette(QPalette(QColor(220, 220, 220)));    // Gray
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QRect mwr = QApplication::desktop()->availableGeometry();
-    qreal pixHeight = mwr.height()/32;
-    qreal pointHeight = (pixHeight*72)/logicalDpiY();
-    
+    qreal pixHeight = mwr.height() / 32;
+    qreal pointHeight = (pixHeight * 72) / logicalDpiY();
+
     QFont fnt = QApplication::font();
     fnt.setPointSizeF(pointHeight);
-    
+
     QPalette pal(palette());
     QColor col(Qt::lightGray);
     col.setAlpha(0);
@@ -218,11 +223,10 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
 KeyboardFrame::~KeyboardFrame()
 {
     // Free keys - they are malloced
-    for(int i = 0; i < numLayouts; i++) {
-        
+    for (int i = 0; i < numLayouts; i++) {
+
         KeyInfo *ki = layouts[i].keys;
-        while(layouts[i].numKeys--)
-        {
+        while (layouts[i].numKeys--) {
             ki->pic = NULL;     // TODO: does this free pixmap data?
             ki++;
         }
@@ -230,9 +234,9 @@ KeyboardFrame::~KeyboardFrame()
     }
 }
 
-void KeyboardFrame::showEvent(QShowEvent *e)
+void KeyboardFrame::showEvent(QShowEvent * e)
 {
-    qwsServer->sendIMQuery ( Qt::ImMicroFocus );
+    qwsServer->sendIMQuery(Qt::ImMicroFocus);
     setGeometry(geometryHint());
     placeKeys(&layouts[curLayout], width(), height());
     releaseKeyboard();
@@ -243,7 +247,7 @@ void KeyboardFrame::showEvent(QShowEvent *e)
     emit showing();
 }
 
-void KeyboardFrame::hideEvent( QHideEvent * )
+void KeyboardFrame::hideEvent(QHideEvent *)
 {
     // don't want keypresses to keep going if the widget is hidden, so reset state
     resetState();
@@ -251,37 +255,35 @@ void KeyboardFrame::hideEvent( QHideEvent * )
     emit hiding();
 };
 
-
-void KeyboardFrame::resizeEvent(QResizeEvent*)
+void KeyboardFrame::resizeEvent(QResizeEvent *)
 {
     placeKeys(&layouts[curLayout], width(), height());
 }
 
-void KeyboardFrame::paintEvent(QPaintEvent* e)
+void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
-    
+
     KeyInfo *ki = layouts[0].keys;
-    for(int i = 0; i < layouts[curLayout].numKeys; i++)
-    {
+    for (int i = 0; i < layouts[curLayout].numKeys; i++) {
 //        qDebug() << "pressedKey=" << pressedKey << ", ki->qcode=" << ki->qcode;
-        QRectF kr = ki->rectSvg;        // key rectangle on svg
+        QRectF kr = ki->rectSvg;    // key rectangle on svg
         layouts[0].svg->render(&p, elemId(ki), ki->rectScr);
         ki++;
     }
 }
 
-void KeyboardFrame::mousePressEvent(QMouseEvent *e)
+void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 {
     // Ingore too fast clicks - this filters out some touchscreen errors
     struct timespec tp;
     clock_gettime(CLOCK_MONOTONIC, &tp);
 
     ignorePress = (1000 * (tp.tv_sec - pressTime.tv_sec) +
-        (tp.tv_nsec - pressTime.tv_nsec) / 1000000) < 100;
+                   (tp.tv_nsec - pressTime.tv_nsec) / 1000000) < 100;
 
     pressTime = tp;
-    if(ignorePress)
+    if (ignorePress)
         return;
 
     // Vibrate
@@ -290,93 +292,93 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
     // Find pressed key
     KeyInfo *ki = layouts[curLayout].keys;
     int num = layouts[curLayout].numKeys;
-    for(;;)
-    {
-        if(ki->rectScr.contains(e->x(), e->y()))
+    for (;;) {
+        if (ki->rectScr.contains(e->x(), e->y()))
             break;
 
         ki++;
-        if(--num <= 0)      // key not found
+        if (--num <= 0)         // key not found
             return;
     }
 
     pressedKey = ki;
     pressedChar = getKeyChar(ki);
-    if ( pressedChar == -1 ) {
-        
-        switch(ki->qcode)
-        {
-            case Qt::Key_Shift:
-                toggleModifier(modifiers, Qt::ShiftModifier);
-                break;
-                
-            case Qt::Key_Alt:
-                toggleModifier(modifiers, Qt::AltModifier);
-                break;
-                
-            case Qt::Key_Control:
-                toggleModifier(modifiers, Qt::ControlModifier);
-                break;
-                
-            case Qt::Key_Mode_switch:
-                break;
-            
+    if (pressedChar == -1) {
+
+        switch (ki->qcode) {
+        case Qt::Key_Shift:
+            toggleModifier(modifiers, Qt::ShiftModifier);
+            break;
+
+        case Qt::Key_Alt:
+            toggleModifier(modifiers, Qt::AltModifier);
+            break;
+
+        case Qt::Key_Control:
+            toggleModifier(modifiers, Qt::ControlModifier);
+            break;
+
+        case Qt::Key_Mode_switch:
+            break;
+
         }
     } else {
         //due to the way the keyboard is defined, we know that
         //k is within the ASCII range, and can be directly mapped to
         //a qkeycode; except letters, which are all uppercase
         /*qkeycode = toupper(k);
-        if ( shift^lock ) {
-            if ( !isalpha( k ) ) {
-            for ( unsigned i = 0; i < sizeof(shiftMap)/sizeof(ShiftMap); i++ )
-                if ( shiftMap[i].normal == k ) {
-                    unicode = shiftMap[i].shifted;
-                    qkeycode = unicode;
-                    break;
-                }
-            } else {
-                unicode = toupper( k );
-            }
-        } else {
-            unicode = k;
-        }*/
+           if ( shift^lock ) {
+           if ( !isalpha( k ) ) {
+           for ( unsigned i = 0; i < sizeof(shiftMap)/sizeof(ShiftMap); i++ )
+           if ( shiftMap[i].normal == k ) {
+           unicode = shiftMap[i].shifted;
+           qkeycode = unicode;
+           break;
+           }
+           } else {
+           unicode = toupper( k );
+           }
+           } else {
+           unicode = k;
+           } */
     }
-    if  ( pressedChar != -1 ) {
-        if ( (modifiers & Qt::ControlModifier) && pressedChar >= 'a' && pressedChar <= 'z' )
+    if (pressedChar != -1) {
+        if ((modifiers & Qt::ControlModifier) && pressedChar >= 'a'
+            && pressedChar <= 'z')
             pressedChar = pressedChar - 'a' + 1;
 
-        qwsServer->processKeyEvent( pressedChar, ki->qcode, modifiers, true, false );
+        qwsServer->processKeyEvent(pressedChar, ki->qcode, modifiers, true,
+                                   false);
         modifiers = Qt::NoModifier;
-        
-        repeatTimer.start( 500 );
+
+        repeatTimer.start(500);
     }
     repaint();
-    if ( pressTid )
+    if (pressTid)
         killTimer(pressTid);
     pressTid = startTimer(80);
     emit needsPositionConfirmation();
 }
 
-
-void KeyboardFrame::mouseReleaseEvent(QMouseEvent*)
+void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
 {
-    if(ignorePress)
+    if (ignorePress)
         return;
 
     repeatTimer.stop();
-    if ( pressTid == 0 )
+    if (pressTid == 0)
 #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-    if (pressedKey) {
-        qwsServer->processKeyEvent( pressedChar, pressedKey->qcode, modifiers, false, false );
-    }
+        if (pressedKey) {
+            qwsServer->processKeyEvent(pressedChar, pressedKey->qcode,
+                                       modifiers, false, false);
+        }
 #endif
     pressedKey = NULL;
 }
 
-void KeyboardFrame::timerEvent(QTimerEvent* e)
+void KeyboardFrame::timerEvent(QTimerEvent * e)
 {
-    if ( e->timerId() == pressTid ) {
+    if (e->timerId() == pressTid) {
         killTimer(pressTid);
         pressTid = 0;
     }
@@ -384,9 +386,10 @@ void KeyboardFrame::timerEvent(QTimerEvent* e)
 
 void KeyboardFrame::repeat()
 {
-    if ( pressedKey && pressedChar > 0) {
-        repeatTimer.start( 150 );
-        qwsServer->processKeyEvent( pressedChar, pressedKey->qcode, modifiers, true, true );
+    if (pressedKey && pressedChar > 0) {
+        repeatTimer.start(150);
+        qwsServer->processKeyEvent(pressedChar, pressedKey->qcode, modifiers,
+                                   true, true);
     } else
         repeatTimer.stop();
 }
@@ -394,11 +397,11 @@ void KeyboardFrame::repeat()
 QRect KeyboardFrame::geometryHint() const
 {
     QRect r = QApplication::desktop()->availableGeometry();
-    if(r.width() <= 480)
-        r.setHeight(480);  // hack - make it larger
+    if (r.width() <= 480)
+        r.setHeight(480);       // hack to make it larger
 
     int sb = style()->pixelMetric(QStyle::PM_ScrollBarExtent) +
-             style()->pixelMetric(QStyle::PM_LayoutRightMargin);
+        style()->pixelMetric(QStyle::PM_LayoutRightMargin);
     r.setWidth(r.width() - sb);
     return r;
 }
@@ -413,30 +416,27 @@ void KeyboardFrame::resetState()
     pressedKey = NULL;
     pressedChar = -1;
     modifiers = Qt::NoModifier;
-    if ( pressTid ) {
+    if (pressTid) {
         killTimer(pressTid);
         pressTid = 0;
     };
     repeatTimer.stop();
 }
 
-
-bool KeyboardFrame::obscures(const QPoint &point)
+bool KeyboardFrame::obscures(const QPoint & point)
 {
     QRect mwr = QApplication::desktop()->availableGeometry();
-    bool isTop = point.y() < (mwr.y()+mwr.height()>>1);
+    bool isTop = point.y() < (mwr.y() + mwr.height() >> 1);
     return (isTop == positionTop);
 }
 
 void KeyboardFrame::swapPosition()
 {
     QRect mwr = QApplication::desktop()->availableGeometry();
-    if(positionTop)
-    {
-        move(mwr.bottomLeft()-QPoint(0,height()));
+    if (positionTop) {
+        move(mwr.bottomLeft() - QPoint(0, height()));
         positionTop = false;
-    } else
-    {
+    } else {
         move(mwr.topLeft());
         positionTop = true;
     }

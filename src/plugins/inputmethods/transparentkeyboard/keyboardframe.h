@@ -30,17 +30,18 @@
 
 #define MAX_LAYOUTS 5
 
-struct KeyInfo {
-    int qcode;          // value from Qt::Key or unicode value
-    QRectF rectSvg;     // bounding rectangle in SVG
-    QRectF rectScr;     // bounding rectangle on screen
+struct KeyInfo
+{
+    int qcode;                  // value from Qt::Key or unicode value
+    QRectF rectSvg;             // bounding rectangle in SVG
+    QRectF rectScr;             // bounding rectangle on screen
     QPixmap pic;
 };
 
 struct KeyLayout
 {
     int numKeys;
-    KeyInfo *keys;      // pointer to first key info
+    KeyInfo *keys;              // pointer to first key info
     QSvgRenderer *svg;
     QRectF rectSvg;
 };
@@ -57,25 +58,32 @@ class KeyboardFrame : public QFrame
 {
     Q_OBJECT
 public:
-    explicit KeyboardFrame( QWidget* parent=0, Qt::WFlags f=0 );
-    virtual ~KeyboardFrame();
+    explicit KeyboardFrame(QWidget * parent = 0, Qt::WFlags f = 0);
+    virtual ~ KeyboardFrame();
 
     void resetState();
-    void mousePressEvent(QMouseEvent*);
-    void mouseReleaseEvent(QMouseEvent*);
-    void resizeEvent(QResizeEvent*);
-    void showEvent(QShowEvent*);
-    void paintEvent(QPaintEvent* e);
-    void timerEvent(QTimerEvent* e);
-    void hideEvent ( QHideEvent * );
+    void mousePressEvent(QMouseEvent *);
+    void mouseReleaseEvent(QMouseEvent *);
+    void resizeEvent(QResizeEvent *);
+    void showEvent(QShowEvent *);
+    void paintEvent(QPaintEvent * e);
+    void timerEvent(QTimerEvent * e);
+    void hideEvent(QHideEvent *);
     QRect geometryHint() const;
     QSize sizeHint() const;
-    bool obscures( const QPoint &point );
-    void focusInEvent ( QFocusEvent *) {
+    bool obscures(const QPoint & point);
+    void focusInEvent(QFocusEvent *)
+    {
         qWarning() << "Warning: keyboard got focus";
     };
-    bool filter(int, int, int, bool, bool) {return false;};
-    bool filter(const QPoint &, int, int) {return false;};
+    bool filter(int, int, int, bool, bool)
+    {
+        return false;
+    };
+    bool filter(const QPoint &, int, int)
+    {
+        return false;
+    };
 
 signals:
     void needsPositionConfirmation();
@@ -92,16 +100,16 @@ private:
     QTimer repeatTimer;
     QVibrateAccessory vib;
 
-    KeyInfo *pressedKey;            // currently pressed key or NULL
-    int pressedChar;                // unicode value of pressed key
+    KeyInfo *pressedKey;        // currently pressed key or NULL
+    int pressedChar;            // unicode value of pressed key
     Qt::KeyboardModifiers modifiers;
 
     int pressTid;
     bool positionTop;
-    struct timespec pressTime;      // last time key was pressed
-    bool ignorePress;               // used to ignore too fast presses    
-    int numLayouts;                 // number of currently loaded layouts
-    int curLayout;                  // current layout
+    struct timespec pressTime;  // last time key was pressed
+    bool ignorePress;           // used to ignore too fast presses    
+    int numLayouts;             // number of currently loaded layouts
+    int curLayout;              // current layout
     KeyLayout layouts[MAX_LAYOUTS];
 };
 
