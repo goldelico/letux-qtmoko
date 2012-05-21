@@ -26,6 +26,7 @@
 #include <qfontmetrics.h>
 #include <qtimer.h>
 #include <ctype.h>
+#include <qtopialog.h>
 
 #include <QPaintEvent>
 #include <QMouseEvent>
@@ -37,62 +38,8 @@
 #include <QStyle>
 #include <QSoftMenuBar>
 
-#include <qtopialog.h>
-
-#define USE_SMALL_BACKSPACE
-
-enum { BSCode = 0x80, TabCode, CapsCode, RetCode,
-       ShiftCode, CtrlCode, AltCode, SpaceCode, BackSlash,
-       UpCode, LeftCode, DownCode, RightCode, Blank, Expand,
-       Opti, ResetDict,
-       Divide, Multiply, Add, Subtract, Decimal, Equal,
-       Percent, Sqrt, Inverse, Escape };
-
-typedef struct SpecialMap {
-    int qcode;
-    ushort unicode;
-    const char * label;
-};
-
-static SpecialMap specialM[] = {
-    {   Qt::Key_Backspace,      8,      "bsp"},
-    {   Qt::Key_Tab,            9,      "tab"},
-    {   Qt::Key_CapsLock,       0xffff, "cap"},
-    {   Qt::Key_Return,         13,     "ret"},
-    {   Qt::Key_Shift,          0xffff, "shi"},
-    {   Qt::Key_Control,        0xffff, "ctr"},
-    {   Qt::Key_Alt,            0xffff, "alt"},
-    {   Qt::Key_Space,          ' ',    "spa"},
-    {   BackSlash,              43,     "bsl"},
-    {   Qt::Key_Up,             0xffff, "up"},
-    {   Qt::Key_Left,           0xffff, "lef"},
-    {   Qt::Key_Down,           0xffff, "dow"},
-    {   Qt::Key_Right,          0xffff, "rig"},
-    {   Qt::Key_Insert,         0xffff, "ins"},
-    {   Qt::Key_Home,           0xffff, "hom"},
-    {   Qt::Key_PageUp,         0xffff, "pgu"},
-    {   Qt::Key_End,            0xffff, "pgd"},
-    {   Qt::Key_Delete,         0xffff, "del"},
-    {   Qt::Key_PageDown,       0xffff, "pgd"},
-    {   Blank,                  0,      " "},
-    {   Expand,                 0xffff, "exp"},
-    {   Opti,                   0xffff, "opt"},
-    // number pad stuff
-    {   Divide,                 0,      "div"},
-    {   Multiply,               0,      "mul"},
-    {   Add,                    0,      "add"},
-    {   Subtract,               0,      "sub"},
-    {   Decimal,                0,      "dec"},
-    {   Equal,                  0,      "eq"},
-    {   Percent,                0,      "per"},
-    {   Sqrt,                   0,      "sqr"},
-    {   Inverse,                0,      "inv"},
-    {   Escape,                 27,     "esc"},
-    {   0,                      0,      NULL}
-};
-
-// Add keys from svg file to list. The keys are in form id="key_a" where a is
-// letter or can be number (key code).
+// Add keys from svg file to list. The keys in svg are in form id="key_xxx"
+// where xxx is hex value from Qt::Key or unicode value of given key.
 static void addKeys(const QString & svgFile, QStringList & keyList)
 {
     QFile f(svgFile);
@@ -192,7 +139,7 @@ static void placeKeys(KeyLayout *layout, float w, float h)
     }
 }
 
-// Return ASCII value for given Qt::Key
+// Return ASCII/unicode value for given KeyInfo
 static int getKeyChar(KeyInfo *ki)
 {
     switch(ki->qcode)
@@ -231,13 +178,9 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
     setPalette(pal);
     setAutoFillBackground(true);
 
-    picks = new KeyboardPicks( this );
-    picks->initialise();
-
     curLayout = 0;
     numLayouts = 1;
     fillLayout("/qwerty.svg", &layouts[0]);
-    placeKeys(&layouts[0], width(), height());
 
     QColor backcolor = palette().shadow().color();
     backcolor.setAlpha(196);
@@ -250,32 +193,29 @@ KeyboardFrame::KeyboardFrame(QWidget* parent, Qt::WFlags f) :
 
 KeyboardFrame::~KeyboardFrame()
 {
+    // Free keys - they are malloced
+    for(int i = 0; i < numLayouts; i++) {
+        
+        KeyInfo *ki = layouts[i].keys;
+        while(layouts[i].numKeys--)
+        {
+            ki->pic = NULL;     // TODO: does this free pixmap data?
+            ki++;
+        }
+        free(layouts[i].keys);
+    }
 }
 
 void KeyboardFrame::showEvent(QShowEvent *e)
 {
     qwsServer->sendIMQuery ( Qt::ImMicroFocus );
     setGeometry(geometryHint());
+    placeKeys(&layouts[curLayout], width(), height());
     releaseKeyboard();
-    int ph = picks->sizeHint().height();
-
-//    picks->setGeometry( 0, 0, width(), ph );
-//    move(0,mwr.height()-height());
-
-    keyHeight = (height()-ph)/5;
-    int nk;
-    if ( useOptiKeys ) {
-        nk = 7;
-    } else if ( useLargeKeys ) {
-        nk = 15;
-    } else {
-        nk = 19;
-    }
-    
-    defaultKeyWidth = width()/nk;
-    xoffs = (width()-defaultKeyWidth*nk)/2;
     QFrame::showEvent(e);
-    // Let keyboardimpl know that we're hidden now, and it should update the menu
+
+    // Let keyboardimpl know that we're hidden now, and it should update the
+    // menu
     emit showing();
 }
 
@@ -290,230 +230,8 @@ void KeyboardFrame::hideEvent( QHideEvent * )
 
 void KeyboardFrame::resizeEvent(QResizeEvent*)
 {
-    int ph = picks->sizeHint().height();
-//    picks->setGeometry( 0, 50, width(), ph );
-    keyHeight = (height()-ph)/5;
-    int nk;
-    if ( useOptiKeys ) {
-        nk = 7;
-    } else if ( useLargeKeys ) {
-        nk = 15;
-    } else {
-        nk = 19;
-    }
-    defaultKeyWidth = width()/nk;
-    xoffs = (width()-defaultKeyWidth*nk)/2;
-    
     placeKeys(&layouts[curLayout], width(), height());
 }
-
-
-KeyboardPicks::~KeyboardPicks()
-{
-    delete dc;
-}
-
-void KeyboardPicks::initialise()
-{
-    setSizePolicy(QSizePolicy(QSizePolicy::Expanding,QSizePolicy::Fixed));
-    mode = 0;
-    dc = new KeyboardConfig(this);
-    configs.append(dc);
-}
-
-QSize KeyboardPicks::sizeHint() const
-{
-    //return QSize(240,fontMetrics().lineSpacing());    // <-- uncomment to enable text hints (quite useless for this type of keyboard)
-    return QSize(240, 0);
-}
-
-
-void  KeyboardConfig::generateText(const QString &s)
-{
-#if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-                  int i;
-    for ( i=0; i<(int)backspaces; i++) {
-        qwsServer->processKeyEvent( 8, Qt::Key_Backspace, 0, true, false );
-        qwsServer->processKeyEvent( 8, Qt::Key_Backspace, 0, false, false );
-    }
-    for ( i=0; i<(int)s.length(); i++) {
-        uint code = 0;
-        if ( s[i].unicode() >= 'a' && s[i].unicode() <= 'z' ) {
-            code = s[i].unicode() - 'a' + Qt::Key_A;
-        }
-        qwsServer->processKeyEvent( s[i].unicode(), code, 0, true, false );
-        qwsServer->processKeyEvent( s[i].unicode(), code, 0, false, false );
-    }
-    qwsServer->processKeyEvent( ' ', Qt::Key_Space, 0, true, false );
-    qwsServer->processKeyEvent( ' ', Qt::Key_Space, 0, false, false );
-    backspaces = 0;
-#endif
-}
-
-
-//PC keyboard layout and scancodes
-
-/*
-  Format: length, code, length, code, ..., 0
-
-  length is measured in half the width of a standard key.
-  If code < 0x80, code gives the ASCII value of the key
-
-  If code >= 0x80, the key is looked up in specialM[].
-
- */
-
-/* Keyboard layout shamelessly stolen from SHR
-
-Esc 1 2 3 4 5 6 7 8 9 0 - = <---
-TABq w e r t y u i o p [ ] \ Del
-CAP a s d f g h j k l ; ' <=====
-SHIF z x c v b n m , . / `   Ins
->  CtrlAltSPACE < > ^ _ PuPdHoEn
-
-*/
-static const uchar * const keyboard_standard[5] = {
-    (const uchar *const)"\002\240\0021\0022\0023\0024\0025\0026\0027\0028\0029\0020\002-\002=\004\200",
-    (const uchar *const)"\003\201\002q\002w\002e\002r\002t\002y\002u\002i\002o\002p\002[\002]\002\\\003\221",
-    (const uchar *const)"\004\202\002a\002s\002d\002f\002g\002h\002j\002k\002l\002;\002'\004\203",
-    (const uchar *const)"\005\204\002z\002x\002c\002v\002b\002n\002m\002,\002.\002/\002`\002\215",
-    (const uchar *const)"\004\225\003\205\002\206\005\207\002\212\002\214\002\211\002\213\002\217\002\222\002\216\002\220"
-};
-
-
-/* Keyboard layout for SMS/mails
-
-1 2 3 4 5 6 7 8 9 0
-q w e r t y u i o p
-a s d f g h j k l <===
-SHIF z x c v b n m , .
-> SPACE < > ^ _    <--
-
-*/
-static const uchar * const keyboard_opti[5] = {
-    (const uchar *const)"\002a\002b\002c\002d\002e\002f\004\200",
-    (const uchar *const)"\002g\002h\002i\002j\002k\002l\004\200",
-    (const uchar *const)"\002m\002n\002o\002p\002q\002r\004\203",
-    (const uchar *const)"\002s\002t\002u\002v\002w\002x\004\203",
-    (const uchar *const)"\002\225\006\207\002y\002z\002,\002."
-};
-
-
-struct ShiftMap {
-    char normal;
-    char shifted;
-};
-
-enum modsIndex {
-    ShiftMod = 0,
-    AltMod = 1,
-    CtrlMod = 2
-};
-
-struct keyLocation {
-    int x, y;
-};
-
-static const keyLocation modsLocMap[] = {
-  {0, 3}, {1, 4}, {0, 4}
-};
-
-
-static const ShiftMap shiftMap[] = {
-    { '`', '~' },
-    { '1', '!' },
-    { '2', '@' },
-    { '3', '#' },
-    { '4', '$' },
-    { '5', '%' },
-    { '6', '^' },
-    { '7', '&' },
-    { '8', '*' },
-    { '9', '(' },
-    { '0', ')' },
-    { '-', '_' },
-    { '=', '+' },
-    { '\\', '|' },
-    { '[', '{' },
-    { ']', '}' },
-    { ';', ':' },
-    { '\'', '"' },
-    { ',', '<' },
-    { '.', '>' },
-    { '/', '?' }
-};
-
-
-int KeyboardFrame::keycode( int i2, int j, const uchar **keyboard, QRect *repaintrect )
-{
-    if ( j <0 || j >= 5 )
-        return 0;
-
-    const uchar *row = keyboard[j];
-
-    int x = 0;
-    while ( *row && x+*row <= i2 ) {
-        x += *row;
-        row += 2;
-    }
-
-    if ( !*row ) return 0;
-
-    if ( repaintrect ) {
-        *repaintrect = QRect(
-            x*defaultKeyWidth/2+xoffs,
-            j*keyHeight+picks->height(),
-            *row*defaultKeyWidth/2,keyHeight);
-    }
-
-    int k;
-    if ( row[1] >= 0x80 ) {
-        k = row[1];
-    } else {
-        k = row[1]+(i2-x)/2;
-    }
-
-    return k;
-}
-
-
-/*
-  return scancode and width of first key in row \a j if \a j >= 0,
-  or next key on current row if \a j < 0.
-
-*/
-
-int KeyboardFrame::getKey( int &w, int j ) {
-    static const uchar *row = 0;
-    static int key_i = 0;
-    static int scancode = 0;
-    static int half = 0;
-
-    if ( j >= 0 && j < 5 ) {
-        if (useOptiKeys)
-            row = keyboard_opti[j];
-        else
-            row = keyboard_standard[j];
-        half=0;
-    }
-
-    if ( !row || !*row ) {
-        return 0;
-    } else if ( row[1] >= 0x80 ) {
-        scancode = row[1];
-        w = (row[0] * w + (half++&1)) / 2;
-        row += 2;
-        return scancode;
-    } else if ( key_i <= 0 ) {
-        key_i = row[0]/2;
-        scancode = row[1];
-    }
-    key_i--;
-    if ( key_i <= 0 )
-        row += 2;
-    return scancode++;
-}
-
 
 void KeyboardFrame::paintEvent(QPaintEvent* e)
 {
@@ -548,87 +266,6 @@ void KeyboardFrame::paintEvent(QPaintEvent* e)
     //drawKeyboard( painter, e->rect() );
     //picks->dc->draw( &painter );
 }
-
-
-/*
-  Draw the KeyboardFrame.
-
-  If key >= 0, only the specified key is drawn.
-*/
-void KeyboardFrame::drawKeyboard( QPainter &p, const QRect& clip, int key )
-{
-    QColor keycolor_pressed = palette().mid().color();
-    QColor backcolor = palette().shadow().color();
-    QColor textcolor = palette().light().color();
-    
-    backcolor.setAlpha(196);    
-    p.fillRect(clip, backcolor);
-
-    for ( int j = 0; j < 5; j++ ) {
-        int y = j * keyHeight + picks->height() + 1;
-        if ( y <= clip.bottom() && y+keyHeight >= clip.top() ) {
-            int x = xoffs;
-            int kw = defaultKeyWidth;
-            int k= getKey( kw, j );
-            while ( k ) {
-                if ( (key < 0 || k == key) && x <= clip.right() && x+kw > clip.left() ) {
-                    QString s;
-                    bool pressed = (k == pressedKey);
-                    bool blank = (k == 0223);
-
-                    if ( k >= 0x80 ) {
-                        s = specialM[k - 0x80].label;
-
-                        if ( k == ShiftCode ) {
-                            pressed = shift;
-                        } else if ( k == CapsCode ) {
-                            pressed = lock;
-                        } else if ( k == CtrlCode ) {
-                            pressed = ctrl;
-                        } else if ( k == AltCode ) {
-                            pressed = alt;
-                        }
-                    } else {
-    #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-    /*
-                        s = QChar( shift^lock ? QWSServer::keyMap()[k].shift_unicode :
-                                   QWSServer::keyMap()[k].unicode);
-    */
-                        // ### Fixme, bad code, needs improving, whole thing needs to
-                        // be re-coded to get rid of the way it did things with scancodes etc
-                        char shifted = k;
-                        if ( !isalpha( k ) ) {
-                            for ( unsigned i = 0; i < sizeof(shiftMap)/sizeof(ShiftMap); i++ )
-                                if ( shiftMap[i].normal == k )
-                                    shifted = shiftMap[i].shifted;
-                        } else {
-                            shifted = toupper( k );
-                        }
-                        s = QChar( shift^lock ? shifted : k );
-    #endif
-                    }
-
-                    if (!blank) {
-                        if ( pressed )
-                            p.fillRect( x, y, kw, keyHeight-1, keycolor_pressed );
-
-                            p.setFont(font());
-                            p.setPen(textcolor);
-                            if(pressed)
-                                p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignTop | Qt::AlignHCenter, s );
-                            else
-                                p.drawText( x - 1, y, kw, keyHeight-2, Qt::AlignCenter, s );
-                    }
-                }
-
-                x += kw;
-                kw = defaultKeyWidth;
-                k = getKey( kw );
-            }
-        }
-    }
-}
-
 
 void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 {
@@ -728,27 +365,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent *e)
 
 	clearMods();
 
-        KeyboardConfig *dc = picks->dc;
-
-        if (dc) {
-            if (qkeycode == Qt::Key_Backspace) {
-                if (dc->input.count()) {
-                    dc->input.removeLast();
-                    dc->decBackspaces();
-                }
-            } else if ( k == 0226 || qkeycode == Qt::Key_Return ||
-                        qkeycode == Qt::Key_Space ||
-                        QChar(unicode).isPunct() ) {
-                dc->input.clear();
-                dc->resetBackspaces();
-            } else {
-                dc->add(QString(QChar(unicode)));
-                dc->incBackspaces();
-            }
-        }
-
-        picks->repaint();
-
         key_down = true;
     }
     pressedKey = k;
@@ -806,41 +422,11 @@ void KeyboardFrame::repeat()
 }
 
 void KeyboardFrame::clearMod(int modindex) {
-    const keyLocation* loc = &modsLocMap[modindex];
-
-    const uchar **keyboard = (const uchar **)((useOptiKeys) ? keyboard_opti : keyboard_standard);
-
-    const uchar *row = keyboard[loc->y];
-
-    int x = 0;
-
-    for ( int id = 0; id != loc->x; row += 2, id++ )
-	x += *row;
-
-    QRect toRepaint = QRect(
-	x*defaultKeyWidth/2+xoffs,
-        loc->y*keyHeight+picks->height(),
-        *row*defaultKeyWidth/2,keyHeight
-    );
-
-    repaint (toRepaint);
 }
 
 void KeyboardFrame::clearMods()
 {
-    if (shift) {
-	shift = false;
-	clearMod(ShiftMod);
-
-    }
-    if (alt) {
-	alt = false;
-	clearMod(AltMod);
-    }
-    if (ctrl) {
-	ctrl = false;
-	clearMod(CtrlMod);
-    }
+    shift = alt = ctrl = false;
 }
 
 void KeyboardFrame::clearHighlight()
@@ -870,7 +456,6 @@ QSize KeyboardFrame::sizeHint() const
 
 void KeyboardFrame::resetState()
 {
-    picks->resetState();
     shift = false;
     lock = false;
     ctrl = false;

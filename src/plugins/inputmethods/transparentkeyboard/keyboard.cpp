@@ -25,10 +25,6 @@
 #include <QDebug>
 #include <qtopialog.h>
 
-KeyboardConfig::~KeyboardConfig()
-{
-}
-
 Keyboard::Keyboard(QWidget* parent, Qt::WFlags f) : QWSInputMethod()
 {
     // The keyboard frame is meaningless after the Keyboard IM is destroyed,

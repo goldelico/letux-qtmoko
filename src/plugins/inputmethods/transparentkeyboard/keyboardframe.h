@@ -21,12 +21,13 @@
 #define KEYBOARDFRAME_H
 
 #include <time.h>
-#include "pickboardcfg.h"
-#include "pickboardpicks.h"
 #include <QDebug>
 #include <QVibrateAccessory>
 #include <QSvgRenderer>
 #include <QPixmap>
+#include <QFrame>
+
+#define MAX_LAYOUTS 5
 
 class QTimer;
 
@@ -34,32 +35,6 @@ enum currentPosition
 {
     Top,
     Bottom
-};
-
-class KeyboardConfig : public DictFilterConfig
-{
-public:
-    KeyboardConfig(PickboardPicks* p) : DictFilterConfig(p), backspaces(0) { nrows = 1; }
-    virtual ~KeyboardConfig();
-    virtual void generateText(const QString &s);
-    void decBackspaces() { if (backspaces) backspaces--; }
-    void incBackspaces() { backspaces++; }
-    void resetBackspaces() { backspaces = 0; }
-private:
-    int backspaces;
-};
-
-
-class KeyboardPicks : public PickboardPicks
-{
-    Q_OBJECT
-public:
-    KeyboardPicks(QWidget* parent=0, Qt::WFlags f=0)
-        : PickboardPicks(parent, f), dc(0) { }
-    virtual ~KeyboardPicks();
-    void initialise();
-    virtual QSize sizeHint() const;
-    KeyboardConfig *dc;
 };
 
 struct KeyInfo {
@@ -77,8 +52,6 @@ struct KeyLayout
     QRectF rectSvg;
 };
 
-#define MAX_LAYOUTS 5
-
 /*
     KeyboardFrame is the primary widget for the Keyboard inputmethod.
     It is responsible for marshalling pickboards for displaying the pickboard,
@@ -87,7 +60,6 @@ struct KeyLayout
     It currently also creates and dispatches keyevents, although this is
     expected to be re-routed through Keyboard in the future.
 */
-
 class KeyboardFrame : public QFrame
 {
     Q_OBJECT
@@ -158,8 +130,6 @@ private:
 
     int pressedKey;
     QRect pressedKeyRect;
-
-    KeyboardPicks *picks;
 
     int keyHeight;
     int defaultKeyWidth;
