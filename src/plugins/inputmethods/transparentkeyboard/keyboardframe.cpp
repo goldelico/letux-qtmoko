@@ -108,18 +108,15 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
             layout->rectSvg = layout->rectSvg.united(ki->rectSvg);
         ki++;
     }
-    
+
     // Order keys by y
     bool ok;
-    do
-    {
+    do {
         ok = true;
         ki = keys;
-        for(int i = 1; i < count; i++)
-        {
+        for (int i = 1; i < count; i++) {
             KeyInfo *next = ki + 1;
-            if(next->rectSvg.top() < ki->rectSvg.top())
-            {
+            if (next->rectSvg.top() < ki->rectSvg.top()) {
                 ok = false;
                 KeyInfo tmp = *next;
                 *next = *ki;
@@ -127,9 +124,8 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
             }
             ki++;
         }
-        qDebug() << "sort" << ok;
-    } while(!ok);
-    
+    } while (!ok);
+
     return true;
 }
 
@@ -140,7 +136,7 @@ static void placeKeys(KeyLayout * layout, float w, float h)
     QRectF lr = layout->rectSvg;    // layout rectangle
     for (int i = 0; i < layout->numKeys; i++) {
         QRectF kr = ki->rectSvg;    // key rectangle on svg
-        QRectF *ks = &(ki->rectScr);    // key rectangle on screen
+        QRect *ks = &(ki->rectScr); // key rectangle on screen
 
         ks->setLeft((w * (kr.left() - lr.left())) / lr.width());
         ks->setTop((h * (kr.top() - lr.top())) / lr.height());
@@ -200,6 +196,16 @@ static void toggleModifier(Qt::KeyboardModifiers & mods,
         setModifier(mods, mod);
 }
 
+// Return rectangle for pressed key
+static QRect pressedRect(const QRect & keyRect)
+{
+    QRect res(keyRect);
+    res.setTop(res.top() - (4 * res.height()) / 3);
+    res.setLeft(keyRect.left() - keyRect.width() / 2);
+    res.setRight(keyRect.right() + keyRect.width() / 2);
+    return res;
+}
+
 KeyboardFrame::KeyboardFrame(QWidget * parent, Qt::WFlags f):
 QFrame(parent, f)
     , repeatTimer(this)
@@ -213,8 +219,8 @@ QFrame(parent, f)
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
     setPalette(QPalette(QColor(220, 220, 220)));    // Gray
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
-                   FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::
+                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QRect mwr = QApplication::desktop()->availableGeometry();
@@ -286,19 +292,22 @@ void KeyboardFrame::resizeEvent(QResizeEvent *)
 void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
+    p.setClipRect(e->rect());
 
-    KeyInfo *ki = layouts[0].keys;
+    KeyInfo *ki = layouts[curLayout].keys;
     for (int i = 0; i < layouts[curLayout].numKeys; i++) {
-        
-        QRectF rect = ki->rectScr;
-        if(ki == pressedKey) {
-            rect.moveTop(rect.top() - rect.height() / 2);
-            p.fillRect(rect, Qt::black);
-        }
-        
-        layouts[0].svg->render(&p, elemId(ki), rect);
+        QRect rect = ki->rectScr;
+        if (ki->rectScr.intersects(e->rect()))
+            layouts[curLayout].svg->render(&p, elemId(ki), rect);
         ki++;
     }
+
+    if (pressedKey)
+        layouts[curLayout].svg->render(&p, elemId(pressedKey),
+                                       pressedRect(pressedKey->rectScr));
+
+//    p.setPen(Qt::yellow);
+//    p.drawRect(e->rect());
 }
 
 void KeyboardFrame::mousePressEvent(QMouseEvent * e)
@@ -381,7 +390,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
         repeatTimer.start(500);
     }
-    repaint();
+
+    repaint(pressedRect(ki->rectScr));
+
     if (pressTid)
         killTimer(pressTid);
     pressTid = startTimer(80);
@@ -401,8 +412,10 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
                                        modifiers, false, false);
         }
 #endif
+
+    QRect rect = pressedRect(pressedKey->rectScr);
     pressedKey = NULL;
-    repaint();
+    repaint(rect);
 }
 
 void KeyboardFrame::timerEvent(QTimerEvent * e)

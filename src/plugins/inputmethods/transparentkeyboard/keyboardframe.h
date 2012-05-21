@@ -35,7 +35,7 @@ struct KeyInfo
 {
     int qcode;                  // value from Qt::Key or unicode value
     QRectF rectSvg;             // bounding rectangle in SVG
-    QRectF rectScr;             // bounding rectangle on screen
+    QRect rectScr;             // bounding rectangle on screen
     //QPixmap pic;
 };
 
