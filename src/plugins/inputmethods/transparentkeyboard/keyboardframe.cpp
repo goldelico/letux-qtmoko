@@ -211,16 +211,17 @@ QFrame(parent, f)
     , repeatTimer(this)
     , vib()
     , pressedKey(NULL)
+    , highKey(NULL)
     , pressedChar(-1)
     , modifiers(Qt::NoModifier)
-    , pressTid(0)
+    , highTid(0)
     , positionTop(true)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
     setPalette(QPalette(QColor(220, 220, 220)));    // Gray
-    setWindowFlags(Qt::Dialog | Qt::
-                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QRect mwr = QApplication::desktop()->availableGeometry();
@@ -294,6 +295,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
     QPainter p(this);
     p.setClipRect(e->rect());
 
+    // Draw keys - only those that are in clip region
     KeyInfo *ki = layouts[curLayout].keys;
     for (int i = 0; i < layouts[curLayout].numKeys; i++) {
         QRect rect = ki->rectScr;
@@ -302,12 +304,14 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
         ki++;
     }
 
-    if (pressedKey) {
-        QRect rect = pressedRect(pressedKey->rectScr);
-        rect.setTop(rect.top() - rect.height() / 2);
-        layouts[curLayout].svg->render(&p, elemId(pressedKey), rect);
+    // Draw highlighted key - except upper row they are all shifted one row up
+    // so that it's not obscured by finger.
+    if (highKey) {
+        QRect rect = pressedRect(highKey->rectScr);
+        if (rect.top() > 0)
+            rect.setTop(rect.top() - highKey->rectScr.height());
+        layouts[curLayout].svg->render(&p, elemId(highKey), rect);
     }
-
     //p.setPen(Qt::yellow);
     //p.drawRect(e->rect());
 }
@@ -325,6 +329,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     if (ignorePress)
         return;
 
+    // Clear highlited key if typing fast
+    cleanHigh();
+
     // Vibrate
     vib.setVibrateNow(true, 32);
 
@@ -340,7 +347,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
             return;
     }
 
-    pressedKey = ki;
+    pressedKey = highKey = ki;
     pressedChar = getKeyChar(ki);
     if (pressedChar == -1) {
 
@@ -395,9 +402,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
     repaint(pressedRect(ki->rectScr));
 
-    if (pressTid)
-        killTimer(pressTid);
-    pressTid = startTimer(80);
     emit needsPositionConfirmation();
 }
 
@@ -406,25 +410,38 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
     if (ignorePress)
         return;
 
-    repeatTimer.stop();
-    if (pressTid == 0)
 #if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-        if (pressedKey) {
-            qwsServer->processKeyEvent(pressedChar, pressedKey->qcode,
-                                       modifiers, false, false);
-        }
+    if (pressedKey)
+        qwsServer->processKeyEvent(pressedChar, pressedKey->qcode,
+                                   modifiers, false, false);
 #endif
 
-    QRect rect = pressedRect(pressedKey->rectScr);
-    pressedKey = NULL;
-    repaint(rect);
+    // This hides highlighted key after 200ms, condition should be always true
+    if (highTid == 0)
+        highTid = startTimer(200);
+
+    repeatTimer.stop();
+}
+
+// Clean highlighted key
+void KeyboardFrame::cleanHigh()
+{
+    if (highTid) {
+        killTimer(highTid);
+        highTid = 0;
+    }
+
+    if (highKey) {
+        QRect rect = pressedRect(highKey->rectScr);
+        highKey = NULL;
+        repaint(rect);
+    }
 }
 
 void KeyboardFrame::timerEvent(QTimerEvent * e)
 {
-    if (e->timerId() == pressTid) {
-        killTimer(pressTid);
-        pressTid = 0;
+    if (e->timerId() == highTid) {
+        cleanHigh();
     }
 }
 
@@ -460,17 +477,13 @@ void KeyboardFrame::resetState()
     pressedKey = NULL;
     pressedChar = -1;
     modifiers = Qt::NoModifier;
-    if (pressTid) {
-        killTimer(pressTid);
-        pressTid = 0;
-    };
     repeatTimer.stop();
 }
 
 bool KeyboardFrame::obscures(const QPoint & point)
 {
     QRect mwr = QApplication::desktop()->availableGeometry();
-    bool isTop = point.y() < (mwr.y() + mwr.height() >> 1);
+    bool isTop = point.y() < (mwr.y() + (mwr.height() >> 1));
     return (isTop == positionTop);
 }
 

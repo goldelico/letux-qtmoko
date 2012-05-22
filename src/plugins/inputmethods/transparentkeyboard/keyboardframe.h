@@ -35,7 +35,7 @@ struct KeyInfo
 {
     int qcode;                  // value from Qt::Key or unicode value
     QRectF rectSvg;             // bounding rectangle in SVG
-    QRect rectScr;             // bounding rectangle on screen
+    QRect rectScr;              // bounding rectangle on screen
     //QPixmap pic;
 };
 
@@ -62,6 +62,7 @@ public:
     explicit KeyboardFrame(QWidget * parent = 0, Qt::WFlags f = 0);
     virtual ~ KeyboardFrame();
 
+    void cleanHigh();
     void resetState();
     void mousePressEvent(QMouseEvent *);
     void mouseReleaseEvent(QMouseEvent *);
@@ -102,10 +103,11 @@ private:
     QVibrateAccessory vib;
 
     KeyInfo *pressedKey;        // currently pressed key or NULL
+    KeyInfo *highKey;           // highlighted key, after release we show the pressed key for some more time
     int pressedChar;            // unicode value of pressed key
     Qt::KeyboardModifiers modifiers;
 
-    int pressTid;
+    int highTid;                // id for time that hides highlighted key after 200ms
     bool positionTop;
     struct timespec pressTime;  // last time key was pressed
     bool ignorePress;           // used to ignore too fast presses    
