@@ -294,6 +294,10 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
     p.setClipRect(e->rect());
+    
+    // Hide keys when layout key is pressed
+    if(pressedKey && pressedKey->qcode == Qt::Key_Mode_switch)
+        return;
 
     // Draw keys - only those that are in clip region
     KeyInfo *ki = layouts[curLayout].keys;
@@ -350,7 +354,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     pressedKey = highKey = ki;
     pressedChar = getKeyChar(ki);
     if (pressedChar == -1) {
-
         switch (ki->qcode) {
         case Qt::Key_Shift:
             toggleModifier(modifiers, Qt::ShiftModifier);
@@ -365,8 +368,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
             break;
 
         case Qt::Key_Mode_switch:
-            break;
-
+            highKey = NULL;
+            repaint();
+            return;
         }
     } else {
         //due to the way the keyboard is defined, we know that
@@ -410,11 +414,16 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
     if (ignorePress)
         return;
 
-#if defined(Q_WS_QWS) || defined(Q_WS_QWS)
-    if (pressedKey)
+    if (pressedKey) {
+        if(pressedKey->qcode == Qt::Key_Mode_switch) {
+            pressedKey = NULL;
+            repaint();
+            return;
+        }
+
         qwsServer->processKeyEvent(pressedChar, pressedKey->qcode,
                                    modifiers, false, false);
-#endif
+    }
 
     // This hides highlighted key after 200ms, condition should be always true
     if (highTid == 0)
