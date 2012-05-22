@@ -200,7 +200,7 @@ static void toggleModifier(Qt::KeyboardModifiers & mods,
 static QRect pressedRect(const QRect & keyRect)
 {
     QRect res(keyRect);
-    res.setTop(res.top() - (4 * res.height()) / 3);
+    res.setTop(res.top() - res.height());
     res.setLeft(keyRect.left() - keyRect.width() / 2);
     res.setRight(keyRect.right() + keyRect.width() / 2);
     return res;
@@ -302,12 +302,14 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
         ki++;
     }
 
-    if (pressedKey)
-        layouts[curLayout].svg->render(&p, elemId(pressedKey),
-                                       pressedRect(pressedKey->rectScr));
+    if (pressedKey) {
+        QRect rect = pressedRect(pressedKey->rectScr);
+        rect.setTop(rect.top() - rect.height() / 2);
+        layouts[curLayout].svg->render(&p, elemId(pressedKey), rect);
+    }
 
-//    p.setPen(Qt::yellow);
-//    p.drawRect(e->rect());
+    //p.setPen(Qt::yellow);
+    //p.drawRect(e->rect());
 }
 
 void KeyboardFrame::mousePressEvent(QMouseEvent * e)
