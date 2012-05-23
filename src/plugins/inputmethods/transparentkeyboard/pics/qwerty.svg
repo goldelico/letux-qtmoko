@@ -18,7 +18,7 @@
    viewBox="0 0 1400 1900"
    enable-background="new 0 0 1400 1900"
    xml:space="preserve"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.48.3.1 r9886"
    sodipodi:docname="qwerty.svg"><metadata
    id="metadata299"><rdf:RDF><cc:Work
        rdf:about=""><dc:format>image/svg+xml</dc:format><dc:type
@@ -824,15 +824,15 @@
    guidetolerance="10"
    inkscape:pageopacity="0"
    inkscape:pageshadow="2"
-   inkscape:window-width="1320"
-   inkscape:window-height="880"
+   inkscape:window-width="1280"
+   inkscape:window-height="1000"
    id="namedview295"
    showgrid="true"
-   inkscape:zoom="2.9839906"
-   inkscape:cx="161.85526"
-   inkscape:cy="1897.9375"
-   inkscape:window-x="119"
-   inkscape:window-y="0"
+   inkscape:zoom="2.11"
+   inkscape:cx="157.29195"
+   inkscape:cy="1779.9014"
+   inkscape:window-x="0"
+   inkscape:window-y="24"
    inkscape:window-maximized="1"
    inkscape:current-layer="svg2"><inkscape:grid
      type="xygrid"
@@ -984,7 +984,7 @@
 
 
 <g
-   id="key_1000001"><rect
+   id="key_1000001_9"><rect
    y="40"
    x="0"
    height="60"
@@ -1005,8 +1005,9 @@
 
 
 
+
 </g><g
-   id="key_77"
+   id="key_57_77"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="50"
@@ -1032,8 +1033,9 @@
 
 
 
+
 </g><g
-   id="key_65"
+   id="key_45_65"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="70"
@@ -1059,8 +1061,9 @@
 
 
 
+
 </g><g
-   id="key_72"
+   id="key_52_72"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="90"
@@ -1086,8 +1089,9 @@
 
 
 
+
 </g><g
-   id="key_71"
+   id="key_51_71"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="30"
@@ -1113,8 +1117,9 @@
 
 
 
+
 </g><g
-   id="key_74"
+   id="key_54_74"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="110"
@@ -1140,8 +1145,9 @@
 
 
 
+
 </g><g
-   id="key_79"
+   id="key_59_79"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="130"
@@ -1167,8 +1173,9 @@
 
 
 
+
 </g><g
-   id="key_75"
+   id="key_55_75"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="150"
@@ -1194,8 +1201,9 @@
 
 
 
+
 </g><g
-   id="key_69"
+   id="key_49_69"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="170"
@@ -1221,8 +1229,9 @@
 
 
 
+
 </g><g
-   id="key_6f"
+   id="key_4f_6f"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="190"
@@ -1248,8 +1257,9 @@
 
 
 
+
 </g><g
-   id="key_70"
+   id="key_50_70"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="210"
@@ -1275,8 +1285,9 @@
 
 
 
+
 </g><g
-   id="key_5b"
+   id="key_5b_5b"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="230"
@@ -1302,8 +1313,9 @@
 
 
 
+
 </g><g
-   id="key_5d"
+   id="key_5d_5d"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="250"
@@ -1329,8 +1341,9 @@
 
 
 
+
 </g><g
-   id="key_5c"
+   id="key_5c_5c"
    transform="translate(0,35.504999)"><g
      id="g4069"><rect
    style="fill:#000000;fill-opacity:0.76862745;stroke:none"
@@ -1357,8 +1370,9 @@
 
 
 
+
 </g></g><g
-   id="key_1000007"
+   id="key_1000007_0"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="290"
@@ -1384,6 +1398,7 @@
 
 
 
+
 </g>
 
 
@@ -1458,7 +1473,7 @@
 
 
 <g
-   id="key_1000020"><rect
+   id="key_1000020_0"><rect
    y="160"
    x="0"
    height="60"
@@ -1479,8 +1494,9 @@
 
 
 
+
 </g><g
-   id="key_7a"
+   id="key_5a_7a"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="50"
@@ -1506,8 +1522,9 @@
 
 
 
+
 </g><g
-   id="key_78"
+   id="key_58_78"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="70"
@@ -1533,8 +1550,9 @@
 
 
 
+
 </g><g
-   id="key_63"
+   id="key_43_63"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="90"
@@ -1560,8 +1578,9 @@
 
 
 
+
 </g><g
-   id="key_76"
+   id="key_56_76"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="110"
@@ -1587,8 +1606,9 @@
 
 
 
+
 </g><g
-   id="key_62"
+   id="key_42_62"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="130"
@@ -1614,8 +1634,9 @@
 
 
 
+
 </g><g
-   id="key_6e"
+   id="key_4e_6e"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="150"
@@ -1641,8 +1662,9 @@
 
 
 
+
 </g><g
-   id="key_6d"
+   id="key_4d_6d"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="170"
@@ -1668,8 +1690,9 @@
 
 
 
+
 </g><g
-   id="key_2c"
+   id="key_2c_2c"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="190"
@@ -1695,8 +1718,9 @@
 
 
 
+
 </g><g
-   id="key_2e"
+   id="key_2e_2e"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="210"
@@ -1722,8 +1746,9 @@
 
 
 
+
 </g><g
-   id="key_2f"
+   id="key_2f_2f"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="230"
@@ -1749,8 +1774,9 @@
 
 
 
+
 </g><g
-   id="key_60"
+   id="key_60_60"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="250"
@@ -1776,8 +1802,9 @@
 
 
 
+
 </g><g
-   id="key_1000006"
+   id="key_1000006_0"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="270"
@@ -1803,6 +1830,7 @@
 
 
 
+
 </g>
 
 
@@ -1832,26 +1860,27 @@
 
 
 <g
-   id="key_1000000"><rect
-     y="-50"
-     x="0"
-     height="89.999954"
-     width="20"
-     id="rect5235-2-3-9-4-4-6"
-     style="fill:#000000;fill-opacity:0.76862745;stroke:none" /><text
-     transform="scale(0.78224271,1.2783756)"
-     id="text2888"
+   id="key_1000000_1b"><rect
+   y="-50"
+   x="0"
+   height="89.999954"
+   width="20"
+   id="rect5235-2-3-9-4-4-6"
+   style="fill:#000000;fill-opacity:0.76862745;stroke:none" /><text
+   transform="scale(0.78224271,1.2783756)"
+   id="text2888"
+   y="12.556764"
+   x="0.74741673"
+   style="font-size:13.2457943px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
+   xml:space="preserve"
+   sodipodi:linespacing="125%"><tspan
      y="12.556764"
      x="0.74741673"
-     style="font-size:13.2457943px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
-     xml:space="preserve"
-     sodipodi:linespacing="125%"><tspan
-       y="12.556764"
-       x="0.74741673"
-       id="tspan2890"
-       sodipodi:role="line">Esc</tspan></text>
+     id="tspan2890"
+     sodipodi:role="line">Esc</tspan></text>
+
 </g><g
-   id="key_31"
+   id="key_31_31"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="20"
@@ -1877,8 +1906,9 @@
 
 
 
+
 </g><g
-   id="key_32"
+   id="key_32_32"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="40"
@@ -1904,8 +1934,9 @@
 
 
 
+
 </g><g
-   id="key_33"
+   id="key_33_33"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="60"
@@ -1931,8 +1962,9 @@
 
 
 
+
 </g><g
-   id="key_34"
+   id="key_34_34"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="80"
@@ -1958,8 +1990,9 @@
 
 
 
+
 </g><g
-   id="key_35"
+   id="key_35_35"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="100"
@@ -1985,8 +2018,9 @@
 
 
 
+
 </g><g
-   id="key_36"
+   id="key_36_36"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="120"
@@ -2012,8 +2046,9 @@
 
 
 
+
 </g><g
-   id="key_37"
+   id="key_37_37"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="140"
@@ -2039,8 +2074,9 @@
 
 
 
+
 </g><g
-   id="key_38"
+   id="key_38_38"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="160"
@@ -2066,8 +2102,9 @@
 
 
 
+
 </g><g
-   id="key_39"
+   id="key_39_39"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="180"
@@ -2093,8 +2130,9 @@
 
 
 
+
 </g><g
-   id="key_30"
+   id="key_30_30"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="200"
@@ -2120,8 +2158,9 @@
 
 
 
+
 </g><g
-   id="key_2d"
+   id="key_2d_2d"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="220"
@@ -2147,8 +2186,9 @@
 
 
 
+
 </g><g
-   id="key_3d"
+   id="key_3d_3d"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="240"
@@ -2174,8 +2214,9 @@
 
 
 
+
 </g><g
-   id="key_64"
+   id="key_44_64"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="80"
@@ -2201,8 +2242,9 @@
 
 
 
+
 </g><g
-   id="key_66"
+   id="key_46_66"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="100"
@@ -2228,8 +2270,9 @@
 
 
 
+
 </g><g
-   id="key_67"
+   id="key_47_67"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="120"
@@ -2255,8 +2298,9 @@
 
 
 
+
 </g><g
-   id="key_68"
+   id="key_48_68"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="140"
@@ -2282,8 +2326,9 @@
 
 
 
+
 </g><g
-   id="key_6a"
+   id="key_4a_6a"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="160"
@@ -2309,8 +2354,9 @@
 
 
 
+
 </g><g
-   id="key_61"
+   id="key_41_61"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="40"
@@ -2336,8 +2382,9 @@
 
 
 
+
 </g><g
-   id="key_73"
+   id="key_53_73"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="60"
@@ -2363,8 +2410,9 @@
 
 
 
+
 </g><g
-   id="key_6b"
+   id="key_4b_6b"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="180"
@@ -2390,8 +2438,9 @@
 
 
 
+
 </g><g
-   id="key_6c"
+   id="key_4c_6c"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="200"
@@ -2417,8 +2466,9 @@
 
 
 
+
 </g><g
-   id="key_3b"
+   id="key_3b_3b"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="220"
@@ -2444,8 +2494,9 @@
 
 
 
+
 </g><g
-   id="key_27"
+   id="key_27_27"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="240"
@@ -2471,8 +2522,9 @@
 
 
 
+
 </g><g
-   id="key_1000024"><rect
+   id="key_1000024_0"><rect
    y="100"
    x="0"
    height="60"
@@ -2492,9 +2544,10 @@
      sodipodi:role="line">CAP</tspan></text>
 
 
+
 </g>
 <g
-   id="key_100117e"
+   id="key_100117e_0"
    transform="translate(0,155.5)"><rect
    y="64.5"
    x="0"
@@ -2521,8 +2574,9 @@
 
 
 
+
 </g><g
-   id="key_1000021"
+   id="key_1000021_0"
    transform="translate(0,155.5)"><rect
    y="64.5"
    x="40"
@@ -2548,8 +2602,9 @@
 
 
 
+
 </g><g
-   id="key_1000023"
+   id="key_1000023_0"
    transform="translate(0,155.5)"><rect
    y="64.5"
    x="70"
@@ -2575,8 +2630,9 @@
 
 
 
+
 </g><g
-   id="key_1000011"
+   id="key_1000011_0"
    transform="translate(-5,152.12868)"><rect
    y="67.871323"
    x="285"
@@ -2604,8 +2660,9 @@
 
 
 
+
 </g><g
-   id="key_1000016"
+   id="key_1000016_0"
    transform="translate(0,155.5)"><rect
      y="64.5"
      x="220"
@@ -2637,6 +2694,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-size:8.76710796px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
@@ -2656,8 +2714,9 @@
 
 
 
+
 </g></g><g
-   id="key_1000017"
+   id="key_1000017_0"
    transform="translate(0,155.5)"><rect
      y="64.5"
      x="240"
@@ -2685,6 +2744,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-size:9.31672001px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
@@ -2704,9 +2764,10 @@
 
 
 
+
 </g></g><g
    transform="translate(20,155.5)"
-   id="key_1000010"><rect
+   id="key_1000010_0"><rect
      y="64.5"
      x="240"
      height="60"
@@ -2733,6 +2794,7 @@
 
 
 
+
 <text
    xml:space="preserve"
    style="font-size:9.31672001px;font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;text-align:start;line-height:125%;writing-mode:lr-tb;text-anchor:start;fill:#ffffff;fill-opacity:1;stroke:none;font-family:DejaVu Sans Mono;-inkscape-font-specification:DejaVu Sans Mono"
@@ -2752,8 +2814,9 @@
 
 
 
+
 </g></g><g
-   id="key_20"><rect
+   id="key_20_20"><rect
      y="220"
      x="90"
      height="60"
@@ -2780,7 +2843,7 @@
        height="1.8292654"
        x="97.90889"
        y="253.50938" /></g></g><g
-   id="key_1000012"><rect
+   id="key_1000012_0"><rect
      y="220"
      x="140"
      height="60"
@@ -2809,29 +2872,7 @@
        x="-297.12473"
        y="82.931168"
        transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)" /></g></g><g
-   id="g4356-5"
-   transform="translate(9.9999993,26.54065)"><rect
-     y="263.01608"
-     x="146.70522"
-     height="0.83780426"
-     width="8.2947845"
-     id="rect4282-48"
-     style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.86117345;stroke-opacity:1" /><rect
-     transform="matrix(0.70710678,-0.70710678,0.70710678,0.70710678,0,0)"
-     y="288.81882"
-     x="-83.757843"
-     height="0.83780426"
-     width="8.2947845"
-     id="rect4282-4-1"
-     style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.86117345;stroke-opacity:1" /><rect
-     transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)"
-     y="82.931168"
-     x="-297.12473"
-     height="0.83780426"
-     width="8.2947845"
-     id="rect4282-4-6-3"
-     style="fill:#ffffff;fill-opacity:1;stroke:#ffffff;stroke-width:0.86117345;stroke-opacity:1" /></g><g
-   id="key_1000014"><rect
+   id="key_1000014_0"><rect
      y="220"
      x="160"
      height="59.999996"
@@ -2860,7 +2901,7 @@
        x="-297.12473"
        y="82.931168"
        transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)" /></g></g><g
-   id="key_1000013"><rect
+   id="key_1000013_0"><rect
      y="220"
      x="180"
      height="60.000004"
@@ -2889,7 +2930,7 @@
        x="-297.12473"
        y="82.931168"
        transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)" /></g></g><g
-   id="key_1000015"><rect
+   id="key_1000015_0"><rect
      y="220"
      x="200"
      height="60"
@@ -2918,7 +2959,7 @@
        x="-297.12473"
        y="82.931168"
        transform="matrix(-0.70710678,-0.70710678,-0.70710678,0.70710678,0,0)" /></g></g><g
-   id="key_1000004"><rect
+   id="key_1000004_0"><rect
      y="100"
      x="260"
      height="60"
@@ -2955,7 +2996,7 @@
        x="314.59033"
        y="-244.07179"
        transform="matrix(0,1,-1,0,0,0)" /></g></g><g
-   id="key_1000003"><rect
+   id="key_1000003_0"><rect
      y="-50"
      x="260"
      height="89.999969"

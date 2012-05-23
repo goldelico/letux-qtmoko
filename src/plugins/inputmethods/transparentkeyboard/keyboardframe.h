@@ -33,7 +33,8 @@
 
 struct KeyInfo
 {
-    int qcode;                  // value from Qt::Key or unicode value
+    int qcode;                  // value from Qt::Key enum
+    int unicode;                // unicode value
     QRectF rectSvg;             // bounding rectangle in SVG
     QRect rectScr;              // bounding rectangle on screen
     //QPixmap pic;
@@ -104,7 +105,6 @@ private:
 
     KeyInfo *pressedKey;        // currently pressed key or NULL
     KeyInfo *highKey;           // highlighted key, after release we show the pressed key for some more time
-    int pressedChar;            // unicode value of pressed key
     Qt::KeyboardModifiers modifiers;
 
     int highTid;                // id for time that hides highlighted key after 200ms
