@@ -69,7 +69,7 @@ static void addKeys(const QString & svgFile, QStringList & keyList)
 // Return name of the element in svg for given key
 static QString elemId(KeyInfo * ki)
 {
-    return "key_" + QString::number(ki->qcode,
+    return "key_" + QString::number(ki->keycode,
                                     16) + "_" + QString::number(ki->unicode,
                                                                 16);
 }
@@ -103,10 +103,10 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
             qWarning() << "key " << id << " must be in form scancode_unicode";
             continue;
         }
-        QString qtkeyStr = id.left(index);
+        QString keycodeStr = id.left(index);
         QString unicodeStr = id.mid(index + 1);
         bool ok;
-        ki->qcode = qtkeyStr.toInt(&ok, 16);
+        ki->keycode = keycodeStr.toInt(&ok, 16);
         if (ok)
             ki->unicode = unicodeStr.toInt(&ok, 16);
         if (!ok)
@@ -290,7 +290,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
     p.setClipRect(e->rect());
 
     // Hide keys when layout key is pressed
-    if (pressedKey && pressedKey->qcode == Qt::Key_Mode_switch)
+    if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch)
         return;
 
     // Draw keys - only those that are in clip region
@@ -349,7 +349,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     Qt::KeyboardModifiers mod = Qt::NoModifier;
 
     if (ki->unicode <= 0) {
-        switch (ki->qcode) {
+        switch (ki->keycode) {
         case Qt::Key_Shift:
             mod = Qt::ShiftModifier;
             break;
@@ -370,7 +370,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     }
 
     if (mod == Qt::NoModifier) {
-        qwsServer->processKeyEvent(keyChar(modifiers, ki->unicode), ki->qcode,
+        qwsServer->processKeyEvent(keyChar(modifiers, ki->unicode), ki->keycode,
                                    modifiers, true, false);
         modifiers = Qt::NoModifier;
     } else
@@ -388,14 +388,15 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
         return;
 
     if (pressedKey) {
-        if (pressedKey->qcode == Qt::Key_Mode_switch) {
+        if (pressedKey->keycode == Qt::Key_Mode_switch) {
             pressedKey = NULL;
             repaint();
             return;
         }
 
         qwsServer->processKeyEvent(keyChar(modifiers, pressedKey->unicode),
-                                   pressedKey->qcode, modifiers, false, false);
+                                   pressedKey->keycode, modifiers, false,
+                                   false);
     }
     // This hides highlighted key after 200ms, condition should be always true
     if (highTid == 0)
@@ -431,7 +432,7 @@ void KeyboardFrame::repeat()
     if (pressedKey && pressedKey->unicode > 0) {
         repeatTimer.start(150);
         qwsServer->processKeyEvent(keyChar(modifiers, pressedKey->unicode),
-                                   pressedKey->qcode, modifiers, true, true);
+                                   pressedKey->keycode, modifiers, true, true);
     } else
         repeatTimer.stop();
 }

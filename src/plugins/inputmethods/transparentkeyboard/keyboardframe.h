@@ -33,7 +33,7 @@
 
 struct KeyInfo
 {
-    int qcode;                  // value from Qt::Key enum
+    int keycode;                // value from Qt::Key enum
     int unicode;                // unicode value
     QRectF rectSvg;             // bounding rectangle in SVG
     QRect rectScr;              // bounding rectangle on screen
