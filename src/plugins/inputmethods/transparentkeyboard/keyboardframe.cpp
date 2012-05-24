@@ -184,6 +184,20 @@ static void toggleModifier(Qt::KeyboardModifiers & mods,
         setModifier(mods, mod);
 }
 
+static Qt::KeyboardModifiers getModifiers(KeyInfo * ki)
+{
+    switch (ki->keycode) {
+    case Qt::Key_Shift:
+        return Qt::ShiftModifier;
+    case Qt::Key_Alt:
+        return Qt::AltModifier;
+    case Qt::Key_Control:
+        return Qt::ControlModifier;
+    default:
+        return Qt::NoModifier;
+    }
+}
+
 static int keyChar(Qt::KeyboardModifiers modifiers, int unicode)
 {
     if ((modifiers & Qt::ControlModifier) && unicode >= 'a' && unicode <= 'z')
@@ -214,8 +228,8 @@ QFrame(parent, f)
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
     setPalette(QPalette(QColor(220, 220, 220)));    // Gray
-    setWindowFlags(Qt::Dialog | Qt::
-                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QRect mwr = QApplication::desktop()->availableGeometry();
@@ -344,36 +358,19 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
         if (--num <= 0)         // key not found
             return;
     }
-
     pressedKey = highKey = ki;
-    Qt::KeyboardModifiers mod = Qt::NoModifier;
 
-    if (ki->unicode <= 0) {
-        switch (ki->keycode) {
-        case Qt::Key_Shift:
-            mod = Qt::ShiftModifier;
-            break;
-
-        case Qt::Key_Alt:
-            mod = Qt::AltModifier;
-            break;
-
-        case Qt::Key_Control:
-            mod = Qt::ControlModifier;
-            break;
-
-        case Qt::Key_Mode_switch:
-            highKey = NULL;
-            repaint();
-            return;
-        }
+    if (ki->keycode == Qt::Key_Mode_switch) {
+        highKey = NULL;
+        repaint();
+        return;
     }
 
-    if (mod == Qt::NoModifier) {
+    Qt::KeyboardModifiers mod = getModifiers(ki);
+    if (mod == Qt::NoModifier)
         qwsServer->processKeyEvent(keyChar(modifiers, ki->unicode), ki->keycode,
                                    modifiers, true, false);
-        modifiers = Qt::NoModifier;
-    } else
+    else
         toggleModifier(modifiers, mod);
 
     repeatTimer.start(500);
@@ -397,6 +394,10 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
         qwsServer->processKeyEvent(keyChar(modifiers, pressedKey->unicode),
                                    pressedKey->keycode, modifiers, false,
                                    false);
+
+        // Clear modifiers when normal key is pressed
+        if (getModifiers(pressedKey) == Qt::NoModifier)
+            modifiers = Qt::NoModifier;
     }
     // This hides highlighted key after 200ms, condition should be always true
     if (highTid == 0)
