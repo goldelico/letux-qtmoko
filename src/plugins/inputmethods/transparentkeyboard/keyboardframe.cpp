@@ -227,17 +227,9 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setPalette(QPalette(QColor(220, 220, 220)));    // Gray
     setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
                    FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
-
-    QRect mwr = QApplication::desktop()->availableGeometry();
-    qreal pixHeight = mwr.height() / 32;
-    qreal pointHeight = (pixHeight * 72) / logicalDpiY();
-
-    QFont fnt = QApplication::font();
-    fnt.setPointSizeF(pointHeight);
 
     QPalette pal(palette());
     QColor col(Qt::lightGray);
@@ -249,9 +241,6 @@ QFrame(parent, f)
     curLayout = 0;
     numLayouts = 1;
     fillLayout("/qwerty.svg", &layouts[0]);
-
-    QColor backcolor = palette().shadow().color();
-    backcolor.setAlpha(196);
 
     connect(&repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()));
 
@@ -443,10 +432,6 @@ QRect KeyboardFrame::geometryHint() const
     QRect r = QApplication::desktop()->availableGeometry();
     if (r.width() <= 480)
         r.setHeight(480);       // hack to make it larger
-
-    int sb = style()->pixelMetric(QStyle::PM_ScrollBarExtent) +
-        style()->pixelMetric(QStyle::PM_LayoutRightMargin);
-    r.setWidth(r.width() - sb);
     return r;
 }
 
