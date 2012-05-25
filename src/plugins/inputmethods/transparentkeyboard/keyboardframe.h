@@ -46,6 +46,8 @@ struct KeyLayout
     KeyInfo *keys;              // pointer to first key info
     QSvgRenderer *svg;
     QRectF rectSvg;
+    int scrWidth;               // width and height for which are keys
+    int scrHeight;              // currrently placed on the screen
 };
 
 /*
@@ -63,6 +65,7 @@ public:
     explicit KeyboardFrame(QWidget * parent = 0, Qt::WFlags f = 0);
     virtual ~ KeyboardFrame();
 
+    void setLayout(int index = 0);
     void cleanHigh();
     void resetState();
     void mousePressEvent(QMouseEvent *);

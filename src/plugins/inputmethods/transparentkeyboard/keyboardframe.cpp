@@ -28,14 +28,16 @@
 #include <ctype.h>
 #include <qtopialog.h>
 
+#include <QDir>
+#include <QFile>
+#include <QMenu>
+#include <Qtopia>
+#include <QStyle>
 #include <QPalette>
+#include <QMouseEvent>
+#include <QSoftMenuBar>
 #include <QApplication>
 #include <QDesktopWidget>
-#include <QMenu>
-#include <QFile>
-#include <QStyle>
-#include <QSoftMenuBar>
-#include <QMouseEvent>
 
 // Add keys from svg file to list. The keys in svg are in form id="key_xxx"
 // where xxx is hex value from Qt::Key or unicode value of given key.
@@ -224,6 +226,8 @@ QFrame(parent, f)
     , modifiers(Qt::NoModifier)
     , highTid(0)
     , positionTop(true)
+    , numLayouts(0)
+    , curLayout(0)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
@@ -238,10 +242,8 @@ QFrame(parent, f)
     setPalette(pal);
     setAutoFillBackground(true);
 
-    curLayout = 0;
-    numLayouts = 1;
-    fillLayout("/qwerty.svg", &layouts[0]);
-
+    memset((void *)(layouts), 0, sizeof(KeyLayout) * MAX_LAYOUTS);
+    
     connect(&repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()));
 
     emit needsPositionConfirmation();
@@ -261,8 +263,32 @@ KeyboardFrame::~KeyboardFrame()
     }
 }
 
+// Set current layout. The layout is loaded from svg file if was not used yet
+void KeyboardFrame::setLayout(int index)
+{
+    if(numLayouts == 0) {
+        QDir d(Qtopia::qtopiaDir() + "/etc/im/svgkbd");
+        QStringList list = d.entryList(QStringList() << "*.svg", QDir::Files);
+        qLog(Input) << "svg kbd layouts in " << d.path() << ": " + list.join(", ");
+        numLayouts = list.count();
+        
+        for(int i = 0; i < numLayouts; i++)
+            fillLayout(d.filePath(list.at(i)), &layouts[i]);
+    }
+    
+    KeyLayout *lay = &layouts[curLayout];
+    if(width() != lay->scrWidth || height() != lay->scrHeight) {
+        lay->scrWidth = width();
+        lay->scrHeight = height();
+        placeKeys(lay, lay->scrWidth, lay->scrHeight);
+    }
+
+    curLayout = index;
+}
+
 void KeyboardFrame::showEvent(QShowEvent * e)
 {
+    setLayout();
     qwsServer->sendIMQuery(Qt::ImMicroFocus);
     setGeometry(geometryHint());
     placeKeys(&layouts[curLayout], width(), height());
@@ -284,24 +310,25 @@ void KeyboardFrame::hideEvent(QHideEvent *)
 
 void KeyboardFrame::resizeEvent(QResizeEvent *)
 {
-    placeKeys(&layouts[curLayout], width(), height());
+    setLayout();
 }
 
 void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
     p.setClipRect(e->rect());
+    KeyLayout *lay = &layouts[curLayout];
 
     // Hide keys when layout key is pressed
     if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch)
         return;
 
     // Draw keys - only those that are in clip region
-    KeyInfo *ki = layouts[curLayout].keys;
-    for (int i = 0; i < layouts[curLayout].numKeys; i++) {
+    KeyInfo *ki = lay->keys;
+    for (int i = 0; i < lay->numKeys; i++) {
         QRect rect = ki->rectScr;
         if (ki->rectScr.intersects(e->rect()))
-            layouts[curLayout].svg->render(&p, elemId(ki), rect);
+            lay->svg->render(&p, elemId(ki), rect);
         ki++;
     }
 
@@ -311,7 +338,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
         QRect rect = pressedRect(highKey->rectScr);
         if (rect.top() > 0)
             rect.setTop(rect.top() - highKey->rectScr.height());
-        layouts[curLayout].svg->render(&p, elemId(highKey), rect);
+        lay->svg->render(&p, elemId(highKey), rect);
     }
     //p.setPen(Qt::yellow);
     //p.drawRect(e->rect());
