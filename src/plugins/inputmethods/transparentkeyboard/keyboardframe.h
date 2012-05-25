@@ -48,6 +48,7 @@ struct KeyLayout
     QRectF rectSvg;
     int scrWidth;               // width and height for which are keys
     int scrHeight;              // currrently placed on the screen
+    bool shifted;               // is this uppercase?
 };
 
 /*

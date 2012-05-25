@@ -139,6 +139,7 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
         }
     } while (!ok);
 
+    layout->shifted = svgFile.contains("shifted");
     return true;
 }
 
@@ -269,6 +270,7 @@ void KeyboardFrame::setLayout(int index)
     if(numLayouts == 0) {
         QDir d(Qtopia::qtopiaDir() + "/etc/im/svgkbd");
         QStringList list = d.entryList(QStringList() << "*.svg", QDir::Files);
+        list.sort();
         qLog(Input) << "svg kbd layouts in " << d.path() << ": " + list.join(", ");
         numLayouts = list.count();
         
@@ -315,13 +317,17 @@ void KeyboardFrame::resizeEvent(QResizeEvent *)
 
 void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
+    qDebug() << "paintEvent curLayout=" << curLayout;
+    
     QPainter p(this);
     p.setClipRect(e->rect());
     KeyLayout *lay = &layouts[curLayout];
 
     // Hide keys when layout key is pressed
-    if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch)
+    if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch) {
+        qDebug() << "Key_Mode_switch pressed";
         return;
+    }
 
     // Draw keys - only those that are in clip region
     KeyInfo *ki = lay->keys;
@@ -386,8 +392,14 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     if (mod == Qt::NoModifier)
         qwsServer->processKeyEvent(keyChar(modifiers, ki->unicode), ki->keycode,
                                    modifiers, true, false);
-    else
+    else {
         toggleModifier(modifiers, mod);
+        if((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts && layouts[numLayouts].shifted) {
+            setLayout(curLayout + 1);
+            repaint();
+            return;
+        }
+    }
 
     repeatTimer.start(500);
     repaint(pressedRect(ki->rectScr));
@@ -397,12 +409,15 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
 void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
 {
-    if (ignorePress)
+    if (ignorePress) {
+        qDebug() << "mouseReleaseEvent ignorePress";
         return;
+    }
 
     if (pressedKey) {
         if (pressedKey->keycode == Qt::Key_Mode_switch) {
             pressedKey = NULL;
+            setLayout(curLayout + 1);
             repaint();
             return;
         }
