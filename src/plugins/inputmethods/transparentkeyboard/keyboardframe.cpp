@@ -233,8 +233,8 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
-                   FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::
+                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -322,6 +322,20 @@ void KeyboardFrame::resizeEvent(QResizeEvent *)
     setLayout();
 }
 
+static void renderKey(QPainter * p, QRect clip, QSvgRenderer * svg,
+                      KeyInfo * ki)
+{
+    if (!ki->rectScr.intersects(clip))
+        return;
+
+    svg->render(p, elemId(ki), ki->rectScr);
+
+//    if(ki->unicode)
+//        p->drawText(ki->rectScr, Qt::AlignCenter, QString(ki->unicode));
+//    else
+//        svg->render(p, elemId(ki), ki->rectScr);
+}
+
 void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
     QPainter p(this);
@@ -335,9 +349,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
     // Draw keys - only those that are in clip region
     KeyInfo *ki = lay->keys;
     for (int i = 0; i < lay->numKeys; i++) {
-        QRect rect = ki->rectScr;
-        if (ki->rectScr.intersects(e->rect()))
-            lay->svg->render(&p, elemId(ki), rect);
+        renderKey(&p, e->rect(), lay->svg, ki);
         ki++;
     }
 
@@ -444,11 +456,11 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
         // Clear shift and modifiers after regular key
         if (getModifiers(pressedKey) == Qt::NoModifier) {
             if (modifiers & Qt::ShiftModifier) {
-                setLayout(curLayout - caps);        // clear shift
+                setLayout(curLayout - caps);    // clear shift
                 highKey = NULL;
                 repaint();
             }
-            modifiers = Qt::NoModifier;     // clear modifiers
+            modifiers = Qt::NoModifier; // clear modifiers
         }
     }
     // This hides highlighted key after 200ms, condition should be always true
