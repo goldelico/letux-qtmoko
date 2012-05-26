@@ -232,8 +232,8 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
-                   FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::
+                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -244,7 +244,7 @@ QFrame(parent, f)
     setAutoFillBackground(true);
 
     memset((void *)(layouts), 0, sizeof(KeyLayout) * MAX_LAYOUTS);
-    
+
     connect(&repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()));
 
     emit needsPositionConfirmation();
@@ -267,19 +267,20 @@ KeyboardFrame::~KeyboardFrame()
 // Set current layout. The layout is loaded from svg file if was not used yet
 void KeyboardFrame::setLayout(int index)
 {
-    if(numLayouts == 0) {
+    if (numLayouts == 0) {
         QDir d(Qtopia::qtopiaDir() + "/etc/im/svgkbd");
         QStringList list = d.entryList(QStringList() << "*.svg", QDir::Files);
         list.sort();
-        qLog(Input) << "svg kbd layouts in " << d.path() << ": " + list.join(", ");
+        qLog(Input) << "svg kbd layouts in " << d.path() << ": " +
+            list.join(", ");
         numLayouts = list.count();
-        
-        for(int i = 0; i < numLayouts; i++)
+
+        for (int i = 0; i < numLayouts; i++)
             fillLayout(d.filePath(list.at(i)), &layouts[i]);
     }
-    
+
     KeyLayout *lay = &layouts[index];
-    if(width() != lay->scrWidth || height() != lay->scrHeight) {
+    if (width() != lay->scrWidth || height() != lay->scrHeight) {
         lay->scrWidth = width();
         lay->scrHeight = height();
         placeKeys(lay, lay->scrWidth, lay->scrHeight);
@@ -390,7 +391,8 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
                                    modifiers, true, false);
     else {
         toggleModifier(modifiers, mod);
-        if((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts && layouts[curLayout + 1].shifted) {
+        if ((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts
+            && layouts[curLayout + 1].shifted) {
             setLayout(curLayout + 1);
             repaint();
             return;
