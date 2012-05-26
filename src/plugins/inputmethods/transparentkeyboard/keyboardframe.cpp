@@ -278,7 +278,7 @@ void KeyboardFrame::setLayout(int index)
             fillLayout(d.filePath(list.at(i)), &layouts[i]);
     }
     
-    KeyLayout *lay = &layouts[curLayout];
+    KeyLayout *lay = &layouts[index];
     if(width() != lay->scrWidth || height() != lay->scrHeight) {
         lay->scrWidth = width();
         lay->scrHeight = height();
@@ -317,17 +317,13 @@ void KeyboardFrame::resizeEvent(QResizeEvent *)
 
 void KeyboardFrame::paintEvent(QPaintEvent * e)
 {
-    qDebug() << "paintEvent curLayout=" << curLayout;
-    
     QPainter p(this);
     p.setClipRect(e->rect());
     KeyLayout *lay = &layouts[curLayout];
 
     // Hide keys when layout key is pressed
-    if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch) {
-        qDebug() << "Key_Mode_switch pressed";
+    if (pressedKey && pressedKey->keycode == Qt::Key_Mode_switch)
         return;
-    }
 
     // Draw keys - only those that are in clip region
     KeyInfo *ki = lay->keys;
@@ -409,15 +405,13 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
 void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
 {
-    if (ignorePress) {
-        qDebug() << "mouseReleaseEvent ignorePress";
+    if (ignorePress)
         return;
-    }
 
     if (pressedKey) {
         if (pressedKey->keycode == Qt::Key_Mode_switch) {
             pressedKey = NULL;
-            setLayout(curLayout + 1);
+            setLayout((curLayout + 1) % numLayouts);
             repaint();
             return;
         }
