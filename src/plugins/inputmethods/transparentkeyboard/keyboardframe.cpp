@@ -232,8 +232,8 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
-                   FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::
+                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -433,8 +433,9 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
         // Clear modifiers when normal key is pressed
         if (getModifiers(pressedKey) == Qt::NoModifier) {
             modifiers = Qt::NoModifier;
-            if(layouts[curLayout].shifted) {
+            if (layouts[curLayout].shifted) {
                 setLayout(curLayout - 1);
+                highKey = NULL;
                 repaint();
             }
         }
