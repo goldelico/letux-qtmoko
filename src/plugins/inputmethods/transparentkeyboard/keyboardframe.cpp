@@ -139,7 +139,7 @@ static bool fillLayout(const QString & svgFile, KeyLayout * layout)
         }
     } while (!ok);
 
-    layout->shifted = svgFile.contains("shifted");
+    layout->shifted = svgFile.contains("shift");
     return true;
 }
 
@@ -390,7 +390,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
                                    modifiers, true, false);
     else {
         toggleModifier(modifiers, mod);
-        if((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts && layouts[numLayouts].shifted) {
+        if((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts && layouts[curLayout + 1].shifted) {
             setLayout(curLayout + 1);
             repaint();
             return;
