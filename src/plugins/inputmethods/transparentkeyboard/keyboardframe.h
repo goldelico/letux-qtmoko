@@ -114,6 +114,7 @@ private:
     int highTid;                // id for time that hides highlighted key after 200ms
     bool positionTop;
     struct timespec pressTime;  // last time key was pressed
+    int caps;                   // direction for shift. -1=caps lock active, 1=caps lock not active
     bool ignorePress;           // used to ignore too fast presses    
     int numLayouts;             // number of currently loaded layouts
     int curLayout;              // current layout

@@ -227,13 +227,14 @@ QFrame(parent, f)
     , modifiers(Qt::NoModifier)
     , highTid(0)
     , positionTop(true)
+    , caps(1)
     , numLayouts(0)
     , curLayout(0)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::
-                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -382,8 +383,18 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
         if (--num <= 0)         // key not found
             return;
     }
+
+    // Handle CAPS lock
+    if (ki->keycode == Qt::Key_CapsLock) {
+        setLayout(curLayout + caps);
+        caps *= -1;
+        repaint();
+        return;
+    }
+
     pressedKey = ki;
 
+    // Handle layout switch
     if (ki->keycode == Qt::Key_Mode_switch) {
         repaint();
         return;
@@ -397,9 +408,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
         toggleModifier(modifiers, mod);
         if (mod & Qt::ShiftModifier) {
             if (modifiers & Qt::ShiftModifier)
-                setLayout(curLayout + 1);
+                setLayout(curLayout + caps);
             else
-                setLayout(curLayout - 1);
+                setLayout(curLayout - caps);
             repaint();
             return;
         }
@@ -430,14 +441,14 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
                                    pressedKey->keycode, modifiers, false,
                                    false);
 
-        // Clear modifiers when normal key is pressed
+        // Clear shift and modifiers after regular key
         if (getModifiers(pressedKey) == Qt::NoModifier) {
-            modifiers = Qt::NoModifier;
-            if (layouts[curLayout].shifted) {
-                setLayout(curLayout - 1);
+            if (modifiers & Qt::ShiftModifier) {
+                setLayout(curLayout - caps);        // clear shift
                 highKey = NULL;
                 repaint();
             }
+            modifiers = Qt::NoModifier;     // clear modifiers
         }
     }
     // This hides highlighted key after 200ms, condition should be always true
