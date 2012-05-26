@@ -232,8 +232,8 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::
-                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -278,6 +278,11 @@ void KeyboardFrame::setLayout(int index)
         for (int i = 0; i < numLayouts; i++)
             fillLayout(d.filePath(list.at(i)), &layouts[i]);
     }
+
+    if (index >= numLayouts)
+        index = 0;
+    else if (index < 0)
+        index = numLayouts - 1;
 
     KeyLayout *lay = &layouts[index];
     if (width() != lay->scrWidth || height() != lay->scrHeight) {
@@ -377,10 +382,9 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
         if (--num <= 0)         // key not found
             return;
     }
-    pressedKey = highKey = ki;
+    pressedKey = ki;
 
     if (ki->keycode == Qt::Key_Mode_switch) {
-        highKey = NULL;
         repaint();
         return;
     }
@@ -391,15 +395,19 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
                                    modifiers, true, false);
     else {
         toggleModifier(modifiers, mod);
-        if ((mod & Qt::ShiftModifier) && (curLayout + 1) < numLayouts
-            && layouts[curLayout + 1].shifted) {
-            setLayout(curLayout + 1);
+        if (mod & Qt::ShiftModifier) {
+            if (modifiers & Qt::ShiftModifier)
+                setLayout(curLayout + 1);
+            else
+                setLayout(curLayout - 1);
             repaint();
             return;
         }
     }
 
     repeatTimer.start(500);
+
+    highKey = ki;
     repaint(pressedRect(ki->rectScr));
 
     emit needsPositionConfirmation();
@@ -413,7 +421,7 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
     if (pressedKey) {
         if (pressedKey->keycode == Qt::Key_Mode_switch) {
             pressedKey = NULL;
-            setLayout((curLayout + 1) % numLayouts);
+            setLayout(curLayout + 1);
             repaint();
             return;
         }
@@ -423,8 +431,13 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
                                    false);
 
         // Clear modifiers when normal key is pressed
-        if (getModifiers(pressedKey) == Qt::NoModifier)
+        if (getModifiers(pressedKey) == Qt::NoModifier) {
             modifiers = Qt::NoModifier;
+            if(layouts[curLayout].shifted) {
+                setLayout(curLayout - 1);
+                repaint();
+            }
+        }
     }
     // This hides highlighted key after 200ms, condition should be always true
     if (highTid == 0)
