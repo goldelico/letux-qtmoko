@@ -35,9 +35,10 @@ SOURCES=\
     keyboardimpl.cpp\
     keyboardframe.cpp
 
-pics [
-    hint=pics
-    files=pics/*
-    path=/pics/keyboard
+config [
+    hint=image
+    files=layouts/*
+    path=/etc
 ]
+
 
