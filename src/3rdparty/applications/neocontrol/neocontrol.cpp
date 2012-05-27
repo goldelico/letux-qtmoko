@@ -26,7 +26,7 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     chkMux = new QCheckBox(tr("Multiplexing"), this);
     connect(chkMux, SIGNAL(stateChanged(int)), this, SLOT(muxStateChanged(int)));
 
-    chkFso = new QCheckBox(tr("Use FSO (freesmatphone.org)"), this);
+    chkFso = new QCheckBox(tr("Use FSO (freesmartphone.org)"), this);
     connect(chkFso, SIGNAL(stateChanged(int)), this, SLOT(fsoStateChanged(int)));
 
     label = new QLabel(this);
