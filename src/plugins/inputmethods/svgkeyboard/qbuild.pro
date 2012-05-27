@@ -34,7 +34,7 @@ SOURCES=\
 config [
     hint=image
     files=layouts/*
-    path=/etc
+    path=/etc/im/svgkbd
 ]
 
 
