@@ -23,15 +23,11 @@ pkg [
 
 HEADERS=\
     keyboard.h\
-    pickboardcfg.h\
-    pickboardpicks.h\
     keyboardimpl.h\
     keyboardframe.h
 
 SOURCES=\
     keyboard.cpp\
-    pickboardcfg.cpp\
-    pickboardpicks.cpp\
     keyboardimpl.cpp\
     keyboardframe.cpp
 
