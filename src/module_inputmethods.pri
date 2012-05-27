@@ -2,7 +2,7 @@
 
 !x11 {
     PROJECTS*=\
-        plugins/inputmethods/transparentkeyboard
+        plugins/inputmethods/svgkeyboard
 #        plugins/inputmethods/predictivekeyboard \
 #        plugins/inputmethods/keyboard \
 #        plugins/inputmethods/fingerkeyboard \

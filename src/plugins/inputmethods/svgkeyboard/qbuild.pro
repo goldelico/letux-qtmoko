@@ -1,5 +1,5 @@
 TEMPLATE=plugin
-TARGET=transparentkeyboard
+TARGET=svgkeyboard
 
 PLUGIN_FOR=qtopia
 PLUGIN_TYPE=inputmethods
@@ -13,12 +13,12 @@ AVAILABLE_LANGUAGES=$$QTOPIA_AVAILABLE_LANGUAGES
 LANGUAGES=$$QTOPIA_LANGUAGES
 
 pkg [
-    name=transparentkeyboard-inputmethod
+    name=svgkeyboard-inputmethod
     desc="Keyboard inputmethod plugin for Qt Extended."
     version=$$QTOPIA_VERSION
     license=$$QTOPIA_LICENSE
     maintainer=$$QTOPIA_MAINTAINER
-    multi=plugins/inputmethods/transparentkeyboard
+    multi=plugins/inputmethods/svgkeyboard
 ]
 
 HEADERS=\
