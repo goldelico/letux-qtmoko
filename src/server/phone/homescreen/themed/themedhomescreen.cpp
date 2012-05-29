@@ -221,6 +221,7 @@ void ThemedHomeScreen::updateHomeScreenInfo()
     vsObject->setAttribute("ShowDate", config.value("ShowDate", "true").toBool());
     vsObject->setAttribute("ShowTime", config.value("ShowTime", "true").toBool());
     vsObject->setAttribute("ShowLocation", config.value("ShowLocation", "true").toBool());
+    vsObject->setAttribute("ShowPressure", config.value("ShowPressure", "false").toBool());
 }
 
 /*!

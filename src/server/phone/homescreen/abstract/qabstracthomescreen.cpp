@@ -66,6 +66,7 @@
         \row    \o HomeScreen/ShowOperator \o Set to true if the current net operator name should be shown.
         \row    \o HomeScreen/ShowProfile  \o Set to true if the name of the current ring profile should be shown.
         \row    \o HomeScreen/ShowTime     \o Set to true if the current time should be shown.
+        \row    \o HomeScreen/ShowPressure \o Set to true if the current atmospheric pressure should be shown.
     \endtable
 
     This class is part of the Qt Extended server and cannot be used by other Qt Extended applications.
