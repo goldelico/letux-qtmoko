@@ -4,6 +4,7 @@
 **
 ** Copyright (C) 2009 Trolltech ASA.
 ** Copyright (C) 2012 Radek Polak.
+** Copyright (C) 2012 Neil Jerram.
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -102,9 +103,23 @@ void Gta04Pressure::updateStatus()
 {
     QString pressureStr = readFile(
         "/sys/devices/platform/omap/omap_i2c.2/i2c-2/2-0077/pressure0_input");
+    QString tempStr = readFile(
+        "/sys/devices/platform/omap/omap_i2c.2/i2c-2/2-0077/temp0_input");
 
     pressureStr = pressureStr.trimmed();
     pressure_space->setAttribute("Pa", pressureStr);
     pressure_space->setAttribute("mb",
 				 QString::number((pressureStr.toInt() + 50) / 100));
+
+    // Also export the BMP085-reported temperature.  Note that this is
+    // a GTA04-internal temperature, not the ambient environmental
+    // temperature; hence the name "CelsiusInternal".  Therefore it's
+    // not of primary interest to most users, but would be interesting
+    // to those who want to monitor the inside of their GTA04.
+    // There's nothing in the UI that shows CelsiusInternal by
+    // default, but it's easy for interested people to modify their
+    // theme to include it.
+    tempStr = tempStr.trimmed();
+    pressure_space->setAttribute("CelsiusInternal",
+				 QString::number((tempStr.toInt() + 5) / 10));
 }
