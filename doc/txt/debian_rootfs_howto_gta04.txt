@@ -98,6 +98,7 @@ echo g_ether > /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 echo ledtrig-timer >> /media/card/etc/modules
+echo bmp085 >> /media/card/etc/modules
 
 * Make the MAC address of g_ether fixed instead of random, so that network
   manager can be configured:
