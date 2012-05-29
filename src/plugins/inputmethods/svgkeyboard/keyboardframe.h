@@ -66,7 +66,7 @@ public:
     explicit KeyboardFrame(QWidget * parent = 0, Qt::WFlags f = 0);
     virtual ~ KeyboardFrame();
 
-    void setLayout(int index = 0);
+    void setLayout(int index = 0, bool skipShifted = false);
     void cleanHigh();
     void resetState();
     void mousePressEvent(QMouseEvent *);

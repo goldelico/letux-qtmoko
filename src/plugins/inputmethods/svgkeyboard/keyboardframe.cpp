@@ -266,7 +266,7 @@ KeyboardFrame::~KeyboardFrame()
 }
 
 // Set current layout. The layout is loaded from svg file if was not used yet
-void KeyboardFrame::setLayout(int index)
+void KeyboardFrame::setLayout(int index, bool skipShifted)
 {
     if (numLayouts == 0) {
         QDir d(Qtopia::qtopiaDir() + "/etc/im/svgkbd");
@@ -280,12 +280,21 @@ void KeyboardFrame::setLayout(int index)
             fillLayout(d.filePath(list.at(i)), &layouts[i]);
     }
 
-    if (index >= numLayouts)
-        index = 0;
-    else if (index < 0)
-        index = numLayouts - 1;
+    KeyLayout *lay = NULL;
+    for(;;)
+    {
+        if (index >= numLayouts)
+            index = 0;
+        else if (index < 0)
+            index = numLayouts - 1;
 
-    KeyLayout *lay = &layouts[index];
+        lay = &layouts[index];
+        if(lay->shifted && skipShifted)
+            index++;
+        else
+            break;
+    }
+    
     if (width() != lay->scrWidth || height() != lay->scrHeight) {
         lay->scrWidth = width();
         lay->scrHeight = height();
@@ -436,15 +445,20 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     emit needsPositionConfirmation();
 }
 
-void KeyboardFrame::mouseReleaseEvent(QMouseEvent *)
+void KeyboardFrame::mouseReleaseEvent(QMouseEvent *e)
 {
     if (ignorePress)
         return;
 
     if (pressedKey) {
         if (pressedKey->keycode == Qt::Key_Mode_switch) {
+            
+            // Switch layout if released on the same rect
+            if(pressedKey->rectScr.contains(e->pos())) {
+                caps = false;
+                setLayout(curLayout + 1, true);
+            }
             pressedKey = NULL;
-            setLayout(curLayout + 1);
             repaint();
             return;
         }
