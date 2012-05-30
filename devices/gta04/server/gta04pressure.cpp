@@ -102,9 +102,9 @@ Gta04Pressure::~Gta04Pressure()
 void Gta04Pressure::updateStatus()
 {
     QString pressureStr = readFile(
-        "/sys/devices/platform/omap/omap_i2c.2/i2c-2/2-0077/pressure0_input");
+        "/sys/bus/i2c/drivers/bmp085/2-0077/pressure0_input");
     QString tempStr = readFile(
-        "/sys/devices/platform/omap/omap_i2c.2/i2c-2/2-0077/temp0_input");
+        "/sys/bus/i2c/drivers/bmp085/2-0077/temp0_input");
 
     pressureStr = pressureStr.trimmed();
     pressure_space->setAttribute("Pa", pressureStr);
