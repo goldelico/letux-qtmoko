@@ -269,7 +269,7 @@ KeyboardFrame::~KeyboardFrame()
 void KeyboardFrame::setLayout(int index, bool skipShifted)
 {
     if (numLayouts == 0) {
-        QDir d(Qtopia::qtopiaDir() + "/etc/im/svgkbd");
+        QDir d(Qtopia::qtopiaDir() + "etc/im/svgkbd");
         QStringList list = d.entryList(QStringList() << "*.svg", QDir::Files);
         list.sort();
         qLog(Input) << "svg kbd layouts in " << d.path() << ": " +
