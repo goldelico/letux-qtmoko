@@ -33,8 +33,6 @@
     This enum describes the value for the different SoftMenu items that the Keyboard input method provides.
 
     \value RootItem The top "Keyboard" menu item
-    \value SwapPosition The command to swap keyboard positions.
-                        No longer supported
     \value ShowKeyboard Shows the keyboard when it is hidden
     \value HideKeyboard Hides the keyboard when it is visible
     \value DockKeyboard Docks the keyboard to the bottom of the screen,
@@ -75,13 +73,9 @@ signals:
 
 public slots:
     void checkMicroFocus();
-private slots:
-    void swapPosition(bool);
 protected:
     virtual void updateHandler(int type);
     KeyboardFrame *keyboardFrame;
-    int microX;
-    int microY;
     QAction* mAction;
 };
 

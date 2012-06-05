@@ -226,7 +226,7 @@ QFrame(parent, f)
     , highKey(NULL)
     , modifiers(Qt::NoModifier)
     , highTid(0)
-    , positionTop(true)
+    , microFocus()
     , caps(1)
     , numLayouts(0)
     , curLayout(0)
@@ -248,7 +248,7 @@ QFrame(parent, f)
 
     connect(&repeatTimer, SIGNAL(timeout()), this, SLOT(repeat()));
 
-    emit needsPositionConfirmation();
+    qwsServer->sendIMQuery(Qt::ImMicroFocus);
 }
 
 KeyboardFrame::~KeyboardFrame()
@@ -331,18 +331,29 @@ void KeyboardFrame::resizeEvent(QResizeEvent *)
     setLayout();
 }
 
-static void renderKey(QPainter * p, QRect clip, QSvgRenderer * svg,
+static void renderKey(QPainter * p, QRect clip, QRect focus, QSvgRenderer * svg,
                       KeyInfo * ki)
 {
-    if (!ki->rectScr.intersects(clip))
+    QRect r = ki->rectScr;
+    
+    if (!r.intersects(clip))
         return;
 
-    svg->render(p, elemId(ki), ki->rectScr);
+    if (r.intersects(focus) && focus.height() < r.height()) {
+        int fromTop = abs(r.top() - focus.top());
+        int fromBottom = abs(r.bottom() - focus.bottom());
+        if(fromTop < fromBottom)
+            r.setTop(focus.bottom());
+        else
+            r.setBottom(focus.top());
+    }
+
+    svg->render(p, elemId(ki), r);
 
 //    if(ki->unicode)
-//        p->drawText(ki->rectScr, Qt::AlignCenter, QString(ki->unicode));
+//        p->drawText(r, Qt::AlignCenter, QString(ki->unicode));
 //    else
-//        svg->render(p, elemId(ki), ki->rectScr);
+//        svg->render(p, elemId(ki), r);
 }
 
 void KeyboardFrame::paintEvent(QPaintEvent * e)
@@ -358,7 +369,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
     // Draw keys - only those that are in clip region
     KeyInfo *ki = lay->keys;
     for (int i = 0; i < lay->numKeys; i++) {
-        renderKey(&p, e->rect(), lay->svg, ki);
+        renderKey(&p, e->rect(), microFocus, lay->svg, ki);
         ki++;
     }
 
@@ -371,7 +382,7 @@ void KeyboardFrame::paintEvent(QPaintEvent * e)
         lay->svg->render(&p, elemId(highKey), rect);
     }
     //p.setPen(Qt::yellow);
-    //p.drawRect(e->rect());
+    //p.drawRect(microFocus);
 }
 
 void KeyboardFrame::mousePressEvent(QMouseEvent * e)
@@ -442,7 +453,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     highKey = ki;
     repaint(pressedRect(ki->rectScr));
 
-    emit needsPositionConfirmation();
+    qwsServer->sendIMQuery(Qt::ImMicroFocus);
 }
 
 void KeyboardFrame::mouseReleaseEvent(QMouseEvent *e)
@@ -518,10 +529,7 @@ void KeyboardFrame::repeat()
 
 QRect KeyboardFrame::geometryHint() const
 {
-    QRect r = QApplication::desktop()->availableGeometry();
-    if (r.width() <= 480)
-        r.setHeight(480);       // hack to make it larger
-    return r;
+    return QApplication::desktop()->availableGeometry();
 }
 
 QSize KeyboardFrame::sizeHint() const
@@ -536,21 +544,14 @@ void KeyboardFrame::resetState()
     repeatTimer.stop();
 }
 
-bool KeyboardFrame::obscures(const QPoint & point)
+void KeyboardFrame::microFocusUpdate(const QRect & rect)
 {
-    QRect mwr = QApplication::desktop()->availableGeometry();
-    bool isTop = point.y() < (mwr.y() + (mwr.height() >> 1));
-    return (isTop == positionTop);
-}
-
-void KeyboardFrame::swapPosition()
-{
-    QRect mwr = QApplication::desktop()->availableGeometry();
-    if (positionTop) {
-        move(mwr.bottomLeft() - QPoint(0, height()));
-        positionTop = false;
-    } else {
-        move(mwr.topLeft());
-        positionTop = true;
+    QRect old = microFocus;
+    microFocus = rect;
+    microFocus.setLeft(0);
+    microFocus.setWidth(width());
+    
+    if(old.top() != microFocus.top() || old.height() != microFocus.height()) {
+        repaint();
     }
 }
