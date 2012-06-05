@@ -54,7 +54,7 @@
 <g
    id="key_57_77"
    transform="translate(30,1775.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="45"
    height="60"
    width="30"
@@ -94,7 +94,7 @@
 </g><g
    id="key_52_72"
    transform="translate(50,1715.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="85"
    height="60"
    width="30"
@@ -114,7 +114,7 @@
 </g><g
    id="key_51_71"
    transform="translate(80,1715.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="25"
    height="60"
    width="30"
@@ -134,7 +134,7 @@
 </g><g
    id="key_54_74"
    transform="translate(90,1715.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="105"
    height="60"
    width="30"
@@ -154,7 +154,7 @@
 </g><g
    id="key_59_79"
    transform="translate(10,1775.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="125"
    height="60"
    width="30"
@@ -176,7 +176,7 @@
    transform="translate(-130,1775.4893)"><rect
    y="4.5107002"
    x="130"
-   height="59.999996"
+   height="60"
    width="45"
    id="ru"
    style="fill:#000000;fill-opacity:0.76862745;stroke:none" /><text
@@ -194,7 +194,7 @@
 </g><g
    id="key_49_69"
    transform="translate(-60,1655.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="165"
    height="60"
    width="30"
@@ -214,7 +214,7 @@
 </g><g
    id="key_4f_6f"
    transform="translate(-140,1715.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="185"
    height="60"
    width="30"
@@ -234,7 +234,7 @@
 </g><g
    id="key_50_70"
    transform="translate(-130,1715.505)"><rect
-   y="4.4949999"
+   y="4.495"
    x="205"
    height="60"
    width="30"
@@ -619,7 +619,7 @@
    transform="matrix(0.99781024,0,0,1,25.000144,1599.9843)"><rect
    y="240.0157"
    x="-25.055008"
-   height="59.999985"
+   height="60"
    width="65.142632"
    id="rabc"
    style="fill:#000000;fill-opacity:0.75294118;stroke:none" /><text
@@ -664,7 +664,7 @@
        x="97.90889"
        y="253.50938" /></g></g><g
    id="key_1000012_0"
-   transform="translate(59.99999,1619.9921)"><rect
+   transform="translate(60,1619.9921)"><rect
      y="220.0079"
      x="135.00002"
      height="60.000004"
@@ -696,8 +696,8 @@
    id="key_1000014_0"
    transform="translate(70.000011,1619.9921)"><rect
      y="220.0079"
-     x="154.99998"
-     height="59.999996"
+     x="155"
+     height="60"
      width="45.000004"
      id="r9"
      style="fill:#000000;fill-opacity:0.76862745;stroke:none" /><g
