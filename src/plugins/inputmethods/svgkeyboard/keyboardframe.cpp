@@ -455,7 +455,7 @@ void KeyboardFrame::mouseReleaseEvent(QMouseEvent *e)
             
             // Switch layout if released on the same rect
             if(pressedKey->rectScr.contains(e->pos())) {
-                caps = false;
+                caps = 1;
                 setLayout(curLayout + 1, true);
             }
             pressedKey = NULL;
