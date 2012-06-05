@@ -227,6 +227,7 @@ QFrame(parent, f)
     , modifiers(Qt::NoModifier)
     , highTid(0)
     , microFocus()
+    , repaintAll(false)
     , caps(1)
     , numLayouts(0)
     , curLayout(0)
@@ -506,7 +507,12 @@ void KeyboardFrame::cleanHigh()
     if (highKey) {
         QRect rect = pressedRect(highKey->rectScr);
         highKey = NULL;
-        repaint(rect);
+        if(repaintAll) {
+            repaintAll = false;
+            repaint();
+        }
+        else
+            repaint(rect);
     }
 }
 
@@ -552,6 +558,9 @@ void KeyboardFrame::microFocusUpdate(const QRect & rect)
     microFocus.setWidth(width());
     
     if(old.top() != microFocus.top() || old.height() != microFocus.height()) {
-        repaint();
+        if(highKey)
+            repaintAll = true;  // repaint after key up
+        else
+            repaint();
     }
 }

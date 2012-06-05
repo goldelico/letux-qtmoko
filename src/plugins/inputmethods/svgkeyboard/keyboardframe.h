@@ -109,6 +109,7 @@ private:
 
     int highTid;                // id for time that hides highlighted key after 200ms
     QRect microFocus;           // where is currently cursor on screen
+    bool repaintAll;
     struct timespec pressTime;  // last time key was pressed
     int caps;                   // direction for shift. -1=caps lock active, 1=caps lock not active
     bool ignorePress;           // used to ignore too fast presses    
