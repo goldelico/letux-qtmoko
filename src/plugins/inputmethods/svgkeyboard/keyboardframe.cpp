@@ -234,8 +234,8 @@ QFrame(parent, f)
 {
     setAttribute(Qt::WA_InputMethodTransparent, true);
 
-    setWindowFlags(Qt::Dialog | Qt::
-                   WindowStaysOnTopHint | Qt::FramelessWindowHint);
+    setWindowFlags(Qt::Dialog | Qt::WindowStaysOnTopHint | Qt::
+                   FramelessWindowHint);
     setFrameStyle(QFrame::Plain | QFrame::Box);
 
     QPalette pal(palette());
@@ -282,20 +282,19 @@ void KeyboardFrame::setLayout(int index, bool skipShifted)
     }
 
     KeyLayout *lay = NULL;
-    for(;;)
-    {
+    for (;;) {
         if (index >= numLayouts)
             index = 0;
         else if (index < 0)
             index = numLayouts - 1;
 
         lay = &layouts[index];
-        if(lay->shifted && skipShifted)
+        if (lay->shifted && skipShifted)
             index++;
         else
             break;
     }
-    
+
     if (width() != lay->scrWidth || height() != lay->scrHeight) {
         lay->scrWidth = width();
         lay->scrHeight = height();
@@ -336,14 +335,14 @@ static void renderKey(QPainter * p, QRect clip, QRect focus, QSvgRenderer * svg,
                       KeyInfo * ki)
 {
     QRect r = ki->rectScr;
-    
+
     if (!r.intersects(clip))
         return;
 
     if (r.intersects(focus) && focus.height() < r.height()) {
         int fromTop = abs(r.top() - focus.top());
         int fromBottom = abs(r.bottom() - focus.bottom());
-        if(fromTop < fromBottom)
+        if (fromTop < fromBottom)
             r.setTop(focus.bottom());
         else
             r.setBottom(focus.top());
@@ -457,16 +456,16 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     qwsServer->sendIMQuery(Qt::ImMicroFocus);
 }
 
-void KeyboardFrame::mouseReleaseEvent(QMouseEvent *e)
+void KeyboardFrame::mouseReleaseEvent(QMouseEvent * e)
 {
     if (ignorePress)
         return;
 
     if (pressedKey) {
         if (pressedKey->keycode == Qt::Key_Mode_switch) {
-            
+
             // Switch layout if released on the same rect
-            if(pressedKey->rectScr.contains(e->pos())) {
+            if (pressedKey->rectScr.contains(e->pos())) {
                 caps = 1;
                 setLayout(curLayout + 1, true);
             }
@@ -507,11 +506,10 @@ void KeyboardFrame::cleanHigh()
     if (highKey) {
         QRect rect = pressedRect(highKey->rectScr);
         highKey = NULL;
-        if(repaintAll) {
+        if (repaintAll) {
             repaintAll = false;
             repaint();
-        }
-        else
+        } else
             repaint(rect);
     }
 }
@@ -556,9 +554,9 @@ void KeyboardFrame::microFocusUpdate(const QRect & rect)
     microFocus = rect;
     microFocus.setLeft(0);
     microFocus.setWidth(width());
-    
-    if(old.top() != microFocus.top() || old.height() != microFocus.height()) {
-        if(highKey)
+
+    if (old.top() != microFocus.top() || old.height() != microFocus.height()) {
+        if (highKey)
             repaintAll = true;  // repaint after key up
         else
             repaint();
