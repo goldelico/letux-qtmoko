@@ -396,7 +396,7 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
     pressTime = tp;
     if (ignorePress)
         return;
-
+    
     // Clear highlited key if typing fast
     cleanHigh();
 
@@ -448,8 +448,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
     highKey = ki;
     repaint(pressedRect(ki->rectScr));
-
-    qwsServer->sendIMQuery(Qt::ImMicroFocus);
 }
 
 void KeyboardFrame::mouseReleaseEvent(QMouseEvent * e)
@@ -515,6 +513,7 @@ void KeyboardFrame::timerEvent(QTimerEvent * e)
     if (e->timerId() == highTid) {
         cleanHigh();
     }
+    qwsServer->sendIMQuery(Qt::ImMicroFocus);
 }
 
 void KeyboardFrame::repeat()
