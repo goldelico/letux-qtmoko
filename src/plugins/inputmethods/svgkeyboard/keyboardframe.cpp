@@ -221,7 +221,6 @@ static QRect pressedRect(const QRect & keyRect)
 KeyboardFrame::KeyboardFrame(QWidget * parent, Qt::WFlags f):
 QFrame(parent, f)
     , repeatTimer(this)
-    , vib()
     , pressedKey(NULL)
     , highKey(NULL)
     , modifiers(Qt::NoModifier)
@@ -400,9 +399,6 @@ void KeyboardFrame::mousePressEvent(QMouseEvent * e)
 
     // Clear highlited key if typing fast
     cleanHigh();
-
-    // Vibrate
-    vib.setVibrateNow(true, 32);
 
     // Find pressed key
     KeyInfo *ki = layouts[curLayout].keys;

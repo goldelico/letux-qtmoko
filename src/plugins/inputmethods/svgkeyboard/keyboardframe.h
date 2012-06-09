@@ -23,7 +23,6 @@
 
 #include <time.h>
 #include <QDebug>
-#include <QVibrateAccessory>
 #include <QSvgRenderer>
 #include <QPixmap>
 #include <QFrame>
@@ -101,7 +100,6 @@ private slots:
 
 private:
     QTimer repeatTimer;
-    QVibrateAccessory vib;
 
     KeyInfo *pressedKey;        // currently pressed key or NULL
     KeyInfo *highKey;           // highlighted key, after release we show the pressed key for some more time
