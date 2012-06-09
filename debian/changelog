@@ -1,3 +1,26 @@
+qtmoko (45-1) unstable; urgency=low
+
+  * fixed wifi password not saving problem
+  * new big transparent keyboard
+  * GTA04 has now vibra motor support
+  * show atmospheric pressure on home screen on GTA04 (Neil Jerram)
+  * removed all other input methods from build
+  * display wifi icon in title bar
+  * run ping on default DNS when wifi icon is clicked
+  * gps icon in title bar with number of satellites and fix indicator
+  * gps has now api for number of satellites
+  * gps plugin for GTA04 now makes gps always enabled
+  * GTA04 charge indicator is polling battery every 30s
+  * GTA02 gps - checking for ntpserver available with ping (Jiri Pinkava)
+  * qterminal can now run scripts using setDocument() api method
+  * scripts for powering on/off modem on GTA04A04
+  * charging udev rules for GTA04 (Neil Brown)
+  * options to boot from all mmc partitions in shutdown ui
+  * build fixes and various code improvements (Yann Dirson)
+  * added new freecell game
+
+ -- Radek Polak <psonek2@seznam.cz>  Mon, 09 Apr 2012 23:53:00 +0100
+
 qtmoko (44-1) unstable; urgency=low
 
   * using 115200 as initial speed for bluetooth uart
