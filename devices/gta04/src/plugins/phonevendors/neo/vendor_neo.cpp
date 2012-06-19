@@ -206,6 +206,8 @@ void NeoModemService::wake()
     port->open(QIODevice::ReadWrite);
     primaryAtChat()->resume();
 
+    post( "modemresumed" );
+
     //primaryAtChat()->resume();
     //chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
