@@ -97,6 +97,7 @@ QModemSMSReader::QModemSMSReader( QModemService *service )
     d->service = service;
     connect( service, SIGNAL(resetModem()), this, SLOT(resetModem()) );
     service->connectToPost( "smsready", this, SLOT(smsReady()) );
+    service->connectToPost( "modemresumed", this, SLOT(newMessageArrived()) );
 
     service->primaryAtChat()->registerNotificationType
         ( "+CMTI:", this, SLOT(newMessageArrived()) );
