@@ -14,7 +14,7 @@ echo "deb http://ftp.cz.debian.org/debian/ squeeze main contrib non-free" >> /et
 echo "deb http://www.emdebian.org/debian wheezy main" >> /etc/apt/sources.list
 apt-get update
 
-  * Install cross armel cross compiler:
+  * Install armel cross compiler:
   
 apt-get install g++-4.4-arm-linux-gnueabi
 
