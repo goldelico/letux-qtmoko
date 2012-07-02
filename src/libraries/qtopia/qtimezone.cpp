@@ -91,7 +91,7 @@ private:
 };
 
 
-QString TimeZonePrivate::sZonePath(0);
+QString TimeZonePrivate::sZonePath((const char *)0);
 QString TimeZonePrivate::zonePath()
 {
     if ( sZonePath.isNull() ) {
@@ -106,7 +106,7 @@ QString TimeZonePrivate::zonePath()
     return sZonePath;
 }
 
-QString TimeZonePrivate::sZoneFile(0);
+QString TimeZonePrivate::sZoneFile((const char *)0);
 QString TimeZonePrivate::zoneFile()
 {
     if ( sZoneFile.isNull() ) {
@@ -125,7 +125,7 @@ QString TimeZonePrivate::zoneFile()
 class TimeZoneData
 {
 public:
-    TimeZoneData() : mId(0) { }
+    TimeZoneData() : mId((const char *)0) { }
     TimeZoneData( const QString &id );
 
     bool matchAbbrev( const QDateTime &t,
