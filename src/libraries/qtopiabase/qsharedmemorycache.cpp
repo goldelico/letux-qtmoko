@@ -987,7 +987,6 @@ bool QSharedMemoryManager::findPixmap(const QString &k, QPixmap &pm, bool ref) c
         PixmapShmItem *item = (PixmapShmItem*)(char*)cache->findItem(k.toLatin1().data(), ref, QSMCacheItem::Pixmap);
 
         if ( item ) {
-            QPixmapData *data = pm.pixmapData();
             QImage newimage((uchar*)item + sizeof(PixmapShmItem),
                                 item->w, item->h, item->format);
             localSerialMap.insert(newimage.serialNumber(), (char*)item);
@@ -998,7 +997,7 @@ bool QSharedMemoryManager::findPixmap(const QString &k, QPixmap &pm, bool ref) c
                 memcpy(clut.data(), (char*)item+sizeof(PixmapShmItem)+newimage.numBytes(), item->numCols*sizeof(QRgb));
                 newimage.setColorTable(clut);
             }
-            data->fromImage(newimage,0);
+            pm = QPixmap::fromImage(newimage);
             qLog(SharedMemCache) << "Found pixmap" << pm.width() << "x" << pm.height();
             return true;
         }
