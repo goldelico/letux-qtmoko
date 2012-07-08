@@ -29,7 +29,8 @@
 
 typedef enum {
 	ACCEL_UNKNOWN,
-        ACCEL_FREERUNNER	/* Openmoko Neo Freerunner */
+        ACCEL_FREERUNNER,	/* Openmoko Neo Freerunner */
+        ACCEL_GTA04	        /* GTA04 */
 } AccelType;
 
 //----------------------------------
