@@ -21,7 +21,8 @@ PROJECTS*=\
     plugins/qtopiacore/iconengines/qtopiaiconengine \
     plugins/qtopiacore/iconengines/qtopiasvgiconengine \
     plugins/qtopiacore/iconengines/qtopiapiciconengine \
-    plugins/qtopiacore/imageformats/picture
+    plugins/qtopiacore/imageformats/picture \
+    libraries/accelerometer
 
 PROJECTS*=server
 SERVER_PROJECTS*=\

@@ -51,7 +51,6 @@
 
 #include <pthread.h>
 #include "accelerometers.h"
-#include "types.h"
 
 pthread_t thread;
 int finished=0;
@@ -60,6 +59,11 @@ double acx=0,acy=0,acz=0;
 #ifdef QT_QWS_GTA04
 
 #define GET_DATA_INTERVAL 12500 //25000
+
+typedef enum {
+	ACCEL_UNKNOWN,
+        ACCEL_GTA04	        /* GTA04 */
+} AccelType;
 
 typedef struct {
 

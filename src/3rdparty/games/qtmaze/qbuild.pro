@@ -7,6 +7,7 @@ TARGET=qtmaze
 # This app uses Qtopia
 CONFIG+=qtopia
 DEFINES+=QTOPIA
+MODULES*=accelerometer
 
 # Build this app as a quicklauncher plugin
 # You need to be using the QTOPIA_ADD_APPLICATION/QTOPIA_MAIN macros or this will not work!
@@ -36,7 +37,6 @@ FORMS=\
 HEADERS=\
     form.h\
     renderarea.h\
-    accelerometers.h\
     types.h\
     json.h\
     paramsloader.h\
@@ -46,7 +46,6 @@ SOURCES=\
     main.cpp\
     form.cpp\
     renderarea.cpp\
-    accelerometers.cpp\
     json.c\
     paramsloader.cpp\
     vibro.cpp
