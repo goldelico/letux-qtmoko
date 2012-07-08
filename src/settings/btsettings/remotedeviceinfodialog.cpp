@@ -343,7 +343,7 @@ AudioDeviceConnectionStatus::AudioDeviceConnectionStatus(QBluetoothLocalDevice *
     : DeviceConnectionStatus(local, parent),
       m_headsetGateway(new QBluetoothAudioGateway("BluetoothHeadset", this)),
       m_handsFreeGateway(new QBluetoothAudioGateway("BluetoothHandsfree", this)),
-      a2dpDbusPath(NULL),
+      a2dpDbusPath(),
       m_connectionStatusLabel(new QLabel),
       m_connectHeadsetButton(new QPushButton(tr("Connect headset"))),
       m_connectHandsFreeButton(new QPushButton(tr("Connect handsfree unit"))),
