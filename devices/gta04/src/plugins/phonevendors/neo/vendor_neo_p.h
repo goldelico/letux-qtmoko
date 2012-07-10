@@ -52,8 +52,9 @@ public slots:
                           uint modemIdentifier = 0);
 
 protected:
-     QTimer clccTimer;
+    QTimer clccTimer;
     NeoModemService *modemService;
+    void abortDial(uint id, QPhoneCall::Scope scope);
     bool hasRepeatingRings() const;
 
 private slots:

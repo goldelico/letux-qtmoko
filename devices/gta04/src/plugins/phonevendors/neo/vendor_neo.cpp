@@ -62,6 +62,15 @@ bool NeoCallProvider::hasRepeatingRings() const
     return true;
 }
 
+ // Use the AT+CHUP command to abort outgoing calls, instead of AT+CHLD=1. Also
+ // use send() without waiting like chat() does.
+ void NeoCallProvider::abortDial(uint id, QPhoneCall::Scope scope)
+{
+    Q_UNUSED(id);
+    Q_UNUSED(scope);
+    atchat()->send("AT+CHUP");
+}
+
 void NeoCallProvider::ringing(const QString &, const QString &, uint)
 {
     llIndicatorsRinging();      // turn on green led
