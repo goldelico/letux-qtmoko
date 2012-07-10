@@ -3,6 +3,11 @@ Cross compling from sources
 
   * You will need Debian wheezy on your PC
   
+  * Install required packages on your host PC:
+  
+apt-get build-dep libqt4-dev
+apt-get install libqt4-dev libv4l-dev libdbus-1-dev
+  
   * We will use emdebian toolchain, check this page:
   
         http://wiki.debian.org/EmdebianToolchain
@@ -21,7 +26,12 @@ apt-get install g++-4.4-arm-linux-gnueabi
   * Install xapt and libraries qtmoko depens on:
   
 apt-get install xapt
-xapt -a armel -m libqt4-dev libts-dev libasound2-dev libspeexdsp-dev libssl-dev libxtst-dev libbluetooth-dev
+xapt -a armel -m libqt4-dev libts-dev libasound2-dev libspeexdsp-dev libssl-dev libxtst-dev libbluetooth-dev libdbus-1-dev
+
+  * Make link for dbus.h:
+  
+cd /usr/arm-linux-gnueabi/include
+ln -s dbus-1.0/dbus dbus
 
   * Clone current git tree:
 
