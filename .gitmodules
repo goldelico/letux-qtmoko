@@ -115,3 +115,6 @@
 [submodule "src/3rdparty/games/qfreecell"]
 	path = src/3rdparty/games/qfreecell
 	url = git://github.com/radekp/qfreecell.git
+[submodule "src/3rdparty/applications/yberbrowser"]
+	path = src/3rdparty/applications/yberbrowser
+	url = git://github.com/radekp/yberbrowser.git
