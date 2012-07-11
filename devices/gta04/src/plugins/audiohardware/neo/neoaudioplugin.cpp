@@ -322,6 +322,68 @@ bool EarpieceAudioState::leave()
 }
 
 // ========================================================================= //
+class EarpieceHwAudioState : public QAudioState
+{
+    Q_OBJECT
+public:
+    EarpieceHwAudioState(bool isPhone, QObject * parent = 0);
+
+    QAudioStateInfo info() const;
+    QAudio::AudioCapabilities capabilities() const;
+
+    bool isAvailable() const;
+    bool enter(QAudio::AudioCapability capability);
+    bool leave();
+
+private:
+    QAudioStateInfo m_info;
+    bool m_isPhone;
+};
+
+EarpieceHwAudioState::EarpieceHwAudioState(bool isPhone, QObject * parent):
+QAudioState(parent), m_isPhone(isPhone)
+{
+    if (isPhone) {
+        m_info.setDomain("Phone");
+        m_info.setProfile("PhoneEarpiece");
+        m_info.setPriority(100);
+    } else {
+        m_info.setDomain("Media");
+        m_info.setProfile("MediaEarpiece");
+        m_info.setPriority(150);
+    }
+    m_info.setDisplayName(tr("Earpiece"));
+}
+
+QAudioStateInfo EarpieceHwAudioState::info() const
+{
+    return m_info;
+}
+
+QAudio::AudioCapabilities EarpieceHwAudioState::capabilities()const
+{
+    return QAudio::OutputOnly;
+}
+
+bool EarpieceHwAudioState::isAvailable() const
+{
+    return true;
+}
+
+bool EarpieceHwAudioState::enter(QAudio::AudioCapability)
+{
+    qLog(AudioState) << "EarpieceHwAudioState::enter()" << "isPhone" << m_isPhone;
+    return restoreState("earpiecehw", m_isPhone);
+}
+
+bool EarpieceHwAudioState::leave()
+{
+    qLog(AudioState) << "EarpieceHwAudioState::leave()";
+    return true;
+}
+
+
+// ========================================================================= //
 class HeadsetAudioState : public QAudioState
 {
     Q_OBJECT
@@ -656,10 +718,16 @@ NeoAudioPlugin::NeoAudioPlugin(QObject * parent):
 QAudioStatePlugin(parent)
 {
     m_data = new NeoAudioPluginPrivate;
-
+    
+    // On A4+ models use HW sound routing, on A3 do SW routing
+    bool gta04a4 = QFile::exists("/sys/class/gpio/gpio186/value");
+    if(gta04a4)
+        m_data->m_states.push_back(new EarpieceHwAudioState(this));   // default for gsm calls
+    else
+        m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
+    
     m_data->m_states.push_back(new SpeakerAudioState(false, this)); // ringtones, mp3 etc..
     m_data->m_states.push_back(new SpeakerAudioState(true, this));  // loud gsm
-    m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
     m_data->m_states.push_back(new HeadsetAudioState(false, this)); // audio in headphones
     m_data->m_states.push_back(new HeadsetAudioState(true, this));  // gsm in headphones
     m_data->m_states.push_back(new RecordingAudioState(this));  // for recording e.g. in voice notes app
