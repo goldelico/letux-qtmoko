@@ -1696,14 +1696,18 @@ void QMplayerFullscreen::enterFullScreen()
 
 QMplayerFullscreenPlay::QMplayerFullscreenPlay():QMplayerFullscreen()
   , locked(0)
+  , lastX(-1)
 {
 }
 
 void QMplayerFullscreenPlay::paintEvent(QPaintEvent *)
 {
+    if(lastX >= 0)
+        return;
+
     QPainter p(this);
     if(locked > 0)
-        p.drawText(this->rect(), Qt::AlignCenter, tr("slide up to unlock"));
+        p.drawText(this->rect(), Qt::AlignCenter, tr("L O C K E D\n\nslide up to unlock"));
     else
         p.drawText(this->rect(), Qt::AlignCenter,
                tr("click to pause\n\nslide left/right to adjust volume\n\nslide up to lock"));
@@ -1712,7 +1716,9 @@ void QMplayerFullscreenPlay::paintEvent(QPaintEvent *)
 void QMplayerFullscreenPlay::mousePressEvent(QMouseEvent * e)
 {
     downX = lastX = e->x();
+    lastY = e->y();
     locked = (locked > 0);
+    update();
 }
 
 void QMplayerFullscreenPlay::mouseReleaseEvent(QMouseEvent * e)
@@ -1721,12 +1727,14 @@ void QMplayerFullscreenPlay::mouseReleaseEvent(QMouseEvent * e)
         clicked = true;
         hide();
     }
+    lastX = -1;
+    update();
 }
 
 void QMplayerFullscreenPlay::mouseMoveEvent(QMouseEvent * e)
 {
     int deltaY = abs(e->y() - lastY);
-    if(deltaY > 240 && locked == 0 || locked == 1) {
+    if(deltaY > 240 && (locked == 0 || locked == 1)) {
         lastY = e->y();
         if(locked)
             locked = -2;
@@ -1745,6 +1753,7 @@ void QMplayerFullscreenPlay::mouseMoveEvent(QMouseEvent * e)
         return;
     }
     lastX = e->x();
+    lastY = e->y();
 }
 
 QMplayerMainWindow::QMplayerMainWindow(QWidget * parent, Qt::WFlags f)
