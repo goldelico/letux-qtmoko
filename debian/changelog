@@ -1,3 +1,22 @@
+qtmoko (46-1) unstable; urgency=low
+
+  * checking for new SMS after resume (Neil Jerram)
+  * upgraded to qt 4.7
+  * HW voice routing for GTA04A4 (Andreas Kemnade)
+  * not closing serial port on suspend now, it's not needed anymore
+  * make hangup of dialed call working
+  * using AUX led for missed calls now
+  * accelerometers are now working on GTA04 (Neil Jerram)
+  * accelerometer code is now in separate library (Neil Jerram)
+  * fixed keyboard popup in nerongps (Neil Jerram)
+  * instructions for building with emdebian toolchain
+  * big always visible button for keyboard showing/hiding
+  * yberbrowser - new touch friendly browser
+  * qmplayer has now option to lock screen
+  * german keyboard layout installable from qtmoko apps web
+  
+ -- Radek Polak <psonek2@seznam.cz>  Wed, 11 Jul 2012 15:16:00 +0100
+  
 qtmoko (45-1) unstable; urgency=low
 
   * fixed wifi password not saving problem
