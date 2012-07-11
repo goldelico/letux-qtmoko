@@ -66,6 +66,8 @@ class QMplayerFullscreenPlay : public QMplayerFullscreen
 public:
     QMplayerFullscreenPlay();
 
+    int locked;         // 0=unlocked, 1=locked, 2,-2=locked/unlocked and mouse is still down
+
     signals: void pause();
     void volumeUp();
     void volumeDown();
@@ -79,6 +81,7 @@ protected:
 private:
     int downX;
     int lastX;
+    int lastY;
 };
 
 class QMplayer : public QWidget
