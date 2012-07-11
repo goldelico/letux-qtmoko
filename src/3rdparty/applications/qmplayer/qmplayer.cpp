@@ -248,13 +248,18 @@ void QMplayer::handleFsDeactivate()
         return;
     }
     if (processRunning(process)) {
-#ifdef QT_QWS_GTA04
-        if (!fsPlay.clicked) {  // user did not press pause, so e.g. incomming call triggered this
-            fsPlay.hide();
-            stopMplayer();      // quit mplayer so that it does not block sound card e.g. when someone
-            return;             // this might be not needed when we have HW sound routing or mixing on GTA04
+
+        // On GTA04A3 (old model) we have to stop mplayer so that gsm voice
+        // routing program can open sound card.
+        bool gta04a3 = !QFile::exists("/sys/class/gpio/gpio186/value");
+        if(gta04a3) {
+            if (!fsPlay.clicked) {  // user did not press pause, so e.g. incomming call triggered this
+                fsPlay.hide();
+                stopMplayer();      // quit mplayer so that it does not block sound card e.g. when someone
+                return;             // this might be not needed when we have HW sound routing or mixing on GTA04
+            }
         }
-#endif
+
         process->write(" ");
         process->waitForBytesWritten(1000);
     }
