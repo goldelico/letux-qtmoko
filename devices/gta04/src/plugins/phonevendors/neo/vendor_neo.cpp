@@ -200,9 +200,9 @@ void NeoModemService::suspend()
     qLog(Modem) << " Gta04ModemService::suspend()";
     //chat("AT_OSQI=0");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
 
-    //primaryAtChat()->suspend();
-    //QSerialIODevice *port = multiplexer()->channel("primary");
-    //port->close();
+    primaryAtChat()->suspend();
+    QSerialIODevice *port = multiplexer()->channel("primary");
+    port->close();
 
     suspendDone();
 }
@@ -211,9 +211,9 @@ void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
 
-    //QSerialIODevice *port = multiplexer()->channel("primary");
-    //port->open(QIODevice::ReadWrite);
-    //primaryAtChat()->resume();
+    QSerialIODevice *port = multiplexer()->channel("primary");
+    port->open(QIODevice::ReadWrite);
+    primaryAtChat()->resume();
 
     post( "modemresumed" );
 
