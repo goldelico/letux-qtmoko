@@ -170,7 +170,8 @@ void NeoModemService::initialize()
     suppressInterface < QCellBroadcast > ();
 
     if (!callProvider()) {
-        setCallProvider(new NeoCallProvider(this));
+        neoCallProvider = new NeoCallProvider(this);
+        setCallProvider(neoCallProvider);
     }
 
     if (!supports < QVibrateAccessory > ())
@@ -215,9 +216,9 @@ void NeoModemService::wake()
     port->open(QIODevice::ReadWrite);
     primaryAtChat()->resume();
 
+    neoCallProvider->doClcc();
     post( "modemresumed" );
 
-    //primaryAtChat()->resume();
     //chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
 }
