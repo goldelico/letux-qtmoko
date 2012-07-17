@@ -86,9 +86,8 @@ static bool alsactl(QStringList & args)
         if(output.length() == 0)
             return true;
 
-        qWarning() << "alsactl returned " << output;
-        qWarning() << "it might be mediaserver, killing it!";
-        QProcess::execute("killall", QStringList() << "mediaserver");
+        qWarning() << "alsactl returned " << output << ", running kill-snd-card-users.sh";
+        QProcess::execute("kill-snd-card-users.sh");
     }
     return false;
 }
