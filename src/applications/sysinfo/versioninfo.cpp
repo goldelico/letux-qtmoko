@@ -29,15 +29,8 @@
 #include <QDesktopWidget>
 
 // For releases, this defines get replaced with the appropriate data by the packaging scripts
-#define QT_EXTENDED_COPYRIGHT_YEAR	2009
-#define QT_EXTENDED_COPYRIGHT_COMPANY "Trolltech ASA"
-
-#ifndef QTOPIA_CHANGE
-#define QTOPIA_CHANGE "unknown"
-#endif
-#ifndef QT_CHANGE
-#define QT_CHANGE "unknown"
-#endif
+#define QT_EXTENDED_COPYRIGHT_YEAR	2012
+#define QT_EXTENDED_COPYRIGHT_COMPANY "Trolltech ASA & QtMoko authors"
 
 VersionInfo::VersionInfo( QWidget *parent, Qt::WFlags f )
     : QWidget( parent, f )
@@ -82,12 +75,12 @@ void VersionInfo::init()
     vBoxLayout1->setSpacing( 3 );
     QLabel *qtopiaName = new QLabel(this);
     qtopiaName->setFont(boldFont);
-    qtopiaName->setText(tr("Qt Extended"));
+    qtopiaName->setText(tr("QtMoko"));
     vBoxLayout1->addWidget(qtopiaName);
 
     QLabel *qtopiaVersion = new QLabel(this);
     qtopiaVersion->setWordWrap(true);
-    qtopiaVersion->setText(tr("Version:") + ' ' + Qtopia::version());
+    qtopiaVersion->setText(tr("Version:") + ' ' + Qtopia::version() + '\n' + tr("Qt version:") + ' ' + QT_VERSION_STR);
     vBoxLayout1->addWidget(qtopiaVersion);
     vBoxLayout1->addSpacing( 10 );
 
@@ -115,16 +108,6 @@ void VersionInfo::init()
 
     qtopiaBuild = new QLabel(this);
     qtopiaBuild->setText(tr("Built on %1","1=date").arg(__DATE__));
-    vBoxLayout1->addWidget(qtopiaBuild);
-
-    QString qtopia_change( QTOPIA_CHANGE );
-    qtopiaBuild = new QLabel(this);
-    qtopiaBuild->setText(tr("Qt Extended Change #:\n    %1").arg(qtopia_change));
-    vBoxLayout1->addWidget(qtopiaBuild);
-
-    QString qt_change( QT_CHANGE );
-    qtopiaBuild = new QLabel(this);
-    qtopiaBuild->setText(tr("Qt Change #:\n    %1").arg(qt_change));
     vBoxLayout1->addWidget(qtopiaBuild);
 
     QSpacerItem *spacerItem = new QSpacerItem(20, 10, QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
