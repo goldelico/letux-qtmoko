@@ -805,14 +805,14 @@ void Qtopia::usleep( unsigned long usecs )
 /*!
   \fn QString Qtopia::version()
 
-  Returns the Qt Extended version string, specified by \i QPE_VERSION. This is of the form:
+  Returns the QtMoko version string, specified by \i QTMOKO_VERSION_STR. This is of the form:
   \i{major} .\i{minor} .\i{patchlevel}  (eg. "1.2.3"),
   possibly followed by a space and special information
-  (eg. "1.2.3 beta4").
+  (eg. "1.2.3 beta4"). Usually all except \i{major} is ommited.
 */
 QString Qtopia::version()
 {
-    return QPE_VERSION;
+    return QTMOKO_VERSION_STR;
 }
 
 /*!
