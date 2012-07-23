@@ -330,7 +330,7 @@
      sodipodi:role="line">p</tspan></text>
 
 </g><g
-   id="key_5b_5b"
+   id="key_fc_fc"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="230"
@@ -351,7 +351,7 @@
      sodipodi:role="line">ü</tspan></text>
 
 </g><g
-   id="key_5d_5d"
+   id="key_2b_2b"
    transform="translate(0,35.504999)"><rect
    y="4.4950008"
    x="250"
@@ -372,7 +372,7 @@
      sodipodi:role="line">+</tspan></text>
 
 </g><g
-   id="key_5c_5c"
+   id="key_2d_2d"
    transform="translate(-40,155.505)"><g
      id="g4069"><rect
    style="fill:#000000;fill-opacity:0.76862745;stroke:none"
@@ -698,7 +698,34 @@
 
 
 </g><g
-   id="key_60_60"
+   id="key_2d_2d"
+   transform="translate(0,115.5)"><rect
+   y="44.5"
+   x="230"
+   height="60"
+   width="20"
+   id="rect5235-2-3-9-4-4-6-4-9-67-5"
+   style="fill:#000000;fill-opacity:0.76862745;stroke:none" /><text
+   transform="scale(1.0005702,0.99943013)"
+   id="text3851"
+   y="80.045616"
+   x="235.86324"
+   style="font-size:16px;line-height:125%;fill:#ffffff;fill-opacity:1"
+   xml:space="preserve"
+   sodipodi:linespacing="125%"><tspan
+     y="80.045616"
+     x="235.86324"
+     id="tspan3853"
+     sodipodi:role="line">-</tspan></text>
+
+
+
+
+
+
+
+</g><g
+   id="key_40_40"
    transform="translate(0,115.5)"><rect
    y="44.5"
    x="250"
@@ -1023,7 +1050,7 @@
 
 
 </g><g
-   id="key_2d_2d"
+   id="key_df_df"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="220"
@@ -1041,10 +1068,10 @@
      y="20.011404"
      x="224.47049"
      id="tspan2934"
-     sodipodi:role="line">-</tspan></text>
+     sodipodi:role="line">ß</tspan></text>
 
 </g><g
-   id="key_3d_3d"
+   id="key_5c_5c"
    transform="translate(0,-4.5)"><rect
    y="-45.5"
    x="240"
@@ -1062,7 +1089,7 @@
      y="20.011404"
      x="243.1505"
      id="tspan2938"
-     sodipodi:role="line">#</tspan></text>
+     sodipodi:role="line">\</tspan></text>
 
 </g><g
    id="key_44_64"
@@ -1290,7 +1317,7 @@
 
 
 </g><g
-   id="key_3b_3b"
+   id="key_f6_f6"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="220"
@@ -1315,7 +1342,7 @@
 
 
 </g><g
-   id="key_27_27"
+   id="key_e4_e4"
    transform="translate(0,75.5)"><rect
    y="24.5"
    x="240"
