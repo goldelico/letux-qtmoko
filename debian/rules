@@ -47,6 +47,10 @@ QMAKE_CONF := devices/$(QTMOKO_DEVICE)/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 	dh $@
 
 override_dh_auto_configure:
+
+	# Add built qt to LD path to avoid libQtSql.so.4 missing error
+	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PWD)/../build/qtopiacore/host/lib/
+
 	# debhelper files
 	cp debian/qtmoko.install.in debian/qtmoko-$(QTMOKO_DEVICE).install
 	[ ! -f debian/qtmoko-$(QTMOKO_DEVICE).install.in ] || \
