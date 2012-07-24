@@ -51,6 +51,11 @@ override_dh_auto_configure:
 	# Add built qt to LD path to avoid libQtSql.so.4 missing error
 	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PWD)/../build/qtopiacore/host/lib/
 
+	# Fix wrong filename for libjscore.a
+	# http://qt-project.org/forums/viewthread/12732
+	mkdir -p $(PWD)/../build/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/
+	ln -s $(PWD)/../build/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/jscore. $(PWD)/../build/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/libjscore.a
+	
 	# debhelper files
 	cp debian/qtmoko.install.in debian/qtmoko-$(QTMOKO_DEVICE).install
 	[ ! -f debian/qtmoko-$(QTMOKO_DEVICE).install.in ] || \
