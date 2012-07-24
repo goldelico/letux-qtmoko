@@ -24,7 +24,6 @@ PROJECTS*=\
     3rdparty/applications/qx \
     3rdparty/applications/gta02-gsm-bt-fix \
     3rdparty/applications/gta02-agps/c \
-    3rdparty/applications/simplefm \
     3rdparty/applications/nerongps \
     3rdparty/applications/arora/src \
     3rdparty/applications/yberbrowser \
