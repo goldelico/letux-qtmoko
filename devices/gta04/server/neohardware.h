@@ -48,6 +48,7 @@ public:
 private:
     QPowerSourceProvider ac;
     QPowerSourceProvider battery;
+    QValueSpaceObject batteryVso;
     QTcpSocket ueventSocket;
     QTimer timer;
     bool hasSmartBattery;

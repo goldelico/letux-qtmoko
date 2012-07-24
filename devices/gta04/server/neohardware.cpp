@@ -95,6 +95,7 @@ NeoHardware::NeoHardware()
 :
 ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
+    , batteryVso("/UI/Battery", this)
     , ueventSocket(this)
     , timer(this)
 {
@@ -146,6 +147,11 @@ void NeoHardware::updateStatus()
             ("/sys/class/power_supply/bq27000-battery/time_to_empty_now");
         battery.setTimeRemaining(time.toInt() / 60);
     }
+    
+    QString currentNowStr =
+        readFile("/sys/class/power_supply/bq27000-battery/current_now");
+    int currentNow = currentNowStr.toInt() / 1000;
+    batteryVso.setAttribute("current_now", QString::number(currentNow));
 }
 
 #define UEVENT_BUFFER_SIZE 1024

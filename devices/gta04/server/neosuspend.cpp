@@ -48,6 +48,7 @@ public:
     virtual bool wake();
 private:
      QProcess resumeScript;
+     QValueSpaceObject batteryVso;
      QDateTime suspendTime;
 };
 
@@ -56,6 +57,7 @@ QTOPIA_TASK_PROVIDES(NeoSuspend, SystemSuspendHandler);
 
 NeoSuspend::NeoSuspend()
 :  resumeScript(this)
+    , batteryVso("/UI/Battery", this)
 {
 }
 
@@ -106,8 +108,27 @@ static void writeFile(const char * path, const char * content)
     f.close();
 }
 
+static QByteArray readFile(const char *path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qLog(PowerManagement) << "file open failed" << path << ":" <<
+            f.errorString();
+        return QByteArray();
+    }
+    QByteArray content = f.readAll();
+    f.close();
+    return content;
+}
+
 bool NeoSuspend::wake()
 {
+    // Read and update current_now. It should contain the current in suspend
+    QString currentNowStr =
+        readFile("/sys/class/power_supply/bq27000-battery/current_now");
+    int currentNow = currentNowStr.toInt() / 1000;
+    batteryVso.setAttribute("current_now_in_suspend", QString::number(currentNow));
+    
     // Check if resume was too fast. If yes, it might be GPS which wakes the
     // device up and prevents suspend. As a workaround we try to turn the gps
     // off. For more info see:
