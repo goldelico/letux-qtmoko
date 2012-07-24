@@ -247,6 +247,11 @@ void QMplayer::handleFsDeactivate()
     if (screen != ScreenFullscreen) {
         return;
     }
+#ifdef QTOPIA
+    QtopiaServiceRequest e1("QtopiaPowerManager", "setBacklight(int)");
+    e1 << -1; // read brightness setting from config
+    e1.send();
+#endif
     if (processRunning(process)) {
 
         // On GTA04A3 (old model) we have to stop mplayer so that gsm voice
@@ -585,6 +590,7 @@ void QMplayer::backClicked()
 
 void QMplayer::volumeDown()
 {
+//    QProcess::execute("amixer", QStringList() << "set" << "Master" << "5%-");
     if (processRunning(process)) {
         process->write("9");
     }
@@ -592,6 +598,7 @@ void QMplayer::volumeDown()
 
 void QMplayer::volumeUp()
 {
+//    QProcess::execute("amixer", QStringList() << "set" << "Master" << "5%+");
     if (processRunning(process)) {
         process->write("0");
     }
@@ -1281,7 +1288,7 @@ PLAY:
     process = new QProcess(this);
     connect(process, SIGNAL(finished(int, QProcess::ExitStatus)), this,
             SLOT(processFinished(int, QProcess::ExitStatus)));
-    process->setProcessChannelMode(QProcess::ForwardedChannels);
+    //process->setProcessChannelMode(QProcess::ForwardedChannels);
     process->start("mplayer", args, QIODevice::ReadWrite);
 
     if (process->waitForStarted(5000)) {
@@ -1700,65 +1707,92 @@ void QMplayerFullscreen::enterFullScreen()
 }
 
 QMplayerFullscreenPlay::QMplayerFullscreenPlay():QMplayerFullscreen()
-  , locked(0)
-  , lastX(-1)
+  , downX(-1)
+  , dim(0)
 {
+    radius = width() > height() ? height() / 4 : width() / 4;
 }
 
 void QMplayerFullscreenPlay::paintEvent(QPaintEvent *)
 {
-    if(lastX >= 0)
+    if(downX < 0)
         return;
 
     QPainter p(this);
-    if(locked > 0)
-        p.drawText(this->rect(), Qt::AlignCenter, tr("L O C K E D\n\nslide up to unlock"));
-    else
-        p.drawText(this->rect(), Qt::AlignCenter,
-               tr("click to pause\n\nslide left/right to adjust volume\n\nslide up to lock"));
+
+    // Circle for unlocking area
+    QPoint center = this->rect().center();
+    p.drawEllipse(center, radius, radius);
+
+    p.drawText(this->rect(), Qt::AlignCenter,
+                tr("pause\n\n\n\n\n\nvol down                vol up\n\n\n\n\n\ndim"));
+
+
+    // Mouse pointer
+    QPoint mP(center.x() + lastX - downX, center.y() + lastY - downY);
+    p.setBrush(Qt::white);
+    p.setPen( Qt::white);
+    p.drawEllipse(mP, radius / 4, radius / 4);
+}
+
+void QMplayerFullscreenPlay::adjustVolume()
+{
+    int deltaX = lastX - downX;
+    if(deltaX > radius)
+        emit volumeUp();
+    else if(-deltaX > radius)
+        emit volumeDown();
+    else {
+        adjustingVolume = false;
+        return;
+    }
+    adjustingVolume = true;
+    QTimer::singleShot(200, this, SLOT(adjustVolume()));
 }
 
 void QMplayerFullscreenPlay::mousePressEvent(QMouseEvent * e)
 {
     downX = lastX = e->x();
-    lastY = e->y();
-    locked = (locked > 0);
+    downY = e->y();
+    adjustingVolume = false;
+    dim = (dim > 0);
     update();
 }
 
-void QMplayerFullscreenPlay::mouseReleaseEvent(QMouseEvent * e)
+void QMplayerFullscreenPlay::mouseReleaseEvent(QMouseEvent *)
 {
-    if (abs(e->x() - downX) < 64 && !locked) {
-        clicked = true;
-        hide();
-    }
-    lastX = -1;
+    downX = lastX = -1;
     update();
 }
 
 void QMplayerFullscreenPlay::mouseMoveEvent(QMouseEvent * e)
 {
-    int deltaY = abs(e->y() - lastY);
-    if(deltaY > 240 && (locked == 0 || locked == 1)) {
-        lastY = e->y();
-        if(locked)
-            locked = -2;
-        else
-            locked = 2;
-        update();
-        return;
-    }
+    int deltaX = abs(e->x() - downX);
+    int deltaY = e->y() - downY;
 
-    int deltaX = e->x() - lastX;
-    if (deltaX > 32) {
-        emit volumeUp();
-    } else if (deltaX < -32) {
-        emit volumeDown();
-    } else {
-        return;
-    }
     lastX = e->x();
     lastY = e->y();
+
+    if(deltaY < -radius)
+        hide();
+    else if(deltaY > radius)
+    {
+        if(dim == 0 || dim == 1)
+        {
+#ifdef QTOPIA
+            QtopiaServiceRequest e1("QtopiaPowerManager", "setBacklight(int)");
+            e1 << (dim ? -1 : 0);
+            e1.send();
+#endif
+            dim = (dim > 0 ? -2 : 2);
+        }
+
+    }
+    else if(deltaX > radius && !adjustingVolume)
+        adjustVolume();
+
+    if(!adjustingVolume)
+        update();
 }
 
 QMplayerMainWindow::QMplayerMainWindow(QWidget * parent, Qt::WFlags f)

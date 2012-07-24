@@ -28,6 +28,7 @@
 #ifdef QTOPIA
 #include <QSoftMenuBar>
 #include <QtopiaApplication>
+#include <QtopiaServiceRequest>
 #else
 #include <QCoreApplication>
 #endif
@@ -76,11 +77,17 @@ protected:
     void mouseReleaseEvent(QMouseEvent *);
     void mouseMoveEvent(QMouseEvent *);
 
+private slots:
+    void adjustVolume();
+
 private:
-    int locked;         // 0=unlocked, 1=locked, 2,-2=locked/unlocked and mouse is still down
+    int radius;
     int downX;
+    int downY;
     int lastX;
     int lastY;
+    int dim;
+    bool adjustingVolume;
 };
 
 class QMplayer : public QWidget
