@@ -136,7 +136,7 @@ getAllTranslatables(new PathIterator(project.property("QT_DEPOT").strValue()+"/s
             libs.commands+="$$MKSPEC.STRIP $$MKSPEC.STRIPFLAGS_SHLIB $$QTOPIA_IMAGE"$$libs.path"/"$$basename($$l)
         }
         plugins.commands+=\
-            "#(ve)plugins=$(find "$$QTOPIA_IMAGE"/qt_plugins -type f);
+            "#(ve)plugins=$(find "$$QTOPIA_IMAGE"/qt_plugins -name *.so -type f);
              for p in $plugins; do
                  echo "$$MKSPEC.STRIP" "$$MKSPEC.STRIPFLAGS_SHLIB" $p
                  "$$MKSPEC.STRIP" "$$MKSPEC.STRIPFLAGS_SHLIB" $p
