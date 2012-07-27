@@ -6,7 +6,7 @@ Cross compling from sources
   * Install required packages on your host PC:
   
 apt-get build-dep libqt4-dev
-apt-get install libqt4-dev libv4l-dev libdbus-1-dev
+apt-get install libqt4-dev libv4l-dev libdbus-1-dev libqt4-sql-sqlite
   
   * We will use emdebian toolchain, check this page:
   
