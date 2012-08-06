@@ -20,6 +20,8 @@
 #ifndef QLED_H
 #define QLED_H
 
+#include <qtopiaglobal.h>
+
 QTOPIABASE_EXPORT int setLed(const char *device, const char *color,
                              const char *function, const char *attr,
                              const char *value);
