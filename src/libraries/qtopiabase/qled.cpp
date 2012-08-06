@@ -265,6 +265,6 @@ void qLedIndicatorLowPowerOn()
 */
 void qLedIndicatorLowPowerOff()
 {
-    qLedSetCall(qLedAttrBrightness(), "0");
-    qLedSetCall(qLedAttrTrigger(), "none");
+    qLedSetPower(qLedAttrBrightness(), "0");
+    qLedSetPower(qLedAttrTrigger(), "none");
 }
