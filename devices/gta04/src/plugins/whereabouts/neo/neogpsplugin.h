@@ -3,6 +3,7 @@
 ** This file is part of the Qt Extended Opensource Package.
 **
 ** Copyright (C) 2009 Trolltech ASA.
+** Copyright (C) 2012 Radek Polak
 **
 ** Contact: Qt Extended Information (info@qtextended.org)
 **
@@ -29,10 +30,10 @@ class QTOPIA_PLUGIN_EXPORT NeoGpsPlugin : public QWhereaboutsPlugin
 {
     Q_OBJECT
 public:
-    explicit NeoGpsPlugin(QObject *parent = 0);
+    explicit NeoGpsPlugin(QObject * parent = 0);
     ~NeoGpsPlugin();
 
-    virtual QWhereabouts *create(const QString &source);
+    virtual QWhereabouts *create(const QString & source);
 };
 
 #endif

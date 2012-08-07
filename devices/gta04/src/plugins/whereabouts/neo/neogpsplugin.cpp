@@ -34,8 +34,8 @@
 /*
  This plugin only works for Goldelico's GTA04
 */
-NeoGpsPlugin::NeoGpsPlugin(QObject *parent)
-    : QWhereaboutsPlugin(parent)
+NeoGpsPlugin::NeoGpsPlugin(QObject * parent)
+:  QWhereaboutsPlugin(parent)
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
     system("/opt/qtmoko/bin/gps-poweron.sh");
@@ -52,19 +52,21 @@ QWhereabouts *NeoGpsPlugin::create(const QString &)
 
     QProcess *reader = new QProcess(this);
     reader->start("cat", QStringList() << "/dev/ttyO1", QIODevice::ReadWrite);
-    
+
     if (!reader->waitForStarted()) {
         qWarning() << "couldnt start cat /dev/ttyO1: " + reader->errorString();
-        QMessageBox::warning( 0,tr("GPS"),tr("Cannot open GPS device at /dev/ttyO1"),
-            QMessageBox::Ok,  QMessageBox::Ok);
+        QMessageBox::warning(0, tr("GPS"),
+                             tr("Cannot open GPS device at /dev/ttyO1"),
+                             QMessageBox::Ok, QMessageBox::Ok);
         delete reader;
         return 0;
     }
 
-    QNmeaWhereabouts *whereabouts = new QNmeaWhereabouts(QNmeaWhereabouts::RealTimeMode, this);
+    QNmeaWhereabouts *whereabouts =
+        new QNmeaWhereabouts(QNmeaWhereabouts::RealTimeMode, this);
     whereabouts->setSourceDevice(reader);
 
-    if(!reader->waitForReadyRead(3000))
+    if (!reader->waitForReadyRead(3000))
         system("/opt/qtmoko/bin/gps-poweron.sh");
 
     return whereabouts;
