@@ -34,6 +34,11 @@ QNmeaRealTimeReader::QNmeaRealTimeReader(QNmeaWhereaboutsPrivate *whereaboutsPro
 {
 }
 
+QNmeaRealTimeReader::~QNmeaRealTimeReader()
+{
+    qLedSetPower(qLedAttrBrightness(), "0");
+}
+
 void QNmeaRealTimeReader::sourceReadyRead()
 {
     QWhereaboutsUpdate update;

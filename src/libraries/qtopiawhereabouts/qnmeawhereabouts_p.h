@@ -110,6 +110,7 @@ class QNmeaRealTimeReader : public QNmeaReader
 {
 public:
     explicit QNmeaRealTimeReader(QNmeaWhereaboutsPrivate *whereaboutsProxy);
+    ~QNmeaRealTimeReader();
     virtual void sourceReadyRead();
 
 private:
