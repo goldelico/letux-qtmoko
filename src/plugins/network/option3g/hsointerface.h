@@ -37,12 +37,12 @@
 #include <qfsogsmpdp.h>
 #endif
 
-class DialupImpl : public QtopiaNetworkInterface
+class HsoInterface : public QtopiaNetworkInterface
 {
     Q_OBJECT
 public:
-    DialupImpl( const QString& confFile );
-    virtual ~DialupImpl();
+    HsoInterface( const QString& confFile );
+    virtual ~HsoInterface();
 
     virtual Status status();
 

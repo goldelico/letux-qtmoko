@@ -17,7 +17,7 @@
 **
 ****************************************************************************/
 
-#include "dialup.h"
+#include "hsointerface.h"
 #include "config.h"
 #include "dialstring.h"
 
@@ -38,7 +38,7 @@
 #define PPPD_BINARY QString("/usr/sbin/pppd")
 static const QString pppScript = Qtopia::qtopiaDir()+"bin/ppp-network";
 
-DialupImpl::DialupImpl( const QString& confFile)
+HsoInterface::HsoInterface( const QString& confFile)
     : state( Initialize ), configIface(0), ifaceStatus(Unknown), tidStateUpdate(0)
 #ifndef QTOPIA_NO_FSO
     , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
@@ -51,7 +51,7 @@ DialupImpl::DialupImpl( const QString& confFile)
 #endif
     , netSpace( 0 ), delayedGatewayInstall( false )
 {
-    qLog(Network) << "Creating DialupImpl instance";
+    qLog(Network) << "Creating HsoInterface instance";
     configIface = new DialupConfig( confFile );
 
 #ifndef QTOPIA_NO_FSO
@@ -62,15 +62,15 @@ DialupImpl::DialupImpl( const QString& confFile)
     connect( &thread, SIGNAL(scriptDone()), this, SLOT(updateState()));
 }
 
-DialupImpl::~DialupImpl()
+HsoInterface::~HsoInterface()
 {
-    qLog(Network) << "Deleting DialupImpl instance";
+    qLog(Network) << "Deleting HsoInterface instance";
     if (configIface)
         delete configIface;
     configIface = 0;
 }
 
-QtopiaNetworkInterface::Status DialupImpl::status()
+QtopiaNetworkInterface::Status HsoInterface::status()
 {
     if ( ifaceStatus == QtopiaNetworkInterface::Unknown) {
         return ifaceStatus;
@@ -94,7 +94,7 @@ QtopiaNetworkInterface::Status DialupImpl::status()
     return ifaceStatus;
 }
 
-void DialupImpl::initialize()
+void HsoInterface::initialize()
 {
     if ( !netSpace ) {
         const uint ident = qHash( configIface->configFile() );
@@ -110,10 +110,10 @@ void DialupImpl::initialize()
 
     if ( isAvailable() ) {
         ifaceStatus = QtopiaNetworkInterface::Down;
-        qLog(Network) << "DialupImpl: Using serial device: " << device();
+        qLog(Network) << "HsoInterface: Using serial device: " << device();
     } else {
         ifaceStatus = QtopiaNetworkInterface::Unavailable;
-        qLog(Network) << "DialupImpl: interface not available";
+        qLog(Network) << "HsoInterface: interface not available";
     }
 
     netSpace->setAttribute( "State", ifaceStatus );
@@ -131,7 +131,7 @@ void DialupImpl::initialize()
 
 }
 
-void DialupImpl::cleanup()
+void HsoInterface::cleanup()
 {
     if ( ifaceStatus != QtopiaNetworkInterface::Unknown ) {
         ifaceStatus = QtopiaNetworkInterface::Unknown;
@@ -171,7 +171,7 @@ void DialupImpl::cleanup()
     //config file will be deleted by qtopia network server
 }
 
-bool DialupImpl::setDefaultGateway()
+bool HsoInterface::setDefaultGateway()
 {
     if ( pppIface.isEmpty() ) {
         updateTrigger( QtopiaNetworkInterface::UnknownError,
@@ -199,7 +199,7 @@ bool DialupImpl::setDefaultGateway()
     return true;
 }
 
-bool DialupImpl::start( const QVariant /*options*/ )
+bool HsoInterface::start( const QVariant /*options*/ )
 {
 #ifndef QTOPIA_NO_FSO
     if(fsoEnabled) {
@@ -367,7 +367,7 @@ bool DialupImpl::start( const QVariant /*options*/ )
 }
 
 #ifndef QTOPIA_NO_FSO
-void DialupImpl::activateContextFinished(QFsoDBusPendingCall & call)
+void HsoInterface::activateContextFinished(QFsoDBusPendingCall & call)
 {
     QFsoDBusPendingReply<> reply = call;
     bool ok = checkReply(reply);
@@ -379,7 +379,7 @@ void DialupImpl::activateContextFinished(QFsoDBusPendingCall & call)
 }
 #endif
 
-bool DialupImpl::stop()
+bool HsoInterface::stop()
 {
 #ifndef QTOPIA_NO_FSO
     if(fsoEnabled) {
@@ -441,7 +441,7 @@ bool DialupImpl::stop()
     return true;
 }
 
-QString DialupImpl::device() const
+QString HsoInterface::device() const
 {
     const QtopiaNetwork::Type t = type();
     if ( t & QtopiaNetwork::NamedModem || t & QtopiaNetwork::PCMCIA )
@@ -450,12 +450,12 @@ QString DialupImpl::device() const
         return QString("internal"); //no tr
 }
 
-QtopiaNetwork::Type DialupImpl::type() const
+QtopiaNetwork::Type HsoInterface::type() const
 {
     return QtopiaNetwork::toType( configIface->configFile() );
 }
 
-bool DialupImpl::isAvailable()
+bool HsoInterface::isAvailable()
 {
 #ifndef QTOPIA_NO_FSO
     if(fsoEnabled) {
@@ -468,7 +468,7 @@ bool DialupImpl::isAvailable()
 
 #ifdef QTOPIA_CELL
     if ( t & QtopiaNetwork::PhoneModem ) { //use internal phone device
-        qLog(Network) << "DialupImpl: Using internal serial device";
+        qLog(Network) << "HsoInterface: Using internal serial device";
         deviceName = QString();
         if ( (regState == QTelephony::RegistrationHome ||
              regState == QTelephony::RegistrationRoaming) && !pppdProcessBlocked ) {
@@ -503,7 +503,7 @@ bool DialupImpl::isAvailable()
         if ( f ) {
             char line[1024];
             char devtype[1024];
-            qLog(Network) << "DialupImpl: Searching for pcmcia serial/modem card...";
+            qLog(Network) << "HsoInterface: Searching for pcmcia serial/modem card...";
             while ( fgets( line, 1024, f ) ) {
                 if ( sscanf(line,"%*d %s %*s", devtype )==1 )
                 {
@@ -514,7 +514,7 @@ bool DialupImpl::isAvailable()
 
                         if (!deviceName.isEmpty()) { // we know this device already
                             if ( QString("/dev/%1").arg(list[4].simplified()) == deviceName) {
-                                qLog(Network) << "DialupImpl: Using serial device on "<< deviceName;
+                                qLog(Network) << "HsoInterface: Using serial device on "<< deviceName;
                                 fclose(f);
                                 return true;
                             }
@@ -524,7 +524,7 @@ bool DialupImpl::isAvailable()
                             fclose(f);
                             deviceName = QString("/dev/%1").arg(list[4].simplified());
                             if ( QFile::exists( deviceName ) ) {
-                                qLog(Network) << "DialupImpl: Found new serial device on /dev/" << deviceName;
+                                qLog(Network) << "HsoInterface: Found new serial device on /dev/" << deviceName;
                                 return true;
                             }
                         }
@@ -536,11 +536,11 @@ bool DialupImpl::isAvailable()
     }
 
     deviceName = QString();
-    qLog(Network) << "DialupImpl: No serial/modem device found";
+    qLog(Network) << "HsoInterface: No serial/modem device found";
     return false;
 }
 
-bool DialupImpl::isActive()
+bool HsoInterface::isActive()
 {
 #ifndef QTOPIA_NO_FSO
     if(fsoEnabled) {      // using FSO
@@ -555,7 +555,7 @@ bool DialupImpl::isActive()
 #endif
     
     if ( pppIface.isEmpty() ||  device().isEmpty() ) {
-        qLog(Network) << "DialupImpl::isActive: no PPP connection active";
+        qLog(Network) << "HsoInterface::isActive: no PPP connection active";
         return false;
     }
 
@@ -570,7 +570,7 @@ bool DialupImpl::isActive()
         int ret = ioctl( sockets[i], SIOCGIFFLAGS, &ifreqst );
         if ( ret == -1 ) {
             int error = errno;
-            qLog(Network) << "DialupImpl::isActive: ioctl: " << strerror( error );
+            qLog(Network) << "HsoInterface::isActive: ioctl: " << strerror( error );
             continue;
         }
 
@@ -580,7 +580,7 @@ bool DialupImpl::isActive()
         if ( ( flags & IFF_UP ) == IFF_UP  &&
                 (flags & IFF_LOOPBACK) != IFF_LOOPBACK &&
                 (flags & IFF_POINTOPOINT) == IFF_POINTOPOINT ) {
-            qLog(Network) << "DialupImpl::isActive: " <<pppIface<<" is up and running";
+            qLog(Network) << "HsoInterface::isActive: " <<pppIface<<" is up and running";
             ::close( sockets[0] );
             ::close( sockets[1] );
             return true;
@@ -589,16 +589,16 @@ bool DialupImpl::isActive()
 
     ::close( sockets[0] );
     ::close( sockets[1] );
-    qLog(Network) << "DialupImpl::isActive: interface " << pppIface <<" is offline" ;
+    qLog(Network) << "HsoInterface::isActive: interface " << pppIface <<" is offline" ;
     return false;
 }
 
-QtopiaNetworkConfiguration * DialupImpl::configuration()
+QtopiaNetworkConfiguration * HsoInterface::configuration()
 {
     return configIface;
 }
 
-void DialupImpl::setProperties( const QtopiaNetworkProperties& properties )
+void HsoInterface::setProperties( const QtopiaNetworkProperties& properties )
 {
     configIface->writeProperties(properties);
 }
@@ -607,7 +607,7 @@ void DialupImpl::setProperties( const QtopiaNetworkProperties& properties )
 /*!
   This function handles registration queries and notifications
 */
-void DialupImpl::registrationStateChanged()
+void HsoInterface::registrationStateChanged()
 {
     if ( commManager->supports<QNetworkRegistration>().contains( "modem" ) ) {
         if ( !netReg ) {
@@ -656,7 +656,7 @@ void DialupImpl::registrationStateChanged()
 #endif
 
 
-void DialupImpl::timerEvent( QTimerEvent* /*e*/)
+void HsoInterface::timerEvent( QTimerEvent* /*e*/)
 {
     const QString peerID = configIface->property("Serial/PeerID").toString();
     const QString logfile = Qtopia::tempDir() + "qpe-pppd-log-"+peerID;
@@ -804,7 +804,7 @@ void DialupImpl::timerEvent( QTimerEvent* /*e*/)
     }
 }
 
-void DialupImpl::updateTrigger( QtopiaNetworkInterface::Error code, const QString& desc )
+void HsoInterface::updateTrigger( QtopiaNetworkInterface::Error code, const QString& desc )
 {
     if ( !netSpace )
         return;
@@ -815,7 +815,7 @@ void DialupImpl::updateTrigger( QtopiaNetworkInterface::Error code, const QStrin
     netSpace->setAttribute( "UpdateTrigger", trigger );
 }
 
-void DialupImpl::updateState()
+void HsoInterface::updateState()
 {
     status();
     if ( delayedGatewayInstall ) {
@@ -831,7 +831,7 @@ void DialupImpl::updateState()
 }
 
 #ifdef QTOPIA_CELL
-void DialupImpl::connectNotification( const QPhoneCall&,
+void HsoInterface::connectNotification( const QPhoneCall&,
         QPhoneCall::Notification notification, const QString& value)
 {
     if ( notification == QPhoneCall::DataStateUpdate )
@@ -863,7 +863,7 @@ void DialupImpl::connectNotification( const QPhoneCall&,
     } 
 }
 
-void DialupImpl::phoneCallStateChanged( const QPhoneCall& call)
+void HsoInterface::phoneCallStateChanged( const QPhoneCall& call)
 {
     if ( (int)call.state()  >= (int) QPhoneCall::HangupLocal  && !pppdProcessBlocked ) {
         //if the call hangs up/aborts w/o being stopped manually by the user we need to cleanup 
