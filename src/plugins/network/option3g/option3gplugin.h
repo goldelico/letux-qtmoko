@@ -29,11 +29,11 @@
 
 #include "dialup.h"
 
-class QTOPIA_PLUGIN_EXPORT DialupPlugin : public QtopiaNetworkPlugin
+class QTOPIA_PLUGIN_EXPORT Option3gPlugin : public QtopiaNetworkPlugin
 {
 public:
-    DialupPlugin();
-    virtual ~DialupPlugin();
+    Option3gPlugin();
+    virtual ~Option3gPlugin();
 
     virtual QPointer<QtopiaNetworkInterface> network( const QString& confFile);
     virtual QtopiaNetwork::Type type() const;

@@ -17,21 +17,21 @@
 **
 ****************************************************************************/
 
-#include "dialupplugin.h"
+#include "option3gplugin.h"
 
 #include <QPointer>
 #include <qtopialog.h>
 #include <qtopiaapplication.h>
 
-DialupPlugin::DialupPlugin()
+Option3gPlugin::Option3gPlugin()
 {
     //Load translation for libqtopianetwork
     QtopiaApplication::loadTranslations( "libqtopianetwork" );
 }
 
-DialupPlugin::~DialupPlugin()
+Option3gPlugin::~Option3gPlugin()
 {
-    qLog(Network) << "Deleting DialupPlugin (" << instances.count()
+    qLog(Network) << "Deleting Option3gPlugin (" << instances.count()
         << " instances)";
     //cleanup all interface instances
     while ( !instances.isEmpty() )
@@ -42,7 +42,7 @@ DialupPlugin::~DialupPlugin()
     }
 }
 
-QPointer<QtopiaNetworkInterface> DialupPlugin::network( const QString& confFile)
+QPointer<QtopiaNetworkInterface> Option3gPlugin::network( const QString& confFile)
 {
     qLog(Network) << "new Dialup interface instance requested -> " << confFile;
     QPointer<QtopiaNetworkInterface> impl = new DialupImpl( confFile );
@@ -51,7 +51,7 @@ QPointer<QtopiaNetworkInterface> DialupPlugin::network( const QString& confFile)
     return impl;
 }
 
-QtopiaNetwork::Type DialupPlugin::type() const
+QtopiaNetwork::Type Option3gPlugin::type() const
 {
     //can handle all type of GPRS and analog dialup connection
     //pcmcia, internal device and specifically named devices
@@ -65,8 +65,8 @@ QtopiaNetwork::Type DialupPlugin::type() const
              QtopiaNetwork::NamedModem );
 }
 
-QByteArray DialupPlugin::customID() const
+QByteArray Option3gPlugin::customID() const
 {
     return QByteArray();
 }
-QTOPIA_EXPORT_PLUGIN( DialupPlugin );
+QTOPIA_EXPORT_PLUGIN( Option3gPlugin );

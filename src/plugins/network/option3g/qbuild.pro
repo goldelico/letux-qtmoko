@@ -1,5 +1,5 @@
 TEMPLATE=plugin
-TARGET=dialing
+TARGET=option3g
 
 PLUGIN_FOR=qtopia
 PLUGIN_TYPE=network
@@ -19,8 +19,8 @@ enable_fso {
 }
 
 pkg [
-    name=dialing-network
-    desc="Dialing network plugin for Qt Extended."
+    name=option3g-network
+    desc="Option 3g Dialing network plugin for QtMoko."
     version=$$QTOPIA_VERSION
     license=$$QTOPIA_LICENSE
     maintainer=$$QTOPIA_MAINTAINER
@@ -31,7 +31,7 @@ FORMS=\
     advancedbase.ui
 
 HEADERS=\
-    dialupplugin.h\
+    option3gplugin.h\
     dialup.h\
     config.h\
     dialing.h\
@@ -39,7 +39,7 @@ HEADERS=\
     dialstring.h
 
 SOURCES=\
-    dialupplugin.cpp\
+    option3gplugin.cpp\
     dialup.cpp\
     config.cpp\
     dialing.cpp\
@@ -49,12 +49,12 @@ SOURCES=\
 pics [
     hint=pics
     files=pics/*
-    path=/pics/Network/dialup
+    path=/pics/Network/option3g
 ]
 
 icons [
     hint=pics
     files=icons/*
-    path=/pics/Network/icons/dialup
+    path=/pics/Network/icons/option3g
 ]
 
