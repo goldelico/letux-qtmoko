@@ -44,29 +44,20 @@ Option3gPlugin::~Option3gPlugin()
 
 QPointer<QtopiaNetworkInterface> Option3gPlugin::network( const QString& confFile)
 {
-    qLog(Network) << "new Dialup interface instance requested -> " << confFile;
-    QPointer<QtopiaNetworkInterface> impl = new DialupImpl( confFile );
-    instances.append(impl);
+    qLog(Network) << "new Option3gPlugin interface instance requested -> " << confFile;
+    QPointer<QtopiaNetworkInterface> hso = new HsoInterface( confFile );
+    instances.append(hso);
 
-    return impl;
+    return hso;
 }
 
 QtopiaNetwork::Type Option3gPlugin::type() const
 {
-    //can handle all type of GPRS and analog dialup connection
-    //pcmcia, internal device and specifically named devices
-    //see dialup.cpp (DialupImpl::isAvailable())
-    return ( QtopiaNetwork::Dialup |
-             QtopiaNetwork::GPRS |
-#ifdef QTOPIA_CELL
-             QtopiaNetwork::PhoneModem |
-#endif
-             QtopiaNetwork::PCMCIA |
-             QtopiaNetwork::NamedModem );
+    return QtopiaNetwork::Custom;
 }
 
 QByteArray Option3gPlugin::customID() const
 {
-    return QByteArray();
+    return "hso";
 }
 QTOPIA_EXPORT_PLUGIN( Option3gPlugin );

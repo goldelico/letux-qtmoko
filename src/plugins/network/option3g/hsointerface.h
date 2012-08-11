@@ -64,22 +64,12 @@ protected:
     bool isAvailable();
     bool isActive();
 
-    void timerEvent( QTimerEvent* e );
 private:
     enum { Initialize, Connect, Monitoring, Disappearing } state;
 
 private:
-    void updateTrigger( QtopiaNetworkInterface::Error code = QtopiaNetworkInterface::NoError, const QString& desc = QString() );
-
-private:
     QtopiaNetworkConfiguration *configIface;
     Status ifaceStatus;
-    mutable QString deviceName;
-    QString pppIface;
-
-    int tidStateUpdate;
-    int logIndex;
-    int trigger;
 
 #ifndef QTOPIA_NO_FSO
     QFsoGSMDevice gsmDev;
@@ -87,27 +77,8 @@ private:
     bool fsoEnabled;
 #endif
 
-private slots:
-    void updateState();
-#ifndef QTOPIA_NO_FSO
-    void activateContextFinished(QFsoDBusPendingCall &);
-#endif
-#ifdef QTOPIA_CELL
-    void connectNotification( const QPhoneCall&, QPhoneCall::Notification, const QString& );
-    void registrationStateChanged();
-    void phoneCallStateChanged( const QPhoneCall& );
-private:
-    QTelephony::RegistrationState regState;
-    QCommServiceManager* commManager;
-    QPhoneCallManager* callManager;
-    QPhoneCall dataCall;
-    QNetworkRegistration *netReg;
-    bool pppdProcessBlocked;
-#endif
 private:
     QValueSpaceObject* netSpace;
-    ScriptThread thread;
-    bool delayedGatewayInstall;
 };
 
 #endif

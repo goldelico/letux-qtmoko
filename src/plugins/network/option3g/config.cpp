@@ -366,18 +366,6 @@ int DialupUI::writeSystemFiles()
         dial = GPRSDialString();
         dial = dial.arg(prop.value("Serial/APN").toString());
         st += dial;
-    } else {
-        const QString phone = prop.value("Serial/Phone").toString();
-        if ( phone.isEmpty() ) {
-            errorText = tr("Missing dialup number");
-            qLog(Network) << errorText;
-            return 2;
-        }
-        if ( prop.value("Serial/SilentDial") == "y" )
-            dial += "ATM0 OK ";
-        dial += prop.value("Serial/ATDial").toString();
-        dial += phone;
-        st += /*QString("ATZ OK ") +*/ dial + QString(" CONNECT");
     }
 
     st.replace( QString("OK"), QString("\nOK") );

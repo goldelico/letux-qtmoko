@@ -27,7 +27,7 @@
 #include <QList>
 #include <QPointer>
 
-#include "dialup.h"
+#include "hsointerface.h"
 
 class QTOPIA_PLUGIN_EXPORT Option3gPlugin : public QtopiaNetworkPlugin
 {

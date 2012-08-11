@@ -32,7 +32,7 @@ FORMS=\
 
 HEADERS=\
     option3gplugin.h\
-    dialup.h\
+    hsointerface.h\
     config.h\
     dialing.h\
     advanced.h\
@@ -40,12 +40,18 @@ HEADERS=\
 
 SOURCES=\
     option3gplugin.cpp\
-    dialup.cpp\
+    hsointerface.cpp\
     config.cpp\
     dialing.cpp\
     advanced.cpp\
     dialstring.cpp
 
+conf [
+    hint=image
+    files+=etc/network/hso.conf
+    path=/etc/network
+]
+    
 pics [
     hint=pics
     files=pics/*
