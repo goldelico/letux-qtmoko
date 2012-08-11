@@ -53,11 +53,13 @@ QPointer<QtopiaNetworkInterface> Option3gPlugin::network( const QString& confFil
 
 QtopiaNetwork::Type Option3gPlugin::type() const
 {
-    return QtopiaNetwork::Custom;
+        return ( QtopiaNetwork::Dialup |
+             QtopiaNetwork::GPRS |
+             QtopiaNetwork::PhoneModem );
 }
 
 QByteArray Option3gPlugin::customID() const
 {
-    return "hso";
+    return QByteArray();
 }
 QTOPIA_EXPORT_PLUGIN( Option3gPlugin );
