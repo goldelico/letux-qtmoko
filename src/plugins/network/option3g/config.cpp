@@ -21,7 +21,6 @@
 #include <accountconfig.h>
 #include "config.h"
 #include "dialing.h"
-#include "advanced.h"
 #include "dialstring.h"
 
 #include <QDebug>
@@ -49,7 +48,7 @@ public:
     ~DialupUI();
 
     enum Entry {
-        Account, Dialing, Proxy, Advanced
+        Account, Dialing, Proxy
     };
 
 public slots:
@@ -68,7 +67,6 @@ private:
     ProxiesPage* proxiesPage;
     AccountPage* accPage;
     DialingPage* dialingPage;
-    AdvancedPage* advancedPage;
     QListWidget* options;
     QStackedWidget* stack;
     QLabel* userHint;
@@ -219,11 +217,6 @@ void DialupUI::init()
     item->setTextAlignment( Qt::AlignHCenter);
     item->setIcon( QIcon(":icon/netsetup/server") );
 
-    item = new QListWidgetItem( tr("Advanced"), options, Advanced );
-    item->setTextAlignment( Qt::AlignHCenter);
-    item->setIcon( QIcon(":icon/settings") );
-
-
     vb->addWidget( options );
 
     QHBoxLayout* hBox = new QHBoxLayout();
@@ -265,13 +258,6 @@ void DialupUI::init()
     scroll->setWidget( dialingPage );
     stack->addWidget( scroll );
 
-    scroll = new QScrollArea();
-    scroll->setFocusPolicy( Qt::NoFocus );
-    scroll->setWidgetResizable( true );
-    advancedPage = new AdvancedPage( knownProp );
-    scroll->setWidget( advancedPage );
-    stack->addWidget( scroll );
-
     stack->setCurrentIndex( 0 );
 
     vBox->addWidget( stack );
@@ -287,8 +273,6 @@ void DialupUI::accept()
         props = accPage->properties();
         config->writeProperties(props);
         props = dialingPage->properties();
-        config->writeProperties(props);
-        props = advancedPage->properties();
         config->writeProperties(props);
 
         createPeerId();
@@ -501,9 +485,6 @@ void DialupUI::optionSelected(QListWidgetItem* item)
             case Dialing:
                 stack->setCurrentIndex( 3 );
                 break;
-            case Advanced:
-                stack->setCurrentIndex( 4 );
-                break;
             case Proxy:
                 stack->setCurrentIndex( 1 );
                 break;
@@ -525,10 +506,6 @@ void DialupUI::updateUserHint(QListWidgetItem* cur, QListWidgetItem* /*prev*/)
             break;
         case Dialing:
             desc = tr("General dial-up parameter.");
-            break;
-        case Advanced:
-            desc = tr("Advanced dial-up parameter that should"
-                   " not usually require any adjustments.");
             break;
         case Proxy:
             desc = tr("Proxy details used for HTTP and FTP data.");

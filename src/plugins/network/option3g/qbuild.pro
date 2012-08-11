@@ -35,7 +35,6 @@ HEADERS=\
     hsointerface.h\
     config.h\
     dialing.h\
-    advanced.h\
     dialstring.h
 
 SOURCES=\
@@ -43,7 +42,6 @@ SOURCES=\
     hsointerface.cpp\
     config.cpp\
     dialing.cpp\
-    advanced.cpp\
     dialstring.cpp
 
 conf [
