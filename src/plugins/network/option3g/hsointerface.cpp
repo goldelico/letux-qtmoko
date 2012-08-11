@@ -51,7 +51,9 @@ HsoInterface::HsoInterface( const QString& confFile)
 
 #ifndef QTOPIA_NO_FSO
     fsoEnabled = !strcmp("Fso", getenv( "QTOPIA_PHONE" ));      // are we using FSO as backend?
-#endif    
+#endif
+    
+    qDebug() << "======= HsoInterface ctor";
 }
 
 HsoInterface::~HsoInterface()
@@ -64,10 +66,27 @@ HsoInterface::~HsoInterface()
 
 QtopiaNetworkInterface::Status HsoInterface::status()
 {
+    qDebug() << "====== HsoInterface::status() ifaceStatus=" << ifaceStatus;
+    
     if ( ifaceStatus == QtopiaNetworkInterface::Unknown) {
         return ifaceStatus;
     }
 
+    QtopiaNetworkInterface::Status status = QtopiaNetworkInterface::Unavailable;
+    if ( isAvailable() ) {
+        status = QtopiaNetworkInterface::Down;
+
+        if ( ifaceStatus == QtopiaNetworkInterface::Pending ||
+                ifaceStatus == QtopiaNetworkInterface::Demand )
+            // these states are updated by timerEvent
+            status = ifaceStatus;
+        else if ( isActive() )
+            status = QtopiaNetworkInterface::Up;
+    }
+    
+    qDebug() << "====== HsoInterface::status()=" <<  status;
+
+    ifaceStatus = status;
     netSpace->setAttribute( "State", ifaceStatus );
     return ifaceStatus;
 }
@@ -86,7 +105,19 @@ void HsoInterface::initialize()
         netSpace->setAttribute( "UpdateTrigger", 0 );
     }
 
-    ifaceStatus = QtopiaNetworkInterface::Down;
+    qDebug() << "HsoInterface::initialize()";
+    if ( isAvailable() ) {
+        qDebug() << "1";
+        if ( isActive() )
+            ifaceStatus = QtopiaNetworkInterface::Up;
+        else
+            ifaceStatus = QtopiaNetworkInterface::Down;
+    } else {
+        ifaceStatus = QtopiaNetworkInterface::Unavailable;
+    }
+    
+    qDebug() << "ifaceStatus=" << ifaceStatus;
+
     netSpace->setAttribute( "State", ifaceStatus );
 }
 
@@ -155,7 +186,37 @@ bool HsoInterface::isAvailable()
 
 bool HsoInterface::isActive()
 {
-    return true;
+    qDebug() << "=== HsoInterface::isActive()";
+    
+    //TODO support for IPv4 only (PF_INET6)
+    int inetfd = socket( PF_INET, SOCK_DGRAM, 0 );
+    if ( inetfd == -1 )
+        return false;
+
+    int flags = 0;
+    struct ifreq ifreqst;
+    strcpy( ifreqst.ifr_name, "hso0" );
+    int ret = ioctl( inetfd, SIOCGIFFLAGS, &ifreqst );
+    if ( ret == -1 ) {
+        int error = errno;
+        qLog(Network) << "HsoInterface: " << strerror( error );
+        ::close( inetfd );
+        return false;
+    }
+
+
+    flags = ifreqst.ifr_flags;
+    qDebug() << "================== flags=" << flags;
+    
+    if ( ( flags & IFF_UP ) == IFF_UP) {
+        qLog(Network) << "HsoInterface: hso0 is up and running";
+        ::close( inetfd );
+        return true;
+    }
+
+    qLog(Network) << "HsoInterface: device is offline" ;
+    ::close( inetfd );
+    return false;
 }
 
 QtopiaNetworkConfiguration * HsoInterface::configuration()
