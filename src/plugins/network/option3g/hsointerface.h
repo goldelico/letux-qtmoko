@@ -20,6 +20,9 @@
 #ifndef DIALUP_H
 #define DIALUP_H
 
+#include <QAtResult>
+#include <QSerialPort>
+
 #include <qtopianetworkinterface.h>
 #include <qtopianetwork.h>
 #include <qvaluespace.h>
@@ -65,10 +68,11 @@ protected:
     bool isActive();
 
 private:
-    enum { Initialize, Connect, Monitoring, Disappearing } state;
+    enum State { Uninitialized, Down, SettingApn, EnablingWan, GettingWanParams, Up, DisablingWan } state;
 
-private:
     QtopiaNetworkConfiguration *configIface;
+    QSerialPort *port;
+    
     Status ifaceStatus;
 
 #ifndef QTOPIA_NO_FSO
@@ -77,8 +81,15 @@ private:
     bool fsoEnabled;
 #endif
 
-private:
     QValueSpaceObject* netSpace;
+    
+    void setState(State newState);
+    
+private slots:
+    void atFinished(bool,QAtResult);
+    void wanCallNotification(QString);
+    void wanDataNotification(QString);
+    
 };
 
 #endif
