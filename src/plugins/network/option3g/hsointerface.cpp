@@ -219,6 +219,19 @@ void HsoInterface::closePort()
     port = NULL;
 }
 
+static bool writeResolvConf(QString dns1, QString dns2)
+{
+    QFile resolvConf("/etc/resolv.conf");
+    if(!resolvConf.open(QIODevice::ReadWrite | QIODevice::Truncate)) {
+        qWarning() << "hso: failed to open /etc/resolv.conf";
+        return false;
+    }
+    
+    resolvConf.write(QString("nameserver %1\nnameserver %2\n").arg(dns1).arg(dns2).toLatin1());
+    resolvConf.close();
+    return true;
+}
+
 bool HsoInterface::start( const QVariant /*options*/ )
 {
     qDebug() << "================ HsoInterface::start()";
@@ -229,7 +242,9 @@ bool HsoInterface::start( const QVariant /*options*/ )
     QAtChat *chat = port->atchat();
     chat->registerNotificationType("_OWANCALL:", this, SLOT(wanCallNotification(QString)));
     chat->registerNotificationType("_OWANDATA:", this, SLOT(wanDataNotification(QString)));
-    chat->chat(QString("AT+CGDCONT=1,\"IP\",\"%1\"").arg("internet"), this, SLOT(atFinished(bool,QAtResult)));
+    
+    QString apn = configIface->property("Serial/APN").toString();
+    chat->chat(QString("AT+CGDCONT=1,\"IP\",\"%1\"").arg(apn), this, SLOT(atFinished(bool,QAtResult)));
     
     setState(SettingApn);
     return true;
@@ -272,6 +287,7 @@ void HsoInterface::atFinished(bool ok, QAtResult result)
         case DisablingWan:
             closePort();
             QProcess::execute("ifconfig", QStringList() << "hso0" << "down");
+            writeResolvConf("8.8.8.8", "208.67.222.222");
             setState(HsoInterface::Down);
             break;
         default:
@@ -312,19 +328,8 @@ void HsoInterface::wanDataNotification(QString result)
     }
 
     qLog(Network) << "hso wan call ip=" << ip << ", dns1=" << dns1 << ", dns2=" << dns2;
-    
-    QFile resolvConf("/etc/resolv.conf");
-    if(!resolvConf.open(QIODevice::ReadWrite)) {
-        qWarning() << "hso: failed to open /etc/resolv.conf";
-        setState(HsoInterface::Down);
-        return;
-    }
-    
-    resolvConf.write("nameserver ");
-    resolvConf.write(dns1.toLatin1());
-    resolvConf.write("\nnameserver ");
-    resolvConf.write(dns2.toLatin1());
-    resolvConf.close();
+ 
+    writeResolvConf(dns1, dns2);
     
     int ret = QProcess::execute("ifconfig", QStringList() << "hso0" << ip << "up");
     if(ret) {
@@ -333,8 +338,7 @@ void HsoInterface::wanDataNotification(QString result)
         return;
     }
     
-    /*
-    ret = QProcess::execute("route", QStringList() << "add" << "default" << "dev" << "hso0");
+    /*ret = QProcess::execute("route", QStringList() << "add" << "default" << "dev" << "hso0");
     if(ret) {
         qWarning() << "hso: route failed with " << ret;
         setState(Down);
