@@ -24,7 +24,6 @@
 #include <QSettings>
 #include <QDebug>
 
-#include <QProcess>
 #include <QTimer>
 #include <QWhereabouts>
 #include <QNmeaWhereabouts>
@@ -43,6 +42,12 @@ NeoGpsPlugin::NeoGpsPlugin(QObject * parent)
 
 NeoGpsPlugin::~NeoGpsPlugin()
 {
+    if(reader) {
+        reader->terminate();
+        if(!reader->waitForFinished(1000))
+            reader->kill();
+    }
+    
     system("/opt/qtmoko/bin/gps-poweroff.sh");
 }
 
@@ -50,7 +55,7 @@ QWhereabouts *NeoGpsPlugin::create(const QString &)
 {
     qLog(Hardware) << __PRETTY_FUNCTION__;
 
-    QProcess *reader = new QProcess(this);
+    reader = new QProcess(this);
     reader->start("cat", QStringList() << "/dev/ttyO1", QIODevice::ReadWrite);
 
     if (!reader->waitForStarted()) {
@@ -59,6 +64,7 @@ QWhereabouts *NeoGpsPlugin::create(const QString &)
                              tr("Cannot open GPS device at /dev/ttyO1"),
                              QMessageBox::Ok, QMessageBox::Ok);
         delete reader;
+        reader = 0;
         return 0;
     }
 

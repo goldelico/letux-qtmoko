@@ -23,6 +23,7 @@
 
 #include <QSocketNotifier>
 #include <QWhereaboutsPlugin>
+#include <QProcess>
 
 class QWhereabouts;
 
@@ -34,6 +35,9 @@ public:
     ~NeoGpsPlugin();
 
     virtual QWhereabouts *create(const QString & source);
+
+private:
+    QProcess *reader;
 };
 
 #endif
