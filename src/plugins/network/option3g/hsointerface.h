@@ -47,6 +47,8 @@ public:
     HsoInterface( const QString& confFile );
     virtual ~HsoInterface();
 
+    enum State { Uninitialized, Down, SettingApn, EnablingWan, GettingWanParams, Up, DisablingWan } state;
+    
     virtual Status status();
 
     virtual void initialize();
@@ -68,12 +70,8 @@ protected:
     bool isActive();
 
 private:
-    enum State { Uninitialized, Down, SettingApn, EnablingWan, GettingWanParams, Up, DisablingWan } state;
-
     QtopiaNetworkConfiguration *configIface;
     QSerialPort *port;
-    
-    Status ifaceStatus;
 
 #ifndef QTOPIA_NO_FSO
     QFsoGSMDevice gsmDev;
@@ -82,7 +80,10 @@ private:
 #endif
 
     QValueSpaceObject* netSpace;
+    int trigger;
     
+    bool openPort();
+    void closePort();
     void setState(State newState);
     
 private slots:

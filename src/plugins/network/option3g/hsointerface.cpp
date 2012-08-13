@@ -92,13 +92,13 @@ HsoInterface::HsoInterface( const QString& confFile)
     : state( Uninitialized )
     , configIface(0)
     , port(0)
-    , ifaceStatus(Unknown)
 #ifndef QTOPIA_NO_FSO
     , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
     , fsoEnabled(false)
 #endif    
     , netSpace( 0 )
+    , trigger( 0 )
 {
     qLog(Network) << "Creating HsoInterface instance";
     configIface = new DialupConfig( confFile );
@@ -108,6 +108,7 @@ HsoInterface::HsoInterface( const QString& confFile)
 #endif
     
     qDebug() << "======= HsoInterface ctor";
+    setState(Uninitialized);
 }
 
 HsoInterface::~HsoInterface()
@@ -118,46 +119,46 @@ HsoInterface::~HsoInterface()
     configIface = 0;
 }
 
+static QtopiaNetworkInterface::Status stateToStatus(HsoInterface::State state)
+{
+    switch(state)
+    {
+        case HsoInterface::Down:
+            return QtopiaNetworkInterface::Down;
+        case HsoInterface::EnablingWan:
+        case HsoInterface::GettingWanParams:
+        case HsoInterface::SettingApn:
+        case HsoInterface::DisablingWan:
+            return QtopiaNetworkInterface::Pending;
+        case HsoInterface::Up:
+            return QtopiaNetworkInterface::Up;
+        default:
+            return QtopiaNetworkInterface::Unknown;
+    }
+}
+
 void HsoInterface::setState(State newState)
 {
     qDebug() << "setState " << state << "->" << newState;
+    
+    Status oldStatus = stateToStatus(state);
+    Status newStatus = stateToStatus(newState);
+    
     this->state = newState;
-    switch(state)
-    {
-        case SettingApn:
-            ifaceStatus = QtopiaNetworkInterface::Pending;
-            netSpace->setAttribute("State", ifaceStatus);
-            break;
-        default:
-            break;
+
+    if(netSpace && newStatus != oldStatus) {
+        qDebug() << "netSpace setState to " << newStatus;
+        netSpace->setAttribute("State", (int)(newStatus));
+        trigger = (++trigger)%256;
+        netSpace->setAttribute( "UpdateTrigger", trigger );
     }
 }
 
 QtopiaNetworkInterface::Status HsoInterface::status()
 {
-    qDebug() << "====== HsoInterface::status() ifaceStatus=" << ifaceStatus;
-    
-    if ( ifaceStatus == QtopiaNetworkInterface::Unknown) {
-        return ifaceStatus;
-    }
-
-    QtopiaNetworkInterface::Status status = QtopiaNetworkInterface::Unavailable;
-    if ( isAvailable() ) {
-        status = QtopiaNetworkInterface::Down;
-
-        if ( ifaceStatus == QtopiaNetworkInterface::Pending ||
-                ifaceStatus == QtopiaNetworkInterface::Demand )
-            // these states are updated by timerEvent
-            status = ifaceStatus;
-        else if ( isActive() )
-            status = QtopiaNetworkInterface::Up;
-    }
-    
-    qDebug() << "====== HsoInterface::status()=" <<  status;
-
-    ifaceStatus = status;
-    netSpace->setAttribute( "State", ifaceStatus );
-    return ifaceStatus;
+    Status res = stateToStatus(state);
+    qDebug() << "====== HsoInterface::status()=" << res;
+    return res;
 }
 
 void HsoInterface::initialize()
@@ -175,29 +176,12 @@ void HsoInterface::initialize()
     }
 
     qDebug() << "HsoInterface::initialize()";
-    if ( isAvailable() ) {
-        qDebug() << "1";
-        if ( isActive() )
-            ifaceStatus = QtopiaNetworkInterface::Up;
-        else
-            ifaceStatus = QtopiaNetworkInterface::Down;
-    } else {
-        ifaceStatus = QtopiaNetworkInterface::Unavailable;
-    }
-    
-    qDebug() << "ifaceStatus=" << ifaceStatus;
-
-    netSpace->setAttribute( "State", ifaceStatus );
+    setState(isActive() ? HsoInterface::Up : HsoInterface::Down);
 }
 
 void HsoInterface::cleanup()
 {
-    if ( ifaceStatus != QtopiaNetworkInterface::Unknown ) {
-        ifaceStatus = QtopiaNetworkInterface::Unknown;
-        netSpace->setAttribute( "State", ifaceStatus );
-    } else {
-        return;
-    }
+    setState(HsoInterface::Uninitialized);
 }
 
 bool HsoInterface::setDefaultGateway()
@@ -213,17 +197,34 @@ bool HsoInterface::setDefaultGateway()
     return true;
 }
 
+bool HsoInterface::openPort()
+{
+    if(port)
+        return true;
+    
+    port = new QSerialPort("/dev/ttyHS_Control", 115200);
+    if(port->open(QIODevice::ReadWrite))
+        return true;
+    
+    qWarning() << "Failed to open /dev/ttyHS_Control: " << port->errorString();
+    delete port;
+    port = 0;
+    return false;
+}
+
+void HsoInterface::closePort()
+{
+    port->close();
+    port->deleteLater();
+    port = NULL;
+}
+
 bool HsoInterface::start( const QVariant /*options*/ )
 {
     qDebug() << "================ HsoInterface::start()";
-    
-    port = new QSerialPort("/dev/ttyHS_Control", 115200);
-    if(!port->open(QIODevice::ReadWrite)) {
-        qWarning() << "Failed to open /dev/ttyHS_Control: " << port->errorString();
-        delete port;
-        port = 0;
+
+    if(!openPort())
         return false;
-    }
     
     QAtChat *chat = port->atchat();
     chat->registerNotificationType("_OWANCALL:", this, SLOT(wanCallNotification(QString)));
@@ -232,16 +233,21 @@ bool HsoInterface::start( const QVariant /*options*/ )
     
     setState(SettingApn);
     return true;
-
-    /*bool ok = true;
-
-    ifaceStatus = ok ?
-        QtopiaNetworkInterface::Up : QtopiaNetworkInterface::Down;
-    
-    netSpace->setAttribute("State", ifaceStatus);
-    
-    return true;*/
 }
+
+bool HsoInterface::stop()
+{
+    qDebug() << "================ HsoInterface::stop()";
+    if(!openPort())
+        return false;
+
+    QAtChat *chat = port->atchat();
+    chat->chat("AT_OWANCALL=1,0,1", this, SLOT(atFinished(bool,QAtResult)));
+    setState(HsoInterface::DisablingWan);
+    
+    return true;
+}
+
 
 void HsoInterface::atFinished(bool ok, QAtResult result)
 {
@@ -262,6 +268,11 @@ void HsoInterface::atFinished(bool ok, QAtResult result)
             setState(GettingWanParams);
             break;
         case GettingWanParams:
+            break;
+        case DisablingWan:
+            closePort();
+            QProcess::execute("ifconfig", QStringList() << "hso0" << "down");
+            setState(HsoInterface::Down);
             break;
         default:
             break;
@@ -292,13 +303,11 @@ void HsoInterface::wanDataNotification(QString result)
 {
     qDebug() << "========= wanDataNotification" << result;
 
-    port->close();
-    port->deleteLater();
-    port = NULL;
+    closePort();
     
     QString ip, dns1, dns2;
     if(!parseWanData(result, ip, dns1, dns2)) {
-        setState(Down);
+        setState(HsoInterface::Down);
         return;
     }
 
@@ -307,7 +316,7 @@ void HsoInterface::wanDataNotification(QString result)
     QFile resolvConf("/etc/resolv.conf");
     if(!resolvConf.open(QIODevice::ReadWrite)) {
         qWarning() << "hso: failed to open /etc/resolv.conf";
-        setState(Down);
+        setState(HsoInterface::Down);
         return;
     }
     
@@ -320,27 +329,19 @@ void HsoInterface::wanDataNotification(QString result)
     int ret = QProcess::execute("ifconfig", QStringList() << "hso0" << ip << "up");
     if(ret) {
         qWarning() << "hso: ifconfig failed with " << ret;
-        setState(Down);
+        setState(HsoInterface::Down);
         return;
     }
     
+    /*
     ret = QProcess::execute("route", QStringList() << "add" << "default" << "dev" << "hso0");
     if(ret) {
         qWarning() << "hso: route failed with " << ret;
         setState(Down);
         return;
-    }
+    }*/
     
-    setState(Up);
-}
-
-
-bool HsoInterface::stop()
-{
-    qDebug() << "================ HsoInterface::stop()";
-    ifaceStatus = QtopiaNetworkInterface::Down;
-    netSpace->setAttribute("State", ifaceStatus);
-    return true;
+    setState(HsoInterface::Up);
 }
 
 QString HsoInterface::device() const
