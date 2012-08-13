@@ -44,33 +44,34 @@ class HsoInterface : public QtopiaNetworkInterface
 {
     Q_OBJECT
 public:
-    HsoInterface( const QString& confFile );
-    virtual ~HsoInterface();
+    HsoInterface(const QString & confFile);
+     virtual ~ HsoInterface();
 
-    enum State { Uninitialized, Down, SettingApn, EnablingWan, GettingWanParams, Up, DisablingWan } state;
-    
+    enum State
+    { Uninitialized, Down, SettingApn, EnablingWan, GettingWanParams, Up,
+            DisablingWan } state;
+
     virtual Status status();
 
     virtual void initialize();
     virtual void cleanup();
-    virtual bool start( const QVariant options = QVariant() );
+    virtual bool start(const QVariant options = QVariant());
     virtual bool stop();
     virtual QString device() const;
     virtual bool setDefaultGateway();
 
     virtual QtopiaNetwork::Type type() const;
 
-    virtual QtopiaNetworkConfiguration * configuration();
+    virtual QtopiaNetworkConfiguration *configuration();
 
-    virtual void setProperties(
-            const QtopiaNetworkProperties& properties);
+    virtual void setProperties(const QtopiaNetworkProperties & properties);
 
 protected:
-    bool isAvailable();
+     bool isAvailable();
     bool isActive();
 
 private:
-    QtopiaNetworkConfiguration *configIface;
+     QtopiaNetworkConfiguration * configIface;
     QSerialPort *port;
 
 #ifndef QTOPIA_NO_FSO
@@ -79,18 +80,18 @@ private:
     bool fsoEnabled;
 #endif
 
-    QValueSpaceObject* netSpace;
+    QValueSpaceObject *netSpace;
     int trigger;
-    
+
     bool openPort();
     void closePort();
     void setState(State newState);
-    
+
 private slots:
-    void atFinished(bool,QAtResult);
+    void atFinished(bool, QAtResult);
     void wanCallNotification(QString);
     void wanDataNotification(QString);
-    
+
 };
 
 #endif

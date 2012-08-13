@@ -64,9 +64,6 @@
     echo nameserver 211.29.132.12 > /etc/resolv.conf
     echo nameserver 61.88.88.88 >> /etc/resolv.conf
 
-
-
-
 And you should be set to go.  If you want tethering via USB then add:
  on GTA04:
     echo 1 > /proc/sys/net/ipv4/ip_forward 
@@ -88,26 +85,27 @@ To terminate data call
   
 */
 
-HsoInterface::HsoInterface( const QString& confFile)
-    : state( Uninitialized )
-    , configIface(0)
-    , port(0)
+HsoInterface::HsoInterface(const QString & confFile)
+:state(Uninitialized)
+, configIface(0)
+, port(0)
 #ifndef QTOPIA_NO_FSO
-    , gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
-    , gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device", QDBusConnection::systemBus(), this)
-    , fsoEnabled(false)
-#endif    
-    , netSpace( 0 )
-    , trigger( 0 )
+, gsmDev("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
+         QDBusConnection::systemBus(), this)
+, gsmPdp("org.freesmartphone.ogsmd", "/org/freesmartphone/GSM/Device",
+         QDBusConnection::systemBus(), this)
+, fsoEnabled(false)
+#endif
+, netSpace(0)
+, trigger(0)
 {
     qLog(Network) << "Creating HsoInterface instance";
-    configIface = new DialupConfig( confFile );
+    configIface = new DialupConfig(confFile);
 
 #ifndef QTOPIA_NO_FSO
-    fsoEnabled = !strcmp("Fso", getenv( "QTOPIA_PHONE" ));      // are we using FSO as backend?
+    fsoEnabled = !strcmp("Fso", getenv("QTOPIA_PHONE"));    // are we using FSO as backend?
 #endif
-    
-    qDebug() << "======= HsoInterface ctor";
+
     setState(Uninitialized);
 }
 
@@ -121,62 +119,56 @@ HsoInterface::~HsoInterface()
 
 static QtopiaNetworkInterface::Status stateToStatus(HsoInterface::State state)
 {
-    switch(state)
-    {
-        case HsoInterface::Down:
-            return QtopiaNetworkInterface::Down;
-        case HsoInterface::EnablingWan:
-        case HsoInterface::GettingWanParams:
-        case HsoInterface::SettingApn:
-        case HsoInterface::DisablingWan:
-            return QtopiaNetworkInterface::Pending;
-        case HsoInterface::Up:
-            return QtopiaNetworkInterface::Up;
-        default:
-            return QtopiaNetworkInterface::Unknown;
+    switch (state) {
+    case HsoInterface::Down:
+        return QtopiaNetworkInterface::Down;
+    case HsoInterface::EnablingWan:
+    case HsoInterface::GettingWanParams:
+    case HsoInterface::SettingApn:
+    case HsoInterface::DisablingWan:
+        return QtopiaNetworkInterface::Pending;
+    case HsoInterface::Up:
+        return QtopiaNetworkInterface::Up;
+    default:
+        return QtopiaNetworkInterface::Unknown;
     }
 }
 
 void HsoInterface::setState(State newState)
 {
-    qDebug() << "setState " << state << "->" << newState;
-    
     Status oldStatus = stateToStatus(state);
     Status newStatus = stateToStatus(newState);
-    
+
     this->state = newState;
 
-    if(netSpace && newStatus != oldStatus) {
-        qDebug() << "netSpace setState to " << newStatus;
+    if (netSpace && newStatus != oldStatus) {
         netSpace->setAttribute("State", (int)(newStatus));
-        trigger = (++trigger)%256;
-        netSpace->setAttribute( "UpdateTrigger", trigger );
+        trigger = (++trigger) % 256;
+        netSpace->setAttribute("UpdateTrigger", trigger);
     }
 }
 
 QtopiaNetworkInterface::Status HsoInterface::status()
 {
     Status res = stateToStatus(state);
-    qDebug() << "====== HsoInterface::status()=" << res;
     return res;
 }
 
 void HsoInterface::initialize()
 {
-    if ( !netSpace ) {
-        const uint ident = qHash( configIface->configFile() );
+    if (!netSpace) {
+        const uint ident = qHash(configIface->configFile());
         QString path = QString("/Network/Interfaces/%1").arg(ident);
-        netSpace = new QValueSpaceObject( path, this );
-        netSpace->setAttribute( "Config", configIface->configFile() );
-        netSpace->setAttribute( "State", QtopiaNetworkInterface::Unknown );
-        netSpace->setAttribute( "Error", QtopiaNetworkInterface::NotInitialized );
-        netSpace->setAttribute( "ErrorString", tr("Interface hasn't been initialized yet.") );
-        netSpace->setAttribute( "NetDevice", QVariant() );
-        netSpace->setAttribute( "UpdateTrigger", 0 );
+        netSpace = new QValueSpaceObject(path, this);
+        netSpace->setAttribute("Config", configIface->configFile());
+        netSpace->setAttribute("State", QtopiaNetworkInterface::Unknown);
+        netSpace->setAttribute("Error", QtopiaNetworkInterface::NotInitialized);
+        netSpace->setAttribute("ErrorString",
+                               tr("Interface hasn't been initialized yet."));
+        netSpace->setAttribute("NetDevice", QVariant());
+        netSpace->setAttribute("UpdateTrigger", 0);
     }
-
-    qDebug() << "HsoInterface::initialize()";
-    setState(isActive() ? HsoInterface::Up : HsoInterface::Down);
+    setState(isActive()? HsoInterface::Up : HsoInterface::Down);
 }
 
 void HsoInterface::cleanup()
@@ -186,26 +178,18 @@ void HsoInterface::cleanup()
 
 bool HsoInterface::setDefaultGateway()
 {
-    QStringList params;
-    params << "install";
-    params << "dns";
-    if ( configIface->property("Serial/UsePeerDNS").toString() == "n" ) {
-        params << configIface->property("Properties/DNS_1").toString();
-        params << configIface->property("Properties/DNS_2").toString();
-    }
- 
     return true;
 }
 
 bool HsoInterface::openPort()
 {
-    if(port)
+    if (port)
         return true;
-    
+
     port = new QSerialPort("/dev/ttyHS_Control", 115200);
-    if(port->open(QIODevice::ReadWrite))
+    if (port->open(QIODevice::ReadWrite))
         return true;
-    
+
     qWarning() << "Failed to open /dev/ttyHS_Control: " << port->errorString();
     delete port;
     port = 0;
@@ -222,90 +206,91 @@ void HsoInterface::closePort()
 static bool writeResolvConf(QString dns1, QString dns2)
 {
     QFile resolvConf("/etc/resolv.conf");
-    if(!resolvConf.open(QIODevice::ReadWrite | QIODevice::Truncate)) {
+    if (!resolvConf.open(QIODevice::ReadWrite | QIODevice::Truncate)) {
         qWarning() << "hso: failed to open /etc/resolv.conf";
         return false;
     }
-    
-    resolvConf.write(QString("nameserver %1\nnameserver %2\n").arg(dns1).arg(dns2).toLatin1());
+
+    resolvConf.write(QString("nameserver %1\nnameserver %2\n").
+                     arg(dns1).arg(dns2).toLatin1());
     resolvConf.close();
     return true;
 }
 
-bool HsoInterface::start( const QVariant /*options*/ )
+bool HsoInterface::start(const QVariant /*options */ )
 {
-    qDebug() << "================ HsoInterface::start()";
-
-    if(!openPort())
+    if (!openPort())
         return false;
-    
+
     QAtChat *chat = port->atchat();
-    chat->registerNotificationType("_OWANCALL:", this, SLOT(wanCallNotification(QString)));
-    chat->registerNotificationType("_OWANDATA:", this, SLOT(wanDataNotification(QString)));
-    
+    chat->registerNotificationType("_OWANCALL:", this,
+                                   SLOT(wanCallNotification(QString)));
+    chat->registerNotificationType("_OWANDATA:", this,
+                                   SLOT(wanDataNotification(QString)));
+
     QString apn = configIface->property("Serial/APN").toString();
-    chat->chat(QString("AT+CGDCONT=1,\"IP\",\"%1\"").arg(apn), this, SLOT(atFinished(bool,QAtResult)));
-    
+    chat->chat(QString("AT+CGDCONT=1,\"IP\",\"%1\"").arg(apn), this,
+               SLOT(atFinished(bool, QAtResult)));
+
     setState(SettingApn);
     return true;
 }
 
 bool HsoInterface::stop()
 {
-    qDebug() << "================ HsoInterface::stop()";
-    if(!openPort())
+    if (!openPort())
         return false;
 
     QAtChat *chat = port->atchat();
-    chat->chat("AT_OWANCALL=1,0,1", this, SLOT(atFinished(bool,QAtResult)));
+    chat->chat("AT_OWANCALL=1,0,1", this, SLOT(atFinished(bool, QAtResult)));
     setState(HsoInterface::DisablingWan);
-    
+
     return true;
 }
 
-
 void HsoInterface::atFinished(bool ok, QAtResult result)
 {
-    if(!ok) {
-        netSpace->setAttribute( "Error", QtopiaNetworkInterface::UnknownError);
-        netSpace->setAttribute( "ErrorString", result.verboseResult());
+    if (!ok) {
+        netSpace->setAttribute("Error", QtopiaNetworkInterface::UnknownError);
+        netSpace->setAttribute("ErrorString", result.verboseResult());
         return;
     }
-    
-    switch(state)
-    {
-        case SettingApn:
-            port->atchat()->chat("AT_OWANCALL=1,1,1", this, SLOT(atFinished(bool,QAtResult)));
-            setState(EnablingWan);
-            break;
-        case EnablingWan:
-            port->atchat()->chat("AT_OWANDATA?", this, SLOT(atFinished(bool,QAtResult)));
-            setState(GettingWanParams);
-            break;
-        case GettingWanParams:
-            break;
-        case DisablingWan:
-            closePort();
-            QProcess::execute("ifconfig", QStringList() << "hso0" << "down");
-            writeResolvConf("8.8.8.8", "208.67.222.222");
-            setState(HsoInterface::Down);
-            break;
-        default:
-            break;
-    }        
+
+    switch (state) {
+    case SettingApn:
+        port->atchat()->chat("AT_OWANCALL=1,1,1", this,
+                             SLOT(atFinished(bool, QAtResult)));
+        setState(EnablingWan);
+        break;
+    case EnablingWan:
+        port->atchat()->chat("AT_OWANDATA?", this,
+                             SLOT(atFinished(bool, QAtResult)));
+        setState(GettingWanParams);
+        break;
+    case GettingWanParams:
+        break;
+    case DisablingWan:
+        closePort();
+        QProcess::execute("ifconfig", QStringList() << "hso0" << "down");
+        writeResolvConf("8.8.8.8", "208.67.222.222");
+        setState(HsoInterface::Down);
+        break;
+    default:
+        break;
+    }
 }
 
-void HsoInterface::wanCallNotification(QString result)
+void HsoInterface::wanCallNotification(QString /*result */ )
 {
-    qDebug() << "========= wanCallNotification" << result;
-
-    port->atchat()->chat("AT_OWANDATA?", this, SLOT(atFinished(bool,QAtResult)));
+    port->atchat()->chat("AT_OWANDATA?", this,
+                         SLOT(atFinished(bool, QAtResult)));
 }
 
-static bool parseWanData(QString result, QString & ip, QString & dns1, QString & dns2)
+static bool parseWanData(QString result, QString & ip, QString & dns1,
+                         QString & dns2)
 {
     QStringList parts = result.split(", ");
-    if(parts.count() < 5) {
+    if (parts.count() < 5) {
         qWarning() << "hso: unknown format of " << result;
         return false;
     }
@@ -317,34 +302,37 @@ static bool parseWanData(QString result, QString & ip, QString & dns1, QString &
 
 void HsoInterface::wanDataNotification(QString result)
 {
-    qDebug() << "========= wanDataNotification" << result;
-
     closePort();
-    
+
     QString ip, dns1, dns2;
-    if(!parseWanData(result, ip, dns1, dns2)) {
+    if (!parseWanData(result, ip, dns1, dns2)) {
         setState(HsoInterface::Down);
         return;
     }
 
-    qLog(Network) << "hso wan call ip=" << ip << ", dns1=" << dns1 << ", dns2=" << dns2;
- 
+    qLog(Network) << "hso wan call ip=" << ip << ", dns1=" << dns1 << ", dns2="
+        << dns2;
+
     writeResolvConf(dns1, dns2);
-    
-    int ret = QProcess::execute("ifconfig", QStringList() << "hso0" << ip << "up");
-    if(ret) {
+
+    int ret =
+        QProcess::execute("ifconfig", QStringList() << "hso0" << ip << "up");
+    if (ret) {
         qWarning() << "hso: ifconfig failed with " << ret;
         setState(HsoInterface::Down);
         return;
     }
-    
-    /*ret = QProcess::execute("route", QStringList() << "add" << "default" << "dev" << "hso0");
-    if(ret) {
+
+    ret =
+        QProcess::execute("route",
+                          QStringList() << "add" << "default" << "dev" <<
+                          "hso0");
+    if (ret) {
         qWarning() << "hso: route failed with " << ret;
         setState(Down);
         return;
-    }*/
-    
+    }
+
     setState(HsoInterface::Up);
 }
 
@@ -353,9 +341,9 @@ QString HsoInterface::device() const
     return "hso0";
 }
 
-QtopiaNetwork::Type HsoInterface::type() const
+QtopiaNetwork::Type HsoInterface::type()const
 {
-    return QtopiaNetwork::toType( configIface->configFile() );
+    return QtopiaNetwork::toType(configIface->configFile());
 }
 
 bool HsoInterface::isAvailable()
@@ -365,45 +353,40 @@ bool HsoInterface::isAvailable()
 
 bool HsoInterface::isActive()
 {
-    qDebug() << "=== HsoInterface::isActive()";
-    
     //TODO support for IPv4 only (PF_INET6)
-    int inetfd = socket( PF_INET, SOCK_DGRAM, 0 );
-    if ( inetfd == -1 )
+    int inetfd = socket(PF_INET, SOCK_DGRAM, 0);
+    if (inetfd == -1)
         return false;
 
     int flags = 0;
     struct ifreq ifreqst;
-    strcpy( ifreqst.ifr_name, "hso0" );
-    int ret = ioctl( inetfd, SIOCGIFFLAGS, &ifreqst );
-    if ( ret == -1 ) {
+    strcpy(ifreqst.ifr_name, "hso0");
+    int ret = ioctl(inetfd, SIOCGIFFLAGS, &ifreqst);
+    if (ret == -1) {
         int error = errno;
-        qLog(Network) << "HsoInterface: " << strerror( error );
-        ::close( inetfd );
+        qLog(Network) << "HsoInterface: " << strerror(error);
+        ::close(inetfd);
         return false;
     }
 
-
     flags = ifreqst.ifr_flags;
-    qDebug() << "================== flags=" << flags;
-    
-    if ( ( flags & IFF_UP ) == IFF_UP) {
+    if ((flags & IFF_UP) == IFF_UP) {
         qLog(Network) << "HsoInterface: hso0 is up and running";
-        ::close( inetfd );
+        ::close(inetfd);
         return true;
     }
 
-    qLog(Network) << "HsoInterface: device is offline" ;
-    ::close( inetfd );
+    qLog(Network) << "HsoInterface: device is offline";
+    ::close(inetfd);
     return false;
 }
 
-QtopiaNetworkConfiguration * HsoInterface::configuration()
+QtopiaNetworkConfiguration *HsoInterface::configuration()
 {
     return configIface;
 }
 
-void HsoInterface::setProperties( const QtopiaNetworkProperties& properties )
+void HsoInterface::setProperties(const QtopiaNetworkProperties & properties)
 {
     configIface->writeProperties(properties);
 }
