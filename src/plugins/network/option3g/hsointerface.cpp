@@ -84,7 +84,7 @@ And you should be set to go.  If you want tethering via USB then add:
 
 To terminate data call
 
-  AT_OWANDATA=1,0,1
+  AT_OWANCALL=1,0,1
   
 */
 
