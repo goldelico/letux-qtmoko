@@ -76,9 +76,10 @@ void QModemSupplementaryServices::cancelUnstructuredSession()
     \reimp
 */
 void QModemSupplementaryServices::sendUnstructuredData( const QString& data )
-{
+ {
+    service->primaryAtChat()->chat( "AT+CSCS=\"IRA\"" );
     service->primaryAtChat()->chat
-        ( "AT+CUSD=1,\"" + QAtUtils::quote( data ) + "\"",
+        ( "AT+CUSD=1,\"" + QAtUtils::quote( data ) + "\",15",
           this, SLOT(cusdDone(bool,QAtResult)) );
 }
 

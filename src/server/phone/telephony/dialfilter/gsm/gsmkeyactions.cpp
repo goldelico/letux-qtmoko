@@ -623,12 +623,16 @@ void GsmKeyActions::modifyDial( QDialOptions& options, bool& handledAlready )
     options.setNumber( number );
 
     // If the number starts with '*' or '#', and ends with a '#', then
-    // assume that this is a supplementary service request to be sent
-    // to the network.  TODO: USSD data?
+    // assume that this is a unstructured supplementary service request 
+    // to be sent to the network.
+    // actually, this is less than perfect, according to the spec, we should look for something like:
+    // 1, 2 or 3 digits from the set (*, #) followed by 1X(Y), where X=any number 0‑9,
+    // Y=any number 0‑9, then, optionally "* followed by any number of any characters", and concluding with # SEND
+    
     if ( ( number.startsWith( QChar('*') ) ||
            number.startsWith( QChar('#') ) ) &&
          number.endsWith( QChar('#') ) ) {
-        d->supp->sendSupplementaryServiceData( number );
+        d->supp->sendUnstructuredData( number );
         handledAlready = true;
         return;
     }
