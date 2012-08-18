@@ -51,7 +51,7 @@ int setLed(const char *device, const char *color,
     sprintf(filename, "/sys/class/leds/%s:%s:%s/%s", device, color, function, attr);    // e.g. /sys/class/leds/gta04:green:power/brightness
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "setLed failed" << f.errorString();
+        qWarning() << "setLed failed" << filename << f.errorString();
         return 0;
     }
     f.write(value);
@@ -130,7 +130,7 @@ const char *qLedFunctionCalls()
 
 const char *qLedColorPower()
 {
-    return "red";
+    return "orange";
 }
 
 const char *qLedColorCalls()
