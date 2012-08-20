@@ -20,6 +20,7 @@
 #ifndef NEOGPSPLUGIN_H
 #define NEOGPSPLUGIN_H
 
+#include <QProcess>
 #include <QWhereaboutsPlugin>
 
 class QWhereabouts;
@@ -32,6 +33,9 @@ public:
     ~NeoGpsPlugin();
 
     virtual QWhereabouts *create(const QString &source);
+
+private:
+    QProcess *reader;
 };
 
 #endif
