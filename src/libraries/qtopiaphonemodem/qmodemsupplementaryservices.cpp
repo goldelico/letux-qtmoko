@@ -79,7 +79,8 @@ void QModemSupplementaryServices::cancelUnstructuredSession()
 */
 void QModemSupplementaryServices::sendUnstructuredData( const QString& data )
  {
-    service->primaryAtChat()->chat( "AT+CSCS=\"IRA\"" );
+    // struppi: ,15" means "GSM encoding, Language unspecified, that's
+    // basically the only one that works at all for me
     service->primaryAtChat()->chat
         ( "AT+CUSD=1,\"" + QAtUtils::quote( data ) + "\",15",
           this, SLOT(cusdDone(bool,QAtResult)) );
