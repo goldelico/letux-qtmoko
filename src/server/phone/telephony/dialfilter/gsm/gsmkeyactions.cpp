@@ -28,6 +28,7 @@
 #include <QCallForwarding>
 #include <QPinManager>
 
+
 /*!
     \class GsmKeyActions
     \inpublicgroup QtCellModule
@@ -622,16 +623,11 @@ void GsmKeyActions::modifyDial( QDialOptions& options, bool& handledAlready )
     }
     options.setNumber( number );
 
-    // If the number starts with '*' or '#', and ends with a '#', then
-    // assume that this is a unstructured supplementary service request 
-    // to be sent to the network.
-    // actually, this is less than perfect, according to the spec, we should look for something like:
+    // Check if this is an unstructured supplementary service request to be sent to the network.
+    // According to the spec, we have to look for something like:
     // 1, 2 or 3 digits from the set (*, #) followed by 1X(Y), where X=any number 0‑9,
-    // Y=any number 0‑9, then, optionally "* followed by any number of any characters", and concluding with # SEND
-    
-    if ( ( number.startsWith( QChar('*') ) ||
-           number.startsWith( QChar('#') ) ) &&
-         number.endsWith( QChar('#') ) ) {
+    // Y=any number 0‑9, then, optionally "*" followed by any number of any characters, and concluding with "#".
+    if ( number.contains( QRegExp("^[*#]{1,3}1[0-9][0-9]?([*][^#]*)?#$") ) ) {
         d->supp->sendUnstructuredData( number );
         handledAlready = true;
         return;
