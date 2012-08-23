@@ -421,10 +421,10 @@ QAudioState(parent), m_isPhone(isPhone)
 {
     if (m_isPhone) {
         m_info.setDomain("Phone");
-        m_info.setProfile("PhoneHeadset");
+        m_info.setProfile("Headset");
     } else {
         m_info.setDomain("Media");
-        m_info.setProfile("MediaHeadset");
+        m_info.setProfile("Headset");
     }
 
     m_info.setDisplayName(tr("Headphones"));

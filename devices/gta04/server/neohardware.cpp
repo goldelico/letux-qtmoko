@@ -96,6 +96,7 @@ NeoHardware::NeoHardware()
 ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , batteryVso("/UI/Battery", this)
+    , vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
     , ueventSocket(this)
     , timer(this)
 {
@@ -114,6 +115,12 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     timer.start(30 * 1000);
     
     QTimer::singleShot(1, this, SLOT(updateStatus()));
+    
+    adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
+    audioMgr = new QtopiaIpcAdaptor("QPE/AudioStateManager", this);
+
+    QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
+                              this, SLOT(headphonesInserted(bool)));
 }
 
 NeoHardware::~NeoHardware()
@@ -174,4 +181,18 @@ void NeoHardware::shutdownRequested()
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
     QtopiaServerApplication::instance()->
         shutdown(QtopiaServerApplication::ShutdownSystem);
+}
+
+void NeoHardware::headphonesInserted(bool b)
+{
+    qLog(Hardware)<< __PRETTY_FUNCTION__ << b;
+    vsoPortableHandsfree.setAttribute("Present", b);
+    vsoPortableHandsfree.sync();
+    if (b) {
+        QByteArray mode("Headphone");
+        audioMgr->send("setProfile(QByteArray)", mode);
+    } else {
+        QByteArray mode("MediaSpeaker");
+        audioMgr->send("setProfile(QByteArray)", mode);
+    }
 }
