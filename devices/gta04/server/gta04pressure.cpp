@@ -77,13 +77,6 @@ timer(this)
 {
     qLog(Hardware) << "gta04 pressure";
 
-    QProcess::execute("sh",
-		      QStringList()
-		      <<
-		      "-c"
-		      <<
-		      "echo bmp085 0x77 > /sys/bus/i2c/devices/i2c-2/new_device");
-
     pressure_space = new QValueSpaceObject("/UI/Pressure", this);
 
     // Arrange to update pressure every 10 minutes.
