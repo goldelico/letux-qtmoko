@@ -72,7 +72,7 @@ namespace Qtopia
     QTOPIABASE_EXPORT QByteArray readFile(const char *path);
 
     // Convenient macros (shorter name), writeFile for writing string constant
-    #define qWriteFile(path, buf) Qtopia::writeFile(path, buf, sizeof(buf));
+    #define qWriteFile(path, buf) Qtopia::writeFile(path, buf, sizeof(buf) - 1);
     #define qReadFile(path) Qtopia::readFile(path);
     
     QTOPIABASE_EXPORT bool mousePreferred();
