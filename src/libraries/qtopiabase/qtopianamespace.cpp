@@ -1653,6 +1653,65 @@ void Qtopia::writeHWClock()
     }
 }
 
+/*!
+  Write n bytes from \a buf to file descriptor \a fd. On success returns
+  \a okRes on error return \a errRes. You can check errno in this case.
+  */
+int Qtopia::writeFd(int fd, const char *buf, int n, int okRes, int errRes)
+{
+    for (;;) {
+        int count = write(fd, buf, n);
+        if (count <= 0) {
+            if(errno == EAGAIN) {
+                usleep(1000);
+                continue;
+            }
+            return errRes;
+        }
+        buf += count;
+        n -= count;
+        if (n <= 0)
+            return okRes;
+    }
+}
+
+/*!
+  Writes \a n bytes from \a buf to file specified by \a path. In case of error
+  if \a warnOnError is true qWarning() is used to print the error message. On
+  success returns \a okRes on errror return \a errRes.
+  */
+int Qtopia::writeFile(const char * path, const char * buf, int n, bool warnOnError, int okRes, int errRes)
+{
+    int fd = open(path, O_WRONLY | O_CREAT | O_TRUNC, 00644);
+    if (fd >= 0 && writeFd(fd, buf, n)) {
+        close(fd);
+        return okRes;
+    }
+    if(warnOnError)
+        qWarning() << "writeFile failed " << path << ":" << strerror(errno);
+
+    if(fd >= 0)
+        close(fd);
+    
+    return errRes;
+}
+
+/*!
+  Reads contents of file specified by \a path.
+  */
+QByteArray Qtopia::readFile(const char *path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << "readFile failed" << path << ":" << f.errorString();
+        return QByteArray();
+    }
+    QByteArray content = f.readAll();
+    f.close();
+    return content;
+}
+
+
 #endif //QTOPIA_HOST
 
 #include "qtopianamespace_lock.cpp"
