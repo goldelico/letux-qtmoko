@@ -78,19 +78,6 @@ static int openNetlink()
     return fd;
 }
 
-static QByteArray readFile(const char *path)
-{
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        qLog(PowerManagement) << "file open failed" << path << ":" <<
-            f.errorString();
-        return QByteArray();
-    }
-    QByteArray content = f.readAll();
-    f.close();
-    return content;
-}
-
 NeoHardware::NeoHardware()
 :
 ac(QPowerSource::Wall, "PrimaryAC", this)
@@ -129,7 +116,7 @@ NeoHardware::~NeoHardware()
 
 void NeoHardware::updateStatus()
 {
-    QByteArray twlVbus = readFile("/sys/bus/platform/devices/twl4030_usb/vbus");
+    QByteArray twlVbus = qReadFile("/sys/bus/platform/devices/twl4030_usb/vbus");
     if (twlVbus.contains("on")) {
         ac.setAvailability(QPowerSource::Available);
     } else {
@@ -137,9 +124,9 @@ void NeoHardware::updateStatus()
     }
 
     QString chargingStr =
-        readFile("/sys/class/power_supply/bq27000-battery/status");
+        qReadFile("/sys/class/power_supply/bq27000-battery/status");
     QString capacityStr =
-        readFile("/sys/class/power_supply/bq27000-battery/capacity");
+        qReadFile("/sys/class/power_supply/bq27000-battery/capacity");
     int capacity = capacityStr.toInt();
 
     battery.setCharging(chargingStr.contains("Charging"));
@@ -150,13 +137,13 @@ void NeoHardware::updateStatus()
 
     if (chargingStr.contains("Discharging")) {
         QString time =
-            readFile
+            qReadFile
             ("/sys/class/power_supply/bq27000-battery/time_to_empty_now");
         battery.setTimeRemaining(time.toInt() / 60);
     }
     
     QString currentNowStr =
-        readFile("/sys/class/power_supply/bq27000-battery/current_now");
+        qReadFile("/sys/class/power_supply/bq27000-battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;
     batteryVso.setAttribute("current_now", QString::number(currentNow));
 }

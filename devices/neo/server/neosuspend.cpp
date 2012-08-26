@@ -58,19 +58,6 @@ NeoSuspend::NeoSuspend()
 {
 }
 
-static QByteArray readFile(const char *path)
-{
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        qLog(PowerManagement) << "file open failed" << path << ":" <<
-            f.errorString();
-        return QByteArray();
-    }
-    QByteArray content = f.readAll();
-    f.close();
-    return content;
-}
-
 bool NeoSuspend::canSuspend() const
 {
 /*    QPowerSource src( QLatin1String("DefaultBattery") );
@@ -106,7 +93,7 @@ bool NeoSuspend::suspend()
 bool NeoSuspend::wake()
 {
     QString currentNowStr =
-        readFile("/sys/class/power_supply/battery/current_now");
+        qReadFile("/sys/class/power_supply/battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;
     batteryVso.setAttribute("current_now_in_suspend", QString::number(currentNow));
     

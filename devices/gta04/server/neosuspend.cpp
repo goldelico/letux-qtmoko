@@ -98,34 +98,11 @@ bool NeoSuspend::suspend()
     return true;
 }
 
-static void writeFile(const char * path, const char * content)
-{
-    QFile f(path);
-    if(!f.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-        return;
-    }
-    f.write(content);
-    f.close();
-}
-
-static QByteArray readFile(const char *path)
-{
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        qLog(PowerManagement) << "file open failed" << path << ":" <<
-            f.errorString();
-        return QByteArray();
-    }
-    QByteArray content = f.readAll();
-    f.close();
-    return content;
-}
-
 bool NeoSuspend::wake()
 {
     // Read and update current_now. It should contain the current in suspend
     QString currentNowStr =
-        readFile("/sys/class/power_supply/bq27000-battery/current_now");
+        qReadFile("/sys/class/power_supply/bq27000-battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;
     batteryVso.setAttribute("current_now_in_suspend", QString::number(currentNow));
     
