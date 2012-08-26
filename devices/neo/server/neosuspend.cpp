@@ -47,6 +47,8 @@ public:
 private:
     QProcess resumeScript;
     QValueSpaceObject batteryVso;
+    QDateTime suspendTime;
+    int chargeNowBeforeSuspend;
 };
 
 QTOPIA_DEMAND_TASK(NeoSuspend, NeoSuspend);
@@ -73,25 +75,36 @@ bool NeoSuspend::canSuspend() const
     return ok;
 }
 
+static int readChargeNow()
+{
+    QString chargeNowStr =
+        qReadFile("/sys/class/power_supply/battery/charge_now");
+    return chargeNowStr.toInt();
+}
+
 bool NeoSuspend::suspend()
 {
     qLog(PowerManagement)<< __PRETTY_FUNCTION__;
     
     QProcess::execute("before-suspend.sh");
-    
-    QFile powerStateFile("/sys/power/state");
-    if( !powerStateFile.open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning()<<"File not opened";
-    } else {
-        QTextStream out(&powerStateFile);
-        out << "mem";
-        powerStateFile.close();
-    }
+    chargeNowBeforeSuspend = readChargeNow();
+    suspendTime = QDateTime::currentDateTime();
+    Qtopia::writeFile("/sys/power/state", "mem", 3, false);
     return true;
 }
 
 bool NeoSuspend::wake()
 {
+        // Average current in suspend computed from charge_now and suspend time
+    QDateTime now = QDateTime::currentDateTime();
+    int chargeNow = readChargeNow();
+    int secs = suspendTime.secsTo(now);
+    if(secs == 0)
+        secs++;
+    int avgCurrent = ((chargeNowBeforeSuspend - chargeNow) * 36) / (10 * secs);      // (first_number - last_number) * 3600 / (last_timestamp - first_timestamp), but we want it in mA so 1000x less
+    batteryVso.setAttribute("avg_current_in_suspend", QString::number(avgCurrent));
+
+    // Actual current_now
     QString currentNowStr =
         qReadFile("/sys/class/power_supply/battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;

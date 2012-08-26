@@ -50,6 +50,7 @@ private:
      QProcess resumeScript;
      QValueSpaceObject batteryVso;
      QDateTime suspendTime;
+     int chargeNowBeforeSuspend;
 };
 
 QTOPIA_DEMAND_TASK(NeoSuspend, NeoSuspend);
@@ -78,46 +79,41 @@ bool NeoSuspend::canSuspend() const
     return ok;
 }
 
+static int readChargeNow()
+{
+    QString chargeNowStr =
+        qReadFile("/sys/class/power_supply/bq27000-battery/charge_now");
+    return chargeNowStr.toInt();
+}
+
 bool NeoSuspend::suspend()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
 
     QProcess::execute("before-suspend.sh");
-
+    chargeNowBeforeSuspend = readChargeNow();
     suspendTime = QDateTime::currentDateTime();
-    
-    QFile powerStateFile("/sys/power/state");
-    if (!powerStateFile.
-        open(QIODevice::ReadWrite | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "File not opened";
-    } else {
-        QTextStream out(&powerStateFile);
-        out << "mem";
-        powerStateFile.close();
-    }
+    Qtopia::writeFile("/sys/power/state", "mem", 3, false);
     return true;
 }
 
 bool NeoSuspend::wake()
 {
+    // Average current in suspend computed from charge_now and suspend time
+    QDateTime now = QDateTime::currentDateTime();
+    int chargeNow = readChargeNow();
+    int secs = suspendTime.secsTo(now);
+    if(secs == 0)
+        secs++;
+    int avgCurrent = ((chargeNowBeforeSuspend - chargeNow) * 36) / (10 * secs);      // (first_number - last_number) * 3600 / (last_timestamp - first_timestamp), but we want it in mA so 1000x less
+    batteryVso.setAttribute("avg_current_in_suspend", QString::number(avgCurrent));
+    
     // Read and update current_now. It should contain the current in suspend
     QString currentNowStr =
         qReadFile("/sys/class/power_supply/bq27000-battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;
     batteryVso.setAttribute("current_now_in_suspend", QString::number(currentNow));
-    
-    // Check if resume was too fast. If yes, it might be GPS which wakes the
-    // device up and prevents suspend. As a workaround we try to turn the gps
-    // off. For more info see:
-    // http://lists.goldelico.com/pipermail/gta04-owner/2012-April/002184.html
-    QDateTime now = QDateTime::currentDateTime();
-    int secs = suspendTime.secsTo(now);
-    if(secs < 10) {
-        qLog(PowerManagement) << "Resume was too fast, trying to turn off gps";
-        writeFile("/sys/devices/virtual/gpio/gpio145/value", "0");
-        writeFile("/sys/devices/virtual/gpio/gpio145/value", "1");
-    }
-    
+
 #ifdef Q_WS_QWS
     QWSServer::instance()->refresh();
 #endif
