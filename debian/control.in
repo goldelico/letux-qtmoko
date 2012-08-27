@@ -11,7 +11,7 @@ Vcs-Browser: https://github.com/radekp/qtmoko
 Package: qtmoko-@QTMOKO_DEVICE@
 Provides: qtmoko
 Conflicts: qtmoko
-Architecture: armel
+Architecture: any
 Depends: ${misc:Depends}, ${shlibs:Depends}, bluez-alsa, ttf-dejavu, sqlite3, psmisc, alsa-utils, ntpdate
 Description: Smartphone environment based on QT Extended - @QTMOKO_DEVICE_SHORTDESC@ flavor
  QtMoko provides a fully integrated phone stack plus smartphone environment
