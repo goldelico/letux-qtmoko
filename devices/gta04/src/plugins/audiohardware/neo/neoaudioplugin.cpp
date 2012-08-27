@@ -21,6 +21,7 @@
 
 #include <QDir>
 #include <QDebug>
+#include <Qtopia>
 #include <QProcess>
 #include <QAudioState>
 #include <QAudioStateInfo>
@@ -111,21 +112,7 @@ static bool restoreDefaultState()
 static bool writeToFile(const char *filename, const char *val, int len)
 {
     qLog(AudioState) << "echo " << val << " > " << filename;
-
-    QFile f(filename);
-    if (!f.open(QIODevice::WriteOnly)) {
-        qWarning() << "failed to open " << filename << ", error is: " <<
-            f.errorString();
-        return false;
-    }
-    int written = f.write(val, len);
-    f.close();
-    if (written == len) {
-        return true;
-    }
-    qWarning() << "failed to write to " << filename << ", error is: " <<
-        f.errorString();
-    return false;
+    return (bool) Qtopia::writeFile(filename, val, len);
 }
 
 QProcess *voicePs = NULL;

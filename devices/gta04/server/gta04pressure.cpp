@@ -58,19 +58,6 @@
 
 QTOPIA_TASK(Gta04Pressure, Gta04Pressure);
 
-static QByteArray readFile(const char *path)
-{
-    QFile f(path);
-    if (!f.open(QIODevice::ReadOnly)) {
-        qLog(Hardware) << "file open failed" << path << ":" <<
-            f.errorString();
-        return QByteArray();
-    }
-    QByteArray content = f.readAll();
-    f.close();
-    return content;
-}
-
 Gta04Pressure::Gta04Pressure()
 :
 timer(this)
@@ -94,9 +81,9 @@ Gta04Pressure::~Gta04Pressure()
 
 void Gta04Pressure::updateStatus()
 {
-    QString pressureStr = readFile(
+    QString pressureStr = qReadFile(
         "/sys/bus/i2c/drivers/bmp085/2-0077/pressure0_input");
-    QString tempStr = readFile(
+    QString tempStr = qReadFile(
         "/sys/bus/i2c/drivers/bmp085/2-0077/temp0_input");
 
     pressureStr = pressureStr.trimmed();
