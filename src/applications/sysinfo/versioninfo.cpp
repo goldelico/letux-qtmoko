@@ -148,7 +148,7 @@ void VersionInfo::init()
     }
     QLabel *linuxVersion = new QLabel(this);
     linuxVersion->setWordWrap(true);
-    linuxVersion->setText(tr("Version:")+ ' ' + kernelVersionString);
+    linuxVersion->setText(kernelVersionString);
     vBoxLayout2->addWidget(linuxVersion);
 
     QLabel *linuxCompiledBy = new QLabel(this);
