@@ -175,6 +175,7 @@ void Alarm::triggerAlarm(const QDateTime &when, int type)
         QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         QString ts = QTimeString::localHM(theTime);
         QString msg = ts + "\n" + tr( "(Daily Alarm)" );
+        alarmt->setVibrateStartDelay(60);
         alarmt->setRepeat(20);
         alarmt->start();
         if ( !alarmDlg ) {

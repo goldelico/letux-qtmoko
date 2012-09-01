@@ -41,6 +41,7 @@ public:
     int noiseOff;
     int vibrateOn;
     int vibrateOff;
+    int vibrateStartDelay;
     bool active;
     int toRepeat;
     int atRepeat;
@@ -108,6 +109,11 @@ void RingControl::setVibrateTimers( int on, int off )
     d->vibrateOff = off;
 }
 
+void RingControl::setVibrateStartDelay( int secs )
+{
+    d->vibrateStartDelay = secs * 1000;
+}
+
 void RingControl::start()
 {
     d->active = true;
@@ -172,6 +178,12 @@ void RingControl::stopNoise()
 
 void RingControl::startVibrate()
 {
+    if(d->vibrateStartDelay > 0) {
+        startTimer( d->startVibrateTimer, d->vibrateStartDelay );
+        d->vibrateStartDelay = 0;
+        return;
+    }
+    
     QVibrateAccessory vib;
     vib.setVibrateNow( true);
     // we stop vibrating before we stop making noise
