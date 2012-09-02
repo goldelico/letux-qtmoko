@@ -1711,6 +1711,16 @@ QByteArray Qtopia::readFile(const char *path)
     return content;
 }
 
+/*!
+  Returns current real time clock time (RTC). This function is implemented by
+  reading /sys/class/rtc/rtc0/since_epoch file.
+  */
+QDateTime Qtopia::rtcNow()
+{
+    QByteArray secsStr = readFile("/sys/class/rtc/rtc0/since_epoch").trimmed();
+    uint secs = secsStr.toUInt();
+    return QDateTime::fromTime_t(secs);
+}
 
 #endif //QTOPIA_HOST
 
