@@ -20,17 +20,24 @@
 #include "alarmcontrol.h"
 #include "qabstractmessagebox.h"
 #include "qtopiaserverapplication.h"
+#include "systemsuspend.h"
 #include <QSettings>
 #include <QtopiaIpcEnvelope>
 #include <QtopiaServiceRequest>
 
-
+#include <stdio.h>
+#include <linux/rtc.h>
+#include <sys/ioctl.h>
+#include <sys/time.h>
 #include <sys/types.h>
-#include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
+#include <stdlib.h>
+#include <errno.h>
 
 struct timerEventItem {
     uint UTCtime;
+    uint RTCtime;
     QString channel, message;
     int data;
     bool operator==( const timerEventItem &right ) const
@@ -46,7 +53,11 @@ class TimerReceiverObject : public QObject
 {
     Q_OBJECT
 public:
-    TimerReceiverObject() : timerId(0) { }
+    TimerReceiverObject() : timerId(0)
+    {
+        QObject::connect(qtopiaTask<SystemSuspend>(), SIGNAL(systemWaking()),
+                         this, SLOT(systemWaking()));
+    }
     ~TimerReceiverObject() { }
 
     void resetTimer();
@@ -55,38 +66,57 @@ public:
     void killTimers() { if (timerId) killTimer(timerId); timerId = 0; }
 
 protected:
+    bool checkNearestEvent(int drift);
     void timerEvent( QTimerEvent *te );
 private:
-    QString atfilename;
     int timerId;
+private slots:
+    void systemWaking();
 };
 
 TimerReceiverObject *timerEventReceiver = NULL;
 QList<timerEventItem*> timerEventList;
 timerEventItem *nearestTimerEvent = NULL;
 
-static const char* atdir = "/var/spool/at/";
-
-static bool triggerAtd()
+static void setRtcWake(QDateTime rtcAlarmDate)
 {
-    QFile trigger(QString(atdir) + "trigger"); // No tr
-    if ( trigger.open(QIODevice::WriteOnly) ) {
+    struct rtc_wkalrm wake;
+    QDateTime utcDt = rtcAlarmDate.toTimeSpec(Qt::UTC);
+    QDate dt = utcDt.date();
+    QTime tm = utcDt.time();
+    int fd;
+    
+    qDebug() << "setRtcWake\n  rtcAlarmDate=" << rtcAlarmDate
+              << "\n  utc=" << utcDt << "\n  secs=" << utcDt.toTime_t();
+    
+    fd = open("/dev/rtc0", O_RDONLY);
+    if (fd < 0)
+        goto err;
+    
+    wake.time.tm_sec = tm.second();
+    wake.time.tm_min = tm.minute();
+    wake.time.tm_hour = tm.hour();
+    wake.time.tm_mday = dt.day();
+    wake.time.tm_mon = dt.month() - 1;
+    wake.time.tm_year = dt.year() - 1900;
+    wake.time.tm_wday = -1;
+    wake.time.tm_yday = -1;
+    wake.time.tm_isdst = -1;
+    
+    wake.enabled = 1;
 
-        const char* data = "\n";
-        int len = strlen(data);
-        int total_written = trigger.write(data,len);
-        if ( total_written != len ) {
-            QAbstractMessageBox::critical( 0, qApp->translate( "AlarmServer",  "Out of Space" ),
-                                   qApp->translate( "AlarmServer", "<qt>Unable to schedule alarm. Free some memory and try again.</qt>" ) );
-            trigger.close();
-            QFile::remove( trigger.fileName() );
-            return false;
-        }
-        return true;
-    }
-    return false;
+    if(ioctl(fd, RTC_WKALM_SET, &wake) < 0)
+        goto err;
+    else
+        goto ok;
+    
+err:
+    qWarning() << "setRtcWake failed:" << strerror(errno);
+    QAbstractMessageBox::critical(0, qApp->translate("AlarmServer", "Setting alarm failed"), strerror(errno));
+    
+ok:    
+    close(fd);
 }
-
 
 // set the timer to go off on the next event in the list
 void setNearestTimerEvent()
@@ -124,6 +154,7 @@ static void saveState()
         timerEventItem *item;
         foreach (item, timerEventList) {
             ds << (quint32)item->UTCtime;
+            ds << (quint32)item->RTCtime;
             ds << item->channel;
             ds << item->message;
             ds << item->data;
@@ -135,64 +166,32 @@ static void saveState()
     }
 }
 
-
 void TimerReceiverObject::deleteTimer()
 {
-    if ( !atfilename.isEmpty() ) {
-        unlink( atfilename.toAscii().constData() );
-        atfilename = QString();
-        triggerAtd();
-    }
+    setRtcWake(QDateTime::fromTime_t(0));
 }
 
 void TimerReceiverObject::resetTimer()
 {
     const int maxsecs = 2147000;
-    int total_written;
-    QDateTime nearest;
-    nearest.setTime_t(nearestTimerEvent->UTCtime);
+    
+    QDateTime nearest = QDateTime::fromTime_t(nearestTimerEvent->UTCtime);
+    QDateTime nearestRtc = QDateTime::fromTime_t(nearestTimerEvent->RTCtime);
+    
     QDateTime now = QDateTime::currentDateTime();
-    if ( nearest < now )
+    
+    if(nearest <= now)
         nearest = now;
+    else
+        setRtcWake(nearestRtc);         // setup RTC wake for future alarm
+
     int secs = now.secsTo(nearest);
     if ( secs > maxsecs ) {
-        // too far for millisecond timing
+        // too far for millisecond timing for startTimer()
         secs = maxsecs;
     }
 
-    // System timer (needed so that we wake from deep sleep),
-    // from the Epoch in seconds.
-    //
-    int at_secs = nearest.toTime_t();
-    QString fn = atdir + QString::number(at_secs) + "."
-                 + QString::number(::getpid());
-    if ( fn != atfilename ) {
-        QFile atfile(fn+".new");
-        if ( atfile.open(QIODevice::WriteOnly) ) {
-            // just wake up and delete the at file
-            QString cmd = "#!/bin/sh\nrm " + fn;
-            total_written = atfile.write(cmd.toLatin1(),cmd.length());
-            if ( total_written != int(cmd.length()) ) {
-                QAbstractMessageBox::critical( 0, tr("Out of Space"),
-                                       tr("<qt>Unable to schedule alarm. "
-                                          "Please free up space and try again</qt>"));
-                atfile.close();
-                QFile::remove( atfile.fileName() );
-                return;
-            }
-            atfile.close();
-            unlink( atfilename.toAscii().constData() );
-            QDir d; d.rename(fn+".new",fn);
-            chmod(fn.toLatin1(),0755);
-            atfilename = fn;
-            triggerAtd();
-        } else {
-	  qWarning("Cannot open atd file %s",fn.toLatin1().constData());
-        }
-    }
-    // Qt timers (does the actual alarm)
-    // from now in milliseconds
-    //
+    // Qt timers from now in milliseconds
     static bool startup = true;
     if (secs < 5 && startup)   // To delay the alarm when Qtopia first starts.
         secs = 5;
@@ -200,42 +199,63 @@ void TimerReceiverObject::resetTimer()
     startup = false;
 }
 
+bool TimerReceiverObject::checkNearestEvent(int drift)
+{
+    qDebug() << "TimerReceiverObject::checkNearestEvent nearestTimerEvent=" << nearestTimerEvent;
+    if(nearestTimerEvent == NULL)
+        return false;
+
+    uint now = QDateTime::currentDateTime().toTime_t() + drift;
+    uint rtcNow = Qtopia::rtcNow().toTime_t() + drift;
+    
+    qDebug() << "nearestTimerEvent->UTCtime=" << QDateTime::fromTime_t(nearestTimerEvent->UTCtime)
+             << "\n  now=" << QDateTime::currentDateTime()
+             << "\n  nearestTimerEvent->RTCtime=" << QDateTime::fromTime_t(nearestTimerEvent->RTCtime)
+             << "\n  rtcNow=" << Qtopia::rtcNow();
+
+    // Is the event in future?
+    if (nearestTimerEvent->UTCtime > now && nearestTimerEvent->RTCtime > rtcNow)
+        return false;
+
+    QDateTime time;
+    time.setTime_t(nearestTimerEvent->UTCtime);
+    QString channel = nearestTimerEvent->channel;
+    qDebug() << "channel=" << channel << ", message=" << nearestTimerEvent->message;
+    if ( !channel.contains( QChar('/') ) ) {
+        QtopiaServiceRequest e( channel, nearestTimerEvent->message );
+        e << time << nearestTimerEvent->data;
+        e.send();        
+    } else {
+        QtopiaIpcEnvelope e( channel, nearestTimerEvent->message );
+        e << time << nearestTimerEvent->data;
+    }
+
+    timerEventList.removeAll(nearestTimerEvent);
+    delete nearestTimerEvent;
+    nearestTimerEvent = 0;
+    setNearestTimerEvent();
+    saveState();
+    
+    return true;
+}
+
 void TimerReceiverObject::timerEvent( QTimerEvent * )
 {
-    bool needSave = false;
     if (timerId){
         killTimer(timerId);
         timerId = 0;
     }
-    if (nearestTimerEvent) {
-        if ( nearestTimerEvent->UTCtime
-             <= QDateTime::currentDateTime().toTime_t() ) {
-            QDateTime time;
-            time.setTime_t(nearestTimerEvent->UTCtime);
-            QString channel = nearestTimerEvent->channel;
-            if ( !channel.contains( QChar('/') ) ) {
-                QtopiaServiceRequest e( channel, nearestTimerEvent->message );
-                e << time << nearestTimerEvent->data;
-                e.send();
-
-            } else {
-                QtopiaIpcEnvelope e( channel, nearestTimerEvent->message );
-                e << time << nearestTimerEvent->data;
-            }
-
-            timerEventList.removeAll(nearestTimerEvent);
-            delete nearestTimerEvent;
-            nearestTimerEvent = 0;
-            needSave = true;
-        }
-        setNearestTimerEvent();
-    } else {
+    
+    if(!checkNearestEvent(0))
         resetTimer();
-    }
-    if ( needSave )
-        saveState();
 }
 
+void TimerReceiverObject::systemWaking()
+{
+    // Check for alarm and alow 60s drift when system wakes up, otherwise it we
+    // might suspend again and miss the alarm.
+    checkNearestEvent(60);
+}
 
 /*!
     \service AlarmServerService AlarmServer
@@ -268,9 +288,11 @@ void AlarmServerService::initAlarmServer()
         QDataStream ds( &savefile );
         while ( !ds.atEnd() ) {
             timerEventItem *newTimerEventItem = new timerEventItem;
-            quint32 UTCtime;
+            quint32 UTCtime, RTCtime;
             ds >> UTCtime;
+            ds >> RTCtime;
             newTimerEventItem->UTCtime = UTCtime;
+            newTimerEventItem->RTCtime = RTCtime;
             ds >> newTimerEventItem->channel;
             ds >> newTimerEventItem->message;
             ds >> newTimerEventItem->data;
@@ -325,8 +347,20 @@ void AlarmServerService::addAlarm
     if (!timerEventReceiver)
         timerEventReceiver = new TimerReceiverObject;
 
+    // Compute RTC time for the event - this handles case when rtc and system
+    // time are not in sync
+    QDateTime now = QDateTime::currentDateTime();
+    QDateTime rtcNow = Qtopia::rtcNow();
+    int secs = now.secsTo(when);
+    QDateTime rtcWhen = rtcNow.addSecs(secs);
+    qDebug() << "addAlarm when=" << when << "(" << when.toTime_t() << ")"
+             << "\n  now=" << now << "(" << now.toTime_t() << ")"
+             << "\n  rtcNow=" << rtcNow << "(" << rtcNow.toTime_t() << ")"
+             << "\n  rtcWhen=" << rtcWhen << "(" << rtcWhen.toTime_t() << ")";
+    
     timerEventItem *newTimerEventItem = new timerEventItem;
     newTimerEventItem->UTCtime = when.toTime_t();
+    newTimerEventItem->RTCtime = rtcWhen.toTime_t();
     newTimerEventItem->channel = channel;
     newTimerEventItem->message = message;
     newTimerEventItem->data = data;
