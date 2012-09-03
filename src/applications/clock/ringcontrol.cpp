@@ -45,6 +45,7 @@ public:
     bool active;
     int toRepeat;
     int atRepeat;
+    QString soundFile;
 };
 
 };
@@ -88,6 +89,7 @@ void RingControl::setSound( const QString &file )
     d->alertSound = new QSound( file, this );
     d->alertSoundControl = new QSoundControl( d->alertSound, this );
     d->alertSoundControl->setPriority( QSoundControl::RingTone );
+    d->soundFile = file;
 }
 
 void RingControl::enableVibrate( bool vibrate )
@@ -133,6 +135,7 @@ void RingControl::stop()
         stopTimer( d->startNoiseTimer );
         stopTimer( d->stopNoiseTimer );
         stopNoise();
+        setSound(d->soundFile);
     }
 
     stopTimer( d->startVibrateTimer );
