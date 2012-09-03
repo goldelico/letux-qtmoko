@@ -66,6 +66,7 @@ RingControl::RingControl( QObject *parent )
     d->noiseOff = 2000;
     d->vibrateOn = 500;
     d->vibrateOff = 2000;
+    d->vibrateStartDelay = 0;
     d->active = false;
     d->toRepeat = 0;
     d->atRepeat = 0;
@@ -182,21 +183,23 @@ void RingControl::stopNoise()
 void RingControl::startVibrate()
 {
     if(d->vibrateStartDelay > 0) {
-        startTimer( d->startVibrateTimer, d->vibrateStartDelay );
-        d->vibrateStartDelay = 0;
-        return;
+        d->vibrateStartDelay -= d->vibrateOn + d->vibrateOff;
     }
-    
-    QVibrateAccessory vib;
-    vib.setVibrateNow( true);
+    else {
+        QVibrateAccessory vib;
+        vib.setVibrateNow( true);
+    }
     // we stop vibrating before we stop making noise
     startTimer( d->stopVibrateTimer, d->vibrateOn );
 }
 
 void RingControl::stopVibrate()
 {
-    QVibrateAccessory vib;
-    vib.setVibrateNow( false);
+    if(d->vibrateStartDelay <= 0) {
+        QVibrateAccessory vib;
+        vib.setVibrateNow( false);
+    }
+
     // start vibrating in 2 seconds
     startTimer( d->startVibrateTimer, d->vibrateOff );
 }

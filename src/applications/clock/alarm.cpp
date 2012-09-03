@@ -183,7 +183,7 @@ void Alarm::triggerAlarm(const QDateTime &when, int type)
         QString ts = QTimeString::localHM(theTime);
         QString msg = ts + "\n" + tr( "(Daily Alarm)" );
         alarmt->setVibrateStartDelay(60);
-        alarmt->setRepeat(20);
+        alarmt->setRepeat(120);
         QTimer::singleShot(5000, alarmt, SLOT(start()));
         if ( !alarmDlg ) {
             alarmDlg = new AlarmDialog(snooze, this);
