@@ -171,8 +171,6 @@ void Alarm::triggerAlarm(const QDateTime &when, int type)
     if ( type == magic_daily ) {
         // Make sure the screen comes on
         QtopiaApplication::setPowerConstraint(QtopiaApplication::DisableLightOff);
-        // but goes off again in the right number of seconds
-        QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         QString ts = QTimeString::localHM(theTime);
         QString msg = ts + "\n" + tr( "(Daily Alarm)" );
         alarmt->setVibrateStartDelay(60);
@@ -222,6 +220,7 @@ void Alarm::triggerAlarm(const QDateTime &when, int type)
             alarmDlg->showMaximized();
             alarmDlg->exec();
             alarmt->stop();
+            QtopiaApplication::setPowerConstraint(QtopiaApplication::Enable);
         }
     }
 }
