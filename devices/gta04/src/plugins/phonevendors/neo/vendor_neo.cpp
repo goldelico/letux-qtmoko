@@ -248,13 +248,21 @@ void NeoModemService::handleInputEvent()
     
     // Read all input data from the file
     char buf[sizeof(input_event) * 32];
-    read(inputEvent.handle(), buf, sizeof(buf));
-
-    // Set fast blinking on missed calls led
-    qLedSetCall(qLedAttrBrightness(), qLedMaxBrightness());
-    qLedSetCall(qLedAttrTrigger(), "timer");
-    qLedSetCall(qLedAttrDelayOff(), "1024");
-    qLedSetCall(qLedAttrDelayOn(), "32");
+    struct input_event *ev = (struct input_event *) buf;
+    int n = read(inputEvent.handle(), buf, sizeof(buf));
+    
+    while(n >= (int)(sizeof(input_event))) {
+        if(ev->type == EV_KEY && ev->code == KEY_UNKNOWN) {
+            // Set fast blinking on missed calls led
+            qLedSetCall(qLedAttrBrightness(), qLedMaxBrightness());
+            qLedSetCall(qLedAttrTrigger(), "timer");
+            qLedSetCall(qLedAttrDelayOff(), "1024");
+            qLedSetCall(qLedAttrDelayOn(), "32");
+            break;
+        }
+        ev++;
+        n -= sizeof(input_event);
+    }
 }
 
 bool NeoModemService::supportsAtCced()
