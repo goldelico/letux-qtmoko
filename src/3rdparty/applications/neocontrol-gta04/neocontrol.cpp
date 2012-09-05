@@ -61,6 +61,33 @@ NeoControl::~NeoControl()
 
 }
 
+// Qtopia compat for Qt only PC version
+#ifndef QTOPIA
+namespace Qtopia
+{
+    QByteArray readFile(const char *path);
+    QDateTime rtcNow();
+}
+QByteArray Qtopia::readFile(const char *path)
+{
+    QFile f(path);
+    if (!f.open(QIODevice::ReadOnly)) {
+        qWarning() << "readFile failed" << path << ":" << f.errorString();
+        return QByteArray();
+    }
+    QByteArray content = f.readAll();
+    f.close();
+    return content;
+}
+
+QDateTime Qtopia::rtcNow()
+{
+    QByteArray secsStr = readFile("/sys/class/rtc/rtc0/since_epoch").trimmed();
+    uint secs = secsStr.toUInt();
+    return QDateTime::fromTime_t(secs);
+}
+#endif
+
 void NeoControl::backClicked()
 {
     switch(screen)
@@ -68,8 +95,11 @@ void NeoControl::backClicked()
     case ScreenInit:
         close();
         break;
-    case ScreenMixer:
+    case ScreenRtc:
         showScreen(ScreenInit);
+        break;
+    case ScreenMixer:
+        showScreen(ScreenRtc);
         break;
     case ScreenModem:
         showScreen(ScreenMixer);
@@ -88,6 +118,9 @@ void NeoControl::nextClicked()
     switch(screen)
     {
     case ScreenInit:
+        showScreen(ScreenRtc);
+        break;
+    case ScreenRtc:
         showScreen(ScreenMixer);
         break;
     case ScreenMixer:
@@ -143,7 +176,7 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     this->screen = scr;
 
     bQvga->setVisible(scr == ScreenDisplay);
-    label->setVisible(scr == ScreenInit || scr == ScreenMixer || scr == ScreenModem || scr == ScreenSysfs);
+    label->setVisible(scr == ScreenInit || scr == ScreenRtc || scr == ScreenMixer || scr == ScreenModem || scr == ScreenSysfs);
     bBack->setText(scr == ScreenInit ? tr("Quit") : tr("Back"));
     lineEdit->setVisible(false);
     chkMux->setVisible(scr == ScreenModem);
@@ -158,6 +191,9 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     {
     case ScreenInit:
         label->setText(tr("Neo hardware tool"));
+        break;
+    case ScreenRtc:
+        updateRtc();
         break;
     case ScreenMixer:
         updateMixer();
@@ -174,6 +210,34 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     default:
         break;
     }
+}
+
+void NeoControl::updateRtc()
+{
+    if(screen != ScreenRtc)
+        return;
+
+    QDateTime rtcNow = Qtopia::rtcNow();
+    QString rtcDate = Qtopia::readFile("/sys/class/rtc/rtc0/date").trimmed();
+    QString rtcTime = Qtopia::readFile("/sys/class/rtc/rtc0/time").trimmed();
+
+    QByteArray wakealarmStr = Qtopia::readFile("/sys/class/rtc/rtc0/wakealarm").trimmed();
+    QString alarmStr;
+    if(wakealarmStr.isEmpty()) {
+        alarmStr = tr("not set");
+    } else {
+        uint wakealarmSecs = wakealarmStr.toUInt();
+        QDateTime wakealarmDt = QDateTime::fromTime_t(wakealarmSecs);
+        alarmStr = wakealarmDt.toString();
+    }
+
+    label->setText(QString(tr("RTC (Real time clock)\n\nDate: %1\nTime: %2\nLocal: %3\nAlarm: %4"))
+                   .arg(rtcDate)
+                   .arg(rtcTime)
+                   .arg(rtcNow.toString())
+                   .arg(alarmStr));
+
+    QTimer::singleShot(1000, this, SLOT(updateRtc()));
 }
 
 int NeoControl::openAlsaMixer()
