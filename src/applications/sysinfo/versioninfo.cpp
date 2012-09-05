@@ -141,7 +141,7 @@ void VersionInfo::init()
         QTextStream t( &file );
         QString v;
         t >> v; t >> v; t >> v;
-        kernelVersionString = v.left( 20 );
+        kernelVersionString = v.left( 22 );
         t >> v;
         compiledByString = v;
         file.close();
