@@ -39,7 +39,7 @@
   		</rect>
 		<rect rect="45,209,135x25">
     				<text name="current_now" size="5" bold="yes" align="left,vcenter" color="#ffffff" outline="#000000" transient="yes" >
-      				expr:@/UI/Battery/current_now . "/". @/UI/Battery/current_now_in_suspend . "mA"
+      				expr:@/UI/Battery/current_now . "/". @/UI/Battery/avg_current_in_suspend . "mA"
     				</text>
 		</rect>
 		<rect rect="45,239,135x25">
