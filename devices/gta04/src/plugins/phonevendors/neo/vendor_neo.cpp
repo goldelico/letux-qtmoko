@@ -33,6 +33,7 @@
 #include <linux/input.h>
 #include <alsa/asoundlib.h>
 
+#include <qled.h>
 #include <qmodemcallvolume.h>
 #include <qmodemsiminfo.h>
 #include <qmodemcellbroadcast.h>
@@ -147,6 +148,8 @@ NeoModemService::NeoModemService
     (const QString & service, QSerialIODeviceMultiplexer * mux,
      QObject * parent)
 :  QModemService(service, mux, parent)
+    , inputEvent("/dev/input/incoming")
+    , inputNotifier(0)
 {
     qDebug() << "Gta04ModemService::constructor";
 
@@ -159,10 +162,25 @@ NeoModemService::NeoModemService
     chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     chat("AT_OPCMENABLE=1");    // enable the PCM interface for voice calls
     chat("AT_OPSYS=0,2");       // disable UMTS, use only GSM
+
+    // Modem input device - reports keys when modem generates interrupt (e.g.
+    // on incoming call or sms).
+    if(inputEvent.open(QIODevice::ReadOnly)) {
+        inputNotifier = new QSocketNotifier(inputEvent.handle(), QSocketNotifier::Read, this);
+        connect(inputNotifier, SIGNAL(activated(int)), this, SLOT(handleInputEvent()));
+    }
+    else {
+        qWarning() << "Gta04ModemService: failed to open " << inputEvent.fileName() << ": " << inputEvent.errorString();
+    }
 }
 
 NeoModemService::~NeoModemService()
 {
+    if(inputNotifier) {
+        delete inputNotifier;
+        inputNotifier = 0;
+    }
+    inputEvent.close();
 }
 
 void NeoModemService::initialize()
@@ -222,6 +240,21 @@ void NeoModemService::wake()
 
     //chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
+}
+
+void NeoModemService::handleInputEvent()
+{
+    qLog(Modem) << "NeoModemService::handleInputEvent()";
+    
+    // Read all input data from the file
+    char buf[sizeof(input_event) * 32];
+    read(inputEvent.handle(), buf, sizeof(buf));
+
+    // Set fast blinking on missed calls led
+    qLedSetCall(qLedAttrBrightness(), qLedMaxBrightness());
+    qLedSetCall(qLedAttrTrigger(), "timer");
+    qLedSetCall(qLedAttrDelayOff(), "1024");
+    qLedSetCall(qLedAttrDelayOn(), "32");
 }
 
 bool NeoModemService::supportsAtCced()
