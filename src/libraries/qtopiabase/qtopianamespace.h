@@ -70,9 +70,6 @@ namespace Qtopia
     QTOPIABASE_EXPORT int writeFd(int fd, const char *buf, int n, int okRes = 1, int errRes = 0);
     QTOPIABASE_EXPORT int writeFile(const char * path, const char * buf, int n, bool warnOnError = true, int okRes = 1, int errRes = 0);
     QTOPIABASE_EXPORT QByteArray readFile(const char *path);
-    
-    // Real time clock (RTC)
-    QTOPIABASE_EXPORT QDateTime rtcNow();
 
     // Convenient macros (shorter name), writeFile for writing string constant
     #define qWriteFile(path, buf) Qtopia::writeFile(path, buf, sizeof(buf) - 1);
@@ -118,6 +115,8 @@ namespace Qtopia
     QTOPIABASE_EXPORT void addAlarm ( QDateTime when, const QString& channel, const QString& msg, int data=0);
     QTOPIABASE_EXPORT void deleteAlarm (QDateTime when, const QString& channel, const QString& msg, int data=0);
     QTOPIABASE_EXPORT void writeHWClock();
+    QTOPIABASE_EXPORT QDateTime rtcNow();
+
 
     /*
 
