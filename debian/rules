@@ -85,10 +85,6 @@ override_dh_auto_clean:
 	rm -fr ../build-gta04
 	rm -fr ../build-neo
 	rm -f sdk/LICENSE.QtopiaGPL
-	# debhelper files
-	rm -f debian/qtmoko-*.install
-	rm -f debian/qtmoko-*.links
-	rm -f debian/qtmoko-*.init
 
 override_dh_auto_install:
 	$(MAKE) -C ../build-neo install
