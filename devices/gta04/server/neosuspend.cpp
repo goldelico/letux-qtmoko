@@ -48,10 +48,12 @@ public:
     virtual bool wake();
 private:
      QProcess resumeScript;
-     QValueSpaceObject batteryVso;
-     QDateTime suspendTime;
-     int chargeNowBeforeSuspend;
+    QValueSpaceObject batteryVso;
+    QDateTime suspendTime;
+    int chargeNowBeforeSuspend;
 };
+
+QByteArray wakeupCount;
 
 QTOPIA_DEMAND_TASK(NeoSuspend, NeoSuspend);
 QTOPIA_TASK_PROVIDES(NeoSuspend, SystemSuspendHandler);
@@ -64,6 +66,8 @@ NeoSuspend::NeoSuspend()
 
 bool NeoSuspend::canSuspend() const
 {
+    wakeupCount = Qtopia::readFile("/sys/power/wakeup_count");
+
 /*    QPowerSource src( QLatin1String("DefaultBattery") );
     return !src.charging();
 */
@@ -72,8 +76,8 @@ bool NeoSuspend::canSuspend() const
 
     if (!ok) {
         qLog(PowerManagement) <<
-            "Cant suspend, resume script is running, state=" << resumeScript.
-            state();
+            "Cant suspend, resume script is running, state=" <<
+            resumeScript.state();
     }
 
     return ok;
@@ -93,6 +97,18 @@ bool NeoSuspend::suspend()
     QProcess::execute("before-suspend.sh");
     chargeNowBeforeSuspend = readChargeNow();
     suspendTime = QDateTime::currentDateTime();
+
+    // Check if wakeup sources havent changed. If yes, then the write will fail
+    // For more info see:
+    // http://lists.goldelico.com/pipermail/gta04-owner/2012-July/002587.html
+    if (Qtopia::
+        writeFile("/sys/power/wakeup_count", wakeupCount.constData(),
+                  wakeupCount.count(), false, 0, 1)) {
+        qLog(PowerManagement) <<
+            "suspend aborted because by kernel wakeup sources";
+        return false;
+    }
+
     Qtopia::writeFile("/sys/power/state", "mem", 3, false);
     return true;
 }
@@ -103,16 +119,18 @@ bool NeoSuspend::wake()
     QDateTime now = QDateTime::currentDateTime();
     int chargeNow = readChargeNow();
     int secs = suspendTime.secsTo(now);
-    if(secs == 0)
+    if (secs == 0)
         secs++;
-    int avgCurrent = ((chargeNowBeforeSuspend - chargeNow) * 36) / (10 * secs);      // (first_number - last_number) * 3600 / (last_timestamp - first_timestamp), but we want it in mA so 1000x less
-    batteryVso.setAttribute("avg_current_in_suspend", QString::number(avgCurrent));
-    
+    int avgCurrent = ((chargeNowBeforeSuspend - chargeNow) * 36) / (10 * secs); // (first_number - last_number) * 3600 / (last_timestamp - first_timestamp), but we want it in mA so 1000x less
+    batteryVso.setAttribute("avg_current_in_suspend",
+                            QString::number(avgCurrent));
+
     // Read and update current_now. It should contain the current in suspend
     QString currentNowStr =
         qReadFile("/sys/class/power_supply/bq27000-battery/current_now");
     int currentNow = currentNowStr.toInt() / 1000;
-    batteryVso.setAttribute("current_now_in_suspend", QString::number(currentNow));
+    batteryVso.setAttribute("current_now_in_suspend",
+                            QString::number(currentNow));
 
 #ifdef Q_WS_QWS
     QWSServer::instance()->refresh();

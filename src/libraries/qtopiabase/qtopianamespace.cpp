@@ -1618,39 +1618,23 @@ void Qtopia::deleteAlarm (QDateTime when, const QString& channel, const QString&
     e << when << channel << message << data;
 }
 
-static const char* atdir = "/var/spool/at/";
-
-static bool triggerAtd()
-{
-    QFile trigger(QString(atdir) + "trigger"); // No tr
-    if ( trigger.open(QIODevice::WriteOnly) ) {
-
-        const char* data = "W\n";
-// ### removed this define as there's no way of updating the hardware clock if our atdaemon doesn't do it.
-// Should probably revise this into a more general solution though.
-        //custom atd only writes HW Clock if we write a 'W'
-        int len = strlen(data);
-        int total_written = trigger.write(data,len);
-        if ( total_written != len ) {
-            QMessageBox::critical( 0, 0, qApp->translate( "AlarmServer",  "Out of Space" ),
-                                   qApp->translate( "AlarmServer", "<qt>Unable to schedule alarm. Free some memory and try again.</qt>" ) );
-            trigger.close();
-            QFile::remove( trigger.fileName() );
-            return false;
-        }
-        return true;
-    }
-    return false;
-}
 /*!
   Writes the system clock to the hardware clock.
 */
 void Qtopia::writeHWClock()
 {
-    if ( !triggerAtd() ) {
-        // atd not running? set it ourselves
-        system("/sbin/hwclock -w"); // ##### UTC?
-    }
+    system("/sbin/hwclock -w"); // ##### UTC?
+}
+
+/*!
+  Returns current real time clock time (RTC). This function is implemented by
+  reading /sys/class/rtc/rtc0/since_epoch file.
+  */
+QDateTime Qtopia::rtcNow()
+{
+    QByteArray secsStr = readFile("/sys/class/rtc/rtc0/since_epoch").trimmed();
+    uint secs = secsStr.toUInt();
+    return QDateTime::fromTime_t(secs);
 }
 
 /*!
@@ -1709,17 +1693,6 @@ QByteArray Qtopia::readFile(const char *path)
     QByteArray content = f.readAll();
     f.close();
     return content;
-}
-
-/*!
-  Returns current real time clock time (RTC). This function is implemented by
-  reading /sys/class/rtc/rtc0/since_epoch file.
-  */
-QDateTime Qtopia::rtcNow()
-{
-    QByteArray secsStr = readFile("/sys/class/rtc/rtc0/since_epoch").trimmed();
-    uint secs = secsStr.toUInt();
-    return QDateTime::fromTime_t(secs);
 }
 
 #endif //QTOPIA_HOST
