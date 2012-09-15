@@ -21,6 +21,7 @@
 
 #include <QDir>
 #include <QDebug>
+#include <Qtopia>
 #include <QProcess>
 #include <QAudioState>
 #include <QAudioStateInfo>
@@ -75,11 +76,21 @@ static bool alsactl(QStringList & args)
 {
     qLog(AudioState) << "alsactl " << args;
 
-    int ret = QProcess::execute("alsactl", args);
-    if (ret != 0) {
-        qWarning() << "alsactl returned " << ret;
+    for(int i = 0; i < 8; i++) {
+        
+        QProcess p;
+        p.start("alsactl", args);
+        p.waitForFinished(-1);
+        QString output = p.readAllStandardOutput();
+        output += p.readAllStandardError();
+
+        if(output.length() == 0)
+            return true;
+
+        qWarning() << "alsactl returned " << output << ", running kill-snd-card-users.sh";
+        QProcess::execute("kill-snd-card-users.sh");
     }
-    return ret == 0;
+    return false;
 }
 
 static bool restoreState(QString stateFile, bool gsm = false)
@@ -101,27 +112,18 @@ static bool restoreDefaultState()
 static bool writeToFile(const char *filename, const char *val, int len)
 {
     qLog(AudioState) << "echo " << val << " > " << filename;
-
-    QFile f(filename);
-    if (!f.open(QIODevice::WriteOnly)) {
-        qWarning() << "failed to open " << filename << ", error is: " <<
-            f.errorString();
-        return false;
-    }
-    int written = f.write(val, len);
-    f.close();
-    if (written == len) {
-        return true;
-    }
-    qWarning() << "failed to write to " << filename << ", error is: " <<
-        f.errorString();
-    return false;
+    return (bool) Qtopia::writeFile(filename, val, len);
 }
 
 QProcess *voicePs = NULL;
 
 static bool gsmVoiceStop()
 {
+    // Move back alsa config (used e.g. by blueooth a2dp sound)
+    if(QFile::exists("/home/root/.asoundrc.tmp")) {
+        QFile::rename("/home/root/.asoundrc.tmp", "/home/root/.asoundrc");
+    }
+
     if (voicePs == NULL) {
         return true;
     }
@@ -140,6 +142,11 @@ static bool gsmVoiceStart()
 {
     gsmVoiceStop();
 
+    // Move away alsa config (used e.g. by blueooth a2dp sound)
+    if(QFile::exists("/home/root/.asoundrc")) {
+        QFile::rename("/home/root/.asoundrc", "/home/root/.asoundrc.tmp");
+    }
+    
     voicePs = new QProcess();
 
     // Dump output always to stderr if audio logging is enabled
@@ -312,6 +319,68 @@ bool EarpieceAudioState::leave()
 }
 
 // ========================================================================= //
+class EarpieceHwAudioState : public QAudioState
+{
+    Q_OBJECT
+public:
+    EarpieceHwAudioState(bool isPhone, QObject * parent = 0);
+
+    QAudioStateInfo info() const;
+    QAudio::AudioCapabilities capabilities() const;
+
+    bool isAvailable() const;
+    bool enter(QAudio::AudioCapability capability);
+    bool leave();
+
+private:
+    QAudioStateInfo m_info;
+    bool m_isPhone;
+};
+
+EarpieceHwAudioState::EarpieceHwAudioState(bool isPhone, QObject * parent):
+QAudioState(parent), m_isPhone(isPhone)
+{
+    if (isPhone) {
+        m_info.setDomain("Phone");
+        m_info.setProfile("PhoneEarpiece");
+        m_info.setPriority(100);
+    } else {
+        m_info.setDomain("Media");
+        m_info.setProfile("MediaEarpiece");
+        m_info.setPriority(150);
+    }
+    m_info.setDisplayName(tr("Earpiece"));
+}
+
+QAudioStateInfo EarpieceHwAudioState::info() const
+{
+    return m_info;
+}
+
+QAudio::AudioCapabilities EarpieceHwAudioState::capabilities()const
+{
+    return QAudio::OutputOnly;
+}
+
+bool EarpieceHwAudioState::isAvailable() const
+{
+    return true;
+}
+
+bool EarpieceHwAudioState::enter(QAudio::AudioCapability)
+{
+    qLog(AudioState) << "EarpieceHwAudioState::enter()" << "isPhone" << m_isPhone;
+    return restoreState("earpiecehw", m_isPhone);
+}
+
+bool EarpieceHwAudioState::leave()
+{
+    qLog(AudioState) << "EarpieceHwAudioState::leave()";
+    return true;
+}
+
+
+// ========================================================================= //
 class HeadsetAudioState : public QAudioState
 {
     Q_OBJECT
@@ -339,10 +408,10 @@ QAudioState(parent), m_isPhone(isPhone)
 {
     if (m_isPhone) {
         m_info.setDomain("Phone");
-        m_info.setProfile("PhoneHeadset");
+        m_info.setProfile("Headset");
     } else {
         m_info.setDomain("Media");
-        m_info.setProfile("MediaHeadset");
+        m_info.setProfile("Headset");
     }
 
     m_info.setDisplayName(tr("Headphones"));
@@ -646,10 +715,16 @@ NeoAudioPlugin::NeoAudioPlugin(QObject * parent):
 QAudioStatePlugin(parent)
 {
     m_data = new NeoAudioPluginPrivate;
-
+    
+    // On A4+ models use HW sound routing, on A3 do SW routing
+    bool gta04a4 = QFile::exists("/sys/class/gpio/gpio186/value");
+    if(gta04a4)
+        m_data->m_states.push_back(new EarpieceHwAudioState(this));   // default for gsm calls
+    else
+        m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
+    
     m_data->m_states.push_back(new SpeakerAudioState(false, this)); // ringtones, mp3 etc..
     m_data->m_states.push_back(new SpeakerAudioState(true, this));  // loud gsm
-    m_data->m_states.push_back(new EarpieceAudioState(this));   // default for gsm calls
     m_data->m_states.push_back(new HeadsetAudioState(false, this)); // audio in headphones
     m_data->m_states.push_back(new HeadsetAudioState(true, this));  // gsm in headphones
     m_data->m_states.push_back(new RecordingAudioState(this));  // for recording e.g. in voice notes app

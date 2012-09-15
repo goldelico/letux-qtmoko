@@ -152,8 +152,7 @@ void MyPty::error()
 }
 
 int MyPty::start() {
-    QStringList lis;
-    int r =run(m_cmd.toLatin1(), lis, 0, 0);
+    int r =run(m_cmd.toLatin1(), args);
     r = r;
     _running = true;
 
@@ -162,7 +161,7 @@ int MyPty::start() {
 /*!
     start the client program.
 */
-int MyPty::run(const char* cmd, QStringList &, const char*, int)
+int MyPty::run(QString cmd, QStringList args)
 {
     // This is code from the Qt DumbTerminal example
     m_cpid = fork();
@@ -197,34 +196,31 @@ int MyPty::run(const char* cmd, QStringList &, const char*, int)
 	    char msg[] = "WARNING: You are running this shell as root!\n";
 	    write(ttyfd, msg, sizeof(msg));
 	}
-        if(QApplication::argc() <= 1)
-        {
-            execl(cmd, cmd, 0);
+    
+    QByteArray cmdBytes = cmd.toLatin1();
+    QByteArray arg0b;
+    QByteArray arg123;
+    const char *arg0 = NULL;
+    
+    for(int i = 0; i < args.count(); i++) {
+        QByteArray arg = args.at(i).toLatin1();
+        if(i == 0) {
+            arg0b = arg;
+            arg0 = arg0b.constData();
+            continue;
         }
-        else
-        {
-            char *arg = QApplication::argv()[1];
-            if(strstr(arg, "-c"))
-            {
-                QByteArray args;
-                for(int i = 2; i < QApplication::argc(); i++)       // e.g. qterminal apt-get update
-                {
-                    if(i > 2)
-                    {
-                        args += " ";
-                    }
-                    args += QApplication::argv()[i];
-                }
-                qDebug() << "Running " << cmd << "-c" << args;
-                execl(cmd, cmd, "-c", args.constData(), 0);
-            }
-            else
-            {
-                qDebug() << "Running " << cmd << " " << arg;
-                execl(cmd, cmd, arg, 0);     // e.g. qterminal /path/to/my/script.sh
-            }
-        }
+        else if(i > 1)
+            arg123.append(" ");
+        arg123.append(arg);
+    }
 
+    if((cmd != "/bin/sh" && cmd != "/bin/bash") || args.count() > 0)
+        printf("Running %s %s %s\n", cmdBytes.constData(),
+               arg0 ? arg0 : "",
+               arg123.isEmpty() ? "" : arg123.constData());
+
+    execl(cmdBytes.constData(), cmdBytes.constData(), arg0, arg123.constData(), 0);
+    
 	donePty();
 	exit(-1);
     }
@@ -277,9 +273,11 @@ int MyPty::openPty()
 /*!
     Create an instance.
 */
-MyPty::MyPty(const Profile& prof) : m_cpid(0)
+MyPty::MyPty(const Profile& prof, QString cmd, QStringList args)
+    : m_cpid(0)
+    , m_cmd(cmd)
+    , args(args)
 {
-
     int term = prof.readNumEntry("Terminal", Profile::VT100 );
     _running = false;
     switch( term ) {
@@ -331,8 +329,9 @@ void MyPty::close() {
 }
 void MyPty::reload( const Profile& prof) {
     m_env.clear();
-    m_cmd = prof.readEntry("Command", "/bin/bash");
-
+    if(m_cmd == NULL || m_cmd.isEmpty())
+        m_cmd = prof.readEntry("Command", "/bin/bash");
+    
     /*
      * Lets check if m_cmd actually
      * exists....

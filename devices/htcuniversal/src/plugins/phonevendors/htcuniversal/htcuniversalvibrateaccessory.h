@@ -33,8 +33,8 @@ class  HtcuniversalVibrateAccessory : public QVibrateAccessoryProvider
   ~HtcuniversalVibrateAccessory();
 
   public slots:
-    void setVibrateNow(const bool value);
-  void setVibrateOnRing(const bool value);
+    void setVibrateNow(const bool value, int timeoutMs = 0, int strength = 0xffff);
+    void setVibrateOnRing(const bool value);
 };
 
 #endif /* HTCUNIVERSALVIBRATEACCESSORY_H */

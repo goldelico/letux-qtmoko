@@ -1,6 +1,71 @@
 Cross compling from sources
 ===========================
 
+  * You will need Debian wheezy on your PC
+  
+  * Install required packages on your host PC:
+  
+apt-get build-dep libqt4-dev
+apt-get install libqt4-dev libv4l-dev libdbus-1-dev libqt4-sql-sqlite
+  
+  * We will use emdebian toolchain, check this page:
+  
+        http://wiki.debian.org/EmdebianToolchain
+        
+  * Add emdebian apt repos and also sqeeze repos for older packages:
+  
+apt-get install emdebian-archive-keyring
+echo "deb http://ftp.cz.debian.org/debian/ squeeze main contrib non-free" >> /etc/apt/sources.list
+echo "deb http://www.emdebian.org/debian wheezy main" >> /etc/apt/sources.list
+apt-get update
+
+  * Install armel cross compiler:
+  
+apt-get install g++-4.4-arm-linux-gnueabi
+
+  * Install xapt and libraries qtmoko depens on:
+  
+apt-get install xapt
+xapt -a armel -m libqt4-dev libts-dev libasound2-dev libspeexdsp-dev libssl-dev libxtst-dev libbluetooth-dev libdbus-1-dev
+
+  * Make link for dbus.h:
+  
+cd /usr/arm-linux-gnueabi/include
+ln -s dbus-1.0/dbus dbus
+
+  * Clone current git tree:
+
+git clone git://github.com/radekp/qtmoko.git
+
+  * Initialize and update submodules
+
+cd qtmoko
+git submodule init
+git submodule update
+
+  * Create build directory (you cant build from the git directory)
+
+mkdir ../build
+cd ../build
+
+  * Build it:
+
+../qtmoko/configure -system-qt -device neo
+make
+make install
+
+  * Upload the result to your device (you must have phone and usb network up)
+
+../qtmoko/devices/neo/scripts/update_qtmoko
+
+  * If you want translations to various languages you need to checkout
+    the translations git branch:
+
+git checkout origin/translations -b translations
+
+Old way
+=======
+
   * Make sure you have installed on your host PC: libqt4-dev, libv4l-dev
 
   * You can also do fetch all build dependecies for qt:
@@ -37,7 +102,7 @@ cd ../build
 
   * Build it:
 
-../qtmoko/configure -device neo
+../qtmoko/configure -force-build-qt -device neo
 make
 make install
 

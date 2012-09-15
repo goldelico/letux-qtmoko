@@ -17,36 +17,44 @@
 **
 ****************************************************************************/
 
+#include <fcntl.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 #include <custom.h>
+#include <sys/stat.h> 
 #include <qtopianamespace.h>
 #include <QtopiaServiceRequest>
 #include <QtopiaIpcEnvelope>
-
 #include <qwindowsystem_qws.h>
 #include <QValueSpaceItem>
 #include <QValueSpaceObject>
-#include <stdio.h>
-#include <stdlib.h>
-#include <QProcess>
-#include <QFile>
-#include <QFileInfo>
-
-#include <QTextStream>
 #include <QDebug>
 
 QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
 {
-    return 101;
+    return 100;
 }
+
+// Write string count bytes long to file
+static int write_file(const char *path, const char *value, size_t count)
+{
+    int fd = open(path, O_WRONLY);
+    if (fd < 0)
+        return - 1;
+    int res = write(fd, value, count);
+    close(fd);
+    return res;
+}
+
 
 QTOPIABASE_EXPORT void qpe_setBrightness(int b)
 {
-    QFile f("/sys/class/backlight/pwm-backlight/brightness");
-    if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "qpe_setBrightness: " + f.errorString();
-        return;
+    char str[8];
+    int n = sprintf(str, "%d", b);
+    for(int i = 10; i >= 0; i--) {
+        if(write_file("/sys/class/backlight/pwm-backlight/brightness", str, n) == n)
+            return;
+        perror("qpe_setBrightness failed");
     }
-    QTextStream out(&f);
-    out << b;
-    f.close();
 }

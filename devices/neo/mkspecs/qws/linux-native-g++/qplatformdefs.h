@@ -102,6 +102,24 @@
 #define QT_OFF_T                long
 #endif
 
+// Directory iteration
+#define QT_DIR                  DIR
+
+#define QT_OPENDIR              ::opendir
+#define QT_CLOSEDIR             ::closedir
+
+#if defined(QT_LARGEFILE_SUPPORT) \
+        && defined(QT_USE_XOPEN_LFS_EXTENSIONS) \
+        && !defined(QT_NO_READDIR64)
+#define QT_DIRENT               struct dirent64
+#define QT_READDIR              ::readdir64
+#define QT_READDIR_R            ::readdir64_r
+#else
+#define QT_DIRENT               struct dirent
+#define QT_READDIR              ::readdir
+#define QT_READDIR_R            ::readdir_r
+#endif
+
 #define QT_STAT_REG		S_IFREG
 #define QT_STAT_DIR		S_IFDIR
 #define QT_STAT_MASK		S_IFMT

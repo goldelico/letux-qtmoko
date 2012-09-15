@@ -39,6 +39,8 @@ signals:
 private slots:
 //    void cancelClicked();
     void timeout();
+    void bootmenuIndexChanged(int);
+    
 public slots:
     void rebootClicked();
     void quitClicked();
@@ -51,6 +53,7 @@ private:
     QTimer *timer;
     int progress;
     QtopiaServerApplication::ShutdownType operation;
+    QStringList distroList;
 };
 
 class ShutdownDialogTask : public QObject

@@ -110,12 +110,14 @@ HomescreenSettings::HomescreenSettings(QWidget* parent, Qt::WFlags fl)
     op = new QCheckBox(tr("Operator"));
     profile = new QCheckBox(tr("Profile"));
     location = new QCheckBox(tr("Location"));
+    pressure = new QCheckBox(tr("Pressure"));
 
     time->setCheckState(config.value("ShowTime", "true").toBool() ? Qt::Checked : Qt::Unchecked);
     date->setCheckState(config.value("ShowDate", "true").toBool() ? Qt::Checked : Qt::Unchecked);
     op->setCheckState(config.value("ShowOperator", "true").toBool() ? Qt::Checked : Qt::Unchecked);
     profile->setCheckState(config.value("ShowProfile", "true").toBool() ? Qt::Checked : Qt::Unchecked);
     location->setCheckState(config.value("ShowLocation", "true").toBool() ? Qt::Checked : Qt::Unchecked);
+    pressure->setCheckState(config.value("ShowPressure", "false").toBool() ? Qt::Checked : Qt::Unchecked);
 
     QVBoxLayout *checkLayout = new QVBoxLayout;
     checkLayout->setContentsMargins(0, 0, 0, 0);
@@ -125,6 +127,7 @@ HomescreenSettings::HomescreenSettings(QWidget* parent, Qt::WFlags fl)
     checkLayout->addWidget(op);
     checkLayout->addWidget(profile);
     checkLayout->addWidget(location);
+    checkLayout->addWidget(pressure);
 
     appearanceLayout->addRow(tr("Display"), checkLayout);
 
@@ -250,6 +253,7 @@ void HomescreenSettings::accept()
     config.setValue("ShowOperator", (op->checkState() == Qt::Checked));
     config.setValue("ShowProfile", (profile->checkState() == Qt::Checked));
     config.setValue("ShowLocation", (location->checkState() == Qt::Checked));
+    config.setValue("ShowPressure", (pressure->checkState() == Qt::Checked));
     config.setValue("HomeScreenPicture", hsImage.fileName());
     config.setValue("HomeScreenPictureMode", imageMode->currentIndex());
     if (QApplication::desktop()->numScreens() > 1) {

@@ -61,7 +61,8 @@ QTOPIA_TASK(NeoHardware, NeoHardware);
 NeoHardware::NeoHardware()
     : vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree"),
       vsoUsbCable("/Hardware/UsbGadget"),
-      vsoNeoHardware("/Hardware/Neo")
+      vsoNeoHardware("/Hardware/Neo"),
+      batteryVso("/UI/Battery", this)
 {
     struct sockaddr_nl snl;
     adaptor = new QtopiaIpcAdaptor("QPE/NeoHardware");
@@ -153,6 +154,11 @@ char *value;
     value=findAttribute(buffer,readCount,"SWITCH_STATE=");
     qDebug()<<"headset change event, switch_state="<<value;
   }
+  
+    QString currentNowStr =
+        qReadFile("/sys/class/power_supply/battery/current_now");
+    int currentNow = currentNowStr.toInt() / 1000;
+    batteryVso.setAttribute("current_now", QString::number(currentNow));
 }
 
 void NeoHardware::findHardwareVersion()

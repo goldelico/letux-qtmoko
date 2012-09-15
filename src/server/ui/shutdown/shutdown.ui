@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>290</width>
-    <height>408</height>
+    <height>436</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -60,7 +60,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Restart Qt Extended</string>
+            <string>Restart QtMoko</string>
            </property>
           </widget>
          </item>
@@ -79,7 +79,7 @@
             </size>
            </property>
            <property name="text">
-            <string>Shutdown Qt Extended</string>
+            <string>Shutdown QtMoko</string>
            </property>
           </widget>
          </item>
@@ -144,6 +144,20 @@
           </widget>
          </item>
         </layout>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="bootmenuCombo">
+        <item>
+         <property name="text">
+          <string>Normal boot</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Boot menu</string>
+         </property>
+        </item>
        </widget>
       </item>
       <item>

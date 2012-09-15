@@ -25,10 +25,78 @@
 #include <qpushbutton.h>
 #include <qlabel.h>
 #include <QtopiaChannel>
+#include <QDir>
+#include <QFile>
+#include <QMessageBox>
 
 #include <stdio.h>
 
 using namespace Ui;
+
+// Enables gta04 initramfs menu
+static void enableBootmenu()
+{
+    QFile::remove("/media/p1/gta04-init/bootdev");
+}
+
+// Disables gta04 initramfs menu
+static void disableBootmenu()
+{
+    QFile::copy("/media/p1/gta04-init/lastbootdev", "/media/p1/gta04-init/bootdev");
+}
+
+static QString bootTo(int index, QStringList & distroList)
+{
+    if(index == 0) {
+        disableBootmenu();
+        return "";
+    }
+    
+    if(index == 1) {
+        enableBootmenu();
+        return "";
+    }
+    index -= 2;
+    
+    if(index < 0 || index > distroList.count()) {
+        return "invalid index";
+    }
+
+    QByteArray content = distroList.at(index).toLatin1();
+
+    if(content.startsWith("mmcblk0p")) {   // booting from partition
+        content = "/dev/" + content;
+    }
+    else {                                 // booting from dir
+        QFile lastDev("/media/p1/gta04-init/lastbootdev");      // read current partition (last booted)
+        if(!lastDev.open(QIODevice::ReadOnly)) {
+            return lastDev.fileName() + " open failed: " + lastDev.errorString();
+        }
+        QByteArray device = lastDev.readAll();
+        lastDev.close();
+        
+        for(int i = 0; i < device.count(); i++) {               // remove directory after /dev/mmcblk0p2
+            if(device.at(i) <= 32) {
+                device = device.left(i);
+                break;
+            }
+        }
+        content = device + " /distros/" + content;
+    }
+
+    QFile bootDev("/media/p1/gta04-init/bootdev");
+    if(!bootDev.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
+        return bootDev.fileName() + " open failed: " + bootDev.errorString();
+    }
+
+    if(bootDev.write(content) != content.count()) {
+        bootDev.close();
+        return bootDev.errorString();
+    }
+
+    bootDev.close();
+    return "";
+}
 
 ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
     : QDialog( parent, fl )
@@ -50,6 +118,23 @@ ShutdownImpl::ShutdownImpl( QWidget* parent, Qt::WFlags fl )
     QPushButton *sb = Shutdown::shutdown;
     sb->hide();
 #endif
+
+    // Bootmenu on GTA04, described here: https://github.com/radekp/gta04-init
+    bool hasBootmenu = QDir("/media/p1/gta04-init").exists();
+    bootmenuCombo->setVisible(hasBootmenu);
+    if(hasBootmenu) {
+        disableBootmenu();  // normally we want the bootmenu disabled
+        
+        QDir d("/distros");
+        distroList = d.entryList(QDir::AllDirs | QDir::NoDotAndDotDot);
+
+        QDir dev("/dev");
+        QStringList partList = dev.entryList(QStringList() << "mmcblk0p*", QDir::System);
+        distroList << partList;
+        
+        bootmenuCombo->addItems(distroList);
+    }
+    connect(bootmenuCombo, SIGNAL(currentIndexChanged(int)), this, SLOT(bootmenuIndexChanged(int)));
 }
 
 void ShutdownImpl::rebootClicked()
@@ -102,6 +187,14 @@ void ShutdownImpl::timeout()
         close();
     } else {
         progressBar->setValue( progress );
+    }
+}
+
+void ShutdownImpl::bootmenuIndexChanged(int index)
+{
+    QString err = bootTo(index, distroList);
+    if(err.length() > 0) {
+        qWarning() << "Boot selection failed: " << err;
     }
 }
 

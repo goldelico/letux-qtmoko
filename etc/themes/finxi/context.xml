@@ -10,4 +10,7 @@
 	<text expanding="yes" name="tbutton0" color="Text" rect="0,2,0x0" size="5" bold="yes" align="vcenter,hcenter" interactive="yes"/>
     <text expanding="yes" name="tbutton1" color="Text" rect="0,2,0x0" size="5" bold="yes" align="vcenter,hcenter" interactive="yes"/>
   </layout>
+  <exclusive rect="34%,25%,32%x75%">
+    <inputmethods-plugin />
+  </exclusive>
 </page>

@@ -52,7 +52,7 @@ wake_gps() {
 }
 
 sync_time() {
-    if /sbin/ifconfig | grep -v LOOPBACK | grep UP 1>/dev/null; then
+    if timeout 4 ping -n -q -W 1 -c 3 -i 0.6 pool.ntp.org 1>/dev/null; then
         echo "Network seems present. Update time using ntp"
         timeout 15 ntpdate pool.ntp.org
     fi

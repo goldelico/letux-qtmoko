@@ -46,6 +46,7 @@ struct QWhereaboutsUpdateInfo
 {
     QWhereaboutsUpdate update;
     QWhereaboutsUpdate::PositionFixStatus status;
+    int numSatellites;
 };
 
 
@@ -60,7 +61,7 @@ public:
     void stopUpdates();
     void requestUpdate();
 
-    void notifyNewUpdate(QWhereaboutsUpdate *update, QWhereaboutsUpdate::PositionFixStatus fixStatus);
+    void notifyNewUpdate(QWhereaboutsUpdate *update, QWhereaboutsUpdate::PositionFixStatus fixStatus, int numSatellites);
     void notifyReachedEndOfFile();
 
     QNmeaWhereabouts::UpdateMode m_updateMode;
@@ -109,7 +110,13 @@ class QNmeaRealTimeReader : public QNmeaReader
 {
 public:
     explicit QNmeaRealTimeReader(QNmeaWhereaboutsPrivate *whereaboutsProxy);
+    ~QNmeaRealTimeReader();
     virtual void sourceReadyRead();
+
+private:
+    char readBuf[1024];
+    int readPos;
+    bool ledOn;
 };
 
 

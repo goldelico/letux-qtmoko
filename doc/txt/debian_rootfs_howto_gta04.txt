@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,timeout,libpng12-0,libjpeg62,libmng1,libtiff4,libxtst6,sqlite3,rfkill,ntpdate squeeze /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,klogd,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof squeeze /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -41,7 +41,11 @@ mkdir /media/card/mnt/nfs
 mkdir /media/card/mnt/p1
 mkdir /media/card/mnt/p2
 mkdir /media/card/mnt/p3
+mkdir /media/card/mnt/p4
+mkdir /media/card/mnt/p5
+mkdir /media/card/mnt/p6
 mkdir /media/card/media/card
+mkdir /media/card/media/p1
 echo "neo" > /media/card/etc/hostname
 echo "127.0.0.1 neo" >> /media/card/etc/hosts
 cat > /media/card/etc/network/interfaces <<__END__
@@ -58,7 +62,7 @@ iface usb0 inet static
 __END__
 cat > /media/card/etc/fstab << __END__
 rootfs  /                auto    defaults,errors=remount-ro,noatime 0 1
-/dev/mmcblk0p1 /boot     auto  defaults                           0 0
+/dev/mmcblk0p1 /media/p1   auto  defaults                           0 0
 /dev/mmcblk0p3 /media/card auto  defaults                           0 0
 /dev/mmcblk0p4 swap      swap    defaults                           0 0
 proc    /proc            proc    defaults                           0 0
@@ -97,6 +101,12 @@ echo g_ether > /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo hso >> /media/card/etc/modules
 echo ledtrig-timer >> /media/card/etc/modules
+echo bmp085 >> /media/card/etc/modules
+
+* Make the MAC address of g_ether fixed instead of random, so that network
+  manager can be configured:
+  
+echo "options g_ether host_addr=46:0d:9e:67:69:eb dev_addr=b6:c8:ab:ac:44:7f" >> /media/card/etc/modprobe.d/options
 
 * Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
@@ -122,10 +132,20 @@ Step 4.1 - stable device nodes for UMTS
     http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001563.html
   We will use udev to create stable symlinks for us:
 
-cat > /media/card/etc/udev/rules.d/hso.rules <<__END__
-SUBSYSTEM=="tty", ACTION=="add", KERNEL=="ttyHS*", ATTR{hsotype}=="?*", SYMLINK+="ttyHS_\$attr{hsotype}", OPTIONS+="string_escape=replace"
-__END__
+cd /media/card/etc/udev/rules.d
+wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v48/GTA04/udev-rules/hso.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v48/GTA04/udev-rules/input.rules
 
+Step 4.2 - charging udev rules
+==============================
+
+* For more info see:
+    http://lists.goldelico.com/pipermail/gta04-owner/2012-April/002272.html
+
+cat > /media/card/etc/udev/rules.d/gta04-charging.rules <<__END__
+SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="floating", ATTR{../../max_current}="500000"
+SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="102k", ATTR{../../max_current}="851000"
+__END__
 
 Step 4.5 - make it generate SSH keys on start
 =============================================
@@ -203,22 +223,11 @@ ln -s libts-0.0.so.0 libts-1.0.so.0
 cd /media/card/dev
 rm -rf .udev
 
-* Remove udev from startup scripts, we have devtmpfs in kernel and it's faster:
-
-chroot /media/card
-update-rc.d -f udev-mtab remove
-update-rc.d -f udev remove
-exit
-
 * Remove /etc/network/run and do make dir /etc/network/run
   Otherwise fstab mounting will fail for this directory
 
 rm /media/card/etc/network/run
 mkdir /media/card/etc/network/run
-
-* Create dir for atd jobs:
-
-mkdir /media/card/var/spool/at
 
 
 Step 7.5 - dash
@@ -254,7 +263,7 @@ Step 8 - install QtMoko
 
 * I use qemu armel host for building qtmoko package. It should be as simple as
 
-git checkout v39_gta04
+git checkout v48
 dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
@@ -274,13 +283,26 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_41-1_armel.deb
-dpkg -i qtmoko-gta04_41-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_48-1_armel.deb
+dpkg -i qtmoko-gta04_48-1_armel.deb
 update-rc.d qtmoko-gta04 defaults
-rm qtmoko-gta04_41-1_armel.deb
+rm qtmoko-gta04_48-1_armel.deb
 exit
-killall qpe.sh  # recent versions start qtmoko after install, so kill it
+killall qpe.sh                  # recent versions start qtmoko after install, so kill it
+rm -rf /media/card/home/root/*  # remove all stuff created by qpe
 
+
+Step 8.1 - install mokofaen theme
+=================================
+
+* Mokofaen is now default theme for qtmoko - but it's not part of qtmoko deb
+  package, so that user can uninstall it to save space. So install mokofaen:
+
+chroot /media/card/
+wget http://qtmoko.sourceforge.net/apps/qtmoko-theme-mokofaen_3-1_all.deb
+dpkg -i qtmoko-theme-mokofaen_3-1_all.deb
+rm qtmoko-theme-mokofaen_3-1_all.deb
+exit
 
 Step 9 - Linux kernel
 =====================
@@ -291,7 +313,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout v3.2-gta04-qtmoko-v41
+git checkout v3.5-gta04-qtmoko-v48
 
 * Create package in buildhost:
 
@@ -304,9 +326,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.2-qtmoko-gta04_41-1_armel.deb
-dpkg -i linux-image-3.2-qtmoko-gta04_41-1_armel.deb
-rm linux-image-3.2-qtmoko-gta04_41-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.5-qtmoko-gta04_48-1_armel.deb
+dpkg -i linux-image-3.5-qtmoko-gta04_48-1_armel.deb
+rm linux-image-3.5-qtmoko-gta04_48-1_armel.deb
 exit
 
 
@@ -315,18 +337,19 @@ Step 9.1 - Linux kernel cross compiling - not using anymore for releases
 
 * If you want to cross compile kernel and make uboot image on PC:
 
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm gta04a3_nodebug_defconfig
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm uImage
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules
-make CROSS_COMPILE=/opt/toolchains/arm920t-eabi/bin/arm-linux- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
-find  GTA04/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-linux-strip -R .not -R .comment --strip-unneeded {} \;
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm gta04_qtmoko_defconfig
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm uImage
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm modules
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
+find  GTA04/lib/modules -name *.ko -exec /usr/bin/arm-linux-gnueabi-strip -R .not -R .comment --strip-unneeded {} \;
 
-Step 9.2 - Remove bluetooth from init scripts until it works good
-=================================================================
+Step 9.2 - Setup bluetooth uarts
+================================
 
-chroot /media/card
-update-rc.d -f bluetooth remove
-exit
+* Bluetooth is on /dev/ttyO0 serial port and we need to run hciattach to have
+  bluetooth working. For more info see http://projects.goldelico.com/p/gta04-kernel/page/Wireless/
+
+echo "-s 3000000 /dev/ttyO0 any 3000000" > /media/card/etc/bluetooth/uart
 
 
 Step 9.3 - Install libts from lindi
@@ -358,19 +381,47 @@ cat > /media/card/etc/resolv.conf <<__END__
 nameserver 8.8.8.8
 __END__
 
+Step 9.7 - boot logo
+====================
+
+* gta04-init displays this logo on boot:
+
+cd /media/card/boot
+wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/sd.bmp
+
+Step 9.8 - directory for multiboot
+==================================
+
+* QtMoko can use gta04-init to boot other distibutions in /distros
+  subdirectory. Create this dir and write instructions how to use it:
+
+mkdir /media/card/distros
+cat > /media/card/distros/README <<__END__
+This directory can contain other distributions and you can boot to them. Simply
+create subdirectory here and unpack distribution tarball here. E.g:
+
+    mkdir SHR
+    cd SHR
+    tar xzvpf /path/to/shr-rootfs.tar.gz
+
+Now press POWER, select the distribution from combo box and press "Restart Device"
+__END__
+
 
 Step 10 - release tarball
 =========================
 
 cd /media/card
-tar -czvf ../qtmoko-debian-gta04-v41.tar.gz .
+tar -czvf ../qtmoko-debian-gta04-v48.tar.gz .
 
-Step 11 - make ubifs images - not using yet
-===========================================
+Step 11 - make ubifs image
+==========================
 
-* Delete contents of boot, because for NAND it's not needed:
+* Download logo for NAND boot:
 
-rm -rf /media/card/boot/*
+cd /media/card/boot/
+rm -f logo.bmp
+wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/nand.bmp
 
 * Remove doc and stuff that is not needed and makes NAND image slower:
 
@@ -400,33 +451,44 @@ rootfs  /                auto    defaults,no_chk_data_crc,bulk_read 0 1
 
 * Create config for ubinize and create the resulting image:
 
-cd /root
+cd /media
 
 cat > ubinize.cfg <<__END__
 [ubifs]
 mode=ubi
-image=qtmoko-debian.ubifs
+image=ubifs.img
 vol_id=0
-vol_size=230MiB
+vol_size=492MiB
 vol_type=dynamic
-vol_name=om-gta02-rootfs
+vol_name=rootfs
 vol_flags=autoresize
 __END__
 
-mkfs.ubifs -r /media/card -o qtmoko-debian.ubifs -x zlib -m 2048 -e 126976 -c 2047
-ubinize -o qtmoko-debian.ubi -m 2048 -p 128KiB -s 2048 -O 2048 ubinize.cfg
-rm qtmoko-debian.ubifs
 
-Step 12 - jffs2
-===============
+mkfs.ubifs -r /media/card -m 2048 -e 129024 -c 4007 -o ubifs.img
+ubinize -o qtmoko-debian-gta04-v48.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
+rm ubifs.img
+
+* To install it on the device you need to boot from SD and:
+
+ubiformat /dev/mtd4 -f /qtmoko-debian-gta04-v48.ubi
+
+* To check that it's mountable:
+
+ubiattach /dev/ubi_ctrl -m 4
+mount -t ubifs ubi0:rootfs /mnt/ubifs/
+
+
+Step 12 - jffs2 - not using anymore
+===================================
 
 * Same first 2 steps as with ubi (copy&delete /boot)
 
 * Create jffs2 image: 
 
 cd /media
-mkfs.jffs2 -o qtmoko-debian-gta04-nosum-v41.jffs2 -e 0x20000 -n -d/media/card
-sumtool -n -e 0x20000 -p -i qtmoko-debian-gta04-nosum-v41.jffs2 -o qtmoko-debian-gta04-v41.jffs2
+mkfs.jffs2 -o qtmoko-debian-gta04-nosum-v48.jffs2 -e 0x20000 -n -d/media/card
+sumtool -n -e 0x20000 -p -i qtmoko-debian-gta04-nosum-v48.jffs2 -o qtmoko-debian-gta04-v48.jffs2
 
 * Create tarbal for NAND:
 

@@ -1,0 +1,24 @@
+<package
+      name="qtmoko-evopedia"
+      version="43-1"
+      title="Evopedia"
+      summary="Offline wikpedia reader"
+      category="applications"
+      >
+      <details>
+          <br/>
+          <h3>Notes</h3>
+          <ul>
+          <li>The package is not finished yet,</li>
+          <li>You need to manually install dependencies to make it running:</li>
+          <li><pre>apt-get install libqt4-webkit</pre></li>
+          <li>In order to use evopedia, you have to download a dump from
+          <a href="http://dumpathome.evopedia.info/dumps/finished/">http://dumpathome.evopedia.info/dumps/finished/</a>
+          (you can try with the "small" dump if the download is too long) Copy the directory on
+          your SD card, launch evopedia (its icon should appear with other applications),
+          click on the configure icon, and select the directory of you dump : it will
+          create a .evopediarc file for you. Then you will be able to search for an article.</li>
+          </ul>
+      </details>
+</package>
+  

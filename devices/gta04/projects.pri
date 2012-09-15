@@ -5,7 +5,8 @@ PROJECTS-=\
     applications/camera \
     settings/serverwidgets \
     server/phone/ui/components/simapp \
-    ../examples/whereabouts/mappingdemo
+    ../examples/whereabouts/mappingdemo \
+    plugins/network/dialing
 
 SERVER_PROJECTS-=\
     server/media/genericvolumeservice \
@@ -18,14 +19,14 @@ PROJECTS*=\
     settings/startupflags \
     tools/phonebounce \
     ../examples/scribble \
+    plugins/network/option3g \
     3rdparty/applications/qterminal \
     3rdparty/applications/screenshot \
     3rdparty/applications/qmplayer \
     3rdparty/applications/qx \
-    3rdparty/applications/simplefm \
     3rdparty/applications/nerongps \
     3rdparty/applications/arora/src \
-    3rdparty/tools/atd \
-    3rdparty/applications/neocontrol \
+    3rdparty/applications/yberbrowser \
+    3rdparty/applications/neocontrol-gta04 \
     3rdparty/applications/raptor \
     3rdparty/applications/gta04-gsm-voice-routing

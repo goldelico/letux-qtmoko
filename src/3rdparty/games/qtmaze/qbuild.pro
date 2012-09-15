@@ -7,6 +7,7 @@ TARGET=qtmaze
 # This app uses Qtopia
 CONFIG+=qtopia
 DEFINES+=QTOPIA
+MODULES*=accelerometer
 
 # Build this app as a quicklauncher plugin
 # You need to be using the QTOPIA_ADD_APPLICATION/QTOPIA_MAIN macros or this will not work!
@@ -17,7 +18,8 @@ DEFINES+=QTOPIA
 
 # Specify the languages that make lupdate should produce .ts files for
 STRING_LANGUAGE=en_US
-#LANGUAGES=en_US
+AVAILABLE_LANGUAGES=$$QTOPIA_AVAILABLE_LANGUAGES
+LANGUAGES=$$QTOPIA_LANGUAGES
 
 # Package information (used for qbuild packages)
 pkg [
@@ -35,7 +37,6 @@ FORMS=\
 HEADERS=\
     form.h\
     renderarea.h\
-    accelerometers.h\
     types.h\
     json.h\
     paramsloader.h\
@@ -45,7 +46,6 @@ SOURCES=\
     main.cpp\
     form.cpp\
     renderarea.cpp\
-    accelerometers.cpp\
     json.c\
     paramsloader.cpp\
     vibro.cpp

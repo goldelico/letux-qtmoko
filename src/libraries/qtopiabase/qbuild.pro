@@ -36,6 +36,7 @@ HEADERS=\
     qdawg.h\
     qglobalpixmapcache.h\
     qlog.h\
+    qled.h \
     qsignalintercepter.h\
     qslotinvoker.h\
     qsoundcontrol.h\
@@ -81,6 +82,7 @@ SOURCES=\
     qcopenvelope.cpp\
     qdawg.cpp\
     qlog.cpp\
+    qled.cpp \
     qmemoryfile.cpp\
     qmemoryfile_unix.cpp\
     qsignalintercepter.cpp\

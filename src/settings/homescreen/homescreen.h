@@ -59,6 +59,7 @@ private:
     QCheckBox *op;
     QCheckBox *profile;
     QCheckBox *location;
+    QCheckBox *pressure;
     QLabel* powerNote;
     QPowerStatus powerStatus;
     QValueSpaceItem* screenSaver_vsi;

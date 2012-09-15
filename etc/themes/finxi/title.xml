@@ -33,6 +33,16 @@
         <status name="bluetooth" imageon="bluetooth-enabled.svg" on="expr:@/Communications/Bluetooth/LocalDevice/Enabled" active="expr:@/Communications/Bluetooth/LocalDevice/Enabled"/>
         <status name="bluetooth" imageon="bluetooth-visible.svg" on="expr:@/Communications/Bluetooth/LocalDevice/Visible" active="expr:@/Communications/Bluetooth/LocalDevice/Visible"/>
       </exclusive>
+      <exclusive rect="40.65%,0,9%x0">
+        <status name="wifi" imageon="wifi-enabled.svg" on="expr:@/Network/Interfaces/Wifi/State == 2" active="expr:@/Network/Interfaces/Wifi/State == 2" onclick="message=QPE/Application/qterminal,setDocument(QString),/opt/qtmoko/bin/ping.sh" />
+      </exclusive>
+      <exclusive rect="30.65%,0,9%x0">
+        <text outline="#000000" color="#FFFFFF" bold="yes" align="hcenter,vcenter" size="5" >expr:@/Gps/NumSatellites</text>
+      </exclusive>
+      <exclusive rect="20.65%,0,9%x0">
+        <status name="gps" imageon="gps-on.svg" on="expr:@/Gps/State == 2" active="expr:@/Gps/State == 2"/>
+        <status name="gps" imageon="gps-fix.svg" on="expr:@/Gps/State == 3" active="expr:@/Gps/State == 3"/>
+      </exclusive>
       <exclusive rect="63%,0,9%x0">
         <status name="messages" imageon="messages.svg" on="expr:@/Communications/Messages/NewMessages > 0" active="expr:@/Communications/Messages/NewMessages > 0"/>
         <status name="smsfull" imageon="smsfull.svg" on="expr:@/Telephony/Status/SMSMemoryFull" active="expr:@/Telephony/Status/SMSMemoryFull"/>
@@ -52,7 +62,7 @@
         <text outline="#000000" color="#FFFFFF" bold="yes" align="hcenter,vcenter" size="5" active="expr:@/UI/HomeScreen/ShowDate">
         expr:@/UI/DisplayTime/BriefDate
       </text>
-    <inputmethods-plugin transient="yes" active="expr:@/UI/IMVisible"/>
+    <inputmethods-plugin transient="yes" />
 </exclusive>
   </rect>
   <text rect="10%,44%,-10%,-3%" name="caption" outline="#000000" bold="yes" color="#FFFFFF" align="hcenter,vcenter" transient="yes" elided="right">

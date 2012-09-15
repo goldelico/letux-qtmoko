@@ -757,8 +757,8 @@ void NeoModemService::suspend()
 
     chat("AT%CBHZ=0");
 
-//     // Turn off signal quality notifications while the system is suspended.
-     chat( "AT%CSQ=0", this, SLOT(mcsqOff()) );
+    // Turn off signal quality notifications while the system is suspended.
+    chat( "AT%CSQ=0", this, SLOT(mcsqOff()) );
 }
 
 void NeoModemService::wake()
@@ -817,7 +817,7 @@ void NeoVibrateAccessory::setVibrateOnRing( const bool value )
     setVibrateNow(value);
 }
 
-void NeoVibrateAccessory::setVibrateNow( const bool value )
+void NeoVibrateAccessory::setVibrateNow( const bool value, int timeoutMs, int strength )
 {
     qLog(Modem)<<"setVibrateNow "<<value;
     QString vibFile("/sys/class/leds/gta02::vibrator");

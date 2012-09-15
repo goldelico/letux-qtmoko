@@ -41,12 +41,12 @@ class CellModemManagerPrivate
 public:
     CellModemManagerPrivate()
     : m_state(CellModemManager::Initializing),
-      m_netReg(0), m_aerialOn(false), m_aerialStable(false),
-      m_pinManager(0), m_regState(QTelephony::RegistrationNone),
-      m_status(0), m_autoRegisterTimer(0), m_profiles(0),
-      m_profilesBlocked(false), m_callForwarding(0),
+      m_netReg(NULL), m_aerialOn(false), m_aerialStable(false),
+      m_pinManager(NULL), m_regState(QTelephony::RegistrationNone),
+      m_status(NULL), m_autoRegisterTimer(NULL), m_profiles(NULL),
+      m_profilesBlocked(false), m_callForwarding(NULL),
       m_callForwardingEnabled(false),
-      m_rfFunc(0), m_phoneBook(0) {}
+      m_rfFunc(NULL), m_phoneBook(NULL) {}
 
     CellModemManager::State m_state;
     QNetworkRegistration *m_netReg;
@@ -205,6 +205,8 @@ CellModemManager::CellModemManager(QObject *parent)
                      this, SLOT(registrationStateChanged()));
     QObject::connect(d->m_netReg, SIGNAL(currentOperatorChanged()),
                      this, SLOT(currentOperatorChanged()));
+    QObject::connect(d->m_netReg, SIGNAL(locationChanged()),
+                     this, SLOT(locationChanged()));
 
     // Rename signal for QAbstractCallPolicyManager.
     QObject::connect(this, SIGNAL(registrationStateChanged(QTelephony::RegistrationState)),
@@ -338,6 +340,16 @@ void CellModemManager::registrationStateChanged()
     }
 
     doAutoRegister();
+}
+
+void CellModemManager::locationChanged()
+{
+  QString cell_location;
+  QTextStream(&cell_location)
+    << d->m_netReg->locationAreaCode()
+    << "/"
+    << d->m_netReg->cellId();
+  setCellLocation(cell_location);
 }
 
 void CellModemManager::rfLevelChanged()

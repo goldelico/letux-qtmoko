@@ -67,7 +67,7 @@ public:
     QThemeItemPrivate()
             : mode(QThemeItem::Rect)
             , activeExpression(0)
-            , activeAttribute(false)
+            , activeAttribute()
             , isActive(true)
             , transient(false)
             , dataExpression(false)

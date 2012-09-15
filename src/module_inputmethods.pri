@@ -2,12 +2,13 @@
 
 !x11 {
     PROJECTS*=\
-        plugins/inputmethods/predictivekeyboard \
+        plugins/inputmethods/svgkeyboard
+#        plugins/inputmethods/predictivekeyboard \
 #        plugins/inputmethods/keyboard \
-        plugins/inputmethods/fingerkeyboard \
-        plugins/inputmethods/dockedkeyboard \
-        3rdparty/plugins/inputmethods/pkim \
-        plugins/inputmethods/biglandscapekeyboard
+#        plugins/inputmethods/fingerkeyboard \
+#        plugins/inputmethods/dockedkeyboard \
+#        3rdparty/plugins/inputmethods/pkim \
+#        plugins/inputmethods/biglandscapekeyboard
 
     contains(QTOPIA_LANGUAGES,zh_CN):PROJECTS*=plugins/inputmethods/pinyin
 }
@@ -17,8 +18,8 @@ PROJECTS*=\
 SERVER_PROJECTS*=\
     server/ui/components/inputmethods
 
-PROJECTS*=\
-    libraries/handwriting \
-    settings/hwsettings \
-    3rdparty/libraries/inputmatch \
-    settings/words
+#PROJECTS*=\
+#    libraries/handwriting \
+#    settings/hwsettings \
+#    3rdparty/libraries/inputmatch \
+#    settings/words

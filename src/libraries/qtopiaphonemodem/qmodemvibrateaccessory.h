@@ -34,7 +34,7 @@ public:
 
 public slots:
     void setVibrateOnRing( const bool value );
-    void setVibrateNow( const bool value );
+    void setVibrateNow( const bool value, int timeoutMs = 0, int strength = 0xffff );
 
 private:
     QModemService *service;

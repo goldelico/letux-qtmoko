@@ -70,7 +70,7 @@ void QModemVibrateAccessory::setVibrateOnRing( const bool value )
     implementation because \c{AT+CVIB} does not support immediate vibrate.
     Subclasses should override this if the modem supports immediate vibrate.
 */
-void QModemVibrateAccessory::setVibrateNow( const bool value )
+void QModemVibrateAccessory::setVibrateNow( const bool value, int timeoutMs, int strength )
 {
     // Not used.
     Q_UNUSED(value);

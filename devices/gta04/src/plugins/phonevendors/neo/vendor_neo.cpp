@@ -24,14 +24,16 @@
 #include <qmodemllindicators.h>
 #include <QProcess>
 #include <QTimer>
-#include <stdio.h>
-#include <stdlib.h>
 #include <QFile>
 #include <QTextStream>
 #include <QSettings>
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <linux/input.h>
 #include <alsa/asoundlib.h>
 
+#include <qled.h>
 #include <qmodemcallvolume.h>
 #include <qmodemsiminfo.h>
 #include <qmodemcellbroadcast.h>
@@ -59,6 +61,15 @@ NeoCallProvider::~NeoCallProvider()
 bool NeoCallProvider::hasRepeatingRings() const
 {
     return true;
+}
+
+ // Use the AT+CHUP command to abort outgoing calls, instead of AT+CHLD=1. Also
+ // use send() without waiting like chat() does.
+ void NeoCallProvider::abortDial(uint id, QPhoneCall::Scope scope)
+{
+    Q_UNUSED(id);
+    Q_UNUSED(scope);
+    atchat()->send("AT+CHUP");
 }
 
 void NeoCallProvider::ringing(const QString &, const QString &, uint)
@@ -137,6 +148,8 @@ NeoModemService::NeoModemService
     (const QString & service, QSerialIODeviceMultiplexer * mux,
      QObject * parent)
 :  QModemService(service, mux, parent)
+    , inputEvent("/dev/input/incoming")
+    , inputNotifier(0)
 {
     qDebug() << "Gta04ModemService::constructor";
 
@@ -145,13 +158,29 @@ NeoModemService::NeoModemService
     primaryAtChat()->registerNotificationType
         ("_OSIGQ:", this, SLOT(sigq(QString)));
 
+    chat("AT+CSCS=\"GSM\"");    // GSM encoding
     chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     chat("AT_OPCMENABLE=1");    // enable the PCM interface for voice calls
     chat("AT_OPSYS=0,2");       // disable UMTS, use only GSM
+
+    // Modem input device - reports keys when modem generates interrupt (e.g.
+    // on incoming call or sms).
+    if(inputEvent.open(QIODevice::ReadOnly)) {
+        inputNotifier = new QSocketNotifier(inputEvent.handle(), QSocketNotifier::Read, this);
+        connect(inputNotifier, SIGNAL(activated(int)), this, SLOT(handleInputEvent()));
+    }
+    else {
+        qWarning() << "Gta04ModemService: failed to open " << inputEvent.fileName() << ": " << inputEvent.errorString();
+    }
 }
 
 NeoModemService::~NeoModemService()
 {
+    if(inputNotifier) {
+        delete inputNotifier;
+        inputNotifier = 0;
+    }
+    inputEvent.close();
 }
 
 void NeoModemService::initialize()
@@ -160,8 +189,12 @@ void NeoModemService::initialize()
     suppressInterface < QCellBroadcast > ();
 
     if (!callProvider()) {
-        setCallProvider(new NeoCallProvider(this));
+        neoCallProvider = new NeoCallProvider(this);
+        setCallProvider(neoCallProvider);
     }
+
+    if (!supports < QVibrateAccessory > ())
+        addInterface(new NeoVibrateAccessory(this));
 
     QModemService::initialize();
 
@@ -185,15 +218,51 @@ void NeoModemService::reset()
 void NeoModemService::suspend()
 {
     qLog(Modem) << " Gta04ModemService::suspend()";
-    chat("AT_OSQI=0");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
+    //chat("AT_OSQI=0");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
+
+    primaryAtChat()->suspend();
+    QSerialIODevice *port = multiplexer()->channel("primary");
+    port->close();
+
     suspendDone();
 }
 
 void NeoModemService::wake()
 {
     qLog(Modem) << " Gta04ModemService::wake()";
-    chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
+
+    QSerialIODevice *port = multiplexer()->channel("primary");
+    port->open(QIODevice::ReadWrite);
+    primaryAtChat()->resume();
+
+    neoCallProvider->doClcc();
+    post( "modemresumed" );
+
+    //chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
     wakeDone();
+}
+
+void NeoModemService::handleInputEvent()
+{
+    qLog(Modem) << "NeoModemService::handleInputEvent()";
+    
+    // Read all input data from the file
+    char buf[sizeof(input_event) * 32];
+    struct input_event *ev = (struct input_event *) buf;
+    int n = read(inputEvent.handle(), buf, sizeof(buf));
+    
+    while(n >= (int)(sizeof(input_event))) {
+        if(ev->type == EV_KEY && ev->code == KEY_UNKNOWN) {
+            // Set fast blinking on missed calls led
+            qLedSetCall(qLedAttrBrightness(), qLedMaxBrightness());
+            qLedSetCall(qLedAttrTrigger(), "timer");
+            qLedSetCall(qLedAttrDelayOff(), "1024");
+            qLedSetCall(qLedAttrDelayOn(), "32");
+            break;
+        }
+        ev++;
+        n -= sizeof(input_event);
+    }
 }
 
 bool NeoModemService::supportsAtCced()
@@ -201,18 +270,105 @@ bool NeoModemService::supportsAtCced()
     return false;
 }
 
-// Each char of output operator name is 4 chars in input name. The 4 chars is
-// integer string of unicode value. E.g.
-// 0056006f006400610066006f006e006500200043005a -> Vodafone CZ
-QString NeoModemService::decodeOperatorName(QString name)
+// Open GTA04 vibrate device
+static int openRumble()
 {
-    QString str;
-    str.resize(name.size() / 4);
-    for (int i = 0; i < str.size(); i++) {
-        QString numStr = name.mid(i * 4, 4);
-        bool ok;
-        int num = numStr.toInt(&ok, 16);
-        str[i] = QChar(num);
+    int fd = open("/dev/input/rumble", O_RDWR);
+    if (fd > 0)
+        return fd;
+
+    perror("rumble open");
+    return -1;
+}
+
+// Upload vibrate effect, returns effect id or -1 on error
+static qint16 uploadEffect(int fd, quint16 strength, int timeoutMs)
+{
+    struct ff_effect e;
+
+    // Define the new event
+    e.type = FF_RUMBLE;
+    e.id = -1;
+    e.direction = 0;
+    e.trigger.button = 0;
+    e.trigger.interval = 0;
+    e.replay.length = timeoutMs ? timeoutMs : 3000;
+    e.replay.delay = 0;
+    e.u.rumble.strong_magnitude = strength;
+    e.u.rumble.weak_magnitude = 0;
+
+    // Write the event
+    if (ioctl(fd, EVIOCSFF, &e) == -1) {
+        perror("rumble upload");
+        return -1;
     }
-    return str;
+    return e.id;
+}
+
+static void removeEffect(int &fd, qint16 & effectId, bool closeFd)
+{
+    if (fd < 0)
+        return;
+
+    if (effectId >= 0 && ioctl(fd, EVIOCRMFF, effectId) == -1)
+        perror("rumble remove");
+    effectId = -1;
+
+    if (closeFd) {
+        close(fd);
+        fd = -1;
+    }
+}
+
+NeoVibrateAccessory::NeoVibrateAccessory(QModemService * service)
+:  QVibrateAccessoryProvider(service->service(), service)
+    , rumbleFd(-1)
+    , effectId(-1)
+{
+    setSupportsVibrateOnRing(true);
+    setSupportsVibrateNow(true);
+}
+
+NeoVibrateAccessory::~NeoVibrateAccessory()
+{
+    removeEffect(rumbleFd, effectId, true);
+}
+
+void NeoVibrateAccessory::setVibrateOnRing(const bool value)
+{
+    qLog(Modem) << "setVibrateOnRing " << value;
+    setVibrateNow(value);
+}
+
+void NeoVibrateAccessory::setVibrateNow(const bool value, int timeoutMs, int strength)
+{
+    struct input_event event;
+
+    //qLog(Modem) << "setVibrateNow " << value << ", timeoutMs=" << timeoutMs << ", strength=" << strength;
+
+    if (value && rumbleFd < 0)
+        rumbleFd = openRumble();
+
+    if (rumbleFd < 0)
+        return;
+
+    if (value && effectId < 0)
+        effectId = uploadEffect(rumbleFd, (quint16)(strength), timeoutMs);
+
+    if (effectId < 0)
+        return;
+
+    // Play/stop the effect
+    event.type = EV_FF;
+    event.code = effectId;
+    event.value = (value ? 1 : 0);
+
+    if (write(rumbleFd, (const void *)&event, sizeof(event)) == -1) {
+        perror("rumble write");
+    }
+
+    if (!value)
+        removeEffect(rumbleFd, effectId, true);
+
+    QVibrateAccessoryProvider::setVibrateNow(value);
 }

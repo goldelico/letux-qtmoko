@@ -1,0 +1,18 @@
+<package
+      name="qtmoko-kbd-de"
+      arch="all"
+      version="45-1"
+      title="German keyboard"
+      summary="German svg keyboard layout"
+      category="input"
+      >
+      <tag>keyboard</tag>
+      <details>
+          <br/>
+          <h3>Notes</h3>
+          <ul>
+          <li>You need to restart QtMoko after installing.</li>
+          </ul>
+      </details>
+</package>
+  
