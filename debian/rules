@@ -30,14 +30,24 @@ CONFIGURE := $(CURDIR)/configure
 LANGUAGES := $(shell ls i18n/ | xargs echo | sed 's/ /,/g')
 
 TOOLCHAIN := linux-native-g++
+QTMOKO_DEVICES ?= gta04 neo
+DEVICES := $(QTMOKO_DEVICES)
 QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 
 %:
 	dh $@
 
+clean: debian/control
+.PHONY: debian/control
+debian/control:
+	cp debian/control-src debian/control
+	for device in $(DEVICES); do \
+		cat debian/control-$$device >> debian/control; \
+	done
+
 override_dh_auto_configure:
 	# Patch the qmake.conf file with proper toolchain configuration
-	for device in neo gta04; do \
+	for device in $(DEVICES); do \
 		sed -i.orig \
 			-e 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" \
 			-e 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" \
@@ -56,56 +66,56 @@ override_dh_auto_configure:
 
 	# Fix wrong filename for libjscore.a
 	# http://qt-project.org/forums/viewthread/12732
-	mkdir -p $(PWD)/../build-neo/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/
-	mkdir -p $(PWD)/../build-gta04/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/
-	ln -s $(PWD)/../build-neo/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/jscore. $(PWD)/../build-neo/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/libjscore.a
-	ln -s $(PWD)/../build-gta04/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/jscore. $(PWD)/../build-gta04/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/libjscore.a
+	for device in $(DEVICES); do \
+		mkdir -p $(PWD)/../build-$$device/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/; \
+		ln -s $(PWD)/../build-$$device/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/jscore. $(PWD)/../build-$$device/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/libjscore.a; \
+	done
 
 	# Qt Extended configuration step
-	mkdir -p ../build-neo
-	cd ../build-neo && "$(CONFIGURE)" -device neo -system-qt -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
-
-	mkdir -p ../build-gta04
-	cd ../build-gta04 && "$(CONFIGURE)" -device gta04 -system-qt -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include
+	for device in $(DEVICES); do \
+		mkdir -p ../build-$$device; \
+		cd ../build-$$device && "$(CONFIGURE)" -device $$device -system-qt -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include; \
+	done
 
 override_dh_auto_build:
-	$(MAKE) -C ../build-neo
-	$(MAKE) -C ../build-gta04
+	for device in $(DEVICES); do \
+		$(MAKE) -C ../build-$$device; \
+	done
 
 override_dh_auto_clean:
-	for device in neo gta04; do \
+	for device in $(DEVICES); do \
 		[ ! -f $(call QMAKE_CONF,$$device).orig ] || mv $(call QMAKE_CONF,$$device).orig $(call QMAKE_CONF,$$device); \
+		rm -fr ../build-$$device; \
 	done
-	rm -fr ../build-gta04
-	rm -fr ../build-neo
 	rm -f sdk/LICENSE.QtopiaGPL
 
 override_dh_auto_install:
-	$(MAKE) -C ../build-neo install
-	mkdir -p debian/tmp-neo/opt/qtmoko
-	cp -r ../build-neo/image/* debian/tmp-neo/opt/qtmoko
-
-	$(MAKE) -C ../build-gta04 install
-	mkdir -p debian/tmp-gta04/opt/qtmoko
-	cp -r ../build-gta04/image/* debian/tmp-gta04/opt/qtmoko
+	for device in $(DEVICES); do \
+		$(MAKE) -C ../build-$$device install; \
+		mkdir -p debian/tmp-$$device/opt/qtmoko; \
+		cp -r ../build-$$device/image/* debian/tmp-$$device/opt/qtmoko; \
+	done
 
 	# remove patented stuff - can be installed via package later
-	rm -f debian/tmp-neo/opt/qtmoko/plugins/codecs/libmadplugin.so
-	rm -f debian/tmp-neo/opt/qtmoko/lib/libmad.so.0
-	rm -f debian/tmp-gta04/opt/qtmoko/plugins/codecs/libmadplugin.so
-	rm -f debian/tmp-gta04/opt/qtmoko/lib/libmad.so.0
+	for device in $(DEVICES); do \
+		rm -f debian/tmp-$$device/opt/qtmoko/plugins/codecs/libmadplugin.so; \
+		rm -f debian/tmp-$$device/opt/qtmoko/lib/libmad.so.0; \
+	done
 
 	# symlink to ttfont installed together with X
-	rm -rf debian/tmp-neo/opt/qtmoko/lib/fonts
-	rm -rf debian/tmp-gta04/opt/qtmoko/lib/fonts
+	for device in $(DEVICES); do \
+		rm -rf debian/tmp-$$device/opt/qtmoko/lib/fonts; \
+	done
 
 	# Install missing dependency for qt_plugins/script/libqtscriptdbus.so
-	install -m"a+r,u+w" ../build-neo/qtopiacore/target/lib/libQtScript.so.4.7.4 debian/tmp-neo/opt/qtmoko/lib
-	install -m"a+r,u+w" ../build-gta04/qtopiacore/target/lib/libQtScript.so.4.7.4 debian/tmp-gta04/opt/qtmoko/lib	
+	for device in $(DEVICES); do \
+		install -m"a+r,u+w" ../build-$$device/qtopiacore/target/lib/libQtScript.so.4.7.4 debian/tmp-$$device/opt/qtmoko/lib; \
+	done
 	
 	# Install libQtDeclarative so that dh_shlibdeps does not complain
-	install -m"a+r,u+w" ../build-neo/qtopiacore/target/lib/libQtDeclarative* debian/tmp-neo/opt/qtmoko/lib/
-	install -m"a+r,u+w" ../build-gta04/qtopiacore/target/lib/libQtDeclarative* debian/tmp-gta04/opt/qtmoko/lib/
+	for device in $(DEVICES); do \
+		install -m"a+r,u+w" ../build-$$device/qtopiacore/target/lib/libQtDeclarative* debian/tmp-$$device/opt/qtmoko/lib/; \
+	done
 
 override_dh_makeshlibs:
 	dh_makeshlibs -n
