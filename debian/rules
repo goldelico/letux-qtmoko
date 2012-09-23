@@ -37,12 +37,6 @@ TOOLCHAIN := linux-native-g++
 override_dh_testdir:
 	dh_testdir
 
-	# Make mokofaen default theme for debian package
-	sed -i 's/finxi/mokofaen/g' devices/neo/src/server/core_server/etc/default/Trolltech/qpe.conf
-	sed -i 's/finxi/mokofaen/g' devices/gta04/src/server/core_server/etc/default/Trolltech/qpe.conf
-	sed -i 's/=background/=herbe_mouillee/g' devices/neo/src/server/core_server/etc/default/Trolltech/qpe.conf
-	sed -i 's/=background/=herbe_mouillee/g' devices/gta04/src/server/core_server/etc/default/Trolltech/qpe.conf
-
 	# Patch the qmake.conf file with proper toolchain configuration
 	sed -i 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 	sed -i 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
