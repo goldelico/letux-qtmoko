@@ -83,6 +83,12 @@ override_dh_auto_build:
 	done
 
 override_dh_auto_clean:
+	# Cope with source format = 3.0 (native)
+	if [ "$$(cat debian/source/format)" = "3.0 (native)" ]; then \
+		if which quilt >/dev/null 2>&1; then \
+			! quilt unapp || quilt push -a; \
+		fi; \
+	fi
 	for device in $(DEVICES); do \
 		[ ! -f $(call QMAKE_CONF,$$device).orig ] || mv $(call QMAKE_CONF,$$device).orig $(call QMAKE_CONF,$$device); \
 		rm -fr ../build-$$device; \
