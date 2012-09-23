@@ -30,37 +30,27 @@ CONFIGURE := $(CURDIR)/configure
 LANGUAGES := $(shell ls i18n/ | xargs echo | sed 's/ /,/g')
 
 TOOLCHAIN := linux-native-g++
+QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 
 %:
 	dh $@
 
-override_dh_testdir:
-	dh_testdir
-
-	# Patch the qmake.conf file with proper toolchain configuration
-	sed -i 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" devices/neo/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-
-	sed -i 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-	sed -i 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" devices/gta04/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-
 override_dh_auto_configure:
+	# Patch the qmake.conf file with proper toolchain configuration
+	for device in neo gta04; do \
+		sed -i.orig \
+			-e 's:^\(QMAKE_CC[ \t]*=\).*$$:\1 '"$(CC):" \
+			-e 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" \
+			-e 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" \
+			-e 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" \
+			-e 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" \
+			-e 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' \
+			-e 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' \
+			-e 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" \
+			-e 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" \
+			-e 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" \
+			$(call QMAKE_CONF,$$device); \
+	done
 	# Add built qt to LD path to avoid libQtSql.so.4 missing error
 	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PWD)/../build/qtopiacore/host/lib/
 
@@ -83,6 +73,9 @@ override_dh_auto_build:
 	$(MAKE) -C ../build-gta04
 
 override_dh_auto_clean:
+	for device in neo gta04; do \
+		[ ! -f $(call QMAKE_CONF,$$device).orig ] || mv $(call QMAKE_CONF,$$device).orig $(call QMAKE_CONF,$$device); \
+	done
 	rm -fr ../build-gta04
 	rm -fr ../build-neo
 	rm -f sdk/LICENSE.QtopiaGPL
