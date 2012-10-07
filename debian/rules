@@ -77,8 +77,6 @@ override_dh_auto_configure:
 			-e 's:^\(QMAKE_LIBS[ \t]*=\).*$$:\1 '"-ldl:" \
 			$(call QMAKE_CONF,$$device); \
 	done
-	# Add built qt to LD path to avoid libQtSql.so.4 missing error
-	export LD_LIBRARY_PATH=$(LD_LIBRARY_PATH):$(PWD)/../build/qtopiacore/host/lib/
 
 	# Fix wrong filename for libjscore.a
 	# http://qt-project.org/forums/viewthread/12732
