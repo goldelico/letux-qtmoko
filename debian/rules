@@ -49,6 +49,8 @@ QTMOKO_DEVICES ?= gta04 neo
 DEVICES := $(QTMOKO_DEVICES)
 QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 
+QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
+
 %:
 	dh $@
 
@@ -123,7 +125,7 @@ override_dh_auto_install:
 
 	# Install missing dependency for qt_plugins/script/libqtscriptdbus.so
 	for device in $(DEVICES); do \
-		install -m"a+r,u+w" ../build-$$device/qtopiacore/target/lib/libQtScript.so.4.7.4 debian/tmp-$$device/opt/qtmoko/lib; \
+		install -m"a+r,u+w" ../build-$$device/qtopiacore/target/lib/libQtScript.so.$(QT_VERSION) debian/tmp-$$device/opt/qtmoko/lib; \
 	done
 	
 	# Install libQtDeclarative so that dh_shlibdeps does not complain
