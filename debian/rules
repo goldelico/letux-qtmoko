@@ -80,13 +80,6 @@ override_dh_auto_configure:
 			$(call QMAKE_CONF,$$device); \
 	done
 
-	# Fix wrong filename for libjscore.a
-	# http://qt-project.org/forums/viewthread/12732
-	for device in $(DEVICES); do \
-		mkdir -p $(CURDIR)/../build-$$device/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/; \
-		ln -s jscore. $(CURDIR)/../build-$$device/qtopiacore/target/src/3rdparty/webkit/JavaScriptCore/release/libjscore.a; \
-	done
-
 	# Qt Extended configuration step
 	for device in $(DEVICES); do \
 		mkdir -p ../build-$$device; \
