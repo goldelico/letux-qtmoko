@@ -50,6 +50,7 @@ DEVICES := $(QTMOKO_DEVICES)
 QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 
 QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
+export QUILT_PATCHES=debian/patches
 
 %:
 	dh $@
@@ -63,6 +64,14 @@ debian/control:
 	done
 
 override_dh_auto_configure:
+	# Qt-4.8 specific patches
+	if [ "$$(echo "4.8\n$(QT_VERSION)" | sort -V | head -1)" = "4.8" ]; then \
+		if [ "$$(basename "$$(readlink -f debian/patches/series)")" = "series-main" ]; then \
+			rm -fr .pc; \
+		fi; \
+		ln -fs series-qt48 debian/patches/series; \
+		quilt push -a; \
+	fi
 	# Patch the qmake.conf file with proper toolchain configuration
 	for device in $(DEVICES); do \
 		sed -i.orig \
@@ -92,6 +101,14 @@ override_dh_auto_build:
 	done
 
 override_dh_auto_clean:
+	# If needed, revert QT_VERSION specific patches
+	if [ "$$(basename "$$(readlink -f debian/patches/series)")" != "series-main" ]; then \
+		if quilt app; then \
+			quilt pop -a; \
+		fi; \
+		ln -fs series-main debian/patches/series; \
+	fi
+
 	for device in $(DEVICES); do \
 		[ ! -f $(call QMAKE_CONF,$$device).orig ] || mv $(call QMAKE_CONF,$$device).orig $(call QMAKE_CONF,$$device); \
 		rm -fr ../build-$$device; \
