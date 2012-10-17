@@ -1,4 +1,4 @@
--xplatform linux-g++ 
+-xplatform linux-native-g++ 
 -arch x86_64
 -prefix /opt/qtmoko
 
