@@ -39,5 +39,4 @@
 
 -D _FORTIFY_SOURCE=0
 -rtti
--system-qt
 -force-pkg-config
