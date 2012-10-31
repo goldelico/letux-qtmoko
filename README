@@ -1,5 +1,39 @@
-Cross compling from sources
-===========================
+Cross compling from sources in debian chroot
+============================================
+
+  * The most easy and painless way is to build QtMoko in debian squeeze chroot.
+
+  * You will need debian on your PC
+
+  * Clone current git tree:
+
+git clone git://github.com/radekp/qtmoko.git
+
+  * Initialize and update submodules
+
+cd qtmoko
+git submodule init
+git submodule update
+
+  * Create and enter debian chroot:
+
+scripts/qtmoko-chroot.sh
+
+  * Build it:
+  
+cd /root/qte/build
+../qtmoko/configure -build-qt -device gta04; make; make install
+
+  * Upload the result to your device (you must have phone and usb network up)
+
+../qtmoko/devices/gta04/scripts/update_qtmoko
+
+
+Cross compiling without chroot
+==============================
+  
+  * This is not supported anymore, but if you know what you are doing you can
+    go on...
 
   * You will need Debian wheezy on your PC
   
