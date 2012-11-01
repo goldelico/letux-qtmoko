@@ -1,11 +1,13 @@
 # Script for debian squeeze chroot with all dependencies for QtMoko
 # For the first time it installs the chroot later it just enters it
 
+# set -o verbose
+
 # We will use ext4 image for chroot
 if [ ! -e ../qtmoko-chroot.img ]
 then
     echo "Creating chroot-build ext4 image"
-    dd if=/dev/zero of=../qtmoko-chroot.img bs=1024 count=1048576
+    dd if=/dev/zero of=../qtmoko-chroot.img bs=1024 count=3145728
     mkfs.ext4 ../qtmoko-chroot.img
 fi
 
@@ -32,7 +34,7 @@ then
     fi
     
     echo "Installing chroot packages"
-    cdebootstrap --flavour=minimal --include=build-essential,git,ccache,libxext-dev,libasound2-dev,libdbus-1-dev,libssl-dev,libts-dev,libbluetooth-dev,libxtst-dev,libpng12-dev,libjpeg8-dev,libv4l-dev,libspeexdsp-dev,libglib2.0-dev,libsqlite3-dev,quilt squeeze ../qtmoko-chroot http://cdn.debian.net/debian/
+    cdebootstrap --flavour=minimal --include=build-essential,git,openssh-client,ccache,locales,procps,psmisc,libxext-dev,libasound2-dev,libdbus-1-dev,libssl-dev,libts-dev,libbluetooth-dev,libxtst-dev,libpng12-dev,libjpeg8-dev,libv4l-dev,libspeexdsp-dev,libglib2.0-dev,libsqlite3-dev,quilt squeeze ../qtmoko-chroot http://cdn.debian.net/debian/
 fi
 
 if [ ! -d ../qtmoko-chroot/proc/bus ]
@@ -79,7 +81,10 @@ echo "+-----------------------------------------------------------------+"
 echo "| Success! You can now build QtMoko like this:                    |"
 echo "|                                                                 |"
 echo "| cd /root/qte/build                                              |"
-echo "| ../qtmoko/configure -build-qt -device gta04; make; make install |"
+echo "| ../qtmoko/configure -build-qt -device gta04                     |"
+echo "| make                                                            |"
+echo "| export LD_LIBRARY_PATH=/root/qte/build/qtopiacore/host/lib/     |"
+echo "| make install                                                    |"
 echo "|                                                                 |"
 echo "+-----------------------------------------------------------------+"
 
@@ -87,6 +92,7 @@ __END__
     
     chmod +x ../qtmoko-chroot/finish_chroot_install.sh
     chroot ../qtmoko-chroot /finish_chroot_install.sh
+    rm -f ../qtmoko-chroot/finish_chroot_install.sh
 fi
 
 chroot ../qtmoko-chroot

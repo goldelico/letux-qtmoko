@@ -17,12 +17,15 @@ git submodule update
 
   * Create and enter debian chroot:
 
-scripts/qtmoko-chroot.sh
+sudo scripts/qtmoko-chroot.sh
 
   * Build it:
   
 cd /root/qte/build
-../qtmoko/configure -build-qt -device gta04; make; make install
+../qtmoko/configure -build-qt -device gta04
+make
+export LD_LIBRARY_PATH=/root/qte/build/qtopiacore/host/lib/
+make install
 
   * Upload the result to your device (you must have phone and usb network up)
 

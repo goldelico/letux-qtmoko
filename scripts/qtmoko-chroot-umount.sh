@@ -1,11 +1,13 @@
 # This script install debian squeeze chroot with all dependencies for QtMoko
 
-echo "Unmounting chroot dirs"
+set -o verbose
 
-umount ../build-chroot/proc
-umount ../build-chroot/sys
-umount ../build-chroot/dev
-umount ../build-chroot/root/qte/qtmoko
-umount ../build-chroot
+# Unmounting chroot dirs
+umount ../qtmoko-chroot/proc
+umount ../qtmoko-chroot/sys
+umount ../qtmoko-chroot/dev
+umount ../qtmoko-chroot/root/qte/qtmoko
+umount ../qtmoko-chroot/root/qte/build
+umount ../qtmoko-chroot
 
-echo "Done"
+# Done
