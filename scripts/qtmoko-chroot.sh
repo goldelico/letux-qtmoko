@@ -76,6 +76,7 @@ apt-get install xapt
 xapt -a armel -m libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg8-dev libv4l-dev libqt4-sql-sqlite libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev
 
 echo "export PATH=/usr/lib/ccache:\$PATH" >> /root/.bashrc
+echo "PS1='qtmoko-chroot:\w\\\$ '" >> /root/.bashrc
 
 echo "+-----------------------------------------------------------------+"
 echo "| Success! You can now build QtMoko like this:                    |"
