@@ -96,4 +96,5 @@ __END__
     rm -f ../qtmoko-chroot/finish_chroot_install.sh
 fi
 
-chroot ../qtmoko-chroot
+chroot ../qtmoko-chroot /bin/bash
+
