@@ -27,6 +27,9 @@ make
 export LD_LIBRARY_PATH=/root/qte/build/qtopiacore/host/lib/
 make install
 
+  * If you have e.g. 8 core processor you can speed it up by passing -j8 arg
+    to configure and make.
+
   * Upload the result to your device (you must have phone and usb network up)
 
 ../qtmoko/devices/gta04/scripts/update_qtmoko

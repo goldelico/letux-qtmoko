@@ -168,6 +168,10 @@ set_optvar("verbose", +{
     },
     "value" => 0,
 });
+set_optvar("j", +{
+    "type" => "value",
+    "set" => [ "%=s", "Number of parallel task used during -build-qt. "],
+});
 set_optvar("silent", +{
     "type" => "bool",
     "set" => [ "%", "Hide compiler commandlines." ],
@@ -4921,7 +4925,13 @@ END
           "Building Qt\n".
           '*'x($cols-1)."\n\n";
 
-    system(opt("make")) == 0 or return 0;
+    # Number of parallel tasks for building host qt
+    my $build_qt_parallel = "";
+    if(opt("j")) {
+        $build_qt_parallel = " -j" . opt("j");
+    }
+
+    system(opt("make") . $build_qt_parallel) == 0 or return 0;
 
     # Print a banner
     print '*'x($cols-1)."\n".
