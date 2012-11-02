@@ -39,4 +39,5 @@
 
 -D _FORTIFY_SOURCE=0
 -rtti
--force-pkg-config
+-no-pkg-config
+-build-qt
