@@ -92,7 +92,7 @@ override_dh_auto_configure:
 	# Qt Extended configuration step
 	for device in $(DEVICES); do \
 		mkdir -p ../build-$$device; \
-		cd ../build-$$device && "$(CONFIGURE)" -device $$device -system-qt -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite" -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include; \
+		cd ../build-$$device && "$(CONFIGURE)" -device $$device -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite" -l dbus-1 -I /usr/include/dbus-1.0/ -I /usr/lib/dbus-1.0/include; \
 	done
 
 override_dh_auto_build:
