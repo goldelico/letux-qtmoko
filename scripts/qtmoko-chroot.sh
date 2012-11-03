@@ -69,6 +69,8 @@ xapt -a armel -m libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev l
 
 echo "export PATH=/usr/lib/ccache:\$PATH" >> /root/.bashrc
 echo "PS1='qtmoko-chroot:\w\\\$ '" >> /root/.bashrc
+echo "export LANG=C" >> /root/.bashrc
+echo "export LC_ALL=C" >> /root/.bashrc
 
 echo "+-----------------------------------------------------------------+"
 echo "| Success! You can now build QtMoko like this:                    |"
