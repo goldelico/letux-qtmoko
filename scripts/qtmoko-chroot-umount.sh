@@ -6,8 +6,7 @@ set -o verbose
 umount ../qtmoko-chroot/proc
 umount ../qtmoko-chroot/sys
 umount ../qtmoko-chroot/dev
-umount ../qtmoko-chroot/root/qte/qtmoko
-umount ../qtmoko-chroot/root/qte/build
+umount ../qtmoko-chroot/root/qte
 umount ../qtmoko-chroot
 
 # Done
