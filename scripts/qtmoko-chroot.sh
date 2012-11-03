@@ -75,6 +75,7 @@ echo "export LC_ALL=C" >> /root/.bashrc
 echo "+-----------------------------------------------------------------+"
 echo "| Success! You can now build QtMoko like this:                    |"
 echo "|                                                                 |"
+echo "| mkdir -p /root/qte/build                                        |"
 echo "| cd /root/qte/build                                              |"
 echo "| ../qtmoko/configure -device gta04                               |"
 echo "| make                                                            |"

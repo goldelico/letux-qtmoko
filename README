@@ -20,7 +20,8 @@ git submodule update
 sudo scripts/qtmoko-chroot.sh
 
   * Build it:
-  
+
+mkdir -p /root/qte/build
 cd /root/qte/build
 ../qtmoko/configure -device gta04
 make
