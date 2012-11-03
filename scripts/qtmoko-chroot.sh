@@ -32,7 +32,7 @@ then
 	echo "Installing cdebootstrap package"
 	apt-get install cdebootstrap
     fi
-    
+
     echo "Installing chroot packages"
     cdebootstrap --flavour=minimal --include=build-essential,git,openssh-client,ccache,locales,procps,psmisc,libxext-dev,libasound2-dev,libdbus-1-dev,libssl-dev,libts-dev,libbluetooth-dev,libxtst-dev,libpng12-dev,libjpeg8-dev,libv4l-dev,libspeexdsp-dev,libglib2.0-dev,libsqlite3-dev,quilt squeeze ../qtmoko-chroot http://cdn.debian.net/debian/
 fi
@@ -43,20 +43,12 @@ then
     mount -t proc none ../qtmoko-chroot/proc
     mount -t sysfs none ../qtmoko-chroot/sys
     mount -o bind /dev ../qtmoko-chroot/dev
-    
-    if [ ! -d ../qtmoko-chroot/root/qte/qtmoko ]
+
+    if [ ! -d ../qtmoko-chroot/root/qte ]
     then
-	mkdir -p ../qtmoko-chroot/root/qte/qtmoko
-	mkdir -p ../qtmoko-chroot/root/qte/build
+	mkdir -p ../qtmoko-chroot/root/qte
     fi
-    mount -o bind . ../qtmoko-chroot/root/qte/qtmoko
-    
-    echo "Build dir"
-    if [ ! -d ../build ]
-    then
-	mkdir -p ../build
-    fi
-    mount -o bind ../build ../qtmoko-chroot/root/qte/build
+    mount -o bind .. ../qtmoko-chroot/root/qte
 fi
 
 if [ ! -e ../qtmoko-chroot/usr/bin/arm-linux-gnueabi-gcc ]
@@ -90,7 +82,7 @@ echo "|                                                                 |"
 echo "+-----------------------------------------------------------------+"
 
 __END__
-    
+
     chmod +x ../qtmoko-chroot/finish_chroot_install.sh
     chroot ../qtmoko-chroot /finish_chroot_install.sh
     rm -f ../qtmoko-chroot/finish_chroot_install.sh
