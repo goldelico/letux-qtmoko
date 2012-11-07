@@ -35,12 +35,6 @@ make install
 
 ../qtmoko/devices/gta04/scripts/update_qtmoko
 
-  * Currently there is bug when generating qtopia_db.sqlite. As a result you
-  will se no icons in the application menu. As a workaround copy that db from
-  some older release:
-
-cp good_old_release/opt/qtmoko/qtopia_db.sqlite /opt/qtmoko/qtopia_db.sqlite
-
 
 Cross compiling without chroot
 ==============================
