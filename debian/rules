@@ -40,8 +40,8 @@ CROSS_CPPFLAGS+=-march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfl
 CROSS_CPPFLAGS+=-marm
 endif
 
-CFLAGS=-pipe $(shell dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
-LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
+QMAKE_CFLAGS=-pipe $(shell dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
+QMAKE_LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
 
 CONFIGURE := $(CURDIR)/configure
 LANGUAGES := $(shell ls i18n/ | xargs echo | sed 's/ /,/g')
@@ -81,12 +81,12 @@ override_dh_auto_configure:
 			-e 's:^\(QMAKE_CXX[ \t]*=\).*$$:\1 '"$(CXX):" \
 			-e 's:^\(QMAKE_LINK[ \t]*=\).*$$:\1 '"$(CXX):" \
 			-e 's:^\(QMAKE_LINK_SHLIB[ \t]*=\).*$$:\1 '"$(CXX):" \
-			-e 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(CFLAGS):" \
+			-e 's:^\(QMAKE_CFLAGS[ \t]*=\).*$$:\1 '"$(QMAKE_CFLAGS):" \
 			-e 's:^\(QMAKE_CFLAGS_RELEASE[ \t]*=\).*$$:\1 :' \
 			-e 's:^\(QMAKE_CFLAGS_DEBUG[ \t]*=\).*$$:\1 :' \
 			-e 's:^\(QMAKE_INCDIR[ \t]*=\).*$$:\1 '"$(CROSS_INCDIR):" \
 			-e 's:^\(QMAKE_LIBDIR[ \t]*=\).*$$:\1 '"$(CROSS_LIBDIR):" \
-			-e 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(LDFLAGS):" \
+			-e 's:^\(QMAKE_LFLAGS[ \t]*=\).*$$:\1 '"$(QMAKE_LDFLAGS):" \
 			-e 's:^\(QMAKE_LIBS[ \t]*=\).*$$:\1 '"-ldl:" \
 			$(call QMAKE_CONF,$$device); \
 	done
