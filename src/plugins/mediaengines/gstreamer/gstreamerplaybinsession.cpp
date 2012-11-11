@@ -32,7 +32,7 @@
 
 #include <custom.h>
 
-#define DEBUG_SESSION 1
+//#define DEBUG_SESSION 1
 
 namespace gstreamer
 {
