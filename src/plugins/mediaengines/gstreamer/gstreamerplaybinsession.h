@@ -24,6 +24,8 @@
 #include <QUuid>
 #include <QMediaServerSession>
 
+#include <gst/gst.h>
+
 namespace gstreamer
 {
 
@@ -78,7 +80,8 @@ private slots:
 private:
     void getStreamsInfo();
     void readySession();
-    void changeState(QtopiaMedia::State);
+    void setQtState(QtopiaMedia::State);
+    bool setGstState(GstState);
 
     PlaybinSessionPrivate*  d;
 };
