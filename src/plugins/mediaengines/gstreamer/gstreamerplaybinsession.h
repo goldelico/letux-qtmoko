@@ -78,6 +78,7 @@ private slots:
 private:
     void getStreamsInfo();
     void readySession();
+    void changeState(QtopiaMedia::State);
 
     PlaybinSessionPrivate*  d;
 };
