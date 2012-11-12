@@ -23,8 +23,6 @@ CROSS_LDFLAGS=
 CROSS_LIBDIR=
 endif
 
-export PKG_CONFIG_LIBDIR=/usr/$(DEB_HOST_MULTIARCH)/lib/pkgconfig
-
 ifeq (arm-linux-gnueabi,$(DEB_HOST_MULTIARCH))
 ifeq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
 CROSS_CPPFLAGS+=-fomit-frame-pointer -finline-functions -falign-functions=2 -falign-loops=2 -falign-jumps=2 -march=armv4t -mtune=arm920t -msoft-float
@@ -40,8 +38,8 @@ CROSS_CPPFLAGS+=-march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfl
 CROSS_CPPFLAGS+=-marm
 endif
 
-QMAKE_CFLAGS=-pipe $(shell dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
-QMAKE_LDFLAGS=$(shell dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
+QMAKE_CFLAGS=-pipe $(shell CC=$(CC) dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
+QMAKE_LDFLAGS=$(shell CC=$(CC) dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
 
 CONFIGURE := $(CURDIR)/configure
 LANGUAGES := $(shell ls i18n/ | xargs echo | sed 's/ /,/g')
@@ -54,13 +52,28 @@ QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
 QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
 export QUILT_PATCHES=debian/patches
 
+# Force our pkg-config wrapper
+export PKG_CONFIG=$(CURDIR)/pkg-config-cross
+# PKG_CONFIG_PATH to use for target system; See devices/<device>/environment
+export QTMOKO_PKG_CONFIG_PATH=/usr/$(DEB_HOST_MULTIARCH)/lib/pkgconfig
+
+# The configure step defaults to '-build-qt'. If QTMOKO_SYSTEM_QT isn't
+# empty, we use 'system-qt' instead. 
+ifneq (,$(QTMOKO_SYSTEM_QT))
+SYSTEM_QT_BUILD_DEPS := , libqt4-dev, libqt4-sql-sqlite
+SYSTEM_QT_OPTION := -system-qt
+else
+# with '-build-qt' we need to force LD_LIBRARY_PATH at install time
+SDK_HOST_LD_LIBRARY_PATH = LD_LIBRARY_PATH=$$(readlink -f ../build-$1)/sdk/qtopiacore/host/lib
+endif
+
 %:
 	dh $@
 
 clean: debian/control
 .PHONY: debian/control
 debian/control:
-	cp debian/control-src debian/control
+	sed 's/@SYSTEM_QT@/'"$(SYSTEM_QT_BUILD_DEPS)"'/' debian/control-src >debian/control
 	for device in $(DEVICES); do \
 		cat debian/control-$$device >> debian/control; \
 	done
@@ -94,7 +107,7 @@ override_dh_auto_configure:
 	# Qt Extended configuration step
 	for device in $(DEVICES); do \
 		mkdir -p ../build-$$device; \
-		cd ../build-$$device && "$(CONFIGURE)" -device $$device -system-qt -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng"; \
+		cd ../build-$$device && "$(CONFIGURE)" -device $$device $(SYSTEM_QT_OPTION) -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng" -extra-qt-config="-system-sqlite -no-gif -nomake tools -no-declarative"; \
 		cd $(CURDIR); \
 	done
 
@@ -120,7 +133,7 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	for device in $(DEVICES); do \
-		$(MAKE) -C ../build-$$device install; \
+		$(call SDK_HOST_LD_LIBRARY_PATH,$$device) $(MAKE) -C ../build-$$device install; \
 		mkdir -p debian/tmp-$$device/opt/qtmoko; \
 		cp -r ../build-$$device/image/* debian/tmp-$$device/opt/qtmoko; \
 	done

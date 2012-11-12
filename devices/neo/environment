@@ -1,23 +1,27 @@
 #!/bin/sh
 
-echo "Running environment script for device neo with PKG_CONFIG_LIBDIR=$PKG_CONFIG_LIBDIR"
+echo "Running environment script for device neo with QTMOKO_PKG_CONFIG_PATH=$QTMOKO_PKG_CONFIG_PATH"
 
-# Guess PKG_CONFIG_LIBDIR if not already exported (e.g. by dpkg-builpackage).
+# Guess QTMOKO_PKG_CONFIG_PATH if not already exported (e.g. by dpkg-builpackage).
 # It should point to directory where .pc files are see:
 # http://radekp.github.com/qtmoko/api/buildsystem/over-device-profiles-1.html#pkg-config
 
 # Cross compiling
-PKG_CONFIG_LIBDIR=${PKG_CONFIG_LIBDIR:-/usr/arm-linux-gnueabi/lib/pkgconfig}
+QTMOKO_PKG_CONFIG_PATH=${QTMOKO_PKG_CONFIG_PATH:-/usr/arm-linux-gnueabi/lib/pkgconfig}
 
 # Native toolchain on squeeze/armel
-if [ ! -d "$PKG_CONFIG_LIBDIR" ]; then
-    PKG_CONFIG_LIBDIR=/usr/lib/pkgconfig
+if [ ! -d "$QTMOKO_PKG_CONFIG_PATH" ]; then
+    QTMOKO_PKG_CONFIG_PATH=/usr/lib/pkgconfig
 fi
 
-if [ -d "$PKG_CONFIG_LIBDIR" ]; then
-    echo "Variable PKG_CONFIG_LIBDIR is now set to: $PKG_CONFIG_LIBDIR"
+if [ -d "$QTMOKO_PKG_CONFIG_PATH" ]; then
+    echo "Variable QTMOKO_PKG_CONFIG_PATH is now set to: $QTMOKO_PKG_CONFIG_PATH"
 else
-    echo "Warning: PKG_CONFIG_LIBDIR directory $PKG_CONFIG_LIBDIR does not exist!!"
+    echo "Warning: QTMOKO_PKG_CONFIG_PATH directory $QTMOKO_PKG_CONFIG_PATH does not exist!!"
 fi
 
-export PKG_CONFIG_LIBDIR
+# src/build/bin/configure insists on using PKG_CONFIG_PATH only
+# PKG_CONFIG_LIBDIR won't be handled correctly when switching between
+# host and target configuration
+PKG_CONFIG_PATH=$QTMOKO_PKG_CONFIG_PATH
+export PKG_CONFIG_PATH

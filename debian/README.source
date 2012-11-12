@@ -15,16 +15,17 @@ You'll find succesfully tested configuration files in the directory
 debian/pdebuild-cross. In order to allow multiple configurations these
 files rely on the following environment variables:
 
-Variable	Meaning				Default value
+Variable	 Meaning			Default value
 -------------------------------------------------------------
-CROSSARCH	armel|armhf			armel
-CROSSVERS	cross gcc version		4.4
-DIST		squeeze|wheezy|sid		squeeze
-MULTISTRAP_ROOT	multistarp conf dir		/etc/multistrap
-CROSS_ROOT	pdebuild-cross worskpace	/var/lib/pdebuild-cross
-QTMOKO_DEVICES	devices to build qtmoko for	neo gta04
+CROSSARCH	 armel|armhf			armel
+CROSSVERS	 cross gcc version		4.4
+DIST		 squeeze|wheezy|sid		squeeze
+MULTISTRAP_ROOT	 multistarp conf dir		/etc/multistrap
+CROSS_ROOT	 pdebuild-cross worskpace	/var/lib/pdebuild-cross
+QTMOKO_DEVICES	 devices to build qtmoko for	neo gta04
+QTMOKO_SYSTEM_QT force '-system-qt' option      no value means '-build-qt'
 
-Note: QTMOKO_DEVICES is used at build time only.
+Note: QTMOKO_* variables are used at build time only.
 
 Here is an example of workflow:
 
