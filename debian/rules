@@ -62,9 +62,6 @@ export QTMOKO_PKG_CONFIG_PATH=/usr/$(DEB_HOST_MULTIARCH)/lib/pkgconfig
 ifneq (,$(QTMOKO_SYSTEM_QT))
 SYSTEM_QT_BUILD_DEPS := , libqt4-dev, libqt4-sql-sqlite
 SYSTEM_QT_OPTION := -system-qt
-else
-# with '-build-qt' we need to force LD_LIBRARY_PATH at install time
-SDK_HOST_LD_LIBRARY_PATH = LD_LIBRARY_PATH=$$(readlink -f ../build-$1)/sdk/qtopiacore/host/lib
 endif
 
 %:
@@ -107,7 +104,7 @@ override_dh_auto_configure:
 	# Qt Extended configuration step
 	for device in $(DEVICES); do \
 		mkdir -p ../build-$$device; \
-		cd ../build-$$device && "$(CONFIGURE)" -device $$device $(SYSTEM_QT_OPTION) -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng" -extra-qt-config="-system-sqlite -no-gif -nomake tools -no-declarative"; \
+		cd ../build-$$device && "$(CONFIGURE)" -device $$device $(SYSTEM_QT_OPTION) -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng" -extra-qt-config="-release -static -system-sqlite -no-gif -nomake tools -no-declarative"; \
 		cd $(CURDIR); \
 	done
 
@@ -133,7 +130,7 @@ override_dh_auto_clean:
 
 override_dh_auto_install:
 	for device in $(DEVICES); do \
-		$(call SDK_HOST_LD_LIBRARY_PATH,$$device) $(MAKE) -C ../build-$$device install; \
+		$(MAKE) -C ../build-$$device install; \
 		mkdir -p debian/tmp-$$device/opt/qtmoko; \
 		cp -r ../build-$$device/image/* debian/tmp-$$device/opt/qtmoko; \
 	done
