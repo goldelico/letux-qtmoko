@@ -942,7 +942,6 @@ set_optvar("sound_system", +{
     "set" => [ "%=s", "Select the sound system to use. ".
                       "You might need to force OSS if your toolchain has ALSA but your kernel does not." ],
     "arg" => "ss",
-    # FIXME see below for the code that hides pulse from the help
     "available" => ["alsa", "oss", "pulse"],
     "default" => "alsa",
     "default_tested" => 1,
@@ -1725,8 +1724,6 @@ if ( !Qtopia::Opt::validate() ) {
 }
 
 if ( !$ok || opt("help") ) {
-    # FIXME Don't show that -sound-system=pulse is available
-    opt("sound_system", "available") = ["alsa", "oss"];
     Qtopia::Opt::get_help();
 }
 
