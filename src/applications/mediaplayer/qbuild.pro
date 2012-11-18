@@ -20,6 +20,7 @@ pkg [
 ]
 
 DEFINES+=NO_VISUALIZATION
+DEFINES+=QTOPIA
 #DEFINES+=NO_THUMBNAIL
 
 HEADERS=\
@@ -28,6 +29,7 @@ HEADERS=\
     statewidget.h\
     elidedlabel.h\
     playerwidget.h\
+    playerfullscreenwidget.h\
     mediabrowser.h\
     visualization.h\
     browser.h\
@@ -46,6 +48,7 @@ SOURCES=\
     statewidget.cpp\
     elidedlabel.cpp\
     playerwidget.cpp\
+    playerfullscreenwidget.cpp\
     mediabrowser.cpp\
     visualization.cpp\
     browser.cpp\
