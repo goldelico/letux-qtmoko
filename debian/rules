@@ -23,12 +23,14 @@ CROSS_LDFLAGS=
 CROSS_LIBDIR=
 endif
 
+# Build flags for armel arch
 ifeq (arm-linux-gnueabi,$(DEB_HOST_MULTIARCH))
 ifeq (,$(filter noopt,$(DEB_BUILD_OPTIONS)))
 CROSS_CPPFLAGS+=-fomit-frame-pointer -finline-functions -falign-functions=2 -falign-loops=2 -falign-jumps=2 -march=armv4t -mtune=arm920t -msoft-float
 endif
 endif
 
+# Build flags for armhf flags (GTA04 only)
 ifeq (arm-linux-gnueabihf,$(DEB_HOST_MULTIARCH))
 # <http://processors.wiki.ti.com/index.php/Cortex-A8>
 CROSS_CPPFLAGS+=-march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfloat-abi=hard
@@ -38,31 +40,45 @@ CROSS_CPPFLAGS+=-march=armv7-a -mtune=cortex-a8 -mfpu=neon -ftree-vectorize -mfl
 CROSS_CPPFLAGS+=-marm
 endif
 
+# Add dpkg-buildflags settings
 QMAKE_CFLAGS=-pipe $(shell CC=$(CC) dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
 QMAKE_LDFLAGS=$(shell CC=$(CC) dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
 
-CONFIGURE := $(CURDIR)/configure
+# Configure flags
+# ---------------
+# No pkgmanagement - everything should be handled the Debian way
+CONFIGURE_FLAGS += -remove-module pkgmanagement
+
+# Languages
 LANGUAGES := $(shell ls i18n/ | xargs echo | sed 's/ /,/g')
+CONFIGURE_FLAGS += -languages $(LANGUAGES)
 
-TOOLCHAIN := linux-native-g++
-QTMOKO_DEVICES ?= gta04 neo pc
-DEVICES := $(QTMOKO_DEVICES)
-QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
-
-QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
-export QUILT_PATCHES=debian/patches
-
-# Force our pkg-config wrapper
-export PKG_CONFIG=$(CURDIR)/pkg-config-cross
-# PKG_CONFIG_PATH to use for target system; See devices/<device>/environment
-export QTMOKO_PKG_CONFIG_PATH=/usr/$(DEB_HOST_MULTIARCH)/lib/pkgconfig
+# Use system librairies where possible
+CONFIGURE_FLAGS += -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng"
 
 # The configure step defaults to '-build-qt'. If QTMOKO_SYSTEM_QT isn't
 # empty, we use 'system-qt' instead. 
 ifneq (,$(QTMOKO_SYSTEM_QT))
 SYSTEM_QT_BUILD_DEPS := , libqt4-dev, libqt4-sql-sqlite
-SYSTEM_QT_OPTION := -system-qt
+CONFIGURE_FLAGS += -system-qt
+else
+# Shorten native Qt build
+# -release: avoid dependency on gdb
+# -static:  avoid setting LD_LIBRARY_PATH at make install step
+# TO DO: check whether sqlite is actually needed
+CONFIGURE_FLAGS += -extra-qt-config="-release -static -system-sqlite -no-gif -nomake tools -no-declarative"
 endif
+
+# Use toolchain linux-native-g++ (from device mkspecs)
+TOOLCHAIN := linux-native-g++
+QMAKE_CONF = devices/$1/mkspecs/qws/$(TOOLCHAIN)/qmake.conf
+CONFIGURE_FLAGS += -xplatform $(TOOLCHAIN)
+# ---------------
+
+# Force our pkg-config wrapper
+export PKG_CONFIG=$(CURDIR)/pkg-config-cross
+# PKG_CONFIG_PATH to use for target system; See devices/<device>/environment
+export QTMOKO_PKG_CONFIG_PATH=/usr/$(DEB_HOST_MULTIARCH)/lib/pkgconfig
 
 # /!\ Ugly workaround to have cross libpulsecommon-2.0.so which isn't
 # handled by xapt + dpkg-cross starting from wheezy
@@ -75,6 +91,17 @@ LIBPULSECOMMON_CROSS := libpulsecommon-cross
 QMAKE_LDFLAGS += -Wl,-rpath-link,$(CURDIR)/pulseaudio-cross/usr/lib/$(DEB_HOST_MULTIARCH)/pulseaudio
 endif
 endif
+
+# Retrieve Qt version from sources
+QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
+
+# Tell quilt where to look for specific patches
+export QUILT_PATCHES=debian/patches
+
+# Devices to build QtMoko for
+QTMOKO_DEVICES ?= gta04 neo pc
+DEVICES := $(QTMOKO_DEVICES)
+
 
 %:
 	dh $@
@@ -121,7 +148,7 @@ override_dh_auto_configure: $(LIBPULSECOMMON_CROSS)
 	# Qt Extended configuration step
 	for device in $(DEVICES); do \
 		mkdir -p ../build-$$device; \
-		cd ../build-$$device && "$(CONFIGURE)" -device $$device $(SYSTEM_QT_OPTION) -xplatform $(TOOLCHAIN) -remove-module pkgmanagement -languages $(LANGUAGES) -extra-qt-embedded-config="-system-sqlite -system-libtiff -system-libmng" -extra-qt-config="-release -static -system-sqlite -no-gif -nomake tools -no-declarative"; \
+		cd ../build-$$device && "$(CURDIR)/configure" -device $$device $(CONFIGURE_FLAGS); \
 		cd $(CURDIR); \
 	done
 
