@@ -46,6 +46,9 @@ QMAKE_LDFLAGS=$(shell CC=$(CC) dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
 
 # Configure flags
 # ---------------
+# Force target architecture
+CONFIGURE_FLAGS := -arch $(DEB_HOST_GNU_CPU)
+
 # No pkgmanagement - everything should be handled the Debian way
 CONFIGURE_FLAGS += -remove-module pkgmanagement
 
