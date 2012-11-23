@@ -339,6 +339,11 @@ dpkg -i linux-image-3.5-qtmoko-gta04_49-1_armel.deb
 rm linux-image-3.5-qtmoko-gta04_49-1_armel.deb
 exit
 
+* Install bootargs.scr so for correct kernel cmdline arguments:
+
+cd /media/card/boot
+wget https://github.com/radekp/qtmoko/raw/master/devices/gta04/boot/bootargs.scr
+
 
 Step 9.1 - Linux kernel cross compiling - not using anymore for releases
 ========================================================================
