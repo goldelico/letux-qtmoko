@@ -21,7 +21,6 @@
 #define __QTOPIA_MEDIA_DEFAULTVOLUMEPROVIDER_H
 
 #include <QtopiaIpcAdaptor>
-#include <QValueSpaceObject>
 
 #include <alsa/asoundlib.h>
 
@@ -50,9 +49,6 @@ private slots:
 private:
     void adjustVolume(int leftChannel, int rightChannel, AdjustType);
 
-    int m_leftChannelVolume;
-    int m_rightChannelVolume;
-
     QtopiaIpcAdaptor *m_adaptor;
 
 protected:
@@ -61,9 +57,6 @@ protected:
 
     int m_minOutputVolume;
     int m_maxOutputVolume;
-
-    int m_minInputVolume;
-    int m_maxInputVolume;
 
     int initMixer();
     int closeMixer();

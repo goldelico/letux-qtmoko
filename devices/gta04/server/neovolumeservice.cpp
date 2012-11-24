@@ -26,13 +26,11 @@
 
 #include <QTimer>
 #include <QDebug>
-#include <QValueSpaceItem>
 #include <qtopiaserverapplication.h>
 #include <qtopiaipcenvelope.h>
 
 #include <QAudioStateConfiguration>
 #include <QAudioStateInfo>
-#include <QValueSpaceObject>
 
 #include "neovolumeservice.h"
 
