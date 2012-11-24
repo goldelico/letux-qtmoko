@@ -314,11 +314,6 @@ void NeoVolumeService::setAmp(bool mode)
     qLog(AudioState) << __PRETTY_FUNCTION__ << mode;
     QValueSpaceItem *device = new QValueSpaceItem("/Hardware/Neo/Device");
 
-    if (device->value().toString() == "GTA01") {
-        set1973Amp(mode);
-        return;
-    }
-
     QValueSpaceItem ampVS("/Hardware/Audio/Amp");
     QString ok = ampVS.value().toString();
 
@@ -344,60 +339,6 @@ void NeoVolumeService::setAmp(bool mode)
             }
         }
     }
-
-    closeMixer();
-}
-
-/*
-  1973 needs this to switch off headphones
-*/
-void NeoVolumeService::set1973Amp(bool mode)
-{
-    qLog(AudioState) << __PRETTY_FUNCTION__ << mode;
-
-    char itemname[40];
-    unsigned int item = 0;
-    QString elemName;
-    QString currentMode;
-    QValueSpaceItem ampVS("/Hardware/Audio/Amp");
-    QString ampMode = ampVS.value().toString();
-
-    m_vsoVolumeObject->setAttribute("Amp", mode);
-    ampMode = mode ? "Stereo Speakers" : "Headphones";
-
-    initMixer();
-
-    for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
-        if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
-            snd_mixer_selem_is_enumerated(elem) &&
-            snd_mixer_selem_is_active(elem)) {
-
-            elemName = QString(snd_mixer_selem_get_name(elem));
-            if (elemName == "Amp Mode") {
-                snd_mixer_selem_get_enum_item(elem, (snd_mixer_selem_channel_id_t)0, &item);
-                snd_mixer_selem_get_enum_item_name(elem, item, sizeof(itemname) - 1, itemname);
-
-                currentMode = itemname;
-
-                int enumItems = snd_mixer_selem_get_enum_items(elem);
-                if (enumItems < 0) {
-                    qWarning() << "snd_mixer_selem_get_enum_items error " << enumItems;
-                } else {
-                    for (item = 0; item < (unsigned int)enumItems; item++) {
-                        snd_mixer_selem_get_enum_item_name(elem, item, sizeof(itemname) - 1, itemname);
-                        if (QString(itemname) == ampMode) {
-                            snd_mixer_selem_set_enum_item(elem, (snd_mixer_selem_channel_id_t)0, item);
-                            break;
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-    if (currentMode != "Off")
-        ampMode = currentMode;
-    m_vsoVolumeObject->setAttribute("Amp",ampMode);
 
     closeMixer();
 }

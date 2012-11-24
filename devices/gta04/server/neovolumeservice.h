@@ -46,7 +46,6 @@ public slots:
     void changeAmpModeVS();
 
     void setAmp(bool);
-    void set1973Amp(bool);
 
     void toggleAmpMode();
 
