@@ -40,8 +40,6 @@ public slots:
     void decreaseVolume(int decrement);
     void setMute(bool mute);
 
-    void adjustMicrophoneVolume(int volume);
-
 private slots:
     void registerService();
     void initVolumes();

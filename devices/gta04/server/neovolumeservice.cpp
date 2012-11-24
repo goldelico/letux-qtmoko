@@ -174,28 +174,6 @@ void NeoVolumeService::adjustSpeakerVolume(int left, int right)
     saveState();
 }
 
-void NeoVolumeService::adjustMicrophoneVolume(int volume)
-{
-    initMixer();
-
-    for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
-        if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
-            snd_mixer_selem_is_active(elem)) {
-
-            QString elemName = QString(snd_mixer_selem_get_name(elem));
-
-            // Mic Input
-            if (elemName == "VLC Capture Target") { 
-                if (snd_mixer_selem_has_playback_volume(elem) > 0)
-                    snd_mixer_selem_set_capture_volume(elem,SND_MIXER_SCHN_FRONT_LEFT, (long)&volume);
-            }
-        }
-    }
-
-    closeMixer();
-    saveState();
-}
-
 int NeoVolumeService::initMixer()
 {
     int result;
