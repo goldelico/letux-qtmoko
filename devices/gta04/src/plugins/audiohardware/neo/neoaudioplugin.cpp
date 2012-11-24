@@ -459,16 +459,6 @@ void HeadsetAudioState::onHeadsetModified()
 
     qLog(AudioState) << __PRETTY_FUNCTION__ << avail;
 
-    if (!avail) {
-        QtopiaIpcEnvelope e("QPE/AudioVolumeManager/NeoVolumeService",
-                            "setAmp(bool)");
-        e << true;              //turn on the speaker amp
-    } else {
-        QtopiaIpcEnvelope e("QPE/AudioVolumeManager/NeoVolumeService",
-                            "setAmp(bool)");
-        e << false;             //turn of the speaker amp
-    }
-
     emit availabilityChanged(avail);
 }
 

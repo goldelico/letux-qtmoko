@@ -43,11 +43,6 @@ NeoVolumeService::NeoVolumeService()
     qLog(AudioState) << __PRETTY_FUNCTION__;
 
     m_adaptor = new QtopiaIpcAdaptor("QPE/NeoModem", this);
-    m_vsoVolumeObject = new QValueSpaceObject("/Hardware/Audio");
-
-    QValueSpaceItem *ampmode = new QValueSpaceItem("/System/Tasks/NeoVolumeService/ampMode");
-    QObject::connect(ampmode, SIGNAL(contentsChanged()),
-                     this, SLOT(toggleAmpMode()));
 
     QTimer::singleShot(0, this, SLOT(registerService()));
 }
@@ -278,81 +273,6 @@ int NeoVolumeService::saveState()
     qLog(AudioState) << cmd;
     system(cmd.toLocal8Bit());
     return 0;
-}
-
-/*
-  sets the vso to current amp mode from mixer
- */
-void NeoVolumeService::changeAmpModeVS()
-{
-    char itemname[40];
-    unsigned int item = 0;
-    initMixer();
-
-    for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
-        if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
-            snd_mixer_selem_is_enumerated(elem) &&
-            snd_mixer_selem_is_active(elem)) {
-
-            elemName = QString(snd_mixer_selem_get_name(elem));
-            if (elemName == "Amp Spk") {
-                //current selection
-                snd_mixer_selem_get_enum_item(elem, (snd_mixer_selem_channel_id_t)0, &item);
-                snd_mixer_selem_get_enum_item_name(elem, item, sizeof(itemname) - 1, itemname);
-                m_vsoVolumeObject->setAttribute("Amp",itemname);
-            }
-        }
-      }
-      closeMixer();
-}
-
-/*
-set Amp spk on neo's audio card
-*/
-void NeoVolumeService::setAmp(bool mode)
-{
-    qLog(AudioState) << __PRETTY_FUNCTION__ << mode;
-    QValueSpaceItem *device = new QValueSpaceItem("/Hardware/Neo/Device");
-
-    QValueSpaceItem ampVS("/Hardware/Audio/Amp");
-    QString ok = ampVS.value().toString();
-
-    initMixer();
-    unsigned int item = 0;
-
-    for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
-        if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
-             //   snd_mixer_selem_is_enumerated(elem) &&
-             snd_mixer_selem_is_active(elem)) {
-
-            elemName = QString(snd_mixer_selem_get_name(elem));
-
-            if (elemName.contains("Amp Spk")) {
-                qLog(AudioState) << "switch says" << elemName << mode;
-
-                if (snd_mixer_selem_has_playback_switch(elem)) {
-                    snd_mixer_selem_set_playback_switch(elem,
-                                                        snd_mixer_selem_channel_id_t(item),
-                                                        mode ? 1:0);
-                    m_vsoVolumeObject->setAttribute("Amp",mode);
-                }
-            }
-        }
-    }
-
-    closeMixer();
-}
-
-
-void NeoVolumeService::toggleAmpMode()
-{
-    QValueSpaceItem ampVS("/Hardware/Audio/Amp");
-    QString ampMode = ampVS.value().toString();
-
-    if (ampMode == "Off")
-        setAmp(false);
-    else
-        setAmp(true);
 }
 
 QTOPIA_TASK(NeoVolumeService, NeoVolumeService);
