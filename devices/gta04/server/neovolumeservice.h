@@ -58,7 +58,6 @@ private:
 protected:
     snd_mixer_t *mixerFd;
     snd_mixer_elem_t *elem;
-    QString elemName;
 
     int m_minOutputVolume;
     int m_maxOutputVolume;

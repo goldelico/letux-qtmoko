@@ -99,7 +99,7 @@ void NeoVolumeService::initVolumes()
         if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
             snd_mixer_selem_is_active(elem)) {
 
-            elemName = QString(snd_mixer_selem_get_name(elem));
+            QString elemName = QString(snd_mixer_selem_get_name(elem));
 
             if (elemName == "Headphone") { // Master output
                 snd_mixer_selem_get_playback_volume_range(elem, &minPVolume, &maxPVolume);
@@ -160,7 +160,7 @@ void NeoVolumeService::adjustSpeakerVolume(int left, int right)
         if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
             snd_mixer_selem_is_active(elem)) {
 
-            elemName = QString(snd_mixer_selem_get_name(elem));
+            QString elemName = QString(snd_mixer_selem_get_name(elem));
 
             // Master output, could use PCM
             if (elemName == QLatin1String("Headphone")) { 
@@ -184,7 +184,7 @@ void NeoVolumeService::adjustMicrophoneVolume(int volume)
         if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
             snd_mixer_selem_is_active(elem)) {
 
-            elemName = QString(snd_mixer_selem_get_name(elem));
+            QString elemName = QString(snd_mixer_selem_get_name(elem));
 
             // Mic Input
             if (elemName == "VLC Capture Target") { 
