@@ -42,12 +42,9 @@ public slots:
 
 private slots:
     void registerService();
-    void initVolumes();
 
 private:
     void adjustVolume(int leftChannel, int rightChannel, AdjustType);
-
-    QtopiaIpcAdaptor *m_adaptor;
 
 protected:
     snd_mixer_t *mixerFd;

@@ -40,8 +40,6 @@ NeoVolumeService::NeoVolumeService()
     publishAll(Slots);
     qLog(AudioState) << __PRETTY_FUNCTION__;
 
-    m_adaptor = new QtopiaIpcAdaptor("QPE/NeoModem", this);
-
     QTimer::singleShot(0, this, SLOT(registerService()));
 }
 
@@ -79,51 +77,6 @@ void NeoVolumeService::registerService()
 {
     QtopiaIpcEnvelope e("QPE/AudioVolumeManager", "registerHandler(QString,QString)");
     e << QString("Headset") << QString("QPE/AudioVolumeManager/NeoVolumeService");
-
-    QTimer::singleShot(0, this, SLOT(initVolumes()));
-}
-
-void NeoVolumeService::initVolumes()
-{
-    qLog(AudioState) << __PRETTY_FUNCTION__;
-
-    initMixer();
-    snd_mixer_elem_t *elem;
-    long minPVolume;
-    long maxPVolume;
-    long volume;
-
-    for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
-        if (snd_mixer_elem_get_type(elem) == SND_MIXER_ELEM_SIMPLE &&
-            snd_mixer_selem_is_active(elem)) {
-
-            QString elemName = QString(snd_mixer_selem_get_name(elem));
-
-            if (elemName == "Headphone") { // Master output
-                snd_mixer_selem_get_playback_volume_range(elem, &minPVolume, &maxPVolume);
-
-                m_adaptor->send(MESSAGE(setSpeakerVolumeRange(int,int)), (int)minPVolume, (int)maxPVolume);
-
-                if(snd_mixer_selem_has_playback_volume(elem) > 0)
-                    snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &volume);
-
-                m_adaptor->send(MESSAGE(setOutputVolume(int)), (int)volume);
-            }
-
-            if (elemName == "ALC Capture Target") { // mic??
-                snd_mixer_selem_get_capture_volume_range(elem, &minPVolume, &maxPVolume);
-
-                m_adaptor->send(MESSAGE(setMicVolumeRange(int,int)), (int)minPVolume, (int)maxPVolume);
-
-                if (snd_mixer_selem_has_capture_volume(elem) > 0)
-                    snd_mixer_selem_get_capture_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &volume);
-
-                m_adaptor->send(MESSAGE(setMicVolume(int)), (int)volume);
-            }
-        }
-    }
-
-    closeMixer();
 }
 
 void NeoVolumeService::adjustVolume(int leftChannel, int rightChannel, AdjustType adjust)
