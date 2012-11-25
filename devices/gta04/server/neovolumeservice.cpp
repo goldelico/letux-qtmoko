@@ -147,11 +147,7 @@ void NeoVolumeService::adjustVolume(int leftChannel, int rightChannel, AdjustTyp
 
     leftright = (left << 8) | right;
     leftright = (m_maxOutputVolume << 8) | m_maxOutputVolume;
-    adjustSpeakerVolume(left, right);
-}
 
-void NeoVolumeService::adjustSpeakerVolume(int left, int right)
-{
     initMixer();
 
     for (elem = snd_mixer_first_elem(mixerFd); elem; elem = snd_mixer_elem_next(elem)) {
@@ -252,4 +248,3 @@ int NeoVolumeService::saveState()
 }
 
 QTOPIA_TASK(NeoVolumeService, NeoVolumeService);
-

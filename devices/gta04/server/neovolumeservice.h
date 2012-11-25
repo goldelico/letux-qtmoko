@@ -59,7 +59,6 @@ protected:
     int initMixer();
     int closeMixer();
     int saveState();
-    void adjustSpeakerVolume(int left, int right);
 };
 
 #endif  // __QTOPIA_MEDIA_DEFAULTVOLUMEPROVIDER_H
