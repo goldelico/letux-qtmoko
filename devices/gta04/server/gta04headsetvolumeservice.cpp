@@ -64,10 +64,10 @@
 #include <QAudioStateConfiguration>
 #include <QAudioStateInfo>
 
-#include "neovolumeservice.h"
+#include "gta04headsetvolumeservice.h"
 
-NeoVolumeService::NeoVolumeService()
-    : QtopiaIpcAdaptor("QPE/AudioVolumeManager/NeoVolumeService")
+GTA04HeadsetVolumeService::GTA04HeadsetVolumeService()
+    : QtopiaIpcAdaptor("QPE/AudioVolumeManager/GTA04HeadsetVolumeService")
 {
     publishAll(Slots);
     qLog(AudioState) << __PRETTY_FUNCTION__;
@@ -75,43 +75,43 @@ NeoVolumeService::NeoVolumeService()
     QTimer::singleShot(0, this, SLOT(registerService()));
 }
 
-NeoVolumeService::~NeoVolumeService()
+GTA04HeadsetVolumeService::~GTA04HeadsetVolumeService()
 {
 }
 
-void NeoVolumeService::setVolume(int volume)
+void GTA04HeadsetVolumeService::setVolume(int volume)
 {
     adjustVolume(volume, volume, Absolute);
 }
 
-void NeoVolumeService::setVolume(int leftChannel, int rightChannel)
+void GTA04HeadsetVolumeService::setVolume(int leftChannel, int rightChannel)
 {
     adjustVolume(leftChannel, rightChannel, Absolute);
 }
 
-void NeoVolumeService::increaseVolume(int increment)
+void GTA04HeadsetVolumeService::increaseVolume(int increment)
 {
     adjustVolume(increment, increment, Relative);
 }
 
-void NeoVolumeService::decreaseVolume(int decrement)
+void GTA04HeadsetVolumeService::decreaseVolume(int decrement)
 {
     decrement *= -1;
 
     adjustVolume(decrement, decrement, Relative);
 }
 
-void NeoVolumeService::setMute(bool)
+void GTA04HeadsetVolumeService::setMute(bool)
 {
 }
 
-void NeoVolumeService::registerService()
+void GTA04HeadsetVolumeService::registerService()
 {
     QtopiaIpcEnvelope e("QPE/AudioVolumeManager", "registerHandler(QString,QString)");
-    e << QString("Headset") << QString("QPE/AudioVolumeManager/NeoVolumeService");
+    e << QString("Headset") << QString("QPE/AudioVolumeManager/GTA04HeadsetVolumeService");
 }
 
-void NeoVolumeService::adjustVolume(int leftChannel, int rightChannel, AdjustType adjust)
+void GTA04HeadsetVolumeService::adjustVolume(int leftChannel, int rightChannel, AdjustType adjust)
 {
     qLog(AudioState) << __PRETTY_FUNCTION__;
 
@@ -155,7 +155,7 @@ void NeoVolumeService::adjustVolume(int leftChannel, int rightChannel, AdjustTyp
     saveState();
 }
 
-int NeoVolumeService::initMixer()
+int GTA04HeadsetVolumeService::initMixer()
 {
     int result;
 
@@ -190,7 +190,7 @@ int NeoVolumeService::initMixer()
     return result;
 }
 
-int NeoVolumeService::closeMixer()
+int GTA04HeadsetVolumeService::closeMixer()
 {
     int result = snd_mixer_detach(mixerFd, "default");
     result = snd_mixer_close(mixerFd);
@@ -199,7 +199,7 @@ int NeoVolumeService::closeMixer()
     return 0;
 }
 
-int NeoVolumeService::saveState()
+int GTA04HeadsetVolumeService::saveState()
 {
     QAudioStateConfiguration *audioState;
     audioState = new QAudioStateConfiguration(this);
@@ -232,4 +232,4 @@ int NeoVolumeService::saveState()
     return 0;
 }
 
-QTOPIA_TASK(NeoVolumeService, NeoVolumeService);
+QTOPIA_TASK(GTA04HeadsetVolumeService, GTA04HeadsetVolumeService);

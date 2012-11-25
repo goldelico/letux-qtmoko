@@ -24,14 +24,14 @@
 
 #include <alsa/asoundlib.h>
 
-class NeoVolumeService : public QtopiaIpcAdaptor
+class GTA04HeadsetVolumeService : public QtopiaIpcAdaptor
 {
     Q_OBJECT
     enum AdjustType { Relative, Absolute };
 
 public:
-    NeoVolumeService();
-    ~NeoVolumeService();
+    GTA04HeadsetVolumeService();
+    ~GTA04HeadsetVolumeService();
 
 public slots:
     void setVolume(int volume);
