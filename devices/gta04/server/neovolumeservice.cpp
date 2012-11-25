@@ -17,6 +17,38 @@
 **
 ****************************************************************************/
 
+/* The claim of this class is that if a headset is plugged into the
+   phone, and there are hardware keys on that headset for increasing
+   and decreasing the headset volume, and those hardware keys are
+   mapped through to Qt as Qt::Key_VolumeUp and Qt::Key_VolumeDown -
+   then this class knows how to achieve the desired increase or
+   decrease in headset volume.
+
+   It does this by registering for the "Headset" domain and
+   implementing increaseVolume() and decreaseVolume() slots.
+
+   Currently on the GTA04 I believe there are a few problems / missing
+   pieces that prevent this from really working:
+
+   1. The mixer-setting code needs adjusting to use an appropriate and
+   precise GTA04 mixer control name.  There aren't any GTA04 controls
+   with "Headphone" in their name.
+
+   2. There isn't any code that sets the volume domain to "Headset".
+   Logically I think this should be in the place that detects headset
+   jack insertion.
+
+   3. I don't know if there's code to map headset hardware keys to
+   Qt::Key_VolumeUp and Qt::Key_VolumeDown.
+
+   I doubt any of this is a priority to fix, because I don't recall
+   any GTA04 owners talking about headset hardware keys.  But I think
+   it is worth recording what I believe the point of this code is, in
+   the context of trying to understand and improve the audio system
+   overall.
+
+   - Neil Jerram 2012-11-25 */
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <fcntl.h>
