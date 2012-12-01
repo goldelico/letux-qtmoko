@@ -230,7 +230,7 @@ bool StateFileAudioState::isAvailable() const
 
 bool StateFileAudioState::enter(QAudio::AudioCapability)
 {
-    if (m_info.domain() != "Phone") {
+    if ((!gta04a4) && (m_info.domain() != "Phone")) {
         gsmVoiceStop();
     }
 
@@ -246,7 +246,7 @@ bool StateFileAudioState::enter(QAudio::AudioCapability)
 
     bool ok = alsactl(QStringList() << "-f" << stateFile << "restore");
 
-    if (m_info.domain() == "Phone") {
+    if ((!gta04a4) && (m_info.domain() == "Phone")) {
         gsmVoiceStart();
     }
 
