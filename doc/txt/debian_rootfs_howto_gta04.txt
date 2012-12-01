@@ -426,6 +426,10 @@ create subdirectory here and unpack distribution tarball here. E.g:
     cd SHR
     tar xzvpf /path/to/shr-rootfs.tar.gz
 
+You need first SD partition to be FAT and enable initramfs multiboot system:
+
+    mkdir /media/p1/gta04-init
+
 Now press POWER, select the distribution from combo box and press "Restart Device"
 __END__
 
