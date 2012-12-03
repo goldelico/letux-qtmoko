@@ -73,6 +73,7 @@ static bool amixerSet(QStringList & args)
 }*/
 
 bool usePulse;
+bool gta04a4;
 
 static bool alsactl(QStringList & args)
 {
@@ -502,7 +503,7 @@ QAudioStatePlugin(parent)
     usePulse = QFile::exists("/usr/bin/pasuspender");
     
     // On A4+ models use HW sound routing, on A3 do SW routing
-    bool gta04a4 = QFile::exists("/sys/class/gpio/gpio186/value");
+    gta04a4 = QFile::exists("/sys/class/gpio/gpio186/value");
 
     /* Priority ordering for phone calls: Headset (if available),
        Bluetooth (if available), Earpiece, Speaker. */
