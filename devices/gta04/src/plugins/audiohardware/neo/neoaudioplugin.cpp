@@ -73,6 +73,7 @@ static bool amixerSet(QStringList & args)
 }*/
 
 bool usePulse;
+bool gta04a3;
 
 static bool alsactl(QStringList & args)
 {
@@ -230,23 +231,23 @@ bool StateFileAudioState::isAvailable() const
 
 bool StateFileAudioState::enter(QAudio::AudioCapability)
 {
-    if ((!gta04a4) && (m_info.domain() != "Phone")) {
+    if (gta04a3 && (m_info.domain() != "Phone")) {
         gsmVoiceStop();
     }
 
     QString stateFile = "/opt/qtmoko/etc/alsa/";
 
-    if (gta04a4) {
-        stateFile += "a4/";
-    } else {
+    if (gta04a3) {
         stateFile += "a3/";
+    } else {
+        stateFile += "a4/";
     }
 
     stateFile += m_info.domain() + m_info.profile() + ".state";
 
     bool ok = alsactl(QStringList() << "-f" << stateFile << "restore");
 
-    if ((!gta04a4) && (m_info.domain() == "Phone")) {
+    if (gta04a3 && (m_info.domain() == "Phone")) {
         gsmVoiceStart();
     }
 
@@ -502,7 +503,7 @@ QAudioStatePlugin(parent)
     usePulse = QFile::exists("/usr/bin/pasuspender");
     
     // On A4+ models use HW sound routing, on A3 do SW routing
-    bool gta04a4 = QFile::exists("/sys/class/gpio/gpio186/value");
+    gta04a3 = !(QFile::exists("/sys/class/gpio/gpio186/value"));
 
     /* Priority ordering for phone calls: Headset (if available),
        Bluetooth (if available), Earpiece, Speaker. */
