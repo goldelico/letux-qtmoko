@@ -1,6 +1,7 @@
 <package
       name="qtmoko-frozen-bubble"
       version="50-1"
+      arch="all"
       title="Frozen Bubble"
       summary="Cool game where you pop out the bubbles!"
       category="games"
