@@ -393,6 +393,18 @@ find  GTA02/lib/modules -name *.ko -exec /opt/toolchains/arm920t-eabi/bin/arm-li
 mkimage -A arm -O linux -T kernel -C none -a 30008000 -e 30008000 -n "qtmoko-v28" -d linux.bin uImage-GTA02.bin
 
 
+Step 9.2 - import QtMoko debian repository public keys
+======================================================
+
+* We use secure apt and we need keys for QtMoko repositories:
+
+chroot /media/card
+wget https://github.com/radekp/qtmoko/raw/master/dist/qtmoko-pubring.gpg
+apt-key add /qtmoko-pubring.gpg 
+rm qtmoko-pubring.gpg
+exit
+
+
 Step 9.5 - remove bash history
 ==============================
 
@@ -516,6 +528,11 @@ Step 13 - generate Packages.gz for debian repository
   have to generate Packages.gz:
 
 dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+
+* For secure apt you need to generate and sign Release file:
+
+apt-ftparchive release . > Release
+gpg -abs -o Release.gpg Release
 
 Boot speedup
 ============

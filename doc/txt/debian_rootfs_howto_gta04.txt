@@ -386,8 +386,19 @@ gconftool-2 -t string --set /system/gstreamer/0.10/default/audiosrc pulsesrc
 exit
 
 
-Step 9.5 - remove bash history
-==============================
+Step 9.5 - import QtMoko debian repository public keys
+======================================================
+
+* We use secure apt and we need keys for QtMoko repositories:
+
+chroot /media/card
+wget https://github.com/radekp/qtmoko/raw/master/dist/qtmoko-pubring.gpg
+apt-key add /qtmoko-pubring.gpg 
+rm qtmoko-pubring.gpg
+exit
+
+Step 9.5.1 - remove bash history
+================================
 
 * Remove .bash_history created during install
 
@@ -585,6 +596,11 @@ Step 13 - generate Packages.gz for debian repository
   have to generate Packages.gz:
 
 dpkg-scanpackages . /dev/null | gzip -9c > Packages.gz
+
+* For secure apt you need to generate and sign Release file:
+
+apt-ftparchive release . > Release
+gpg -abs -o Release.gpg Release
 
 
 Boot speedup
