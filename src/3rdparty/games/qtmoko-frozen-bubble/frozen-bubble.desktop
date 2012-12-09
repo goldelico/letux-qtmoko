@@ -1,7 +1,7 @@
 [Desktop Entry]
 Comment[]=Frozen Bubble
-Exec=/opt/qtmoko/bin/frozen-bubble.sh
-Icon=frozen-bubble.png
-Type=ConsoleApplication
+Exec=frozen-bubble.sh
+Icon=frozen-bubble
+Type=Application
 Name[]=Frozen Bubble
 
