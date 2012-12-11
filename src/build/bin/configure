@@ -3078,7 +3078,7 @@ if ( opt("qtopia_ui") && !opt("qte_config") ) {
     }
     my $args = "-embedded ".opt("arch")." -platform $qt_platform -xplatform $qt_xplatform ".
                "-prefix ".fixpath("$SDKROOT/qtopiacore/target")." -make src -nomake tools ".
-               "-no-stl -no-exceptions -no-xmlpatterns -no-qt3support -no-phonon -no-cups -no-dbus -no-accessibility ".
+               "-no-stl -no-exceptions -no-xmlpatterns -no-qt3support -phonon -no-phonon-backend -no-cups -no-dbus -no-accessibility ".
                "-nomake examples -nomake demos -nomake docs ".
                "-DQT_QWS_DISABLE_FLUSHCLIPPING ".
                "-confirm-license -opensource";
