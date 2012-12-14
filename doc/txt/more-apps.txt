@@ -1,0 +1,9 @@
+Installing more apps to QtMoko release tarball
+==============================================
+
+* You can continue here after creating rootfs tarball (the rootfs is in
+  /media/card) and install more qtmoko apps.
+  
+chroot /media/card
+apt-get update
+apt-get install 
