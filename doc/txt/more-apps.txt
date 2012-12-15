@@ -13,7 +13,7 @@ dpkg -i *.deb
 chroot /media/card
 apt-get update
 apt-get -f install
-apt-get install gnuchess
+apt-get install gnuchess gstreamer-plugins-good gstreamer-plugins-bad gstreamer-plugins-ugly
 
 rm /var/cache/apt/archives/*.deb
 
