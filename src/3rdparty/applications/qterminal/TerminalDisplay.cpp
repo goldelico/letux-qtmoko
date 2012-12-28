@@ -212,6 +212,10 @@ void TerminalDisplay::setVTFont(const QFont& f)
 {
   QFont font = f;
 
+#ifdef QTOPIA_PHONE
+  font.setPixelSize(font.pointSize() * 5);  // ugly workaround to make cursor appear where it shoudl be (after last char)
+#endif
+
   QFontMetrics metrics(font);
 
   if ( metrics.height() < height() && metrics.maxWidth() < width() )
