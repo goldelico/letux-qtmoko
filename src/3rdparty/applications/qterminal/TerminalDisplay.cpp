@@ -656,7 +656,7 @@ void TerminalDisplay::drawCharacters(QPainter& painter,
     if ( isLineCharString(text) )
 	  	drawLineCharString(painter,rect.x(),rect.y(),text,style);
     else
-        painter.drawText(rect,text);
+        painter.drawText(rect,Qt::AlignLeft | Qt::AlignVCenter,text);
 }
 
 void TerminalDisplay::drawTextFragment(QPainter& painter , 
