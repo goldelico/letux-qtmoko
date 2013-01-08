@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,libasound2-plugins,liblcms1,libmng1,libpulse-mainloop-glib0,libvorbisfile3 wheezy /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-plugins-base,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,liblcms1,libmng1,libpulse-mainloop-glib0,libvorbisfile3 wheezy /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -81,9 +81,9 @@ __END_CHROOT__
 Step 3 - add more package repositories
 ========================================
 
-echo "deb http://cdn.debian.net/debian squeeze contrib" >> /media/card/etc/apt/sources.list
-echo "deb http://cdn.debian.net/debian squeeze non-free" >> /media/card/etc/apt/sources.list
-echo "deb http://security.debian.org/ squeeze/updates main contrib non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://cdn.debian.net/debian wheezy contrib" >> /media/card/etc/apt/sources.list
+echo "deb http://cdn.debian.net/debian wheezy non-free" >> /media/card/etc/apt/sources.list
+echo "deb http://security.debian.org/ wheezy/updates main contrib non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/debian/gta04 /" >> /media/card/etc/apt/sources.list
 echo "deb http://qtmoko.sourceforge.net/apps /" >> /media/card/etc/apt/sources.list
 
@@ -131,8 +131,8 @@ Step 4.1 - stable device nodes for UMTS
   We will use udev to create stable symlinks for us:
 
 cd /media/card/etc/udev/rules.d
-wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v51/GTA04/udev-rules/hso.rules
-wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v51/GTA04/udev-rules/input.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v52/GTA04/udev-rules/hso.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v52/GTA04/udev-rules/input.rules
 
 Step 4.2 - charging udev rules
 ==============================
@@ -258,9 +258,9 @@ exit
 Step 8 - install QtMoko
 =======================
 
-* I use qemu armel host for building qtmoko package. It should be as simple as
+* I use qemu armhf host for building qtmoko package. It should be as simple as
 
-git checkout v51
+git checkout v52
 dpkg-buildpackage
 
 * Note that you may need to install some dependencies before building:
@@ -280,10 +280,10 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_51-1_armel.deb
-dpkg -i qtmoko-gta04_51-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_52-1_armhf.deb
+dpkg -i qtmoko-gta04_52-1_armhf.deb
 update-rc.d qtmoko-gta04 defaults
-rm qtmoko-gta04_51-1_armel.deb
+rm qtmoko-gta04_52-1_armhf.deb
 exit
 killall qpe.sh                  # recent versions start qtmoko after install, so kill it
 rm -rf /media/card/home/root/*  # remove all stuff created by qpe
@@ -320,7 +320,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout v3.5-gta04-qtmoko-v51
+git checkout v3.5-gta04-qtmoko-v52
 
 * Create package in buildhost:
 
@@ -333,9 +333,9 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.5-qtmoko-gta04_51-1_armel.deb
-dpkg -i linux-image-3.5-qtmoko-gta04_51-1_armel.deb
-rm linux-image-3.5-qtmoko-gta04_51-1_armel.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
+dpkg -i linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
+rm linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
 exit
 
 * Install bootargs.scr so for correct kernel cmdline arguments:
@@ -364,17 +364,6 @@ Step 9.2 - Setup bluetooth uarts
 echo "-s 3000000 /dev/ttyO0 any 3000000" > /media/card/etc/bluetooth/uart
 
 
-Step 9.3 - Install libts from lindi
-===================================
-
-* It is needed for more recent kernels
-
-chroot /media/card
-wget http://lindi.iki.fi/lindi/tslib/libts-0.0-0_1.0-8lindi1_armel.deb
-dpkg -i libts-0.0-0_1.0-8lindi1_armel.deb
-rm libts-0.0-0_1.0-8lindi1_armel.deb
-exit
-
 Step 9.4 - Set pulseaudio as default source/sink for gstreamer
 ==============================================================
 
@@ -394,6 +383,11 @@ nano /media/card/etc/pulse/daemon.conf
 * Change the line with speex-float-3 to:
 
 resample-method = speex-fixed-3
+
+* In wheezy during gsm all the remote side does not hear you. Not sure what is
+  exactly the problem, but removing pulseaudio udev rules helps:
+  
+rm /media/card/lib/udev/rules.d/90-pulseaudio.rules
 
 
 Step 9.5 - import QtMoko debian repository public keys
@@ -473,7 +467,7 @@ Step 10 - release tarball
 =========================
 
 cd /media/card
-tar -czvf ../qtmoko-debian-gta04-v51.tar.gz .
+tar -czvf ../qtmoko-debian-gta04-v52.tar.gz .
 
 Step 11 - make ubifs image
 ==========================
@@ -527,12 +521,12 @@ __END__
 
 
 mkfs.ubifs -r /media/card -m 2048 -e 129024 -c 4007 -o ubifs.img
-ubinize -o qtmoko-debian-gta04-v51.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
+ubinize -o qtmoko-debian-gta04-v52.ubi -m 2048 -p 128KiB -s 512 ubinize.cfg
 rm ubifs.img
 
 * To install it on the device you need to boot from SD and:
 
-ubiformat /dev/mtd4 -f /qtmoko-debian-gta04-v51.ubi
+ubiformat /dev/mtd4 -f /qtmoko-debian-gta04-v52.ubi
 
 * To check that it's mountable:
 
@@ -548,8 +542,8 @@ Step 12 - jffs2 - not using anymore
 * Create jffs2 image: 
 
 cd /media
-mkfs.jffs2 -o qtmoko-debian-gta04-nosum-v51.jffs2 -e 0x20000 -n -d/media/card
-sumtool -n -e 0x20000 -p -i qtmoko-debian-gta04-nosum-v51.jffs2 -o qtmoko-debian-gta04-v51.jffs2
+mkfs.jffs2 -o qtmoko-debian-gta04-nosum-v52.jffs2 -e 0x20000 -n -d/media/card
+sumtool -n -e 0x20000 -p -i qtmoko-debian-gta04-nosum-v52.jffs2 -o qtmoko-debian-gta04-v52.jffs2
 
 * Create tarbal for NAND:
 
