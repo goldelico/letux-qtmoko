@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-plugins-base,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,liblcms1,libmng1,libpulse-mainloop-glib0,libvorbisfile3 wheezy /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,libasound2-plugins,liblcms1,libmng1,libtiff4,libpulse-mainloop-glib0,libvorbisfile3,libicu48 wheezy /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -43,6 +43,7 @@ mkdir /media/card/mnt/p2
 mkdir /media/card/mnt/p3
 mkdir /media/card/mnt/p5
 mkdir /media/card/mnt/p6
+mkdir /media/card/mnt/p7
 mkdir /media/card/media/card
 mkdir /media/card/media/p1
 echo "neo" > /media/card/etc/hostname
@@ -131,8 +132,8 @@ Step 4.1 - stable device nodes for UMTS
   We will use udev to create stable symlinks for us:
 
 cd /media/card/etc/udev/rules.d
-wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v52/GTA04/udev-rules/hso.rules
-wget https://raw.github.com/radekp/linux-2.6/v3.5-gta04-qtmoko-v52/GTA04/udev-rules/input.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.7-gta04-qtmoko-v52/GTA04/udev-rules/hso.rules
+wget https://raw.github.com/radekp/linux-2.6/v3.7-gta04-qtmoko-v52/GTA04/udev-rules/input.rules
 
 Step 4.2 - charging udev rules
 ==============================
@@ -306,9 +307,9 @@ Step 8.2 - some more alarm and ringtones
 
 mkdir -p /media/card/home/root/Documents
 cd /media/card/home/root/Documents
-wget https://github.com/radekp/qtmoko/raw/master/src/applications/clock/sounds/Alarm_Beep_01.ogg
-wget https://github.com/radekp/qtmoko/raw/master/src/applications/clock/sounds/Alarm_Beep_02.ogg
-wget https://github.com/radekp/qtmoko/raw/master/src/applications/clock/sounds/Alarm_Beep_03.ogg
+wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_01.ogg
+wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_02.ogg
+wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_03.ogg
 
 
 Step 9 - Linux kernel
@@ -320,7 +321,7 @@ http://github.com/radekp/linux-2.6/
 
 * Checkout branch for your qtmoko version:
 
-git checkout v3.5-gta04-qtmoko-v52
+git checkout v3.7-gta04-qtmoko-v52
 
 * Create package in buildhost:
 
@@ -333,15 +334,15 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
-dpkg -i linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
-rm linux-image-3.5-qtmoko-gta04_52-1_armhf.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
+dpkg -i linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
+rm linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
 exit
 
 * Install bootargs.scr so for correct kernel cmdline arguments:
 
 cd /media/card/boot
-wget https://github.com/radekp/qtmoko/raw/master/devices/gta04/boot/bootargs.scr
+wget https://raw.github.com/radekp/qtmoko/master/devices/gta04/boot/bootargs.scr
 
 
 Step 9.1 - Linux kernel cross compiling - not using anymore for releases
@@ -385,9 +386,13 @@ nano /media/card/etc/pulse/daemon.conf
 resample-method = speex-fixed-3
 
 * In wheezy during gsm all the remote side does not hear you. Not sure what is
-  exactly the problem, but removing pulseaudio udev rules helps:
+  exactly the problem, but commenting out udev magic helps:
   
-rm /media/card/lib/udev/rules.d/90-pulseaudio.rules
+nano /media/card/etc/pulse/default.pa
+
+* Comment out line:
+
+load-module module-udev-detect
 
 
 Step 9.5 - import QtMoko debian repository public keys
@@ -396,7 +401,7 @@ Step 9.5 - import QtMoko debian repository public keys
 * We use secure apt and we need keys for QtMoko repositories:
 
 cd /media/card
-wget https://github.com/radekp/qtmoko/raw/master/dist/qtmoko-pubring.gpg
+wget https://raw.github.com/radekp/qtmoko/master/dist/qtmoko-pubring.gpg
 chroot /media/card
 apt-key add /qtmoko-pubring.gpg 
 rm qtmoko-pubring.gpg
@@ -425,7 +430,7 @@ Step 9.7 - boot logo
 * gta04-init displays this logo on boot:
 
 cd /media/card/boot
-wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/sd.bmp
+wget -O logo.bmp https://raw.github.com/radekp/qtmoko/master/pics/gta04-init/sd.bmp
 
 Step 9.8 - directory for multiboot
 ==================================
@@ -476,7 +481,7 @@ Step 11 - make ubifs image
 
 cd /media/card/boot/
 rm -f logo.bmp
-wget -O logo.bmp https://github.com/radekp/qtmoko/raw/master/pics/gta04-init/nand.bmp
+wget -O logo.bmp https://raw.github.com/radekp/qtmoko/master/pics/gta04-init/nand.bmp
 
 * Remove doc and stuff that is not needed and makes NAND image slower:
 
