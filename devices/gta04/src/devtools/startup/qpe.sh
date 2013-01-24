@@ -18,6 +18,8 @@ fi
 
 # Saves power in suspend
 rfkill block gps &
+mount -t debugfs none /sys/kernel/debug/
+echo 1 > /sys/kernel/debug/pm_debug/enable_off_mode
 
 # Power on modem on GTA04A4 and higher
 modem-poweron.sh
