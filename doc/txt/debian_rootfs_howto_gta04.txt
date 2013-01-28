@@ -30,7 +30,7 @@ Step 1
 
 * We will be installing new image to /media/card:
 
-cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,libasound2-plugins,liblcms1,libmng1,libtiff4,libpulse-mainloop-glib0,libvorbisfile3,libicu48 wheezy /media/card/ http://cdn.debian.net/debian/
+cdebootstrap --flavour=minimal --include=ifupdown,net-tools,procps,netbase,nano,module-init-tools,wget,openssh-server,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,rfkill,ntpdate,libspeex1,libspeexdsp1,lsof,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-fluendo-mp3,gstreamer0.10-pulseaudio,pulseaudio,pulseaudio-utils,libasound2-plugins,liblcms1,libmng1,libtiff4,libpulse-mainloop-glib0,libvorbisfile3,libicu48 wheezy /media/card/ http://cdn.debian.net/debian/
 
 Step 2
 ======
@@ -85,8 +85,9 @@ Step 3 - add more package repositories
 echo "deb http://cdn.debian.net/debian wheezy contrib" >> /media/card/etc/apt/sources.list
 echo "deb http://cdn.debian.net/debian wheezy non-free" >> /media/card/etc/apt/sources.list
 echo "deb http://security.debian.org/ wheezy/updates main contrib non-free" >> /media/card/etc/apt/sources.list
-echo "deb http://qtmoko.sourceforge.net/debian/gta04 /" >> /media/card/etc/apt/sources.list
-echo "deb http://qtmoko.sourceforge.net/apps /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/debian/gta04/armhf /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/apps/all /" >> /media/card/etc/apt/sources.list
+echo "deb http://qtmoko.sourceforge.net/apps/armhf /" >> /media/card/etc/apt/sources.list
 
 Step 4
 ======
@@ -281,12 +282,13 @@ git submodule update --init
 * Install it
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/debian/gta04/qtmoko-gta04_52-1_armhf.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_52-1_armhf.deb
 dpkg -i qtmoko-gta04_52-1_armhf.deb
 update-rc.d qtmoko-gta04 defaults
 rm qtmoko-gta04_52-1_armhf.deb
 exit
 killall qpe.sh                  # recent versions start qtmoko after install, so kill it
+killall pulse.sh                # kill pulseaudio - in qemu it just eats cpu
 rm -rf /media/card/home/root/*  # remove all stuff created by qpe
 
 
@@ -297,7 +299,7 @@ Step 8.1 - install mokofaen theme
   package, so that user can uninstall it to save space. So install mokofaen:
 
 chroot /media/card/
-wget http://qtmoko.sourceforge.net/apps/qtmoko-theme-mokofaen_3-1_all.deb
+wget http://qtmoko.sourceforge.net/apps/all/qtmoko-theme-mokofaen_3-1_all.deb
 dpkg -i qtmoko-theme-mokofaen_3-1_all.deb
 rm qtmoko-theme-mokofaen_3-1_all.deb
 exit
@@ -334,7 +336,7 @@ dpkg-buildpackage
 * Install kernel image:
 
 chroot /media/card
-wget http://qtmoko.sourceforge.net/debian/gta04/linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
+wget http://qtmoko.sourceforge.net/debian/gta04/armhf/linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
 dpkg -i linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
 rm linux-image-3.7-qtmoko-gta04_52-1_armhf.deb
 exit
@@ -378,21 +380,11 @@ Step 9.4.1 - config pulseaudio
 ==============================
 
 * Use speex-fixed-3 for resampling (http://lists.goldelico.com/pipermail/gta04-owner/2012-November/003549.html)
+* Disable udev autodetection, because it's for some reason broken on GTA04:
 
-nano /media/card/etc/pulse/daemon.conf
-
-* Change the line with speex-float-3 to:
-
-resample-method = speex-fixed-3
-
-* In wheezy during gsm all the remote side does not hear you. Not sure what is
-  exactly the problem, but commenting out udev magic helps:
-  
-nano /media/card/etc/pulse/default.pa
-
-* Comment out line:
-
-load-module module-udev-detect
+cd /media/card/etc/pulse
+wget -O daemon.conf https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/daemon.conf
+wget -O default.pa https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/default.pa
 
 
 Step 9.5 - import QtMoko debian repository public keys
