@@ -464,7 +464,7 @@ Step 10 - release tarball
 =========================
 
 cd /media/card
-tar -czvf ../qtmoko-debian-gta04-v52.tar.gz .
+tar -czvf ../qtmoko-debian-gta04-v52-armhf.tar.gz .
 
 Step 11 - make ubifs image
 ==========================
