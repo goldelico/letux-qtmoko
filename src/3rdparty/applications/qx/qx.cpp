@@ -438,12 +438,15 @@ void QX::runApp(QString filename, QString applabel, bool rotate)
         }
         else
         {
+#ifdef QT_QWS_NEO
             args.append("-hide-cursor");
             args.append("-dpi");
             args.append("128");
-#ifdef QT_QWS_NEO
             xprocess->start("/usr/bin/Xglamo", args);
 #else
+            args.append("-nocursor");
+            args.append("-dpi");
+            args.append("128");
             xprocess->start("/usr/bin/Xfbdev", args);
 #endif
         }
