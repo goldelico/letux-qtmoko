@@ -172,7 +172,7 @@ QX::QX(QWidget *parent, Qt::WFlags f)
     screen = QX::ScreenMain;
 
     if(getenv("DISPLAY") == NULL)
-        setenv("DISPLAY", "0:0", true);
+        setenv("DISPLAY", ":0.0", true);
 
 #if QTOPIA
     powerConstraint = QtopiaApplication::Disable;
