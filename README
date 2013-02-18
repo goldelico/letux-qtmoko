@@ -35,6 +35,28 @@ make install
 
 ../qtmoko/devices/gta04/scripts/update_qtmoko
 
+Native compiling on GTA04
+=========================
+
+  * Very easy to setup, takes long time, can produce QtMoko armhf package
+
+  * You will need working QtMoko installation on at least 8GB partition
+  
+  * Install QtMoko dependecies:
+
+apt-get update
+apt-get install git ccache libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg8-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libpulse-dev libvorbis-dev
+  
+  * Get sources:
+  
+git clone git://github.com/radekp/qtmoko.git
+cd qtmoko
+git submodule init
+git submodule update
+
+  * Build the package:
+
+scripts/build-package-gta04.sh
 
 Cross compiling without chroot
 ==============================
