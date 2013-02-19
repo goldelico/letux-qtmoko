@@ -42,6 +42,12 @@ Native compiling on GTA04
 
   * You will need working QtMoko installation on at least 8GB partition
   
+  * Linking takes a lot of memory, so will need swap:
+  
+dd if=/dev/zero of=/swapfile bs=1024 count=1048576
+mkswap /swapfile
+swapon /swapfile
+  
   * Install QtMoko dependecies:
 
 apt-get update
@@ -58,11 +64,14 @@ git submodule update
 
 scripts/build-package-gta04.sh
 
-  * You might want to setup ccache, swapfile and stop some services for more
+  * You might want to stop some services for more
     RAM:
     
 /etc/init.d/qtmoko-gta04 stop
 /etc/init.d/bluetooth stop
+
+  * You can use ccache - first compilation will be slow but then compiling will
+    be very fast.
 
 Cross compiling without chroot
 ==============================
