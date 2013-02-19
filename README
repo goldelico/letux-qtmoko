@@ -45,7 +45,7 @@ Native compiling on GTA04
   * Install QtMoko dependecies:
 
 apt-get update
-apt-get install git ccache libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg8-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libpulse-dev libvorbis-dev
+apt-get install git quilt debhelper build-essential libtiff4-dev libmng-dev quilt libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg8-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libpulse-dev libvorbis-dev
   
   * Get sources:
   
@@ -57,6 +57,12 @@ git submodule update
   * Build the package:
 
 scripts/build-package-gta04.sh
+
+  * You might want to setup ccache, swapfile and stop some services for more
+    RAM:
+    
+/etc/init.d/qtmoko-gta04 stop
+/etc/init.d/bluetooth stop
 
 Cross compiling without chroot
 ==============================
