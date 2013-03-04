@@ -1,3 +1,9 @@
+qtmoko (54-1) unstable; urgency=low
+
+  * gta02 - increase modem gsm net reg timeout so it registers ok
+
+ -- Radek Polak <psonek2@seznam.cz>  Mon, 04 Mar 2013 09:02:00 +0100
+
 qtmoko (53-1) unstable; urgency=low
 
   * fix DISPLAY in QX and Xfbdev incocation (Neil Jerram)
