@@ -76,7 +76,7 @@ apt-get install emdebian-archive-keyring
 echo "deb http://cdn.debian.net/debian wheezy main contrib non-free" > /etc/apt/sources.list
 echo "deb http://www.emdebian.org/debian unstable main" >> /etc/apt/sources.list
 apt-get update
-apt-get install g++-4.6-arm-linux-gnueabihf
+apt-get install g++-4.7-arm-linux-gnueabihf
 
 echo "Installing xapt and ARM qtmoko dependencies"
 apt-get install xapt
