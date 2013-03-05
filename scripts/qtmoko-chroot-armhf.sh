@@ -34,7 +34,7 @@ then
     fi
 
     echo "Installing chroot packages"
-    until cdebootstrap --flavour=minimal --include=build-essential,git,openssh-client,ccache,locales,procps,psmisc,libxext-dev,libasound2-dev,libdbus-1-dev,libssl-dev,libts-dev,libbluetooth-dev,libxtst-dev,libpng12-dev,libjpeg8-dev,libv4l-dev,libspeexdsp-dev,libglib2.0-dev,libsqlite3-dev,quilt,libgstreamer0.10-dev,libgstreamer-plugins-base0.10-dev,libpulse-dev wheezy ../qtmoko-chroot http://cdn.debian.net/debian/; do
+    until cdebootstrap --flavour=minimal --include=build-essential,git,openssh-client,ccache,locales,procps,psmisc,libxext-dev,libasound2-dev,libdbus-1-dev,libssl-dev,libts-dev,libbluetooth-dev,libxtst-dev,libpng12-dev,libjpeg8-dev,libv4l-dev,libspeexdsp-dev,libglib2.0-dev,libsqlite3-dev,quilt,libgstreamer0.10-dev,libgstreamer-plugins-base0.10-dev,libpulse-dev,wget,curl wheezy ../qtmoko-chroot http://cdn.debian.net/debian/; do
 	:
     done
 fi
