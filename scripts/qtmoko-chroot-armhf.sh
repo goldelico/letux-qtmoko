@@ -66,7 +66,7 @@ then
     mount -o bind /var/run/ ../qtmoko-chroot/var/run
 fi
 
-if [ ! -e ../qtmoko-chroot/usr/bin/arm-linux-gnueabi-gcc ]
+if [ ! -e ../qtmoko-chroot/usr/bin/arm-linux-gnueabihf-gcc-4.7 ]
 then
     cat > ../qtmoko-chroot/finish_chroot_install.sh <<__END__
 #!/bin/bash
