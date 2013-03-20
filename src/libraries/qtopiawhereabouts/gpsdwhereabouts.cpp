@@ -126,18 +126,20 @@ void QGpsdWhereabouts::timerEvent(QTimerEvent *event)
     else
        elapsed_time += POLL_MS;
 
-    if(!gps_waiting(&gps_data,1)) {
+#if GPSD_API_MAJOR_VERSION >= 5
+    if(!gps_waiting(gps_data,1)) {
         //debugprintf( "timerEvent, but no data avilable");
+        return;
+    }
+#endif    
+
+    if(gps_read(gps_data) == -1) {
+        errorprintf("timerEvent: read error");
     }
     else {
-        if(gps_read(&gps_data) == -1) {
-            errorprintf("timerEvent: read error");
-        }
-        else {
-            debugprintf("Got set: %x", (unsigned int)gps_data.set);
-	    parseFix(&gps_data);
-        }
-    }   
+        debugprintf("Got set: %x", (unsigned int)gps_data.set);
+        parseFix(gps_data);
+    }
 }
 
 /*!
@@ -255,10 +257,19 @@ bool QGpsdWhereabouts :: activateGps()
     if(active)
        return true;
     QString s_port = QString::number(m_port);
-    /* Connect to gpsd*/
+    
+#if GPSD_API_MAJOR_VERSION >= 5
+    gps_data = &gpsdata;
+
+    /* gps_open returns 0 on success */
     ret = gps_open(m_address.toString().toUtf8().constData(),
-                   s_port.toUtf8().constData(),
-                   &gps_data);
+                   s_port.toUtf8().constData(), gps_data);
+#else
+    gps_data = gps_open(m_address.toString().toUtf8().constData(),
+                        s_port.toUtf8().constData());
+    ret = (gps_data == 0);
+#endif
+    
     if(ret != 0)
     {
         /* Sh*t. Seem there is no gpsd */
@@ -275,7 +286,7 @@ bool QGpsdWhereabouts :: activateGps()
     m_queryTimer->start(POLL_MS, this);
 
     /* Tell gpsd we want updates */
-    ret = gps_stream(&gps_data, WATCH_ENABLE|WATCH_JSON, NULL);
+    ret = gps_stream(gps_data, WATCH_ENABLE|WATCH_JSON, NULL);
     if(ret != 0){
         errorprintf("No GPSD running.");
     }
@@ -296,9 +307,9 @@ void QGpsdWhereabouts :: deactivateGps()
 
     if(active) {
         debugprintf("Shut down GPSD.");
-        gps_stream(&gps_data, WATCH_DISABLE, NULL);
+        gps_stream(gps_data, WATCH_DISABLE, NULL);
 	sleep(2); /* give gpsd some time to shut down */
-        gps_close(&gps_data);
+        gps_close(gps_data);
     }
     setState(QWhereabouts::NotAvailable);
     active = false;
