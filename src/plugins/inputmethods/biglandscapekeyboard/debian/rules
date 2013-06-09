@@ -9,7 +9,7 @@ clean:
 binary: build
 	/root/qte/build/bin/qbuild image
 	mkdir -p debian/tmp/opt/qtmoko/plugins/inputmethods
-	cp /root/qte/build/image/plugins/inputmethods/libqqbigkeyboard.so debian/tmp/opt/qtmoko/plugins/inputmethods
+	cp /root/qte/build/image/plugins/inputmethods/libqbigkeyboard.so debian/tmp/opt/qtmoko/plugins/inputmethods
 	install -d debian/tmp/DEBIAN
 	dpkg-gencontrol
 	chown -R root:root debian/tmp/opt
