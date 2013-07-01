@@ -39,7 +39,6 @@
 #include <QDBusConnection>
 #include <QDBusMessage>
 #include <QSet>
-#include <QFile>
 #include <QDebug>
 #include <QMetaObject>
 
@@ -90,11 +89,6 @@ template <class T>
                                          const char * returnMethod,
                                          const char * errorMethod)
 {
-    if(!QFile::exists("/var/run/dbus/system_bus_socket")) {
-        qWarning() << "/var/run/dbus/system_bus_socket does not exit, dbus crashed?";
-        return false;
-    }
-    
     if(!isValid()) {
         qWarning() << "Dbus interface " << path() << " is not valid";
         return false;
