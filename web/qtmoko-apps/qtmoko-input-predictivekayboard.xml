@@ -1,6 +1,5 @@
 <package
       name="qtmoko-input-predictivekeyboard"
-      arch="all"
       version="1-1"
       title="Predictive keyboard"
       summary="Finger friendly predictive keyboard"

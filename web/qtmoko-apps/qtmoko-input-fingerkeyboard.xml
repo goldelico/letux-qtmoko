@@ -1,6 +1,5 @@
 <package
       name="qtmoko-input-fingerkeyboard"
-      arch="all"
       version="1-1"
       title="Finger friendly keyboard"
       summary="Keyboard quite friendly for writing without stylus"

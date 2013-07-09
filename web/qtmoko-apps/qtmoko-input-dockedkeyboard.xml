@@ -1,6 +1,5 @@
 <package
       name="qtmoko-input-dockedkeyboard"
-      arch="all"
       version="1-1"
       title="Docked keyboard"
       summary="Small keyboard docked on bottom of screen, quite nice e.g. for terminal"
