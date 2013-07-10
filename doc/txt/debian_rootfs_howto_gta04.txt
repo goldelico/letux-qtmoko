@@ -364,11 +364,11 @@ Step 9.1 - Linux kernel cross compiling - not using anymore for releases
 
 * If you want to cross compile kernel and make uboot image on PC:
 
-make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm gta04_qtmoko_defconfig
-make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm uImage
-make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm modules
-make CROSS_COMPILE=/usr/bin/arm-linux-gnueabi- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
-find  GTA04/lib/modules -name *.ko -exec /usr/bin/arm-linux-gnueabi-strip -R .not -R .comment --strip-unneeded {} \;
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- ARCH=arm gta04_qtmoko_defconfig
+make -j8 CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- ARCH=arm uImage
+make -j8 CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- ARCH=arm modules
+make CROSS_COMPILE=/usr/bin/arm-linux-gnueabihf- ARCH=arm modules_install INSTALL_MOD_PATH=GTA04
+find  GTA04/lib/modules -name *.ko -exec /usr/bin/arm-linux-gnueabihf-strip -R .not -R .comment --strip-unneeded {} \;
 
 Step 9.2 - Setup bluetooth uarts
 ================================
