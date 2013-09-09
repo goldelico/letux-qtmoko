@@ -27,6 +27,8 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     connect(chkFso, SIGNAL(stateChanged(int)), this, SLOT(fsoStateChanged(int)));
 
     label = new QLabel(this);
+    normalFont = label->font();
+    smallFont = QFont(normalFont.family(), (3 * normalFont.pointSize()) / 5);
     lineEdit = new QLineEdit(this);
 
     label4 = new QLabel(this);
@@ -171,6 +173,14 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     if(this->screen == ScreenMixer)
     {
         closeAlsaMixer();
+    }
+    if(this->screen == ScreenSysfs)
+    {
+        label->setFont(normalFont);
+    }
+    if(scr == ScreenSysfs)
+    {
+        label->setFont(smallFont);
     }
 
     this->screen = scr;
@@ -432,7 +442,7 @@ void NeoControl::updateModem()
     QTimer::singleShot(1000, this, SLOT(updateModem()));
 }
 
-static void appendValue(QString desc, QString file, QString *text)
+static void appendValue(QString desc, QString file, QString *text, QByteArray replaceBefore = "", QByteArray replaceAfter = "")
 {
     text->append(desc);
     text->append(": ");
@@ -451,6 +461,9 @@ static void appendValue(QString desc, QString file, QString *text)
         }
         else
         {
+            if(replaceBefore.count() > 0) {
+                content = content.replace(replaceBefore, replaceAfter);
+            }
             text->append(content);
         }
         f.close();
@@ -465,25 +478,10 @@ void NeoControl::updateSysfs()
     }
 
     QString text;
-    appendValue(tr("Battery type"), "/sys/class/power_supply/bq27000-battery/type", &text);
-    appendValue(tr("  Status"), "/sys/class/power_supply/bq27000-battery/status", &text);
-    text[text.length() - 1] = ' ';
-    appendValue(tr("  Present"), "/sys/class/power_supply/bq27000-battery/present", &text);
-    appendValue(tr("  Capacity"), "/sys/class/power_supply/bq27000-battery/capacity", &text);
-    appendValue(tr("  Current now"), "/sys/class/power_supply/bq27000-battery/current_now", &text);
-    appendValue(tr("  Voltage now"), "/sys/class/power_supply/bq27000-battery/voltage_now", &text);
-    //appendValue(tr("  Time to empty avg"), "/sys/class/power_supply/bq27000-battery/time_to_empty_avg", &text);
-    appendValue(tr("  Time to empty now"), "/sys/class/power_supply/bq27000-battery/time_to_empty_now", &text);
-    appendValue(tr("  Time to full now"), "/sys/class/power_supply/bq27000-battery/time_to_full_now", &text);
-    appendValue(tr("  Charge full"), "/sys/class/power_supply/bq27000-battery/charge_full", &text);
-    appendValue(tr("  Charge now"), "/sys/class/power_supply/bq27000-battery/charge_now", &text);
-    appendValue(tr("  Cycle count"), "/sys/class/power_supply/bq27000-battery/cycle_count", &text);
-    appendValue(tr("  Energy now"), "/sys/class/power_supply/bq27000-battery/energy_now", &text);
-    appendValue(tr("  Temperature"), "/sys/class/power_supply/bq27000-battery/temp", &text);
-    text[text.length() - 1] = ' ';
-    appendValue(tr("  Type"), "/sys/class/power_supply/bq27000-battery/technology", &text);
-    //appendValue(tr("  Technology"), "/sys/class/power_supply/bq27000-battery/type", &text);
-    appendValue(tr("  Charge full design"), "/sys/class/power_supply/bq27000-battery/charge_full_design", &text);
+    appendValue(tr("Battery"), "/sys/class/power_supply/bq27000-battery/uevent", &text, "POWER_SUPPLY_", "  ");
+    appendValue(tr("USB"), "/sys/class/power_supply/twl4030_usb/uevent", &text, "POWER_SUPPLY_", "  ");
+    appendValue(tr("USB max current"), "/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current", &text);
+
     label->setText(text);
 
     QTimer::singleShot(1000, this, SLOT(updateSysfs()));

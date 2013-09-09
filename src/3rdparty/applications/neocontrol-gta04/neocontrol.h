@@ -69,6 +69,8 @@ private:
     QLabel *label5;
     MixerSlider *slider4;
     MixerSlider *slider5;
+    QFont normalFont;
+    QFont smallFont;
 
     void showScreen(NeoControl::Screen scr);
     int openAlsaMixer();
