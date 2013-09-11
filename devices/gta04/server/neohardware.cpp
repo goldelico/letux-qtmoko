@@ -110,7 +110,7 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
 
     QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
                               this, SLOT(headphonesInserted(bool)));
-    
+
     // By default limit charging current to 250mA, we will increase it once we
     // know that charging voltage wont drop under 4.5V, for more info see:
     // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
@@ -123,17 +123,18 @@ NeoHardware::~NeoHardware()
 
 void NeoHardware::setMaxChargeCurrent(int newValue)
 {
-    if(newValue < 100000)
+    if (newValue < 100000)
         newValue = 100000;
-    if(newValue > MAX_CURRENT)
+    if (newValue > MAX_CURRENT)
         newValue = MAX_CURRENT;
-    if(maxChargeCurrent == newValue)
+    if (maxChargeCurrent == newValue)
         return;
 
     char buf[7];
     maxChargeCurrent = newValue;
     sprintf(buf, "%d", maxChargeCurrent);
-    qWriteFile("/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current", buf);
+    qWriteFile("/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current",
+               buf);
 }
 
 // Parse uevent string and return given attribute value. Example uevent file:
@@ -212,35 +213,39 @@ void NeoHardware::updateStatus()
 
     int currentNow = getIntAttr("POWER_SUPPLY_CURRENT_NOW=", uevent);
     batteryVso.setAttribute("current_now", QString::number(currentNow / 1000));
-    
+
     // Now we will try to set max_current so that phone charges reliably.
     int chargerVoltage = -1;
-    if(chargerOn) {
-        QByteArray chargerUevent = qReadFile("/sys/class/power_supply/twl4030_usb/uevent");
+    if (chargerOn) {
+        QByteArray chargerUevent =
+            qReadFile("/sys/class/power_supply/twl4030_usb/uevent");
         chargerVoltage = getIntAttr("POWER_SUPPLY_VOLTAGE_NOW=", chargerUevent);
 
         // Warn if charging voltage drops too low
-        if(chargerVoltage < 4500000)
-            qWarning() << "Charging voltage dropped to " << chargerVoltage << ", charging might not restart when battery gets low";
-        
+        if (chargerVoltage < 4500000)
+            qWarning() << "Charging voltage dropped to " << chargerVoltage <<
+                ", charging might not restart when battery gets low";
+
         // Battery discharges
-        if(currentNow > 0) {
+        if (currentNow > 0) {
             // Increase charging current until 500mA if voltage is above 4.6V
-            if(chargerVoltage > 4600000) {
+            if (chargerVoltage > 4600000) {
                 setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
             }
-        } else if(capacity > 90 && currentNow < -5000 && oldChargeNow != chargeNow) {        // Battery is finishing charging, we will slow charging
-            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2);         // slow it down
+        } else if (capacity > 90 && currentNow < -5000 && oldChargeNow != chargeNow) {  // Battery is finishing charging, we will slow charging
+            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow it down
         }
-    } else if(maxChargeCurrent > INIT_CURRENT) {
+    } else if (maxChargeCurrent > INIT_CURRENT) {
         setMaxChargeCurrent(INIT_CURRENT);
     }
     oldChargeNow = chargeNow;
 
     // Charging log
-    if(lastLogDt.secsTo(now) >= 300) {
+    if (lastLogDt.secsTo(now) >= 300) {
         lastLogDt = now;
-        QString newEntry = now.toString("yyyy-MM-dd hh:mm:ss") + "\t" + QString::number(chargeNow) + "\n";
+        QString newEntry =
+            now.toString("yyyy-MM-dd hh:mm:ss") + "\t" +
+            QString::number(chargeNow) + "\n";
         QString logContent = chargeLog.value().toString();
         batteryVso.setAttribute("charge_log", logContent + newEntry);
     }
@@ -264,8 +269,8 @@ void NeoHardware::uevent()
 void NeoHardware::shutdownRequested()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
-                                                  ShutdownSystem);
+    QtopiaServerApplication::instance()->
+        shutdown(QtopiaServerApplication::ShutdownSystem);
 }
 
 void NeoHardware::headphonesInserted(bool b)
