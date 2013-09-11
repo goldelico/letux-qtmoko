@@ -24,6 +24,7 @@
 #include <QTimer>
 #include <QObject>
 #include <QProcess>
+#include <QDateTime>
 #include <QTcpSocket>
 #include <QtopiaIpcAdaptor>
 #include <QPowerSourceProvider>
@@ -38,6 +39,17 @@ class QSocketNotifier;
 class QtopiaIpcAdaptor;
 class QSpeakerPhoneAccessoryProvider;
 
+// Initial charging current - we will raise if until charging voltage does not
+// drop under 4.6V
+#define INIT_CURRENT 250000
+
+// Max charging current
+#define MAX_CURRENT 500000
+
+// Max value used to raise charging current. We cant raise with large numbers
+// because charging voltage could drop below 4.4V and made charging unreliable
+#define CURRENT_PLUS 50000
+
 class NeoHardware : public QObject
 {
     Q_OBJECT
@@ -50,12 +62,17 @@ private:
     QPowerSourceProvider battery;
     QValueSpaceObject batteryVso;
     QValueSpaceObject vsoPortableHandsfree;
+    QValueSpaceItem chargeLog;                         // power supply log
+    QDateTime lastLogDt;
     QTcpSocket ueventSocket;
     QTimer timer;
+    int maxChargeCurrent;
+    int oldChargeNow;
     bool hasSmartBattery;
     QtopiaIpcAdaptor *adaptor;
     QtopiaIpcAdaptor *audioMgr;
-
+    void setMaxChargeCurrent(int newValue);
+    
 private slots:
     void headphonesInserted(bool);
     void shutdownRequested();

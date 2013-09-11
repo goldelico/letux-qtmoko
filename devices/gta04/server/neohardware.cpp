@@ -84,6 +84,8 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , batteryVso("/UI/Battery", this)
     , vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
+    , chargeLog("/UI/Battery/charge_log")
+    , lastLogDt()
     , ueventSocket(this)
     , timer(this)
 {
@@ -108,10 +110,30 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
 
     QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
                               this, SLOT(headphonesInserted(bool)));
+    
+    // By default limit charging current to 250mA, we will increase it once we
+    // know that charging voltage wont drop under 4.5V, for more info see:
+    // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
+    setMaxChargeCurrent(INIT_CURRENT);
 }
 
 NeoHardware::~NeoHardware()
 {
+}
+
+void NeoHardware::setMaxChargeCurrent(int newValue)
+{
+    if(newValue < 100000)
+        newValue = 100000;
+    if(newValue > MAX_CURRENT)
+        newValue = MAX_CURRENT;
+    if(maxChargeCurrent == newValue)
+        return;
+
+    char buf[7];
+    maxChargeCurrent = newValue;
+    sprintf(buf, "%d", maxChargeCurrent);
+    qWriteFile("/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current", buf);
 }
 
 // Parse uevent string and return given attribute value. Example uevent file:
@@ -151,13 +173,19 @@ static int getIntAttr(const char *name, QByteArray & uevent)
 
 void NeoHardware::updateStatus()
 {
+    QDateTime now = QDateTime::currentDateTime();
+
+    // Determine charging via USB
     QByteArray twlVbus =
         qReadFile("/sys/bus/platform/devices/twl4030_usb/vbus");
-    if (twlVbus.contains("on"))
+
+    bool chargerOn = twlVbus.contains("on");
+    if (chargerOn)
         ac.setAvailability(QPowerSource::Available);
     else
         ac.setAvailability(QPowerSource::NotAvailable);
 
+    // Update battery status
     QByteArray uevent =
         qReadFile("/sys/class/power_supply/bq27000-battery/uevent");
 
@@ -169,11 +197,11 @@ void NeoHardware::updateStatus()
         battery.setTimeRemaining(timeToEmpty / 60);
 
     int capacity = getIntAttr("POWER_SUPPLY_CAPACITY=", uevent);
+    int chargeNow = getIntAttr("POWER_SUPPLY_CHARGE_NOW=", uevent);
     if (capacity < 0) {
         // Handle uncalibrated battery - it does not have POWER_SUPPLY_CAPACITY
         // and we compute capacity from charge_now and charge_full_design.
-        // http://lists.goldelico.com/pipermail/gta04-owner/2013-February/003903.html
-        int chargeNow = getIntAttr("POWER_SUPPLY_CHARGE_NOW=", uevent);
+        // http://lists.goldelico.com/pipermail/gta04-owner/2013-February/003903.html        
         int chargeFullDesign =
             getIntAttr("POWER_SUPPLY_CHARGE_FULL_DESIGN=", uevent);
         capacity = (chargeNow * 100) / chargeFullDesign;
@@ -182,8 +210,40 @@ void NeoHardware::updateStatus()
     if (capacity > 0)
         battery.setCharge(capacity);
 
-    int currentNow = getIntAttr("POWER_SUPPLY_CURRENT_NOW=", uevent) / 1000;
-    batteryVso.setAttribute("current_now", QString::number(currentNow));
+    int currentNow = getIntAttr("POWER_SUPPLY_CURRENT_NOW=", uevent);
+    batteryVso.setAttribute("current_now", QString::number(currentNow / 1000));
+    
+    // Now we will try to set max_current so that phone charges reliably.
+    int chargerVoltage = -1;
+    if(chargerOn) {
+        QByteArray chargerUevent = qReadFile("/sys/class/power_supply/twl4030_usb/uevent");
+        chargerVoltage = getIntAttr("POWER_SUPPLY_VOLTAGE_NOW=", chargerUevent);
+
+        // Warn if charging voltage drops too low
+        if(chargerVoltage < 4500000)
+            qWarning() << "Charging voltage dropped to " << chargerVoltage << ", charging might not restart when battery gets low";
+        
+        // Battery discharges
+        if(currentNow > 0) {
+            // Increase charging current until 500mA if voltage is above 4.6V
+            if(chargerVoltage > 4600000) {
+                setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
+            }
+        } else if(capacity > 90 && currentNow < -5000 && oldChargeNow != chargeNow) {        // Battery is finishing charging, we will slow charging
+            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2);         // slow it down
+        }
+    } else if(maxChargeCurrent > INIT_CURRENT) {
+        setMaxChargeCurrent(INIT_CURRENT);
+    }
+    oldChargeNow = chargeNow;
+
+    // Charging log
+    if(lastLogDt.secsTo(now) >= 300) {
+        lastLogDt = now;
+        QString newEntry = now.toString("yyyy-MM-dd hh:mm:ss") + "\t" + QString::number(chargeNow) + "\n";
+        QString logContent = chargeLog.value().toString();
+        batteryVso.setAttribute("charge_log", logContent + newEntry);
+    }
 }
 
 #define UEVENT_BUFFER_SIZE 1024
