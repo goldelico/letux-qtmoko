@@ -186,12 +186,11 @@ void NeoHardware::updateStatus()
     else
         ac.setAvailability(QPowerSource::NotAvailable);
 
+    battery.setCharging(chargerOn);
+    
     // Update battery status
     QByteArray uevent =
         qReadFile("/sys/class/power_supply/bq27000-battery/uevent");
-
-    bool charging = uevent.contains("POWER_SUPPLY_STATUS=Charging");
-    battery.setCharging(charging);
 
     int timeToEmpty = getIntAttr("POWER_SUPPLY_TIME_TO_EMPTY_NOW=", uevent);
     if (timeToEmpty >= 0)
@@ -217,10 +216,10 @@ void NeoHardware::updateStatus()
     // Now we will try to set max_current so that phone charges reliably.
     int chargerVoltage = -1;
     if (chargerOn) {
-        
-        if(maxChargeCurrent < 0)
+
+        if (maxChargeCurrent < 0)
             setMaxChargeCurrent(INIT_CURRENT);
-        
+
         QByteArray chargerUevent =
             qReadFile("/sys/class/power_supply/twl4030_usb/uevent");
         chargerVoltage = getIntAttr("POWER_SUPPLY_VOLTAGE_NOW=", chargerUevent);
@@ -230,20 +229,20 @@ void NeoHardware::updateStatus()
             qWarning() << "Charging voltage dropped to " << chargerVoltage <<
                 ", charging might not restart when battery gets low";
 
-        if(oldChargeNow != chargeNow) {         // this prevents too fast updates            
-            // Battery discharges
-            if (currentNow > 0) {
-                // Increase charging current until 500mA, but make sure that
-                // voltage wont drop under 4.5V, for more info see:
-                // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
-                if (chargerVoltage > 4600000) {
-                    setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
-                    QTimer::singleShot(5000, this, SLOT(updateStatus()));
-                }
-            } else if (capacity > 90 && currentNow < -5000) {  // Battery is finishing charging
-                setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow it down
+        // Battery discharges
+        if (currentNow > 0 || capacity <= 90) {
+            // Increase charging current until 600mA, but make sure that
+            // voltage wont drop under 4.5V, for more info see:
+            // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
+            if (chargerVoltage > 4600000 && chargerVoltage != oldChargerVoltage) {
+                setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
+                QTimer::singleShot(200, this, SLOT(updateStatus()));
             }
+        } else if (currentNow < -24000 && oldChargeNow != chargeNow) {  // Battery is finishing charging
+            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow charging down under 24mA
         }
+
+        oldChargerVoltage = chargerVoltage;
     } else if (maxChargeCurrent > INIT_CURRENT) {
         maxChargeCurrent = -1;
     }
@@ -278,8 +277,8 @@ void NeoHardware::uevent()
 void NeoHardware::shutdownRequested()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QtopiaServerApplication::instance()->
-        shutdown(QtopiaServerApplication::ShutdownSystem);
+    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
+                                                  ShutdownSystem);
 }
 
 void NeoHardware::headphonesInserted(bool b)

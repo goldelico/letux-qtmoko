@@ -39,12 +39,12 @@ class QSocketNotifier;
 class QtopiaIpcAdaptor;
 class QSpeakerPhoneAccessoryProvider;
 
-// Initial charging current - we will raise if until charging voltage does not
+// Initial charging current - we will raise it until charging voltage does not
 // drop under 4.6V
 #define INIT_CURRENT 100000
 
 // Max charging current
-#define MAX_CURRENT 500000
+#define MAX_CURRENT 600000
 
 // Max value used to raise charging current. We cant raise with large numbers
 // because charging voltage could drop below 4.4V and made charging unreliable
@@ -68,6 +68,7 @@ private:
     QTimer timer;
     int maxChargeCurrent;
     int oldChargeNow;
+    int oldChargerVoltage;
     bool hasSmartBattery;
     QtopiaIpcAdaptor *adaptor;
     QtopiaIpcAdaptor *audioMgr;
