@@ -41,7 +41,7 @@ class QSpeakerPhoneAccessoryProvider;
 
 // Initial charging current - we will raise if until charging voltage does not
 // drop under 4.6V
-#define INIT_CURRENT 250000
+#define INIT_CURRENT 100000
 
 // Max charging current
 #define MAX_CURRENT 500000

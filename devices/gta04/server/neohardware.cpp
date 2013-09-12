@@ -88,6 +88,7 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     , lastLogDt()
     , ueventSocket(this)
     , timer(this)
+    , maxChargeCurrent(-1)
 {
     qLog(Hardware) << "gta04 hardware";
 
@@ -111,10 +112,9 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     QtopiaIpcAdaptor::connect(adaptor, MESSAGE(headphonesInserted(bool)),
                               this, SLOT(headphonesInserted(bool)));
 
-    // By default limit charging current to 250mA, we will increase it once we
-    // know that charging voltage wont drop under 4.5V, for more info see:
-    // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
-    setMaxChargeCurrent(INIT_CURRENT);
+    // Y sets usb charging limit to 600mA which can be too high and causes
+    // charging voltage drops. We will set limit manually to prevent this.
+    qWriteFile("/sys/module/twl4030_charger/parameters/allow_usb", "N");
 }
 
 NeoHardware::~NeoHardware()
@@ -217,26 +217,35 @@ void NeoHardware::updateStatus()
     // Now we will try to set max_current so that phone charges reliably.
     int chargerVoltage = -1;
     if (chargerOn) {
+        
+        if(maxChargeCurrent < 0)
+            setMaxChargeCurrent(INIT_CURRENT);
+        
         QByteArray chargerUevent =
             qReadFile("/sys/class/power_supply/twl4030_usb/uevent");
         chargerVoltage = getIntAttr("POWER_SUPPLY_VOLTAGE_NOW=", chargerUevent);
 
         // Warn if charging voltage drops too low
-        if (chargerVoltage < 4500000)
+        if (chargerVoltage < 4500000 && chargerVoltage > 0)
             qWarning() << "Charging voltage dropped to " << chargerVoltage <<
                 ", charging might not restart when battery gets low";
 
-        // Battery discharges
-        if (currentNow > 0) {
-            // Increase charging current until 500mA if voltage is above 4.6V
-            if (chargerVoltage > 4600000) {
-                setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
+        if(oldChargeNow != chargeNow) {         // this prevents too fast updates            
+            // Battery discharges
+            if (currentNow > 0) {
+                // Increase charging current until 500mA, but make sure that
+                // voltage wont drop under 4.5V, for more info see:
+                // http://lists.goldelico.com/pipermail/gta04-owner/2013-September/004963.html
+                if (chargerVoltage > 4600000) {
+                    setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
+                    QTimer::singleShot(5000, this, SLOT(updateStatus()));
+                }
+            } else if (capacity > 90 && currentNow < -5000) {  // Battery is finishing charging
+                setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow it down
             }
-        } else if (capacity > 90 && currentNow < -5000 && oldChargeNow != chargeNow) {  // Battery is finishing charging, we will slow charging
-            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow it down
         }
     } else if (maxChargeCurrent > INIT_CURRENT) {
-        setMaxChargeCurrent(INIT_CURRENT);
+        maxChargeCurrent = -1;
     }
     oldChargeNow = chargeNow;
 

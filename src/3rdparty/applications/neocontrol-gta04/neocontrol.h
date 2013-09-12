@@ -25,6 +25,7 @@
 #include <QDateTime>
 #ifdef QTOPIA
 #include <Qtopia>
+#include <QValueSpaceItem>
 #include <QtopiaApplication>
 #endif
 #ifdef Q_WS_WIN
@@ -41,6 +42,9 @@ public:
     NeoControl(QWidget *parent = 0, Qt::WFlags f = 0);
     ~NeoControl();
 
+protected:
+    void paintEvent(QPaintEvent *);
+
 private:
     enum Screen
     {
@@ -49,7 +53,7 @@ private:
         ScreenMixer,
         ScreenModem,
         ScreenSysfs,
-        ScreenDisplay,
+        ScreenCharge,
     };
 
     Screen screen;
@@ -59,7 +63,6 @@ private:
     QHBoxLayout *buttonLayout;
     QLabel *label;
     QLineEdit *lineEdit;
-    QPushButton *bQvga;
     QPushButton *bBack;
     QPushButton *bNext;
     QPushButton *bSave;
@@ -71,6 +74,10 @@ private:
     MixerSlider *slider5;
     QFont normalFont;
     QFont smallFont;
+    QString chargeLog;
+#ifdef QTOPIA
+    QValueSpaceItem chargeLogVsi;
+#endif
 
     void showScreen(NeoControl::Screen scr);
     int openAlsaMixer();
@@ -79,7 +86,6 @@ private:
     void setQpeEnv(bool);
 
 private slots:
-    void qvgaClicked();
     void backClicked();
     void nextClicked();
     void saveClicked();
@@ -87,6 +93,7 @@ private slots:
     void updateMixer();
     void updateModem();
     void updateSysfs();
+    void updateCharge();
     void muxStateChanged(int);
     void fsoStateChanged(int);
     void fsoChange();

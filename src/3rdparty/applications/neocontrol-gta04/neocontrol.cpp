@@ -1,16 +1,17 @@
 #include "neocontrol.h"
+#include <QPainter>
 
 NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     : QWidget(parent)
+#ifdef QTOPIA
+    , chargeLogVsi("/UI/Battery/charge_log")
+#endif
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
 #else
     Q_UNUSED(f);
 #endif
-    bQvga = new QPushButton(tr("Switch to QVGA"), this);
-    connect(bQvga, SIGNAL(clicked()), this, SLOT(qvgaClicked()));
-
     bBack = new QPushButton(this);
     connect(bBack, SIGNAL(clicked()), this, SLOT(backClicked()));
 
@@ -43,7 +44,6 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     buttonLayout->addWidget(bNext);
 
     layout = new QVBoxLayout(this);
-    layout->addWidget(bQvga);
     layout->addWidget(label);
     layout->addWidget(label4);
     layout->addWidget(slider4);
@@ -55,7 +55,7 @@ NeoControl::NeoControl(QWidget *parent, Qt::WFlags f)
     layout->addWidget(chkFso);
     layout->addLayout(buttonLayout);
 
-    showScreen(NeoControl::ScreenInit);
+    showScreen(NeoControl::ScreenCharge);
 }
 
 NeoControl::~NeoControl()
@@ -109,7 +109,7 @@ void NeoControl::backClicked()
     case ScreenSysfs:
         showScreen(ScreenModem);
         break;
-    case ScreenDisplay:
+    case ScreenCharge:
         showScreen(ScreenSysfs);
         break;
     }
@@ -132,9 +132,9 @@ void NeoControl::nextClicked()
         showScreen(ScreenSysfs);
         break;
     case ScreenSysfs:
-        showScreen(ScreenDisplay);
+        showScreen(ScreenCharge);
         break;
-    case ScreenDisplay:
+    case ScreenCharge:
         break;
     }
 }
@@ -145,23 +145,6 @@ void NeoControl::saveClicked()
     {
         system("alsactl -f /opt/qtmoko/etc/alsa/gta04_initial_alsa.state store");
     }
-}
-
-void NeoControl::qvgaClicked()
-{
-    QFile cal("/etc/pointercal_qvga");
-    if(!cal.exists())
-    {
-        cal.open(QFile::WriteOnly);
-        cal.write("-360 16920 -2227050 -21726 -170 20270704 56321");
-        cal.close();
-    }
-
-    QFile f("/tmp/restart-qtopia-qvga");
-    f.open(QFile::WriteOnly);
-    f.write("restart in qvga");
-    f.close();
-    QMessageBox::information(this, tr("QVGA setup"), tr("QVGA mode will be activated after restarting QtExtended with POWER button"));
 }
 
 void NeoControl::showScreen(NeoControl::Screen scr)
@@ -182,10 +165,17 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     {
         label->setFont(smallFont);
     }
+    if(this->screen == ScreenCharge)
+    {
+        setFont(normalFont);
+    }
+    if(scr == ScreenCharge)
+    {
+        setFont(smallFont);
+    }
 
     this->screen = scr;
 
-    bQvga->setVisible(scr == ScreenDisplay);
     label->setVisible(scr == ScreenInit || scr == ScreenRtc || scr == ScreenMixer || scr == ScreenModem || scr == ScreenSysfs);
     bBack->setText(scr == ScreenInit ? tr("Quit") : tr("Back"));
     lineEdit->setVisible(false);
@@ -211,7 +201,8 @@ void NeoControl::showScreen(NeoControl::Screen scr)
     case ScreenModem:
         updateModem();
         break;
-    case ScreenDisplay:
+    case ScreenCharge:
+        updateCharge();
         break;
     case ScreenSysfs:
         updateSysfs();
@@ -219,6 +210,116 @@ void NeoControl::showScreen(NeoControl::Screen scr)
 
     default:
         break;
+    }
+}
+
+static int computeCurrent(int secs, int chargeBefore, int chargeAfter)
+{
+    return ((chargeBefore - chargeAfter) * 36) / (10 * secs);
+}
+
+void NeoControl::paintEvent(QPaintEvent *)
+{
+    if(screen != ScreenCharge)
+    {
+        return;
+    }
+
+    QList<QString> lines = chargeLog.split('\n');
+    if(lines.count() < 2)
+        return;
+
+    QList<QDateTime> dates;
+    QList<int> charges;
+
+    QDateTime dtMin(QDate(2999, 1, 1));
+    QDateTime dtMax(QDate(1899, 1, 1));
+    int chargeMax = 0;
+
+    for(int i = 0; i < lines.count(); i++) {
+        QList<QString> values = lines.at(i).split('\t');
+        if(values.count() < 2) {
+            continue;
+        }
+        QDateTime dt = QDateTime::fromString(values.at(0), "yyyy-MM-dd hh:mm:ss");
+        int charge = values.at(1).toInt();
+        dates.append(dt);
+        charges.append(charge);
+
+        dtMin = (dtMin < dt ? dtMin : dt);
+        dtMax = (dtMax > dt ? dtMax : dt);
+        chargeMax = (chargeMax > charge ? chargeMax : charge);
+    }
+
+    int w = (9 * this->width()) / 10;
+    int h = bNext->y() - bNext->height();
+
+    int totalSecs = dtMin.secsTo(dtMax);
+    int x1 = -1;
+    int y1 = -1;
+    int prevSecs = -1;
+    int prevCharge = -1;
+
+    if(chargeMax == 0 || totalSecs == 0)
+        return;
+
+    QPainter p(this);
+
+    int textY = 0x7fffffff;
+    int hourTextX = 0x7fffffff;
+
+    int fontW = p.fontMetrics().width('w');
+    int fontH = p.fontMetrics().height();
+
+    p.translate(fontW, fontH);
+
+    p.drawLine(0, h, w, h);
+    p.drawLine(0, 0, 0, h);
+
+    QPen pen = p.pen();
+
+    for(int i = 0; i < dates.count(); i++) {
+        QDateTime dt = dates.at(i);
+        int charge = charges.at(i);
+        int secs = dtMin.secsTo(dt);
+
+        int x2 = (w * secs) / totalSecs;
+        int y2 = h - (h * charge) / chargeMax;
+
+        // Draw time on x axis
+        if(abs(x2 - hourTextX) > 5 * fontW)
+        {
+            p.drawText(x2, h + fontH, dt.toString("hh:mm"));
+            p.setPen(Qt::darkGreen);
+            p.drawLine(x2, 0, x2, h);
+            p.setPen(pen);
+            hourTextX = x2;
+        }
+
+        // Draw charge point and charge value
+        p.drawEllipse(x2 - 2, y2 - 2, 4, 4);
+        int y = y2 + fontH / 2;
+        if(abs(y2 - textY) > 2 * fontH) {
+            QString text = QString::number(charge);
+            p.drawText(x2 + fontW, y, text);
+            textY = y;
+        }
+
+        // Draw charge line and in the middle write current
+        if(x1 >= 0) {
+            p.drawLine(x1, y1, x2, y2);
+            y = (y1 + y2) / 2;
+            if(abs(y - textY) > 2 * fontH) {
+                int current = computeCurrent(secs - prevSecs, prevCharge, charge);
+                p.drawText((x1 + x2) / 2 + fontW, y, QString::number(current) + "mA");
+                textY = y;
+            }
+        }
+
+        x1 = x2;
+        y1 = y2;
+        prevSecs = secs;
+        prevCharge = charge;
     }
 }
 
@@ -485,4 +586,21 @@ void NeoControl::updateSysfs()
     label->setText(text);
 
     QTimer::singleShot(1000, this, SLOT(updateSysfs()));
+}
+
+void NeoControl::updateCharge()
+{
+    if(screen != ScreenCharge)
+    {
+        return;
+    }
+
+#ifdef QTOPIA
+    chargeLog = chargeLogVsi.value().toString();
+#else
+    chargeLog = "2013-09-11 20:45:14\t969790\n2013-09-12 06:33:01\t344148\n2013-09-12 09:55:33\t83716\n2013-09-12 10:00:41\t100674\n2013-09-12 10:05:41\t117988\n2013-09-12 10:11:11\t137088\n2013-09-12 10:16:11\t153688\n2013-09-12 10:21:41\t172788\n2013-09-12 10:26:41\t189924\n2013-09-12 10:31:41\t207238\n2013-09-12 10:37:11\t225981\n2013-09-12 10:42:41\t244902\n2013-09-12 10:48:11\t263823\n2013-09-12 10:53:11\t281137\n2013-09-12 10:58:11\t298273\n2013-09-12 11:03:11\t314874";
+#endif
+
+    QTimer::singleShot(10000, this, SLOT(updateCharge()));
+    update();
 }
