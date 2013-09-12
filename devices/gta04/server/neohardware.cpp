@@ -238,8 +238,8 @@ void NeoHardware::updateStatus()
                 setMaxChargeCurrent(maxChargeCurrent + CURRENT_PLUS);
                 QTimer::singleShot(200, this, SLOT(updateStatus()));
             }
-        } else if (currentNow < -24000 && oldChargeNow != chargeNow) {  // Battery is finishing charging
-            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow charging down under 24mA
+        } else if (currentNow < -50000 && oldChargeNow != chargeNow) {  // Battery is finishing charging
+            setMaxChargeCurrent(maxChargeCurrent + currentNow / 2); // slow charging down under 50mA
         }
 
         oldChargerVoltage = chargerVoltage;
@@ -255,6 +255,10 @@ void NeoHardware::updateStatus()
             now.toString("yyyy-MM-dd hh:mm:ss") + "\t" +
             QString::number(chargeNow) + "\n";
         QString logContent = chargeLog.value().toString();
+        if(logContent.length() >= 64000) {
+            int index = logContent.indexOf('\n', 32000);
+            logContent = logContent.mid(index + 1);
+        }
         batteryVso.setAttribute("charge_log", logContent + newEntry);
     }
 }
