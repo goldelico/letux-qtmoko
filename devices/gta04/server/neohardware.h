@@ -21,6 +21,7 @@
 #ifndef NEOHARDWARE_H
 #define NEOHARDWARE_H
 
+#include <QFile>
 #include <QTimer>
 #include <QObject>
 #include <QProcess>
@@ -62,7 +63,7 @@ private:
     QPowerSourceProvider battery;
     QValueSpaceObject batteryVso;
     QValueSpaceObject vsoPortableHandsfree;
-    QValueSpaceItem chargeLog;                         // power supply log
+    QFile chargeLog;                         // power supply log
     QDateTime lastLogDt;
     QTcpSocket ueventSocket;
     QTimer timer;
@@ -73,6 +74,7 @@ private:
     QtopiaIpcAdaptor *adaptor;
     QtopiaIpcAdaptor *audioMgr;
     void setMaxChargeCurrent(int newValue);
+    void logCharge(QDateTime now, int chargeNow);
     
 private slots:
     void headphonesInserted(bool);

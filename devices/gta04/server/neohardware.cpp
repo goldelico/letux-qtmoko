@@ -84,7 +84,7 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     , battery(QPowerSource::Battery, "NeoBattery", this)
     , batteryVso("/UI/Battery", this)
     , vsoPortableHandsfree("/Hardware/Accessories/PortableHandsfree")
-    , chargeLog("/UI/Battery/charge_log")
+    , chargeLog("/var/log/charging")
     , lastLogDt()
     , ueventSocket(this)
     , timer(this)
@@ -172,6 +172,27 @@ static int getIntAttr(const char *name, QByteArray & uevent)
     return str.toInt();
 }
 
+void NeoHardware::logCharge(QDateTime now, int chargeNow)
+{
+    if (lastLogDt.secsTo(now) < 300)
+        return;
+
+    lastLogDt = now;
+
+    if (!chargeLog.exists())
+        return;
+
+    QString newEntry =
+        now.toString("yyyy-MM-dd hh:mm:ss") + "\t" +
+        QString::number(chargeNow) + "\n";
+
+    if (!chargeLog.open(QIODevice::WriteOnly | QIODevice::Append))
+        return;
+
+    chargeLog.write(newEntry.toLatin1().constData());
+    chargeLog.close();
+}
+
 void NeoHardware::updateStatus()
 {
     QDateTime now = QDateTime::currentDateTime();
@@ -187,7 +208,7 @@ void NeoHardware::updateStatus()
         ac.setAvailability(QPowerSource::NotAvailable);
 
     battery.setCharging(chargerOn);
-    
+
     // Update battery status
     QByteArray uevent =
         qReadFile("/sys/class/power_supply/bq27000-battery/uevent");
@@ -249,18 +270,7 @@ void NeoHardware::updateStatus()
     oldChargeNow = chargeNow;
 
     // Charging log
-    if (lastLogDt.secsTo(now) >= 300) {
-        lastLogDt = now;
-        QString newEntry =
-            now.toString("yyyy-MM-dd hh:mm:ss") + "\t" +
-            QString::number(chargeNow) + "\n";
-        QString logContent = chargeLog.value().toString();
-        if(logContent.length() >= 64000) {
-            int index = logContent.indexOf('\n', 32000);
-            logContent = logContent.mid(index + 1);
-        }
-        batteryVso.setAttribute("charge_log", logContent + newEntry);
-    }
+    logCharge(now, chargeNow);
 }
 
 #define UEVENT_BUFFER_SIZE 1024
@@ -281,8 +291,8 @@ void NeoHardware::uevent()
 void NeoHardware::shutdownRequested()
 {
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QtopiaServerApplication::instance()->shutdown(QtopiaServerApplication::
-                                                  ShutdownSystem);
+    QtopiaServerApplication::instance()->
+        shutdown(QtopiaServerApplication::ShutdownSystem);
 }
 
 void NeoHardware::headphonesInserted(bool b)
