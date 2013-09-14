@@ -301,7 +301,7 @@ void NeoControl::paintEvent(QPaintEvent *)
             int secs = dtMin.secsTo(dt);
 
             int x2 = (w * secs) / totalSecs;
-            int y2 = h - (h * charge) / chargeMax;
+            int y2 = h - (6 * h * charge) / (chargeMax * 7);
 
             // Draw time on x axis
             if (abs(x2 - hourTextX) > 5 * fontW) {
