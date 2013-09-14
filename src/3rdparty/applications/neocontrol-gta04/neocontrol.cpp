@@ -288,7 +288,6 @@ void NeoControl::paintEvent(QPaintEvent *)
     for (int round = 0; round <= 1; round++) {
         int chargeX = 0x7fffffff;
         int currentX = 0x7fffffff;
-        int currentY = 0x7fffffff;
         int hourTextX = 0x7fffffff;
 
         int x1 = -1;
@@ -316,7 +315,7 @@ void NeoControl::paintEvent(QPaintEvent *)
             }
             // Draw charge point and charge value
             p.drawEllipse(x2 - 2, y2 - 2, 4, 4);
-            int shiftY = -h / 8;
+            int shiftY = -h / 6;
             int y = y2 + shiftY;
             if (abs(x2 - chargeX) > 2 * fontW) {
                 QString text = QString::number(charge);
@@ -339,9 +338,7 @@ void NeoControl::paintEvent(QPaintEvent *)
                 y = (y1 + y2) / 2;
                 int x = (x1 + x2) / 2;
                 int shiftY = h / 4;
-                int fontShiftY = (y > h / 2 ? -fontH : fontH);
-                if (abs(y - currentY) > 2 * fontH
-                    || abs(x - currentX) > 5 * fontW) {
+                if (abs(x - currentX) > 2 * fontW) {
                     int current =
                         computeCurrent(secs - prevSecs, prevCharge, charge);
                     if (round == 0) {
@@ -354,10 +351,9 @@ void NeoControl::paintEvent(QPaintEvent *)
                     p.save();
                     p.translate(x, y + shiftY);
                     p.rotate(90);
-                    p.fillRect(0, - fontShiftY, textW, fontH, Qt::red);
+                    p.fillRect(0, -fontH, textW, fontH, Qt::red);
                     p.drawText(0, 0, text);
                     p.restore();
-                    currentY = y;
                     currentX = x;
                 }
             }
