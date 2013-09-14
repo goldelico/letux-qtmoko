@@ -1,3 +1,11 @@
+qtmoko (57-1) unstable; urgency=low
+
+  * clever charging for gta04
+  * charging log
+  * better sysfs for gta04 in neocontrol
+
+ -- Radek Polak <psonek2@seznam.cz>  Sat, 14 Sep 2013 11:20:00 +0100
+
 qtmoko (56-1) unstable; urgency=low
 
   * optimise removed messages on IMAP server (Neil Jerram)
