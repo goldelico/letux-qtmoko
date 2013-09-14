@@ -3,9 +3,6 @@
 
 NeoControl::NeoControl(QWidget * parent, Qt::WFlags f)
 :  QWidget(parent)
-#ifdef QTOPIA
-    , chargeLogVsi("/UI/Battery/charge_log")
-#endif
 {
 #ifdef QTOPIA
     this->setWindowState(Qt::WindowMaximized);
@@ -21,13 +18,13 @@ NeoControl::NeoControl(QWidget * parent, Qt::WFlags f)
     bSave = new QPushButton(tr("Save"), this);
     connect(bSave, SIGNAL(clicked()), this, SLOT(saveClicked()));
 
-    chkMux = new QCheckBox(tr("Multiplexing"), this);
-    connect(chkMux, SIGNAL(stateChanged(int)), this,
-            SLOT(muxStateChanged(int)));
-
     chkFso = new QCheckBox(tr("Use FSO (freesmartphone.org)"), this);
     connect(chkFso, SIGNAL(stateChanged(int)), this,
             SLOT(fsoStateChanged(int)));
+
+    chkCharge = new QCheckBox(tr("Log charging"), this);
+    connect(chkCharge, SIGNAL(stateChanged(int)), this,
+            SLOT(chargeStateChanged(int)));
 
     label = new QLabel(this);
     normalFont = label->font();
@@ -44,6 +41,7 @@ NeoControl::NeoControl(QWidget * parent, Qt::WFlags f)
     buttonLayout->setAlignment(Qt::AlignBottom);
     buttonLayout->addWidget(bBack);
     buttonLayout->addWidget(bNext);
+    buttonLayout->addWidget(chkCharge);
 
     layout = new QVBoxLayout(this);
     layout->addWidget(label);
@@ -51,9 +49,8 @@ NeoControl::NeoControl(QWidget * parent, Qt::WFlags f)
     layout->addWidget(slider4);
     layout->addWidget(label5);
     layout->addWidget(slider5);
-    layout->addWidget(bSave);
     layout->addWidget(lineEdit);
-    layout->addWidget(chkMux);
+    layout->addWidget(bSave);
     layout->addWidget(chkFso);
     layout->addLayout(buttonLayout);
 
@@ -145,6 +142,12 @@ void NeoControl::saveClicked()
         system
             ("alsactl -f /opt/qtmoko/etc/alsa/gta04_initial_alsa.state store");
     }
+    if (screen == ScreenModem) {
+        QSettings cfg("Trolltech", "Modem");
+        cfg.setValue("OPSYS/Value", lineEdit->text());
+        cfg.sync();
+        QMessageBox::information(this, tr("Modem settings"), tr("Settings will be activated after restarting QtMoko with POWER button"));
+    }
 }
 
 void NeoControl::showScreen(NeoControl::Screen scr)
@@ -174,14 +177,14 @@ void NeoControl::showScreen(NeoControl::Screen scr)
                       || scr == ScreenMixer || scr == ScreenModem
                       || scr == ScreenSysfs);
     bBack->setText(scr == ScreenInit ? tr("Quit") : tr("Back"));
-    lineEdit->setVisible(false);
-    chkMux->setVisible(scr == ScreenModem);
+    lineEdit->setVisible(scr == ScreenModem);
     chkFso->setVisible(scr == ScreenModem);
+    chkCharge->setVisible(scr == ScreenCharge);
     label4->setVisible(scr == ScreenMixer);
     label5->setVisible(scr == ScreenMixer);
     slider4->setVisible(scr == ScreenMixer);
     slider5->setVisible(scr == ScreenMixer);
-    bSave->setVisible(scr == ScreenMixer);
+    bSave->setVisible(scr == ScreenMixer || scr == ScreenModem);
 
     switch (scr) {
     case ScreenInit:
@@ -324,7 +327,7 @@ void NeoControl::paintEvent(QPaintEvent *)
                     QString text = QString::number(current) + "mA";
                     int textW = p.fontMetrics().width(text);
                     p.fillRect(x, y + shiftY - fontShiftY, textW, fontH,
-                               Qt::yellow);
+                               Qt::gray);
                     p.drawText(x, y + shiftY, text);
                     currentY = y;
                     currentX = x;
@@ -359,14 +362,13 @@ void NeoControl::updateRtc()
         alarmStr = wakealarmDt.toString();
     }
 
-    label->
-        setText(QString
-                (tr
-                 ("RTC (Real time clock)\n\nDate: %1\nTime: %2\nLocal: %3\nAlarm: %4"))
-                .arg(rtcDate)
-                .arg(rtcTime)
-                .arg(rtcNow.toString())
-                .arg(alarmStr));
+    label->setText(QString
+                   (tr
+                    ("RTC (Real time clock)\n\nDate: %1\nTime: %2\nLocal: %3\nAlarm: %4"))
+                   .arg(rtcDate)
+                   .arg(rtcTime)
+                   .arg(rtcNow.toString())
+                   .arg(alarmStr));
 
     QTimer::singleShot(1000, this, SLOT(updateRtc()));
 }
@@ -452,21 +454,6 @@ void NeoControl::updateMixer()
     QTimer::singleShot(1000, this, SLOT(updateMixer()));
 }
 
-void NeoControl::muxStateChanged(int state)
-{
-    if (updatingModem) {
-        return;
-    }
-    QString val = (state == Qt::Checked ? "yes" : "no");
-    QSettings cfg("Trolltech", "Modem");
-    cfg.setValue("Multiplexing/Active", val);
-    cfg.sync();
-
-    QMessageBox::information(this, tr("Multiplexing"),
-                             tr
-                             ("Settings will be activated after restarting QtExtended with POWER button"));
-}
-
 QString NeoControl::getQpeEnv()
 {
     QFile f("/opt/qtmoko/qpe.env");
@@ -505,7 +492,7 @@ void NeoControl::setQpeEnv(bool fso)
 
 void NeoControl::fsoStateChanged(int)
 {
-    if (updatingModem) {
+    if (updatingScreen) {
         return;
     }
     QTimer::singleShot(0, this, SLOT(fsoChange()));
@@ -550,22 +537,19 @@ void NeoControl::updateModem()
     if (screen != ScreenModem) {
         return;
     }
-    updatingModem = true;
+    updatingScreen = true;
 
-    QString text(tr("Modem settings\n\n"));
-    QSettings cfg("Trolltech", "Modem");
-
-    QString multiplexing = cfg.value("Multiplexing/Active", "yes").toString();
-    text += tr("Multiplexing") + ": " + multiplexing;
-    chkMux->setChecked(multiplexing != "no");
-
-    label->setText(text);
+    if(!lineEdit->hasFocus()) {
+        QSettings cfg("Trolltech", "Modem");
+        lineEdit->setText(cfg.value("OPSYS/Value", "AT_OPSYS=0,2").toString());
+        label->setText("AT_OPSYS=0,2 is 2G only\nAT_OPSYS=3,2 is 3G\n3G=modem troubles");
+    }
 
     QString qpeEnv = getQpeEnv();
     QString fsoStr = "export QTOPIA_PHONE=Fso";
     chkFso->setChecked(qpeEnv.indexOf(fsoStr) >= 0);
 
-    updatingModem = false;
+    updatingScreen = false;
     QTimer::singleShot(1000, this, SLOT(updateModem()));
 }
 
@@ -613,18 +597,56 @@ void NeoControl::updateSysfs()
     QTimer::singleShot(1000, this, SLOT(updateSysfs()));
 }
 
+#ifdef QTOPIA
+#define CHARGE_LOG_FILE "/var/log/charging"
+#else
+#define CHARGE_LOG_FILE "/mnt/neo/var/log/charging"
+#endif
+
 void NeoControl::updateCharge()
 {
     if (screen != ScreenCharge) {
         return;
     }
-#ifdef QTOPIA
-    chargeLog = chargeLogVsi.value().toString();
-#else
-    chargeLog =
-        "2013-09-12 23:07:47\t1002813\n2013-09-12 23:13:11\t1006740\n2013-09-12 23:18:11\t1009417\n2013-09-12 23:23:41\t1012273\n2013-09-12 23:28:41\t1014772\n2013-09-12 23:33:41\t1017450\n2013-09-12 23:38:41\t1020127\n2013-09-12 23:44:11\t1023162\n2013-09-12 23:49:11\t1025839\n2013-09-12 23:54:41\t1028695\n2013-09-12 23:59:41\t1025661\n2013-09-13 00:05:11\t1007275\n2013-09-13 00:10:41\t988711\n2013-09-13 00:15:41\t971932\n2013-09-13 00:20:41\t954975\n2013-09-13 00:25:42\t938196\n2013-09-13 00:30:42\t921238\n2013-09-13 00:36:11\t902853\n2013-09-13 00:41:12\t886074\n2013-09-13 00:46:41\t867331\n2013-09-13 00:51:42\t850731\n2013-09-13 00:57:11\t842877\n2013-09-13 01:02:11\t875185\n2013-09-13 01:07:12\t907494\n2013-09-13 01:12:41\t936411\n2013-09-13 01:17:42\t938553\n2013-09-13 01:23:11\t940516\n2013-09-13 01:28:11\t942123\n2013-09-13 01:33:11\t946228\n2013-09-13 01:38:41\t950155\n2013-09-13 01:43:41\t953547\n2013-09-13 01:49:11\t957474\n2013-09-13 01:54:11\t960865\n2013-09-13 01:59:41\t964792\n2013-09-13 02:04:41\t968362\n2013-09-13 02:09:41\t971932\n2013-09-13 02:15:11\t975859\n2013-09-13 02:20:41\t979608\n2013-09-13 02:26:11\t983356\n2013-09-13 06:22:12\t853944\n2013-09-13 06:37:48\t841270\n2013-09-13 07:03:52\t796288\n2013-09-13 07:08:52\t762552\n2013-09-13 07:13:52\t729172\n2013-09-13 07:18:52\t695079\n2013-09-13 07:24:22\t657772\n2013-09-13 07:29:52\t651882\n2013-09-13 07:34:52\t665091\n2013-09-13 07:40:22\t679549\n2013-09-13 07:45:22\t692937\n2013-09-13 07:50:22\t706146\n2013-09-13 07:55:22\t719533\n2013-09-13 08:00:52\t734170\n2013-09-13 08:05:52\t747558\n2013-09-13 08:10:52\t760945\n2013-09-13 08:16:22\t775582\n2013-09-13 08:21:22\t788791\n2013-09-13 08:26:22\t802000\n2013-09-13 08:31:22\t815209\n2013-09-13 08:36:22\t828418\n2013-09-13 08:41:52\t843055\n2013-09-13 08:47:22\t857692\n2013-09-13 08:52:22\t870901\n2013-09-13 08:57:22\t884289\n2013-09-13 09:02:52\t898926\n2013-09-13 09:07:52\t912135\n2013-09-13 09:12:52\t925165\n2013-09-13 09:17:52\t935518\n2013-09-13 09:22:52\t936411\n2013-09-13 09:27:53\t908386\n2013-09-13 09:33:22\t877506\n2013-09-13 09:38:22\t892500\n2013-09-13 09:43:52\t915526\n2013-09-13 09:49:22\t936054\n2013-09-13 09:54:52\t939088\n2013-09-13 09:59:52\t941766\n2013-09-13 10:05:22\t944800\n2013-09-13 10:10:22\t947656\n2013-09-13 10:15:22\t949977\n2013-09-13 10:20:52\t953725\n2013-09-13 10:26:22\t957831\n2013-09-13 10:31:22\t961579\n2013-09-13 10:36:52\t965506\n2013-09-13 10:42:22\t969612\n2013-09-13 10:47:22\t973360\n2013-09-13 10:52:22\t977109\n2013-09-13 10:57:52\t981036\n2013-09-13 11:02:52\t984606\n2013-09-13 11:07:52\t988533\n2013-09-13 11:12:52\t992281\n2013-09-13 11:18:22\t995316\n2013-09-13 11:23:52\t998350\n2013-09-13 11:28:52\t1001028\n2013-09-13 11:33:52\t1003705\n2013-09-13 11:38:52\t1006561\n2013-09-13 11:43:52\t1009239\n2013-09-13 11:48:52\t1012095\n2013-09-13 11:53:52\t1014772\n2013-09-13 11:58:52\t1017450\n2013-09-13 12:04:22\t1019770\n2013-09-13 12:09:22\t1022448\n2013-09-13 12:14:22\t1025482\n2013-09-13 12:19:22\t1028517\n2013-09-13 12:24:52\t1030837\n2013-09-13 12:30:22\t1030837\n2013-09-13 12:35:52\t1030837\n2013-09-13 12:41:22\t1030837\n2013-09-13 12:46:52\t1030837\n2013-09-13 12:51:52\t1030837\n2013-09-13 12:56:52\t1030837\n2013-09-13 13:01:52\t1030837\n2013-09-13 13:07:22\t1030837";
-#endif
+    updatingScreen = true;
+
+    QFile f(CHARGE_LOG_FILE);
+    bool isLogging = f.exists();
+    chkCharge->setChecked(isLogging);
+    if (isLogging) {
+        if (f.open(QIODevice::ReadOnly)) {
+            chargeLog = f.readAll();
+            f.close();
+        }
+    }
 
     QTimer::singleShot(10000, this, SLOT(updateCharge()));
     update();
+    updatingScreen = false;
+}
+
+void NeoControl::chargeStateChanged(int state)
+{
+    if (updatingScreen)
+        return;
+
+    QFile f(CHARGE_LOG_FILE);
+    if (state == Qt::Checked) {
+        if (!f.exists()) {
+            if (f.open(QIODevice::WriteOnly)) {
+                f.close();
+            }
+            QMessageBox::information(this, tr("Charging log"),
+                                     tr
+                                     ("Charging log is now in /var/log/charging QtMoko will update it every 5 minutes."));
+        }
+    } else {
+        if (QMessageBox::question(this, tr("Stop charging log"),
+                                  tr
+                                  ("This will delete current log"),
+                                  QMessageBox::Yes,
+                                  QMessageBox::No) == QMessageBox::Yes) {
+            f.remove();
+        }
+    }
 }

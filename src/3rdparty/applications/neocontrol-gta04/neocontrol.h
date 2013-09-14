@@ -25,7 +25,6 @@
 #include <QDateTime>
 #ifdef QTOPIA
 #include <Qtopia>
-#include <QValueSpaceItem>
 #include <QtopiaApplication>
 #endif
 #ifdef Q_WS_WIN
@@ -57,7 +56,7 @@ private:
     };
 
     Screen screen;
-    bool updatingModem;
+    bool updatingScreen;
     snd_mixer_t *mixerFd;
     QVBoxLayout *layout;
     QHBoxLayout *buttonLayout;
@@ -66,8 +65,8 @@ private:
     QPushButton *bBack;
     QPushButton *bNext;
     QPushButton *bSave;
-    QCheckBox *chkMux;
     QCheckBox *chkFso;
+    QCheckBox *chkCharge;
     QLabel *label4;
     QLabel *label5;
     MixerSlider *slider4;
@@ -75,9 +74,6 @@ private:
     QFont normalFont;
     QFont smallFont;
     QString chargeLog;
-#ifdef QTOPIA
-    QValueSpaceItem chargeLogVsi;
-#endif
 
     void showScreen(NeoControl::Screen scr);
     int openAlsaMixer();
@@ -94,8 +90,8 @@ private slots:
     void updateModem();
     void updateSysfs();
     void updateCharge();
-    void muxStateChanged(int);
     void fsoStateChanged(int);
+    void chargeStateChanged(int);
     void fsoChange();
 };
 
