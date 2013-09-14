@@ -67,6 +67,7 @@ private:
     QDateTime lastLogDt;
     QTcpSocket ueventSocket;
     QTimer timer;
+    int chargingLogInterval;
     int maxChargeCurrent;
     int oldChargeNow;
     int oldChargerVoltage;

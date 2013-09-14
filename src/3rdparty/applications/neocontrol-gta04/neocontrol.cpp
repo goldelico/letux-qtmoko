@@ -146,7 +146,17 @@ void NeoControl::saveClicked()
         QSettings cfg("Trolltech", "Modem");
         cfg.setValue("OPSYS/Value", lineEdit->text());
         cfg.sync();
-        QMessageBox::information(this, tr("Modem settings"), tr("Settings will be activated after restarting QtMoko with POWER button"));
+        QMessageBox::information(this, tr("Modem settings"),
+                                 tr
+                                 ("Settings will be activated after restarting QtMoko with POWER button"));
+    }
+    if (screen == ScreenCharge) {
+        QSettings cfg("Trolltech", "qpe");
+        cfg.setValue("Charging/LogInterval", lineEdit->text().toInt());
+        cfg.sync();
+        QMessageBox::information(this, tr("Log settings"),
+                                 tr
+                                 ("Settings will be activated after restarting QtMoko with POWER button"));
     }
 }
 
@@ -539,10 +549,12 @@ void NeoControl::updateModem()
     }
     updatingScreen = true;
 
-    if(!lineEdit->hasFocus()) {
+    if (!lineEdit->hasFocus()) {
         QSettings cfg("Trolltech", "Modem");
         lineEdit->setText(cfg.value("OPSYS/Value", "AT_OPSYS=0,2").toString());
-        label->setText("AT_OPSYS=0,2 is 2G only\nAT_OPSYS=3,2 is 3G\n3G=modem troubles");
+        label->
+            setText
+            ("AT_OPSYS=0,2 is 2G only\nAT_OPSYS=3,2 is 3G\n3G=modem troubles");
     }
 
     QString qpeEnv = getQpeEnv();
@@ -612,15 +624,30 @@ void NeoControl::updateCharge()
 
     QFile f(CHARGE_LOG_FILE);
     bool isLogging = f.exists();
+
     chkCharge->setChecked(isLogging);
+    label->setVisible(!isLogging);
+    lineEdit->setVisible(!isLogging);
+    bSave->setVisible(!isLogging);
+
     if (isLogging) {
+        setFont(smallFont);
         if (f.open(QIODevice::ReadOnly)) {
             chargeLog = f.readAll();
             f.close();
         }
+    } else {
+        setFont(normalFont);
+        label->setText(tr("Logging interval"));
+        if (!lineEdit->hasFocus()) {
+            QSettings cfg("Trolltech", "qpe");
+            cfg.beginGroup("Charging");
+            int chargingLogInterval = cfg.value("LogInterval", 300).toInt();
+            lineEdit->setText(QString::number(chargingLogInterval));
+        }
     }
 
-    QTimer::singleShot(10000, this, SLOT(updateCharge()));
+    QTimer::singleShot(3000, this, SLOT(updateCharge()));
     update();
     updatingScreen = false;
 }

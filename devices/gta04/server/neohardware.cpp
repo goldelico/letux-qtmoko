@@ -25,6 +25,7 @@
 #include <QLabel>
 #include <QDesktopWidget>
 #include <QProcess>
+#include <QSettings>
 #include <QPowerSourceProvider>
 
 #include <qcontentset.h>
@@ -88,6 +89,7 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     , lastLogDt()
     , ueventSocket(this)
     , timer(this)
+    , chargingLogInterval(300)
     , maxChargeCurrent(-1)
 {
     qLog(Hardware) << "gta04 hardware";
@@ -115,6 +117,10 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     // Y sets usb charging limit to 600mA which can be too high and causes
     // charging voltage drops. We will set limit manually to prevent this.
     qWriteFile("/sys/module/twl4030_charger/parameters/allow_usb", "N");
+    
+    QSettings cfg("Trolltech", "qpe");
+    cfg.beginGroup("Charging");
+    chargingLogInterval = cfg.value("LogInterval", 300).toInt();
 }
 
 NeoHardware::~NeoHardware()
@@ -174,7 +180,7 @@ static int getIntAttr(const char *name, QByteArray & uevent)
 
 void NeoHardware::logCharge(QDateTime now, int chargeNow)
 {
-    if (lastLogDt.secsTo(now) < 300)
+    if (lastLogDt.secsTo(now) < chargingLogInterval)
         return;
 
     lastLogDt = now;
