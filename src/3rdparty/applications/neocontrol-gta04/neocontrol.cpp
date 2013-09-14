@@ -270,6 +270,10 @@ void NeoControl::paintEvent(QPaintEvent *)
         return;
 
     QPainter p(this);
+    p.fillRect(0, 0, width(), height(), Qt::black);
+    p.setBackground(Qt::black);
+    p.setBrush(Qt::white);
+    p.setPen(Qt::white);
 
     int fontW = p.fontMetrics().width('w');
     int fontH = p.fontMetrics().height();
@@ -282,7 +286,7 @@ void NeoControl::paintEvent(QPaintEvent *)
     QPen pen = p.pen();
 
     for (int round = 0; round <= 1; round++) {
-        int chargeY = 0x7fffffff;
+        int chargeX = 0x7fffffff;
         int currentX = 0x7fffffff;
         int currentY = 0x7fffffff;
         int hourTextX = 0x7fffffff;
@@ -305,40 +309,54 @@ void NeoControl::paintEvent(QPaintEvent *)
                 if (round == 0) {
                     p.drawText(x2, h + fontH, dt.toString("hh:mm"));
                     p.setPen(Qt::darkGreen);
-                    p.drawLine(x2, 0, x2, h);
+                    p.drawLine(x2, y2, x2, h);
                     p.setPen(pen);
                 }
                 hourTextX = x2;
             }
             // Draw charge point and charge value
             p.drawEllipse(x2 - 2, y2 - 2, 4, 4);
-            int y = y2 + fontH / 2;
-            if (abs(y2 - chargeY) > 2 * fontH) {
+            int shiftY = -h / 8;
+            int y = y2 + shiftY;
+            if (abs(x2 - chargeX) > 2 * fontW) {
                 QString text = QString::number(charge);
-                p.drawText(x2 + fontW, y, text);
-                chargeY = y;
+
+                p.setPen(Qt::darkGreen);
+                p.drawLine(x2, y, x2, y2);
+                p.setPen(pen);
+
+                p.save();
+                p.translate(x2, y);
+                p.rotate(90);
+                p.drawText(0, 0, text);
+                p.restore();
+
+                chargeX = x2;
             }
             // Draw charge line and in the middle write current
             if (x1 >= 0) {
                 p.drawLine(x1, y1, x2, y2);
                 y = (y1 + y2) / 2;
                 int x = (x1 + x2) / 2;
-                int shiftY = (y > h / 2 ? -h : h) / 4;
+                int shiftY = h / 4;
                 int fontShiftY = (y > h / 2 ? -fontH : fontH);
                 if (abs(y - currentY) > 2 * fontH
                     || abs(x - currentX) > 5 * fontW) {
                     int current =
                         computeCurrent(secs - prevSecs, prevCharge, charge);
                     if (round == 0) {
-                        p.setPen(Qt::darkYellow);
-                        p.drawLine(x, y, x, y + shiftY - fontShiftY);
+                        p.setPen(Qt::red);
+                        p.drawLine(x, y, x, y + shiftY);
                         p.setPen(pen);
                     }
                     QString text = QString::number(current) + "mA";
                     int textW = p.fontMetrics().width(text);
-                    p.fillRect(x, y + shiftY - fontShiftY, textW, fontH,
-                               Qt::gray);
-                    p.drawText(x, y + shiftY, text);
+                    p.save();
+                    p.translate(x, y + shiftY);
+                    p.rotate(90);
+                    p.fillRect(0, - fontShiftY, textW, fontH, Qt::red);
+                    p.drawText(0, 0, text);
+                    p.restore();
                     currentY = y;
                     currentX = x;
                 }
