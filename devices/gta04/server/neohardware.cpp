@@ -197,6 +197,11 @@ void NeoHardware::logCharge(QDateTime now, int chargeNow)
 
     chargeLog.write(newEntry.toLatin1().constData());
     chargeLog.close();
+    
+    // When user selects fast updates, use timer to update status because
+    // uevent does not trigger that fast.
+    if (chargingLogInterval < 300)
+        QTimer::singleShot(1000 * chargingLogInterval, this, SLOT(updateStatus()));
 }
 
 void NeoHardware::updateStatus()
