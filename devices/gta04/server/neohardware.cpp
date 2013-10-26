@@ -139,8 +139,7 @@ void NeoHardware::setMaxChargeCurrent(int newValue)
     char buf[7];
     maxChargeCurrent = newValue;
     sprintf(buf, "%d", maxChargeCurrent);
-    qWriteFile("/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current",
-               buf);
+    qWriteFile("/sys/class/power_supply/twl4030_usb/max_current", buf);
 }
 
 // Parse uevent string and return given attribute value. Example uevent file:

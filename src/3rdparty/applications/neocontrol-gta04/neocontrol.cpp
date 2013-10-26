@@ -617,8 +617,7 @@ void NeoControl::updateSysfs()
     appendValue(tr("USB"), "/sys/class/power_supply/twl4030_usb/uevent", &text,
                 "POWER_SUPPLY_", "  ");
     appendValue(tr("USB max current"),
-                "/sys/bus/platform/drivers/twl4030_bci/twl4030_bci/max_current",
-                &text);
+                "/sys/class/power_supply/twl4030_usb/max_current", &text);
 
     label->setText(text);
 
@@ -681,7 +680,7 @@ void NeoControl::chargeStateChanged(int state)
             }
             QMessageBox::information(this, tr("Charging log"),
                                      tr
-                                     ("Charging log is now in /var/log/charging QtMoko will update it every 5 minutes."));
+                                     ("Charging log is now in /var/log/charging. It will take a while until logging starts."));
         }
     } else {
         if (QMessageBox::question(this, tr("Stop charging log"),
