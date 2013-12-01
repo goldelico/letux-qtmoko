@@ -96,9 +96,20 @@ Step 4
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
+echo lis302dl >> /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo bq27x00_battery >> /media/card/etc/modules
 echo ohci_hcd >> /media/card/etc/modules
+echo snd-soc-neo1973-wm8753 >> /media/card/etc/modules
+echo ar6000 >> /media/card/etc/modules
+echo btusb >> /media/card/etc/modules
+echo bluetooth >> /media/card/etc/modules
+echo snd-soc-neo1973-wm8753 >> /media/card/etc/modules
+echo snd-soc-wm8753 >> /media/card/etc/modules
+echo snd-soc-dfbmcs320 >> /media/card/etc/modules
+echo snd-soc-neo1973-wm8753 >> /media/card/etc/modules
+echo snd_soc_s3c24xx >> /media/card/etc/modules
+
 
 * Edit /media/card/etc/ppp/options and replace "auth" with "noauth"
 
