@@ -184,13 +184,15 @@ void NeoBattery::updateStatus()
   \internal */
 bool NeoBattery::isCharging()
 {
+    char buf[64];
     qLog(PowerManagement) << __PRETTY_FUNCTION__;
-    QByteArray content = qReadFile("/sys/class/power_supply/battery/status");
-    qLog(PowerManagement) << __PRETTY_FUNCTION__ << content;
+    
+    qReadSysfsStr("/sys/class/power_supply/battery/status", buf);
+    qLog(PowerManagement) << __PRETTY_FUNCTION__ << buf;
     // Charging  Discharging  Not charging
     // ac        battery      ac/full
 	// JM: Fixed this as it can return Not charging too
-    return (strcmp(content.constData(), "Charging") == 0);
+    return (strcmp(buf, "Charging") == 0);
 }
 
 /*!
