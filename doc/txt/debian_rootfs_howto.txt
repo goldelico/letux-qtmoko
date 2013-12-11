@@ -507,6 +507,19 @@ mv 1 DejaVuSansCondensed-Bold.ttf
 mv 2 DejaVuSansCondensed.ttf
 mv 3 DejaVuSansMono.ttf
 
+* Trim down midnight commander
+
+mkdir /media/card/usr/share/mc-new
+cp /media/card/usr/share/mc/mc.* /media/card/usr/share/mc-new
+mkdir /media/card/usr/share/mc-new/skins
+cp /media/card/usr/share/mc/skins/default.ini /media/card/usr/share/mc-new/skins
+rm -rf /media/card/usr/share/mc/
+mv /media/card/usr/share/mc-new /media/card/usr/share/mc
+
+rm -rf /usr/share/xml/iso-codes/iso_*
+
+find /media/card/lib/modules/2.6.39-qtmoko-v58/ -name *.ko -exec strip -R .not -R .comment --strip-unneeded {} \;
+
 
 * Edit the mount for root in /media/card/etc/fstab so that it reads:
 
