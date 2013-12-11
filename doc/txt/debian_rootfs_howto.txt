@@ -49,7 +49,7 @@ keyring=debian-archive-keyring
 suite=wheezy
 
 [Grip]
-packages=ifupdown net-tools procps netbase nano module-init-tools wget screen mc wpasupplicant wireless-tools iproute dosfstools fbset rsyslog psmisc iptables dash ttf-dejavu libpng12-0 libjpeg8 libxtst6 sqlite3 ntpdate libmng1 libtiff4 libvorbisfile3 libicu48 gpsd ppp libasound2 alsa-utils libcap-ng0 libcap2 libsystemd-login0 dbus libgstreamer-plugins-base0.10-0
+packages=ifupdown net-tools procps netbase nano module-init-tools wget screen mc wpasupplicant wireless-tools iproute dosfstools fbset rsyslog psmisc iptables dash ttf-dejavu libpng12-0 libjpeg8 libxtst6 sqlite3 ntpdate libmng1 libtiff4 libvorbisfile3 libicu48 gpsd ppp rfkill libasound2 alsa-utils libcap-ng0 libcap2 libsystemd-login0 dbus libgstreamer-plugins-base0.10-0
 keyring=emdebian-archive-keyring
 source=http://www.emdebian.org/grip
 suite=wheezy-grip
@@ -151,7 +151,6 @@ Step 4
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
-echo lis302dl >> /media/card/etc/modules
 echo joydev >> /media/card/etc/modules
 echo bq27x00_battery >> /media/card/etc/modules
 echo ohci_hcd >> /media/card/etc/modules
