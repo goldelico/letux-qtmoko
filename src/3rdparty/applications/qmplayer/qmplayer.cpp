@@ -1330,7 +1330,12 @@ PLAY:
 
 void QMplayer::encode(QString filename)
 {
-    QString dstFile = getEncFilename(filename, ".encoded.mp4");
+#ifdef QT_QWS_NEO
+    QString dstFile = filename + ".gta02.mp4";
+#else
+    QString dstFile = filename + ".encoded.mp4";
+#endif
+
     if (startMencoder(filename, dstFile)) {
 #ifdef QTOPIA
         QtopiaApplication::setPowerConstraint(QtopiaApplication::
