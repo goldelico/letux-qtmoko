@@ -59,10 +59,6 @@ __END__
 multistrap -f multistrap.conf
 
 
-ifupdown net-tools procps netbase nano module-init-tools wget openssh-server screen mc libts-0.0-0 udhcpc wpasupplicant wireless-tools iputils-ping iproute dosfstools fbset rsyslog psmisc iptables dash ttf-dejavu libpng12-0 libjpeg8 libxtst6 sqlite3 ntpdate liblcms1 libmng1 libtiff4 libvorbisfile3 libicu48 gpsd ppp libasound2 alsa-utils
-
-bluez bluez-alsa gpsd-clients gstreamer0.10-ffmpeg gstreamer0.10-plugins-good gstreamer0.10-fluendo-mp3 gstreamer0.10-alsa
-
 Step 1.2 - modified packages
 ============================
 
@@ -151,7 +147,6 @@ Step 4
 
 echo g_ether > /media/card/etc/modules
 echo ppp_generic >> /media/card/etc/modules
-echo joydev >> /media/card/etc/modules
 echo bq27x00_battery >> /media/card/etc/modules
 echo ohci_hcd >> /media/card/etc/modules
 echo snd-soc-neo1973-wm8753 >> /media/card/etc/modules
@@ -370,8 +365,9 @@ Step 8.1 - install mokofaen theme
 * Mokofaen is now default theme for qtmoko - but it's not part of qtmoko deb
   package, so that user can uninstall it to save space. So install mokofaen:
 
-chroot /media/card/
+cd /media/card
 wget http://qtmoko.sourceforge.net/apps/all/qtmoko-theme-mokofaen_3-2_all.deb
+chroot /media/card/
 dpkg -i qtmoko-theme-mokofaen_3-2_all.deb
 rm qtmoko-theme-mokofaen_3-2_all.deb
 exit
@@ -476,6 +472,8 @@ nano /media/card/etc/rc.local
 Step 10 - release tarball
 =========================
 
+* Release tarbals are uploaded to sourceforge dir /home/frs/project/qtmoko/GTA02/
+
 cd /media/card
 tar -czvf ../qtmoko-debian-gta02-v58.tar.gz .
 
@@ -516,7 +514,7 @@ cp /media/card/usr/share/mc/skins/default.ini /media/card/usr/share/mc-new/skins
 rm -rf /media/card/usr/share/mc/
 mv /media/card/usr/share/mc-new /media/card/usr/share/mc
 
-rm -rf /usr/share/xml/iso-codes/iso_*
+* Strip kernel modules a bit more (saves ~1MB)
 
 find /media/card/lib/modules/2.6.39-qtmoko-v58/ -name *.ko -exec strip -R .not -R .comment --strip-unneeded {} \;
 
