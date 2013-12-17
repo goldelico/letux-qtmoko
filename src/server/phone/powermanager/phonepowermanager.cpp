@@ -180,7 +180,7 @@ void PhonePowerManager::setIntervals(int* ivals, int size )
         default:
         case 3:
             ivals[2] = interval(ivals[2], config, "Suspend","Interval", 60); // No tr
-            v[2] = qMax( 1000*ivals[2] + 100, 100);
+            v[2] = qMax( 1000*ivals[2] + 1000, 1000);
             m_suspendEnabled = ( (ivals[2] != 0) ? config.value("Suspend", true).toBool() : false );
             if (m_suspendEnabled)
                 timeToAction.insert(v[2], PhonePowerManager::Suspend);
@@ -188,18 +188,18 @@ void PhonePowerManager::setIntervals(int* ivals, int size )
             ivals[1] = interval(ivals[1], config, "LightOff","Interval_LightOff", 30);
             if (ivals[1] == 0 && m_suspendEnabled)
                 ivals[1] = ivals[2];
-            v[1] = qMax( 1000*ivals[1], 100);
+            v[1] = qMax( 1000*ivals[1], 1000);
             if (timeToAction.contains(v[1]))
-                v[1] = v[1]+100; //add few ms for next timeout
+                v[1] = v[1]+1000; //add few ms for next timeout
             m_lightOffEnabled = ( (ivals[1] != 0 ) ? config.value("LightOff", true).toBool() : false );
             m_lightOffEnabled |= m_suspendEnabled;
             if (m_lightOffEnabled)
                 timeToAction.insert(v[1], PhonePowerManager::LightOff);
         case 1:
             ivals[0] = interval(ivals[0], config, "Dim","Interval_Dim", 20); // No tr
-            v[0] = qMax( 1000*ivals[0], 100);
+            v[0] = qMax( 1000*ivals[0], 1000);
             while ( timeToAction.contains( v[0] ) )
-                v[0] = v[0]+100; //add few ms for next timeout
+                v[0] = v[0]+1000; //add few ms for next timeout
             m_dimLightEnabled = ( (ivals[0] != 0) ? config.value("Dim", true).toBool() : false );
             if (m_dimLightEnabled)
                 timeToAction.insert(v[0], PhonePowerManager::DimLight);
