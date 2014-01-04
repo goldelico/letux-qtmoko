@@ -1,0 +1,10 @@
+[Translation]
+File=QtopiaApplications
+Context=childmath
+[Desktop Entry]
+Comment[]=Math trining for children
+Exec=childmath
+Icon=childmath/childmath
+Type=Application
+Name[]=Child math
+Categories=MainApplications
