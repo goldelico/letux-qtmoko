@@ -4,8 +4,8 @@
 #include <QDateTime>
 #include <QMessageBox>
 
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
+MainWindow::MainWindow(QWidget *parent, Qt::WindowFlags f) :
+    QMainWindow(parent, f),
     ui(new Ui::MainWindow),
     okResults(0)
 {

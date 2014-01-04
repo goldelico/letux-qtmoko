@@ -18,12 +18,12 @@ pkg [
 ]
 
 # Input files
-HEADERS=\
-    src/childmath.h
+SOURCES += main.cpp\
+        mainwindow.cpp
 
-SOURCES=\
-    src/main.cpp \
-    src/childmath.cpp \
+HEADERS  += mainwindow.h
+
+FORMS    += mainwindow.ui
 
 # Install rules
 target [
@@ -41,10 +41,4 @@ pics [
     hint=pics
     files=pics/*
     path=/pics/childmath
-]
-
-help [
-    hint=help
-    source=help
-    files=*.html
 ]
