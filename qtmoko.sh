@@ -341,6 +341,10 @@ killall pulse.sh                # kill pulseaudio - in qemu it just eats cpu
 
 rm -rf /home/root/*  # remove all stuff created by qpe
 
+# relace touch screen by stable node
+
+sed -ibak 's|/dev/input/event0|/dev/input/touchscreen|g' /opt/qtmoko/qpe.env
+
 
 # Step 8.1 - install mokofaen theme
 # =================================
