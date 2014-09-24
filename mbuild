@@ -47,8 +47,8 @@ fi
 echo "mbuild: run script within qemu"
 ssh -o StrictHostKeyChecking=no -p 22222 root@localhost <<END
 
-apt-get update
-apt-get upgrade
+apt-get update -y
+apt-get upgrade -y
 
 # Note that you may need to install some dependencies before building:
 apt-get install -y libX11-dev libXext-dev libXtst-dev libasound2-dev libdbus-1-dev libts-dev libbluetooth-dev
@@ -57,7 +57,7 @@ apt-get install -y debhelper libssl-dev libpng12-dev libv4l-dev libspeexdsp-dev 
 # and some tools
 apt-get install -y git dpkg-dev
 
-echo "mbuild: cloning tree"
+echo "mbuild: getting source tree"
 # here we should simply cd to the shared directory with the checked out git tree...
 if [ -d qtmoko ]
 then
