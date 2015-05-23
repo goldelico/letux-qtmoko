@@ -1,5 +1,9 @@
 #!/bin/bash
-# make qtmoko rootfs.tbz
+# make qtmoko packages from sources
+#
+# 1. runs Wheezy in qemu
+# 2. uses git to fetch the sources into the virtual machine
+# 3. use buildpackage to run the complete build process
 #
 
 [ "$VERSION" ] || export VERSION=58
