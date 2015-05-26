@@ -20,6 +20,7 @@ cd qemu-wheezy-vexpress || exit
 
 [ -r vmlinuz-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/vmlinuz-3.2.0-4-vexpress
 [ -r initrd.img-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/initrd.img-3.2.0-4-vexpress
+## FIXME: load image with sources and precompiled objects
 [ -r wheezy.img -o -r wheezy.img.bz2 ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/wheezy.img.bz2
 [ -r wheezy.img.bz2 ] && bunzip2 -f wheezy.img.bz2
 
@@ -56,15 +57,13 @@ fi
 echo "mbuild: run script within qemu"
 ssh -o StrictHostKeyChecking=no -p 22222 root@localhost <<END
 
+echo "mbuild: updating Debian $(cat /etc/debian_version) within Qemu"
+
 apt-get update -y
 apt-get upgrade -y
 
-# Note that you may need to install some dependencies before building:
-apt-get install -y libX11-dev libXext-dev libXtst-dev libasound2-dev libdbus-1-dev libts-dev libbluetooth-dev
-apt-get install -y debhelper libssl-dev libpng12-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer-plugins-base0.10-dev libtiff4-dev libmng-dev quilt libvorbis-dev
-
-# and some tools
-apt-get install -y git dpkg-dev
+echo install developer toolset
+apt-get install -y git dpkg-dev build-essential
 
 echo "mbuild: getting source tree"
 # here we should simply cd to the shared directory with the checked out git tree...
@@ -75,17 +74,30 @@ else
 	git clone https://github.com/radekp/qtmoko.git
 fi
 
-cd qtmoko
+cd qtmoko || exit 1
 
 echo "mbuild: checkout v${VERSION}"
 git checkout -f v${VERSION}
 # Please note that releases are made from translations branch so that we have
 # all languages.
+
+echo "mbuild: checkout submodules"
 # ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
 git submodule update --init
 echo "mbuild: dpkg-buildpackage"
 echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
-dpkg-buildpackage
+
+echo "mbuild: install specific build dependencies"
+depends=$(cat debian/control* | fgrep Build-Depends | sed "s/^Build-Depends: //g")
+depends=$(echo $depends | sed "s/[() ]//g" | tr "," " ")
+apt-get install -y $depends
+
+echo "mbuild: dpkg-buildpackage"
+# build packages but don't clean (so that a rebuild is faster)
+# use debuild -nc --prepend-path=/usr/lib/ccache --preserve-envvars=CCACHE_* instead?
+
+dpkg-buildpackage -nc
+
 echo "mbuild: dpkg-buildpackage done"
 
 ls -l
@@ -93,7 +105,7 @@ ls -l
 END
 
 echo "mbuild: pull image from qemu"
-ssh -o StrictHostKeyChecking=no -p 22222 root@localhost sh -c 'cd; cd /media/rootfs && tar cf - .' >qtmoko-gta04.tar
+ssh -o StrictHostKeyChecking=no -p 22222 root@localhost sh -c 'cd; cd qtmoko && tar cf - packages' >qtmoko-gta04.tar
 ls -l qtmoko-gta04.tar
 
 if [ "$PID" ]
