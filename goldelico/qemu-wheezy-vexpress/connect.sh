@@ -1,17 +1,19 @@
 #!/bin/bash
 
+[ "$IP" ] || export IP=localhost
 [ -r vmlinuz-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/vmlinuz-3.2.0-4-vexpress
 [ -r initrd.img-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/initrd.img-3.2.0-4-vexpress
 [ -r wheezy.img -o -r wheezy.img.bz2 ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/wheezy.img.bz2
 [ -r wheezy.img.bz2 ] && bunzip2 -f wheezy.img.bz2
 
-if pgrep qemu-system-arm
+PID=$(pgrep qemu-system-arm | head -n 1)
+if [ "$PID" ]
 then
-	echo "qemu-system-arm already running"
+	# echo "qemu-system-arm already running"
 	UFLAG=false
 	DFLAG=false
 else
-	echo "start new qemu-system-arm"
+	# echo "start new qemu-system-arm"
 	UFLAG=true
 	DFLAG=true
 fi >&2
@@ -31,6 +33,12 @@ do
 			break;
 	esac
 done
+
+if [ "$IP" != "localhost" ]
+then # no qemu
+	ssh -o StrictHostKeyChecking=no root@$IP "$@"
+	exit
+fi
 
 if $UFLAG
 then
