@@ -6,16 +6,7 @@
 # 3. pulls the results and uploads to download area
 #
 
-function run
-{
-	if true
-	then
-		( cd qemu-wheezy-vexpress && ./connect.sh "$@" )
-	else
-		ssh 192.168.0.202 "$@"
-	fi
-}
-
+[ "$IP" ] || export IP=192.168.2.202
 [ "$VERSION" ] || export VERSION=58
 [ "$UPLOAD" ] || export UPLOAD="/Volumes/Server HD/Library/WebServer/Sites/download.goldelico.com/gta04/qtmoko/"
 
@@ -26,11 +17,11 @@ function run
 	mount_smbfs "//hns:$(cat ~/.ssh/www.goldelico.com)@www.goldelico.com/Server%20HD" /Volumes/Server\ HD || exit 1
 }
 
-echo "mbuild: building unstable.tbz Version $VERSION for $UPLOAD"
-run -u <mbuild.rsh
+echo "mbuild: building unstable.tbz Version $VERSION for $UPLOAD on $IP"
+( cd qemu-wheezy-vexpress && ./connect.sh -u ) <mbuild.rsh
 
-echo "mbuild: pull image from qemu"
-run -d >qtmoko-gta04.tar <<END
+echo "mbuild: pull image from $IP"
+( cd qemu-wheezy-vexpress && ./connect.sh -d ) >qtmoko-gta04.tar <<END
 cd
 cd qtmoko && tar cf - packages
 END

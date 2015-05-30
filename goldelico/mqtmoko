@@ -4,6 +4,7 @@
 # runs qtmoko.sh in qemu (Wheezy) image
 #
 
+[ "$IP" ] || export IP=192.168.2.202
 [ "$SERVER" ] || export SERVER="http://download.goldelico.com/gta04/qtmoko"
 [ "$UPLOAD" ] || export UPLOAD="/Volumes/Server HD/Library/WebServer/Sites/download.goldelico.com/gta04/qtmoko/unstable.tbz"
 
@@ -14,24 +15,11 @@
 	mount_smbfs "//hns:$(cat ~/.ssh/www.goldelico.com)@www.goldelico.com/Server%20HD" /Volumes/Server\ HD || exit 1
 }
 
-function run
-{
-	if true
-	then
-		( cd qemu-wheezy-vexpress && ./connect.sh "$@" )
-	else
-		ssh 192.168.0.202 "$@"
-	fi
-}
-
-echo "push scripts to qemu"
-(cd .. && tar cf - *.sh) | run -u sh -c 'cd; tar xvf -'
-
-echo "run script within qemu"
-run <mqtmoko.rsh
+echo "run mqtmoko.rsh on buildhost $IP"
+( cd qemu-wheezy-vexpress && ./connect.sh -u ) <mqtmoko.rsh
 
 echo "pull image from qemu"
-run -d sh -c 'cd; cd /media/rootfs && tar cf - .' >unstable.tar
+( cd qemu-wheezy-vexpress && ./connect.sh -d sh -c 'cd; cd /media/rootfs && tar cf - .') >unstable.tar
 ls -l unstable.tar
 
 echo "compress"
