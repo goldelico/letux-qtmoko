@@ -22,7 +22,8 @@ if [ -d qtmoko ]
 then
 	(cd qtmoko; git fetch)
 else
-	git clone https://github.com/radekp/qtmoko.git
+	# git clone https://github.com/radekp/qtmoko.git
+	git clone git://git.goldelico.com/gta04-qtmoko.git qtmoko
 fi
 
 cd qtmoko || exit 1
@@ -39,8 +40,8 @@ echo "mbuild: dpkg-buildpackage"
 echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 
 echo "mbuild: install specific build dependencies"
-depends=$(cat debian/control* | fgrep Build-Depends | sed "s/^Build-Depends: //g")
-depends=$(echo $depends | sed "s/[() ]//g" | tr "," " ")
+depends=$(for i in debian/control*; do cat $i | fgrep Build-Depends | sed "s/^Build-Depends: //g" | sed "s/@.*@//g"; echo ,; done)
+depends=$(echo $depends | sed "s/([^)]*)//g" | tr "," " ")
 apt-get install -y $depends
 
 echo "mbuild: dpkg-buildpackage"
