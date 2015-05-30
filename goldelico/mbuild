@@ -1,10 +1,20 @@
 #!/bin/bash
 # make qtmoko packages from sources
 #
-# 1. runs Wheezy in qemu
-# 2. uses git to fetch the sources into the virtual machine
-# 3. use buildpackage to run the complete build process
+# 1. runs Wheezy in qemu or on a connected ARM machine
+# 2. runs the mbuild.rsh on that machine
+# 3. pulls the results and uploads to download area
 #
+
+function run
+{
+	if true
+	then
+		( cd qemu-wheezy-vexpress && ./connect.sh "$@" )
+	else
+		ssh 192.168.0.202 "$@"
+	fi
+}
 
 [ "$VERSION" ] || export VERSION=58
 [ "$UPLOAD" ] || export UPLOAD="/Volumes/Server HD/Library/WebServer/Sites/download.goldelico.com/gta04/qtmoko/"
@@ -16,110 +26,20 @@
 	mount_smbfs "//hns:$(cat ~/.ssh/www.goldelico.com)@www.goldelico.com/Server%20HD" /Volumes/Server\ HD || exit 1
 }
 
-cd qemu-wheezy-vexpress || exit
-
-[ -r vmlinuz-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/vmlinuz-3.2.0-4-vexpress
-[ -r initrd.img-3.2.0-4-vexpress ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/initrd.img-3.2.0-4-vexpress
-## FIXME: load image with sources and precompiled objects
-[ -r wheezy.img -o -r wheezy.img.bz2 ] || curl -O http://download.goldelico.com/gta04/debian/qemu-wheezy-vexpress/wheezy.img.bz2
-[ -r wheezy.img.bz2 ] && bunzip2 -f wheezy.img.bz2
-
 echo "mbuild: building unstable.tbz Version $VERSION for $UPLOAD"
-
-if ! pgrep qemu-system-arm
-then
-echo "mbuild: start new qemu-system-arm"
-# -nographic  does not work
-	#qemu-system-arm -M vexpress-a9 -kernel vmlinuz-3.2.0-4-vexpress -initrd initrd.img-3.2.0-4-vexpress -sd wheezy.img -append "root=/dev/mmcblk0p2 console=ttyAMA0 console=ttyS0" -redir tcp:22222::22 -m 256 -serial none&
-	qemu-system-arm -M vexpress-a9 -kernel vmlinuz-3.2.0-4-vexpress -initrd initrd.img-3.2.0-4-vexpress -sd wheezy.img -append "root=/dev/mmcblk0p2" -redir tcp:22222::22 -m 256 -serial none&
-	PID=$!
-
-#while ! nc -z -w 4 localhost 22222
-#do
-#	echo waiting for ssh port...
-#	sleep 5
-#done
-
-	echo "mbuild: sleeping 300 seconds"
-	for i in 1 2 3 4 5 6 7 8 9 10
-	do
-		for j in 1 2 3 4 5 6 7 8 9 10
-			do
-				sleep 3	# virtual machine will need quite some time to start up...
-				echo -n "."
-			done
-		echo
-	done
-else
-	echo "mbuild: qemu-system-arm is already running"
-fi
-
-echo "mbuild: run script within qemu"
-ssh -o StrictHostKeyChecking=no -p 22222 root@localhost <<END
-
-echo "mbuild: updating Debian $(cat /etc/debian_version) within Qemu"
-
-apt-get update -y
-apt-get upgrade -y
-
-echo install developer toolset
-apt-get install -y git dpkg-dev build-essential
-
-echo "mbuild: getting source tree"
-# here we should simply cd to the shared directory with the checked out git tree...
-if [ -d qtmoko ]
-then
-	(cd qtmoko; git fetch)
-else
-	git clone https://github.com/radekp/qtmoko.git
-fi
-
-cd qtmoko || exit 1
-
-echo "mbuild: checkout v${VERSION}"
-git checkout -f v${VERSION}
-# Please note that releases are made from translations branch so that we have
-# all languages.
-
-echo "mbuild: checkout submodules"
-# ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
-git submodule update --init
-echo "mbuild: dpkg-buildpackage"
-echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
-
-echo "mbuild: install specific build dependencies"
-depends=$(cat debian/control* | fgrep Build-Depends | sed "s/^Build-Depends: //g")
-depends=$(echo $depends | sed "s/[() ]//g" | tr "," " ")
-apt-get install -y $depends
-
-echo "mbuild: dpkg-buildpackage"
-# build packages but don't clean (so that a rebuild is faster)
-# use debuild -nc --prepend-path=/usr/lib/ccache --preserve-envvars=CCACHE_* instead?
-
-dpkg-buildpackage -nc
-
-echo "mbuild: dpkg-buildpackage done"
-
-ls -l
-
-END
+run -u <mbuild.rsh
 
 echo "mbuild: pull image from qemu"
-ssh -o StrictHostKeyChecking=no -p 22222 root@localhost sh -c 'cd; cd qtmoko && tar cf - packages' >qtmoko-gta04.tar
+run -d >qtmoko-gta04.tar <<END
+cd
+cd qtmoko && tar cf - packages
+END
+
 ls -l qtmoko-gta04.tar
 
-if [ "$PID" ]
-then
-	echo "mbuild: stop qemu"
-	echo "mbuild: shutdown guest Linux"
-	ssh -o StrictHostKeyChecking=no -p 22222 root@localhost sh -c 'cd; poweroff'
-	sleep 20
-	kill $PID
-fi
-
-#echo "compress"
-#rm -f qtmoko-gta04.tar.bz2
-#[ -s qtmoko-gta04.tar ] && bzip2 -f qtmoko-gta04.tar # compress on host because that is much faster
+echo "mbuild: compress"
+rm -f qtmoko-gta04.tar.bz2
+[ -r qtmoko-gta04.tar ] && bzip2 -f qtmoko-gta04.tar # compress on host because that is much faster
 echo "mbuild: upload to $UPLOAD"
 ls -l qtmoko-gta04.tar*
 mv -f qtmoko-gta04.tar.bz2 "$UPLOAD/qtmoko-gta04_${VERSION}-1_armhf.deb"
