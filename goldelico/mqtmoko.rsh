@@ -446,7 +446,7 @@ echo "exit 0" >>/etc/rc.local
 # ========================================
 # ========================================
 
-rm -rf /usr/share/QuantumSTEP
+rm -rf /usr/local/QuantumSTEP
 
 sync
 cat /etc/debian_version
