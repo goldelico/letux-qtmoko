@@ -1,0 +1,18 @@
+Demo for buidling Apps for QtMoko2.
+
+This directory should receive all configs needed for
+packaging this for the Debian Source packages and
+build system.
+
+/src/ contains the sources and Qt Makefile.
+
+For testing:
+* [ -x /usr/bin/qmake ] || apt-get install qt-sdk
+* [ -x /usr/bin/qtcreator ] || apt-get install qcreator
+* [ -x /usr/bin/git ] || apt-get install git
+* git checkout http://git.goldelico.com/gta04-qtmoko.git
+* cd gta04-qtmoko/qtmoko2/QtHelloWorld/src
+* qmmake -project
+* qmake
+* make
+* run the binary from local directory ./QtHelloWorld
