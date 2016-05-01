@@ -1,0 +1,25 @@
+This is the experimental source tree for QtMoko2.
+
+The goal of QtMoko2 is to rewrite/port intersting applications
+and tools from QtMoko to use Qt5 libraries as provided by Debian
+Jessie.
+
+This removes the dependency on compiling (and maintaining) QPE
+and allows to run QtMoko on different devices and architectures
+because it can much easier be recompiled.
+
+It is planned to add debian packaging files so that the source
+code and be distributed as debian source packages and the binaries
+can be rebuilt on any Debian machine from scratch.
+
+It should become easily possible to create a download.qtmoko.net
+repository where all packages are provided so that a simple
+addition to /etc/apt/sources.list.d allows to use standard
+Debian installation tools.
+
+At some stage in the future we should tree-rewrite the git
+so that all other files above are removed and this directory
+becomes the root of the git repo.
+
+But for the initial experimentations it is better to have everything
+grouped here.
