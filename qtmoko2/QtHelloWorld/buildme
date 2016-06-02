@@ -1,0 +1,17 @@
+# Demo for building Apps for QtMoko2.
+
+[ -x /usr/bin/qmake ] || apt-get install qt-sdk
+[ -x /usr/bin/qtcreator ] || apt-get install qcreator
+[ -x /usr/bin/git ] || apt-get install git
+
+git clone http://git.goldelico.com/gta04-qtmoko.git || exit
+
+cd gta04-qtmoko/qtmoko2/QtHelloWorld || exit
+
+qmake -project src || exit
+qmake || exit
+make || exit
+
+. /root/x
+
+./QtHelloWorld
