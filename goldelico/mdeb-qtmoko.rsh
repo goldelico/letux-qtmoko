@@ -31,10 +31,8 @@ fi
 cd "$SOURCE" || exit 1
 
 echo "mdeb-qtmoko: checkout v${VERSION}"
-## FIXME: there is no "v" branch so far - only "master"
-git checkout --force v${VERSION}
-# Please note that releases are made from translations branch so that we have
-# all languages.
+git checkout --force v${VERSION}	# switch to branch
+git pull	# update from upstream
 
 echo "mdeb-qtmoko: checkout submodules"
 # ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
@@ -43,8 +41,11 @@ echo "mdeb-qtmoko: dpkg-buildpackage"
 echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 
 echo "mdeb-qtmoko: install specific build dependencies"
-depends=$(for i in debian/control*; do cat $i | fgrep Build-Depends | sed "s/^Build-Depends: //g" | sed "s/@.*@//g"; echo ,; done)
-depends=$(echo $depends | sed "s/([^)]*)//g" | tr "," " ")
+depends=$(fgrep -h Build-Depends debian/control* | sed "s/^Build-Depends: //g" | sed "s/@.*@//g" | sed "s/([^)]*)//g" | sed "s/,/ /g")
+# substitutes
+depends=$(echo $depends | sed 's/libtiff4-dev /libtiff5-dev /g')
+depends=$(echo $depends | sed 's/libts-dev //g')
+echo "mdeb-qtmoko: dependencies" $depends
 apt-get install -y $depends
 
 echo "mdeb-qtmoko: dpkg-buildpackage"
