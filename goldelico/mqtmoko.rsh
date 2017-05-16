@@ -4,7 +4,7 @@
 # see https://github.com/radekp/qtmoko/blob/master/doc/txt/debian_rootfs_howto_gta04.txt
 #
 
-VERSION=57
+VERSION=58
 QTMOKO=http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_${VERSION}-1_armhf.deb
 
 echo "build image in qemu"
