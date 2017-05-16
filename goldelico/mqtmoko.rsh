@@ -1,10 +1,11 @@
 #!/bin/bash
-# run this script within ssh to qemu
+# this builds a QtMoko rootfs
 #
 # see https://github.com/radekp/qtmoko/blob/master/doc/txt/debian_rootfs_howto_gta04.txt
 #
 
 VERSION=57
+QTMOKO=http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_${VERSION}-1_armhf.deb
 
 echo "build image in qemu"
 pwd
@@ -15,51 +16,72 @@ which bzip2 >/dev/null || apt-get install -y bzip2
 which partprobe >/dev/null || apt-get install -y parted
 which mkfs.vfat >/dev/null || apt-get install -y dosfstools
 
+MEDIA=/media/P1
+MEDIA=/qtmoko
+
 echo "cleaning up and making new rootfs"
-umount /media/rootfs
-rm -rf /media/rootfs
+umount $MEDIA/proc $MEDIA/sys
+umount $MEDIA
+rm -rf $MEDIA
 
 # Step 1
 # ======
 
-# * We will be installing new image to /media/rootfs:
+# * We will be installing new image to $MEDIA:
 # * now cdebootstrap a clean base system
 
-which cdebootstrap >/dev/null || apt-get install -y cdebootstrap
+if ! [ "$(cat $MEDIA/.cdebootstrapped 2>/dev/null)" = "ok" ]
+then
 
-INCLUDES+=ifupdown,net-tools,procps,netbase,nano
-INCLUDES+=,module-init-tools,wget,openssh-server
-INCLUDES+=,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools
-INCLUDES+=,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc
-INCLUDES+=,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,ntpdate
-INCLUDES+=,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-fluendo-mp3
-INCLUDES+=,liblcms1,libmng1,libtiff4,libvorbisfile3,libicu48,gpsd,gpsd-clients
-INCLUDES+=,rfkill,libspeex1,libspeexdsp1,lsof,gstreamer0.10-pulseaudio,pulseaudio
-INCLUDES+=,pulseaudio-utils,libasound2-plugins,libpulse-mainloop-glib0
+	echo "cdebootstrapping wheezy rootfs"
 
-# more for convenience
-INCLUDES+=,file # this should be defined in the kernel package as "pre-depends: file"
-INCLUDES+=,vi
+	which cdebootstrap >/dev/null || apt-get install -y cdebootstrap
 
-cdebootstrap --flavour=minimal --include="${INCLUDES}" wheezy /media/rootfs/ http://cdn.debian.net/debian/
+	INCLUDES+=ifupdown,net-tools,procps,netbase,nano
+	INCLUDES+=,module-init-tools,wget,openssh-server
+	INCLUDES+=,screen,mc,libts-0.0-0,libasound2,alsa-utils,udhcpc,wpasupplicant,wireless-tools
+	INCLUDES+=,iputils-ping,iproute,bluez,bluez-alsa,dosfstools,fbset,rsyslog,psmisc
+	INCLUDES+=,iptables,dash,ttf-dejavu,libpng12-0,libjpeg8,libxtst6,sqlite3,ntpdate
+	INCLUDES+=,gstreamer0.10-ffmpeg,gstreamer0.10-plugins-good,gstreamer0.10-fluendo-mp3
+	INCLUDES+=,liblcms1,libmng1,libtiff4,libvorbisfile3,libicu48,gpsd,gpsd-clients
+	INCLUDES+=,rfkill,libspeex1,libspeexdsp1,lsof,gstreamer0.10-pulseaudio,pulseaudio
+	INCLUDES+=,pulseaudio-utils,libasound2-plugins,libpulse-mainloop-glib0
+	INCLUDES+=,ca-certificates
 
-mkdir -p /media/rootfs/mnt/nfs
-mkdir -p /media/rootfs/mnt/p1
-mkdir -p /media/rootfs/mnt/p2
-mkdir -p /media/rootfs/mnt/p3
-mkdir -p /media/rootfs/mnt/p5
-mkdir -p /media/rootfs/mnt/p6
-mkdir -p /media/rootfs/mnt/p7
-mkdir -p /media/rootfs/media/card
-mkdir -p /media/rootfs/media/p1
+	# more for convenience
+	INCLUDES+=,file # this should be defined in the kernel package as "pre-depends: file"
+	INCLUDES+=,vim-tiny
+	INCLUDES+=,libbz2-1.0
 
-mkdir -p /media/rootfs/proc /media/rootfs/sys
-mount -t proc proc /media/rootfs/proc
-mount -t sysfs sys /media/rootfs/sys
+	mkdir -p $MEDIA/mnt/nfs
+	mkdir -p $MEDIA/mnt/p1
+	mkdir -p $MEDIA/mnt/p2
+	mkdir -p $MEDIA/mnt/p3
+	mkdir -p $MEDIA/mnt/p5
+	mkdir -p $MEDIA/mnt/p6
+	mkdir -p $MEDIA/mnt/p7
+	mkdir -p $MEDIA/media/card
+	mkdir -p $MEDIA/media/p1
+
+	mkdir -p $MEDIA/proc $MEDIA/sys
+
+	if cdebootstrap --flavour=minimal --include="${INCLUDES}" wheezy $MEDIA/ http://cdn.debian.net/debian/
+	then
+		# mark directory as successfully debootstrapped
+		echo ok >$MEDIA/.cdebootstrapped
+	else
+		exit 1
+	fi
+fi
+
+# mounts for chroot (and umount if script exits)
+trap "umount $MEDIA/proc $MEDIA/sys" 0
+mount -t proc proc $MEDIA/proc
+mount -t sysfs sys $MEDIA/sys
 
 echo "chroot and post-install"
 
-chroot /media/rootfs /bin/bash <<END_CHROOT
+chroot $MEDIA /bin/bash <<END_CHROOT
 echo "chroot started"
 pwd
 cat /etc/debian_version
@@ -69,16 +91,16 @@ cat /etc/debian_version
 
 # * Complete installation. Copy paste below in shell:
 
-mkdir /mnt/nfs
-mkdir /mnt/p1
-mkdir /mnt/p2
-mkdir /mnt/p3
-mkdir /mnt/p5
-mkdir /mnt/p6
-mkdir /mnt/p7
-mkdir /media/p1
-echo "neo" > /etc/hostname
-echo "127.0.0.1 neo" >> /etc/hosts
+mkdir -p /mnt/nfs
+mkdir -p /mnt/p1
+mkdir -p /mnt/p2
+mkdir -p /mnt/p3
+mkdir -p /mnt/p5
+mkdir -p /mnt/p6
+mkdir -p /mnt/p7
+mkdir -p /media/p1
+echo "qtmoko" > /etc/hostname
+echo "127.0.0.1 qtmoko" >> /etc/hosts
 
 cat > /etc/network/interfaces <<__END__
 auto lo
@@ -87,7 +109,7 @@ auto usb0
 iface usb0 inet static
     address 192.168.0.202
     netmask 255.255.255.0
-    network 192.168.0.0
+    network 192.168.0.192
     gateway 192.168.0.200
     up rm /etc/resolv.conf
     up echo nameserver 208.67.222.222 >/etc/resolv.conf
@@ -139,8 +161,11 @@ echo bmp085 >> /etc/modules
 
 # Make the MAC address of g_ether fixed instead of random, so that network
 #  manager can be configured:
-  
+
+if false	# commented out because it is provided by gta04 kernel package
+then
 echo "options g_ether host_addr=46:0d:9e:67:69:eb dev_addr=b6:c8:ab:ac:44:7f" >> /etc/modprobe.d/options
+fi
 
 # Configure bluez4 for handsfreee calls, otherwise there is no sounds:
 
@@ -154,32 +179,37 @@ update-rc.d -f alsa-utils remove
 # Step 4.1 - stable device nodes for UMTS
 # =======================================
 
-# commented out because it is provided by gta04 kernel package
-
+if false	# commented out because it is provided by gta04 kernel package
+then
 # Modem device is by default on /dev/ttyHS3, but it can rename after modem
 #  disconnect. For details see:
 #    http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001515.html
 #    http://lists.goldelico.com/pipermail/gta04-owner/2012-February/001563.html
 #  We will use udev to create stable symlinks for us:
 
-#cd /etc/udev/rules.d
+cd /etc/udev/rules.d
 
-#wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/hso.rules
-#wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/input.rules
-#wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/sensor.rules
+wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/hso.rules
+wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/input.rules
+wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/sensor.rules
+fi
 
 # Step 4.2 - charging udev rules
 # ==============================
 
+if false	# commented out because it is provided by gta04 kernel package
+then
+
 # For more info see:
 #    http://lists.goldelico.com/pipermail/gta04-owner/2012-April/002272.html
 
-# cat > /etc/udev/rules.d/gta04-charging.rules <<__END__
-#SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="floating", ATTR{../../max_current}="500000"
-#SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="102k", ATTR{../../max_current}="851000"
-#__END__
+cat > /etc/udev/rules.d/gta04-charging.rules <<__END__
+SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="floating", ATTR{../../max_current}="500000"
+SUBSYSTEM=="power_supply", ACTION=="change", DEVPATH=="*power_supply/twl4030_usb" ATTRS{1-0048/twl4030_usb/id}=="102k", ATTR{../../max_current}="851000"
+__END__
 
-#wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/charging.rules
+wget http://git.goldelico.com/?p=gta04-kernel.git;a=blob;f=GTA04/udev-rules/charging.rules
+fi
 
 # Step 4.5 - make it generate SSH keys on start
 # =============================================
@@ -288,25 +318,26 @@ ln -s dash sh
 # Step 7.6 - libertas firmware
 # ============================
 
-# already provided by kernel package
+if false	# commented out because it is provided by gta04 kernel package
+then
 
 # Wifi needs sd8686.bin and sd8686_helper.bin in /lib/firmware:
 
-#wget http://ftp.de.debian.org/debian/pool/non-free/libe/libertas-firmware/libertas-firmware_9.70.7.p0.0-1_all.deb
-#dpkg -i libertas-firmware_9.70.7.p0.0-1_all.deb
-#rm libertas-firmware_9.70.7.p0.0-1_all.deb
-#cd /lib/firmware
-#mv sd8686.bin 1
-#mv sd8686_helper.bin 2
-#rm -f *.bin
-#mv 1 sd8686.bin
-#mv 2 sd8686_helper.bin
-
+wget http://ftp.de.debian.org/debian/pool/non-free/libe/libertas-firmware/libertas-firmware_9.70.7.p0.0-1_all.deb
+dpkg -i libertas-firmware_9.70.7.p0.0-1_all.deb
+rm libertas-firmware_9.70.7.p0.0-1_all.deb
+cd /lib/firmware
+mv sd8686.bin 1
+mv sd8686_helper.bin 2
+rm -f *.bin
+mv 1 sd8686.bin
+mv 2 sd8686_helper.bin
+fi
 
 # Step 8 - install QtMoko
 # =======================
 
-# we don't build the core here
+# we don't build the core here - use the mbuild script!
 
 # I use qemu armhf host for building qtmoko package. It should be as simple as
 
@@ -329,19 +360,19 @@ ln -s dash sh
 
 # Install it
 
-# FIXME: if this is available in the repo, we can just apt-get install qtmoko-gta04
+# FIXME: if this were available in the repo, we could just apt-get install qtmoko-gta04
 
-wget http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_${VERSION}-1_armhf.deb
-dpkg -i qtmoko-gta04_${VERSION}-1_armhf.deb
+wget "$QTMOKO"
+dpkg -i $(basename "$QTMOKO")
 update-rc.d qtmoko-gta04 defaults
-rm qtmoko-gta04_${VERSION}-1_armhf.deb
+rm $(basename "$QTMOKO")
 
 killall qpe.sh                  # recent versions start qtmoko after install, so kill it
 killall pulse.sh                # kill pulseaudio - in qemu it just eats cpu
 
 rm -rf /home/root/*  # remove all stuff created by qpe
 
-# relace touch screen by stable node
+# replace touch screen by stable node name
 
 sed -ibak 's|/dev/input/event0|/dev/input/touchscreen|g' /opt/qtmoko/qpe.env
 
@@ -414,7 +445,7 @@ wget -O default.pa https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc
 # * We use secure apt and we need keys for QtMoko repositories:
 
 wget https://raw.github.com/radekp/qtmoko/master/dist/qtmoko-pubring.gpg
-apt-key add /qtmoko-pubring.gpg 
+apt-key add qtmoko-pubring.gpg 
 rm qtmoko-pubring.gpg
 
 # Step 9.6 - setup default DNS
@@ -463,12 +494,17 @@ echo "cleanup system"
 
 # * Remove .bash_history created during install
 
-rm -f /media/rootfs/root/.bash_history
+rm -f $MEDIA/root/.bash_history
 
 sync
-umount /media/rootfs/proc /media/rootfs/sys
+umount $MEDIA/proc $MEDIA/sys
 
-# fuser -m /media/rootfs/ -TERM -k
+# fuser -m $MEDIA/ -TERM -k
 # echo "wait for all processes in chroot to be killed"
 # sleep 2
 echo "done with building image in qemu"
+
+echo "pack rootfs"
+tar cjf /qtmoko.tbz -C $MEDIA/ .
+
+ls -l /qtmoko.tbz

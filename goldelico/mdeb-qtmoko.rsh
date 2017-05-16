@@ -1,5 +1,5 @@
 #!/bin/bash
-# make qtmoko packages from sources
+# build the qtmoko.deb packages from sources
 #
 # run this script on a Debian Wheezy ARM machine (virtual or real)
 #
@@ -8,7 +8,9 @@
 
 [ "$VERSION" ] || export VERSION=58
 
-echo "mbuild: updating Debian $(cat /etc/debian_version) within Qemu"
+SOURCE=/qtmoko-src
+
+echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) within Qemu"
 
 apt-get update -y
 apt-get upgrade -y
@@ -16,40 +18,41 @@ apt-get upgrade -y
 echo install developer toolset
 apt-get install -y git dpkg-dev build-essential
 
-echo "mbuild: getting source tree"
-# here we should simply cd to a shared directory with the already checked out git tree...
-if [ -d qtmoko ]
+echo "mdeb-qtmoko: getting source tree"
+if [ -d "$SOURCE/.git" ]
 then
-	(cd qtmoko; git fetch)
+	(cd "$SOURCE" && git fetch) || exit 1
 else
+	rm -rf "$SOURCE/.git"
 	# git clone https://github.com/radekp/qtmoko.git
-	git clone git://git.goldelico.com/gta04-qtmoko.git qtmoko
+	git clone git://git.goldelico.com/gta04-qtmoko.git "$SOURCE"
 fi
 
-cd qtmoko || exit 1
+cd "$SOURCE" || exit 1
 
-echo "mbuild: checkout v${VERSION}"
-git checkout -f v${VERSION}
+echo "mdeb-qtmoko: checkout v${VERSION}"
+## FIXME: there is no "v" branch so far - only "master"
+git checkout --force v${VERSION}
 # Please note that releases are made from translations branch so that we have
 # all languages.
 
-echo "mbuild: checkout submodules"
+echo "mdeb-qtmoko: checkout submodules"
 # ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
-git submodule update --init
-echo "mbuild: dpkg-buildpackage"
+git submodule update --force --init
+echo "mdeb-qtmoko: dpkg-buildpackage"
 echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 
-echo "mbuild: install specific build dependencies"
+echo "mdeb-qtmoko: install specific build dependencies"
 depends=$(for i in debian/control*; do cat $i | fgrep Build-Depends | sed "s/^Build-Depends: //g" | sed "s/@.*@//g"; echo ,; done)
 depends=$(echo $depends | sed "s/([^)]*)//g" | tr "," " ")
 apt-get install -y $depends
 
-echo "mbuild: dpkg-buildpackage"
+echo "mdeb-qtmoko: dpkg-buildpackage"
 # build packages but don't clean (so that a rebuild is faster)
 # use debuild -nc --prepend-path=/usr/lib/ccache --preserve-envvars=CCACHE_* instead?
 
 dpkg-buildpackage -nc
 
-echo "mbuild: dpkg-buildpackage done"
+echo "mdeb-qtmoko: dpkg-buildpackage done"
 
 ls -l

@@ -1,35 +1,24 @@
 #!/bin/bash
 # make qtmoko rootfs.tbz from prebuilt package
 #
-# runs qtmoko.sh in qemu (Wheezy) image
+# runs qtmoko.rsh on build server (external Letux Cortex 8 connected through USB)
 #
 
-[ "$IP" ] || export IP=192.168.2.202
-[ "$SERVER" ] || export SERVER="http://download.goldelico.com/gta04/qtmoko"
-[ "$UPLOAD" ] || export UPLOAD="/Volumes/Server HD/Library/WebServer/Sites/download.goldelico.com/gta04/qtmoko/unstable.tbz"
+IP=192.168.0.202
 
-[ -x "$UPLOAD" ] || {
-	echo "server down - can't reach $UPLOAD"
-	mkdir -p "/Volumes/Server HD/"
-#	mount_afp "afp://hns:PASSWD@www.goldelico.com/Server HD" "/Volumes/Server HD/"	# try to mount
-	mount_smbfs "//hns:$(cat ~/.ssh/www.goldelico.com)@www.goldelico.com/Server%20HD" /Volumes/Server\ HD || exit 1
-}
+[ "$IP" ] || export IP=192.168.2.202
 
 echo "run mqtmoko.rsh on buildhost $IP"
-( cd qemu-wheezy-vexpress && ./connect.sh -u ) <mqtmoko.rsh
+ssh root@$IP <mqtmoko.rsh
 
-echo "pull image from qemu"
-( cd qemu-wheezy-vexpress && ./connect.sh -d sh -c 'cd; cd /media/rootfs && tar cf - .') >unstable.tar
-ls -l unstable.tar
+DEBIAN=$(ssh root@192.168.0.202 sh -c "cd; cd /qtmoko && cat etc/debian_version")
 
-echo "compress"
-rm -f unstable.tar.bz2
-[ -s unstable.tar ] && bzip2 -f unstable.tar # compress on host because that is much faster
-echo "upload to $UPLOAD"
-ls -l unstable.tar*
-mv -f unstable.tar.bz2 "$UPLOAD"
+[ "$DEBIAN" ] || exit 1
 
-echo "result"
-ls -l "$UPLOAD"
+UPLOAD="/Library/WebServer/Sites/download.goldelico.com/letux-debian-rootfs/"
+FILE="$UPLOAD$(date "+%Y%m%d")-wheezy-$DEBIAN-qtmoko57.tbz"
 
-exit
+echo "pull image from buildhost $IP to $FILE"
+
+scp root@$IP:/qtmoko.tbz "$FILE"
+ls -l $UPLOAD

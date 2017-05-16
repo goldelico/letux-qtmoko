@@ -1,0 +1,24 @@
+#!/bin/bash
+# build the qtmoko.deb packages from sources
+#
+# 1. runs Wheezy in qemu or on a connected ARM machine
+# 2. runs the mbuild.rsh on that machine
+# 3. pulls the results and uploads to download area
+#
+
+IP=192.168.0.202
+
+SOURCE=/qtmoko-src
+
+[ "$IP" ] || export IP=192.168.2.202
+[ "$VERSION" ] || export VERSION=58
+
+echo "mdeb-qtmoko: building qtmoko-gta04_${VERSION}-1_armhf.deb Version $VERSION for $UPLOAD on $IP"
+ssh root@$IP <mdeb-qtmoko.rsh
+
+# FIXME: pull all .deb files to http://download.goldelico.com/letux-debian-rootfs/debian/dists/
+
+ssh root@$IP >qtmoko-gta04.tar <<END
+cd
+cd "$SOURCE" && tar cf - packages
+END
