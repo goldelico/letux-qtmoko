@@ -8,52 +8,109 @@
 
 [ "$VERSION" ] || export VERSION=58
 
+while [ "$1" ]
+do
+	case "$1" in
+		-s ) SYNC=yes;;
+		* ) break;
+	esac
+	shift
+done
+
+CHROOT=/qtmoko-build
 SOURCE=/qtmoko-src
 
-echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) within Qemu"
-
-apt-get update -y
-apt-get upgrade -y
-
-echo install developer toolset
-apt-get install -y git dpkg-dev build-essential
-
-echo "mdeb-qtmoko: getting source tree"
-if [ -d "$SOURCE/.git" ]
+if ! [ -d "$CHROOT" ]
 then
-	(cd "$SOURCE" && git fetch) || exit 1
-else
-	rm -rf "$SOURCE/.git"
-	# git clone https://github.com/radekp/qtmoko.git
-	git clone git://git.goldelico.com/gta04-qtmoko.git "$SOURCE"
+	: debootstrap image
 fi
 
-cd "$SOURCE" || exit 1
+echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) on build server"
 
-echo "mdeb-qtmoko: checkout v${VERSION}"
-git checkout --force v${VERSION}	# switch to branch
-git pull	# update from upstream
+if [ "$SYNC" ]
+then
+	apt-get update -y || exit 1
+	apt-get upgrade -y || exit 1
+fi
 
-echo "mdeb-qtmoko: checkout submodules"
-# ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
-git submodule update --force --init
-echo "mdeb-qtmoko: dpkg-buildpackage"
+echo install developer toolset
+[ "$(which git)" ] || apt-get install -y git # dpkg-dev build-essential
+
+echo "$0: getting source tree"
+mkdir -p "$CHROOT/$SOURCE"
+if ! [ -d "$CHROOT/$SOURCE/.git" ]
+then
+	rm -rf "$CHROOT/$SOURCE/.git"
+	# git clone https://github.com/radekp/qtmoko.git
+	git clone git://git.goldelico.com/gta04-qtmoko.git "$CHROOT/$SOURCE"
+	SYNC=yes	# first setup always needs a SYNC
+fi
+
+cd "$CHROOT/$SOURCE" || exit 1
+
+if [ "$SYNC" ]
+then
+	echo "$0: checkout v${VERSION}"
+	git checkout --force v${VERSION} || exit 1	# switch to branch
+	git pull || exit 1	# update from upstream
+
+	echo "$0: checkout submodules"
+	# ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
+	git submodule update --force --init || exit 1
+fi
+
+echo "$0: prepare and start dpkg-buildpackage"
 echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 
-echo "mdeb-qtmoko: install specific build dependencies"
-depends=$(fgrep -h Build-Depends debian/control* | sed "s/^Build-Depends: //g" | sed "s/@.*@//g" | sed "s/([^)]*)//g" | sed "s/,/ /g")
-# substitutes
-depends=$(echo $depends | sed 's/libtiff4-dev /libtiff5-dev /g')
-depends=$(echo $depends | sed 's/libts-dev //g')
-echo "mdeb-qtmoko: dependencies" $depends
-apt-get install -y $depends
+# build inside a chroot wrapper
+umount $CHROOT/proc $CHROOT/sys $CHROOT 2>/dev/null
 
-echo "mdeb-qtmoko: dpkg-buildpackage"
-# build packages but don't clean (so that a rebuild is faster)
-# use debuild -nc --prepend-path=/usr/lib/ccache --preserve-envvars=CCACHE_* instead?
+trap "umount $CHROOT/proc $CHROOT/sys" 0
+mount -t proc proc $CHROOT/proc
+mount -t sysfs sys $CHROOT/sys
 
-dpkg-buildpackage -nc
+echo "chroot for dpkg-buildpackage"
 
-echo "mdeb-qtmoko: dpkg-buildpackage done"
+chroot $CHROOT /bin/bash <<END_CHROOT || exit 1
+
+echo "chroot debian: \$(cat /etc/debian_version)"
+cd "$SOURCE" || exit 1
+echo "chroot source on \$PWD"
+
+PATH=/usr/lib/ccache:\$PATH
+echo "chroot PATH=\$PATH"
+
+if [ "$SYNC" ]
+then
+
+	if ! [ "\$(which dpkg-buildpackage)" ]
+	then
+		echo install developer toolset
+		# note: this somehow manages to abort the chroot!
+		apt-get update	# may be first apt-get update
+		dpkg --configure -a	# in case of trouble from last time
+		apt-get upgrade
+		apt-get install -y dpkg-dev build-essential ccache
+	fi
+
+	echo "chroot: install specific build dependencies"
+	depends=\$(fgrep -h Build-Depends debian/control* | sed "s/^Build-Depends: //g" | sed "s/@.*@//g" | sed "s/([^)]*)//g" | sed "s/,/ /g")
+	# substitutes
+	#depends=\$(echo $depends | sed 's/libtiff4-dev /libtiff5-dev /g')
+	#depends=\$(echo $depends | sed 's/libts-dev //g')
+	echo "mdeb-qtmoko: dependencies:" \$depends
+	dpkg --configure -a     # in case of trouble from last time
+	apt-get install -y \$depends
+fi
+
+# build binary and source packages but don't clean (so that a rebuild is faster)
+FLAGS="-F -nc"
+
+echo "chroot: dpkg-buildpackage \$FLAGS"
+dpkg-buildpackage \$FLAGS || exit 1
+
+echo "chroot: dpkg-buildpackage done"
+END_CHROOT
+umount $CHROOT/proc $CHROOT/sys 2>/dev/null
 
 ls -l

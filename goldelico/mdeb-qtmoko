@@ -5,20 +5,21 @@
 # 2. runs the mbuild.rsh on that machine
 # 3. pulls the results and uploads to download area
 #
+# call with -s option to sync from git and debian repos
 
 IP=192.168.0.202
 
-SOURCE=/qtmoko-src
+SOURCE=/qtmoko-build/qtmoko-src
 
 [ "$IP" ] || export IP=192.168.2.202
 [ "$VERSION" ] || export VERSION=58
 
-echo "mdeb-qtmoko: building qtmoko-gta04_${VERSION}-1_armhf.deb Version $VERSION for $UPLOAD on $IP"
-ssh root@$IP <mdeb-qtmoko.rsh
+echo "mdeb-qtmoko: building qtmoko-gta04_${VERSION}-1_armhf.deb Version $VERSION on $IP"
+ssh root@$IP <mdeb-qtmoko.rsh || exit 1
 
 # FIXME: pull all .deb files to http://download.goldelico.com/letux-debian-rootfs/debian/dists/
 
-ssh root@$IP >qtmoko-gta04.tar <<END
+ssh root@$IP "$@" >qtmoko-gta04.tar <<END
 cd
 cd "$SOURCE" && tar cf - packages
 END
