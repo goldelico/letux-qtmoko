@@ -7,7 +7,7 @@
 VERSION=58
 QTMOKO=http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_${VERSION}-1_armhf.deb
 
-echo "build image in qemu"
+echo "build image on build server"
 pwd
 apt-get update
 
@@ -16,8 +16,8 @@ which bzip2 >/dev/null || apt-get install -y bzip2
 which partprobe >/dev/null || apt-get install -y parted
 which mkfs.vfat >/dev/null || apt-get install -y dosfstools
 
-MEDIA=/media/P1
-MEDIA=/qtmoko
+VERSION=wheezy
+MEDIA=/qtmoko-$VERSION
 
 echo "cleaning up and making new rootfs"
 umount $MEDIA/proc $MEDIA/sys
@@ -65,7 +65,7 @@ then
 
 	mkdir -p $MEDIA/proc $MEDIA/sys
 
-	if cdebootstrap --flavour=minimal --include="${INCLUDES}" wheezy $MEDIA/ http://cdn.debian.net/debian/
+	if cdebootstrap --flavour=minimal --include="${INCLUDES}" $VERSION $MEDIA/ http://cdn.debian.net/debian/
 	then
 		# mark directory as successfully debootstrapped
 		echo ok >$MEDIA/.cdebootstrapped
@@ -502,7 +502,7 @@ umount $MEDIA/proc $MEDIA/sys
 # fuser -m $MEDIA/ -TERM -k
 # echo "wait for all processes in chroot to be killed"
 # sleep 2
-echo "done with building image in qemu"
+echo "done with building image on build server"
 
 echo "pack rootfs"
 tar cjf /qtmoko.tbz -C $MEDIA/ .
