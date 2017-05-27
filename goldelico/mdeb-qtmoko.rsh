@@ -1,34 +1,38 @@
 #!/bin/bash
 # build the qtmoko.deb packages from sources
 #
-# run this script on a Debian Wheezy ARM machine (virtual or real)
+# run this script on a Debian ARM machine (virtual or real)
 #
 # 1. uses git to fetch the sources
 # 2. use dpkg-buildpackage to run the complete build process
-
-[ "$VERSION" ] || export VERSION=58
+#
+# -s	sync everything
+# -v	specific version
+#
 
 while [ "$1" ]
 do
 	case "$1" in
+		-v ) shift; VERSION="$1";;
 		-s ) SYNC=yes;;
 		* ) break;
 	esac
 	shift
 done
 
+[ "$VERSION" ] || export VERSION=58
+
 CHROOT=/qtmoko-build
 SOURCE=/qtmoko-src
 
 if ! [ -d "$CHROOT" ]
 then
-	: debootstrap image
+	: debootstrap debian image
 fi
-
-echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) on build server"
 
 if [ "$SYNC" ]
 then
+	echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) on build server"
 	apt-get update -y || exit 1
 	apt-get upgrade -y || exit 1
 fi
@@ -53,6 +57,7 @@ then
 	echo "$0: checkout v${VERSION}"
 	git checkout --force v${VERSION} || exit 1	# switch to branch
 	git pull || exit 1	# update from upstream
+	git checkout master --goldelico || exit 1	# fetch latest build scripts
 
 	echo "$0: checkout submodules"
 	# ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
