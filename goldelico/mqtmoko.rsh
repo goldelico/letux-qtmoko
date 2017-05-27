@@ -83,8 +83,8 @@ echo "chroot and post-install"
 
 chroot $MEDIA /bin/bash <<END_CHROOT
 echo "chroot started"
-pwd
-cat /etc/debian_version
+echo "chroot PWD=\$PWD"
+echo "chroot version \$(cat /etc/debian_version)"
 
 # Step 2
 # ======
@@ -141,9 +141,13 @@ echo "deb http://cdn.debian.net/debian wheezy contrib" >> /etc/apt/sources.list
 echo "deb http://cdn.debian.net/debian wheezy non-free" >> /etc/apt/sources.list
 echo "deb http://security.debian.org/ wheezy/updates main contrib non-free" >> /etc/apt/sources.list
 mkdir -p /etc/apt/sources.list.d
+
+# FIXME: switch to www.qtmoko.net/download wheezy main
 echo "deb http://qtmoko.sourceforge.net/debian/gta04/armhf /" > /etc/apt/sources.list.d/qtmoko.list
 echo "deb http://qtmoko.sourceforge.net/apps/all /" >> /etc/apt/sources.list.d/qtmoko.list
 echo "deb http://qtmoko.sourceforge.net/apps/armhf /" >> /etc/apt/sources.list.d/qtmoko.list
+
+apt-get update
 
 # Step 4
 # ======
@@ -337,35 +341,12 @@ fi
 # Step 8 - install QtMoko
 # =======================
 
-# we don't build the core here - use the mbuild script!
+#wget "$QTMOKO"
+#dpkg -i $(basename "$QTMOKO")
+#update-rc.d qtmoko-gta04 defaults
+#rm $(basename "$QTMOKO")
 
-# I use qemu armhf host for building qtmoko package. It should be as simple as
-
-#git checkout v${VERSION}
-#dpkg-buildpackage
-
-# Note that you may need to install some dependencies before building:
-
-#apt-get install libX11-dev libXext-dev libXtst-dev libasound2-dev libdbus-1-dev libts-dev libbluetooth-dev
-
-# ...and checkout git submodules as it's necessary to place qt sources into qtmoko/qtopiacore/qt/:
-
-#git submodule update --init
-
-# Please note that releases are made from translations branch so that we have
-# all languages.
-
-# Now upload the package to sourceforge. In filezilla connect to sourceforge
-#  sftp and upload it to /home/project-web/qtmoko/htdocs/debian/gta04
-
-# Install it
-
-# FIXME: if this were available in the repo, we could just apt-get install qtmoko-gta04
-
-wget "$QTMOKO"
-dpkg -i $(basename "$QTMOKO")
-update-rc.d qtmoko-gta04 defaults
-rm $(basename "$QTMOKO")
+apt-get install -y qtmoko-gta04
 
 killall qpe.sh                  # recent versions start qtmoko after install, so kill it
 killall pulse.sh                # kill pulseaudio - in qemu it just eats cpu
@@ -376,16 +357,17 @@ rm -rf /home/root/*  # remove all stuff created by qpe
 
 sed -ibak 's|/dev/input/event0|/dev/input/touchscreen|g' /opt/qtmoko/qpe.env
 
-
 # Step 8.1 - install mokofaen theme
 # =================================
 
 # Mokofaen is now default theme for qtmoko - but it's not part of qtmoko deb
 #  package, so that user can uninstall it to save space. So install mokofaen:
 
-wget http://qtmoko.sourceforge.net/apps/all/qtmoko-theme-mokofaen_3-2_all.deb
-dpkg -i qtmoko-theme-mokofaen_3-2_all.deb
-rm qtmoko-theme-mokofaen_3-2_all.deb
+#wget http://qtmoko.sourceforge.net/apps/all/qtmoko-theme-mokofaen_3-2_all.deb
+#dpkg -i qtmoko-theme-mokofaen_3-2_all.deb
+#rm qtmoko-theme-mokofaen_3-2_all.deb
+
+apt-get install -y qtmoko-theme-mokofaen
 
 # Step 8.2 - some more alarm and ringtones
 # ========================================
