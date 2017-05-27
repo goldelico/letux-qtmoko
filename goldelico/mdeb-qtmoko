@@ -12,14 +12,16 @@ IP=192.168.0.202
 SOURCE=/qtmoko-build/qtmoko-src
 
 [ "$IP" ] || export IP=192.168.2.202
-[ "$VERSION" ] || export VERSION=56
+[ "$VERSION" ] || export VERSION=57
 
 echo "mdeb-qtmoko: building qtmoko-gta04_${VERSION}-1_armhf.deb Version $VERSION on $IP"
-ssh root@$IP <mdeb-qtmoko.rsh || exit 1
+ssh root@$IP "bash -s -- -v v$VERSION $@" <mdeb-qtmoko.rsh || exit 1
 
-# FIXME: pull all .deb files to http://download.goldelico.com/letux-debian-rootfs/debian/dists/
-
-ssh root@$IP -v $VErSION "$@" >qtmoko-gta04.tar <<END
-cd
-cd "$SOURCE" && tar cf - packages
-END
+# FIXME: for this to correctly work for different versions we must parse -v here
+echo "mdeb-qtmoko: copy to server"
+mkdir -p /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/binary-armhf
+scp root@192.168.0.202:/qtmoko-build/qtmoko-gta04_$VERSION-1_armhf.deb /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/binary-armhf
+mkdir -p /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
+scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1.dsc /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
+scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1_armhf.changes /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
+scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1.tar.gz /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
