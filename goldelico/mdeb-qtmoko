@@ -5,23 +5,36 @@
 # 2. runs the mbuild.rsh on that machine
 # 3. pulls the results and uploads to download area
 #
-# call with -s option to sync from git and debian repos
 
 IP=192.168.0.202
 
-SOURCE=/qtmoko-build/qtmoko-src
+CHROOT=/qtmoko-build
+SOURCE=/qtmoko-src
+SERVER=/Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main
 
 [ "$IP" ] || export IP=192.168.2.202
-[ "$VERSION" ] || export VERSION=57
 
-echo "mdeb-qtmoko: building qtmoko-gta04_${VERSION}-1_armhf.deb Version $VERSION on $IP"
-ssh root@$IP "bash -s -- -v v$VERSION $@" <mdeb-qtmoko.rsh || exit 1
+echo "mdeb-qtmoko: building qtmoko-gta04_\$VERSION-1_armhf.deb on $IP"
+ssh root@$IP "bash -s -- $@" <mdeb-qtmoko.rsh || exit 1
 
-# FIXME: for this to correctly work for different versions we must parse -v here
-echo "mdeb-qtmoko: copy to server"
-mkdir -p /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/binary-armhf
-scp root@192.168.0.202:/qtmoko-build/qtmoko-gta04_$VERSION-1_armhf.deb /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/binary-armhf
-mkdir -p /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
-scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1.dsc /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
-scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1_armhf.changes /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
-scp root@192.168.0.202:/qtmoko-build/qtmoko_$VERSION-1.tar.gz /Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main/source
+echo "mdeb-qtmoko: pull all Debian packages from $IP and send to server"
+
+ssh root@$IP bash <<END | ( mkdir -p $SERVER/binary-armhf && cd $SERVER/binary-armhf && tar xvjf - )
+find $CHROOT -name 'qtmoko*_armhf.deb' | ( while read FILE
+do # collect all .deb and flatten
+FILES+=" -C \$(dirname "\$FILE") \$(basename "\$FILE")"
+done
+# echo \$FILES
+tar cjf - \$FILES
+)
+END
+
+ssh root@$IP bash <<END | ( mkdir -p $SERVER/source && cd $SERVER/source && tar xvjf - )
+find $CHROOT -name 'qtmoko*.dsc' -o -name 'qtmoko*.changes' -o -name 'qtmoko*.tar.gz' | ( while read FILE
+do # collect all .dsc and flatten
+FILES+=" -C \$(dirname "\$FILE") \$(basename "\$FILE")"
+done
+# echo \$FILES
+tar cjf - \$FILES
+)
+END
