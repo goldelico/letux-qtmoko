@@ -6,30 +6,35 @@
 # 1. uses git to fetch the sources
 # 2. use dpkg-buildpackage to run the complete build process
 #
-# -v	select specific version/tag/branch (default is "master")
+# -v branch	select specific version/tag/branch (default is "master")
+# -v56		select branch v56
 #
+
+CHROOT=/qtmoko-build
+SOURCE=/qtmoko-src
+# echo "$@"
+
+[ "$VERSION" ] || VERSION="$(cat $CHROOT/.qtmoko-version 2>/dev/null)"
+[ "$VERSION" ] || VERSION=master
 
 while [ "$1" ]
 do
 	case "$1" in
 		-v ) shift; VERSION="$1";;
+		-v* ) VERSION=v${1:2};;
 		* ) break;
 	esac
 	shift
 done
 
-[ "$VERSION" ] || export VERSION="$(cat $CHROOT/.qtmoko-version 2>/dev/null)"
-[ "$VERSION" ] || export VERSION=master
-
-# echo "$VERSION" = "$(cat $CHROOT/.qtmoko-version 2>/dev/null)"
+echo "mdeb-qtmoko: building version $VERSION on build server"
 
 if ! [ "$VERSION" = "$(cat $CHROOT/.qtmoko-version 2>/dev/null)" ]
 then
+	echo "mdeb-qtmoko: version has changed - syncing"
+	rm -f $CHROOT/.qtmoko-version
 	SYNC=yes	# different version needs sync
 fi
-
-CHROOT=/qtmoko-build
-SOURCE=/qtmoko-src
 
 export LANGUAGE=C
 export LC_ALL=C
@@ -80,9 +85,6 @@ then
 	echo "qtmoko-gta04_$QTMV-1_armhf.deb comm optional" > debian/files
 fi
 
-echo "mdeb-qtmoko: prepare and start dpkg-buildpackage"
-echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
-
 # build inside a chroot wrapper
 umount $CHROOT/proc $CHROOT/sys $CHROOT 2>/dev/null
 
@@ -127,11 +129,28 @@ then
 	apt-get install -y \$depends
 fi
 
+echo "mdeb-qtmoko: prepare and start dpkg-buildpackage"
+
 # build binary and source packages but don't clean (so that a rebuild is faster)
 FLAGS="-F -nc"
+FLAGS="-F"
 
+echo '3.0 (native)' > $SOURCE/debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 echo "chroot: dpkg-buildpackage \$FLAGS"
 dpkg-buildpackage \$FLAGS || exit 1
+
+ln -sf build-gta04 /build
+
+find ./src/3rdparty/ -name debian | while read PACKAGE
+do # build all debian packages
+	(
+	cd \$PACKAGE/.. || continue
+	mkdir -p debian/source
+	echo '3.0 (native)' > debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
+	echo "chroot - \$PWD: dpkg-buildpackage \$FLAGS"
+	dpkg-buildpackage \$FLAGS || exit 1
+	) || exit 1
+done
 
 echo "chroot: dpkg-buildpackage successful"
 END_CHROOT
