@@ -102,6 +102,7 @@ echo "chroot source on \$PWD"
 
 export PATH="/usr/lib/ccache:\$PATH"
 echo "chroot PATH=\$PATH"
+ccache -M 5GB	# default is 1GB but we need more
 
 if [ "$SYNC" ]
 then
