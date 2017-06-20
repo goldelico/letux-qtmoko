@@ -4,6 +4,22 @@
 # runs qtmoko.rsh on build server (external Letux Cortex 8 connected through USB)
 #
 
+mailresult()
+{
+	(
+	echo "STATUS:" $1
+	echo "IP:" $IP
+	echo "DEB_VERSION:" $DEB_VERSION
+	echo "DEBIAN:" $DEBIAN
+	echo "UPLOAD:" $UPLOAD
+	echo "FILE:" $FILE
+	echo "LATEST:" $LATEST
+	echo "HOSTNAME:" $(hostname)
+	echo
+	ls -l "$UPLOAD/"
+	) | mail -s "mqtmoko $DEB_VERSION on $(hostname) $1" hns@goldelico.com
+}
+
 while [ "$1" ]
 do
 	case "$1" in
@@ -21,7 +37,7 @@ IP=192.168.0.202
 [ "$IP" ] || export IP=192.168.2.202
 
 echo "run mqtmoko.rsh on buildhost $IP"
-ssh root@$IP "bash -s -- $DEB_VERSION" <mqtmoko.rsh || exit 1
+ssh root@$IP "bash -s -- $DEB_VERSION" <mqtmoko.rsh || { mailresult failed; exit 1; }
 
 DEBIAN=$(ssh root@192.168.0.202 sh -c "cd; cd /debian-$DEB_VERSION-qtmoko && cat etc/debian_version")
 
@@ -32,12 +48,14 @@ FILE="${UPLOAD}$(date "+%Y%m%d")-$DEB_VERSION-$DEBIAN-qtmoko.tbz"
 
 echo "pull image from buildhost $IP to $FILE"
 
-scp root@$IP:/qtmoko.tbz "$FILE" || exit 1
+scp root@$IP:/qtmoko.tbz "$FILE" || { mailresult failed; exit 1; }
 
 if [ "$LATEST" ]
 then
 	rm "${UPLOAD}/latest-qtmoko.tbz"
 	ln -sf "$basename($FILE)" "${UPLOAD}/latest-qtmoko.tbz"
 fi
+
+mailresult finished
 
 ls -l $UPLOAD
