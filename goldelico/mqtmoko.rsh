@@ -7,7 +7,11 @@
 VERSION=58
 QTMOKO=http://qtmoko.sourceforge.net/debian/gta04/armhf/qtmoko-gta04_${VERSION}-1_armhf.deb
 
-echo "build image on build server"
+[ "$DEB_VERSION" ] || DEB_VERSION="$1"
+[ "$DEB_VERSION" ] || DEB_VERSION="wheezy"
+MEDIA=/debian-$DEB_VERSION-qtmoko
+
+echo "build $MEDIA image on build server"
 pwd
 apt-get update
 
@@ -16,10 +20,7 @@ which bzip2 >/dev/null || apt-get install -y bzip2
 which partprobe >/dev/null || apt-get install -y parted
 which mkfs.vfat >/dev/null || apt-get install -y dosfstools
 
-[ "$DEB_VERSION" ] || DEB_VERSION=wheezy
-MEDIA=/debian-$DEB_VERSION-qtmoko
-
-echo "cleaning up and making new rootfs"
+echo "cleaning up and making new rootfs $MEDIA"
 umount $MEDIA/proc $MEDIA/sys
 umount $MEDIA
 rm -rf $MEDIA
@@ -35,7 +36,7 @@ then
 
 	echo "cdebootstrapping $DEB_VERSION rootfs"
 
-	which cdebootstrap >/dev/null || apt-get install -y cdebootstrap
+	which cdebootstrap >/dev/null || apt-get install -y cdebootstrap || exit 1
 
 # FIXME: make dependent on $DEB_VERSION
 
@@ -83,7 +84,7 @@ mount -t sysfs sys $MEDIA/sys
 
 echo "chroot and post-install"
 
-chroot $MEDIA /bin/bash <<END_CHROOT
+chroot $MEDIA /bin/bash <<END_CHROOT || exit 1
 echo "chroot started"
 echo "chroot PWD=\$PWD"
 echo "chroot version \$(cat /etc/debian_version)"
@@ -348,7 +349,7 @@ fi
 #update-rc.d qtmoko-gta04 defaults
 #rm $(basename "$QTMOKO")
 
-apt-get install -y qtmoko-gta04
+apt-get install -y qtmoko-gta04 || exit 1
 
 killall qpe.sh                  # recent versions start qtmoko after install, so kill it
 killall pulse.sh                # kill pulseaudio - in qemu it just eats cpu
@@ -369,18 +370,18 @@ sed -ibak 's|/dev/input/event0|/dev/input/touchscreen|g' /opt/qtmoko/qpe.env
 #dpkg -i qtmoko-theme-mokofaen_3-2_all.deb
 #rm qtmoko-theme-mokofaen_3-2_all.deb
 
-apt-get install -y qtmoko-theme-mokofaen
+apt-get install -y qtmoko-theme-mokofaen || exit 1
 
 # Step 8.2 - some more alarm and ringtones
 # ========================================
 
 mkdir -p /home/root/Documents
 (
-cd /home/root/Documents
-wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_01.ogg
-wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_02.ogg
+cd /home/root/Documents &&
+wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_01.ogg &&
+wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_02.ogg &&
 wget https://raw.github.com/radekp/qtmoko/master/src/applications/clock/sounds/Alarm_Beep_03.ogg
-)
+) || exit 1
 
 # Step 9 - Linux kernel
 # =====================
@@ -420,16 +421,16 @@ gconftool-2 -t string --set /system/gstreamer/0.10/default/audiosrc pulsesrc
 # * Disable udev autodetection, because it's for some reason broken on GTA04:
 
 cd /etc/pulse
-wget -O daemon.conf https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/daemon.conf
-wget -O default.pa https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/default.pa
+wget -O daemon.conf https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/daemon.conf || exit 1
+wget -O default.pa https://raw.github.com/radekp/qtmoko/master/devices/gta04/etc/pulse/default.pa || exit 1
 
 # Step 9.5 - import QtMoko debian repository public keys
 # ======================================================
 
 # * We use secure apt and we need keys for QtMoko repositories:
 
-wget https://raw.github.com/radekp/qtmoko/master/dist/qtmoko-pubring.gpg
-apt-key add qtmoko-pubring.gpg 
+wget https://raw.github.com/radekp/qtmoko/master/dist/qtmoko-pubring.gpg || exit 1
+apt-key add qtmoko-pubring.gpg || exit 1
 rm qtmoko-pubring.gpg
 
 # Step 9.6 - setup default DNS
@@ -489,6 +490,6 @@ umount $MEDIA/proc $MEDIA/sys
 echo "done with building image on build server"
 
 echo "pack rootfs"
-tar cjf /qtmoko.tbz -C $MEDIA/ .
+tar cjf /qtmoko.tbz -C $MEDIA/ . || exit 1
 
 ls -l /qtmoko.tbz

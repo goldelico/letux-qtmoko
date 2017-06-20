@@ -4,6 +4,9 @@
 # runs qtmoko.rsh on build server (external Letux Cortex 8 connected through USB)
 #
 
+QTMOKO_VERSION=
+UPLOAD="/Library/WebServer/Sites/download.goldelico.com/letux-debian-rootfs/"
+
 mailresult()
 {
 	(
@@ -11,6 +14,7 @@ mailresult()
 	echo "IP:" $IP
 	echo "DEB_VERSION:" $DEB_VERSION
 	echo "DEBIAN:" $DEBIAN
+	echo "QTMOKO_VERSION:" $QTMOKO_VERSION
 	echo "UPLOAD:" $UPLOAD
 	echo "FILE:" $FILE
 	echo "LATEST:" $LATEST
@@ -43,8 +47,7 @@ DEBIAN=$(ssh root@192.168.0.202 sh -c "cd; cd /debian-$DEB_VERSION-qtmoko && cat
 
 [ "$DEBIAN" ] || exit 1
 
-UPLOAD="/Library/WebServer/Sites/download.goldelico.com/letux-debian-rootfs/"
-FILE="${UPLOAD}$(date "+%Y%m%d")-$DEB_VERSION-$DEBIAN-qtmoko.tbz"
+FILE="${UPLOAD}$(date "+%Y%m%d")-$DEB_VERSION-$DEBIAN-qtmoko${QTMOKO_VERSION}.tbz"
 
 echo "pull image from buildhost $IP to $FILE"
 
