@@ -16,8 +16,8 @@ which bzip2 >/dev/null || apt-get install -y bzip2
 which partprobe >/dev/null || apt-get install -y parted
 which mkfs.vfat >/dev/null || apt-get install -y dosfstools
 
-VERSION=wheezy
-MEDIA=/qtmoko-$VERSION
+[ "$DEB_VERSION" ] || DEB_VERSION=wheezy
+MEDIA=/debian-$DEB_VERSION-qtmoko
 
 echo "cleaning up and making new rootfs"
 umount $MEDIA/proc $MEDIA/sys
@@ -33,9 +33,11 @@ rm -rf $MEDIA
 if ! [ "$(cat $MEDIA/.cdebootstrapped 2>/dev/null)" = "ok" ]
 then
 
-	echo "cdebootstrapping wheezy rootfs"
+	echo "cdebootstrapping $DEB_VERSION rootfs"
 
 	which cdebootstrap >/dev/null || apt-get install -y cdebootstrap
+
+# FIXME: make dependent on $DEB_VERSION
 
 	INCLUDES+=ifupdown,net-tools,procps,netbase,nano
 	INCLUDES+=,module-init-tools,wget,openssh-server
@@ -65,7 +67,7 @@ then
 
 	mkdir -p $MEDIA/proc $MEDIA/sys
 
-	if cdebootstrap --flavour=minimal --include="${INCLUDES}" $VERSION $MEDIA/ http://cdn.debian.net/debian/
+	if cdebootstrap --flavour=minimal --include="${INCLUDES}" $DEB_VERSION $MEDIA/ http://cdn.debian.net/debian/
 	then
 		# mark directory as successfully debootstrapped
 		echo ok >$MEDIA/.cdebootstrapped

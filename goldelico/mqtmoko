@@ -4,21 +4,40 @@
 # runs qtmoko.rsh on build server (external Letux Cortex 8 connected through USB)
 #
 
+while [ "$1" ]
+do
+	case "$1" in
+		-l ) LATEST=yes;;
+		* ) break;
+	esac
+	shift
+done
+
+DEB_VERSION=$1
+[ "$DEB_VERSION" ] || DEB_VERSION=wheezy
+
 IP=192.168.0.202
 
 [ "$IP" ] || export IP=192.168.2.202
 
 echo "run mqtmoko.rsh on buildhost $IP"
-ssh root@$IP <mqtmoko.rsh
+ssh root@$IP "bash -s -- $DEB_VERSION" <mqtmoko.rsh || exit 1
 
-DEBIAN=$(ssh root@192.168.0.202 sh -c "cd; cd /qtmoko && cat etc/debian_version")
+DEBIAN=$(ssh root@192.168.0.202 sh -c "cd; cd /debian-$DEB_VERSION-qtmoko && cat etc/debian_version")
 
 [ "$DEBIAN" ] || exit 1
 
 UPLOAD="/Library/WebServer/Sites/download.goldelico.com/letux-debian-rootfs/"
-FILE="$UPLOAD$(date "+%Y%m%d")-wheezy-$DEBIAN-qtmoko57.tbz"
+FILE="${UPLOAD}$(date "+%Y%m%d")-$DEB_VERSION-$DEBIAN-qtmoko.tbz"
 
 echo "pull image from buildhost $IP to $FILE"
 
-scp root@$IP:/qtmoko.tbz "$FILE"
+scp root@$IP:/qtmoko.tbz "$FILE" || exit 1
+
+if [ "$LATEST" ]
+then
+	rm "${UPLOAD}/latest-qtmoko.tbz"
+	ln -sf "$basename($FILE)" "${UPLOAD}/latest-qtmoko.tbz"
+fi
+
 ls -l $UPLOAD
