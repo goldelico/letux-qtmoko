@@ -1,25 +1,59 @@
 #!/bin/bash
 # build the qtmoko.deb packages from sources
 #
-# 1. runs Wheezy in qemu or on a connected ARM machine
-# 2. runs the mbuild.rsh on that machine
-# 3. pulls the results and uploads to download area
-#
 
-IP=192.168.0.202
+# echo $@
+
+HOST=192.168.0.202
+USER=root
+PORT=
 
 CHROOT=/qtmoko-build
 SOURCE=/qtmoko-src
-SERVER=/Library/WebServer/Sites/www.qtmoko.net/download/dists/wheezy/main
 
-[ "$IP" ] || export IP=192.168.2.202
+while [ "$1" ]
+do
+	case "$1" in
+		-e ) HOST=192.168.2.106;;	# eeePC
+		-o ) HOST=192.168.0.202;;	# online
+		-n ) HOST=192.168.0.202;;	# native
+		-vb )	# virtual box
+			VM="Debian64 Jessie Master"	# buildhost
+			PORT=3022	# choose different ports for different VMs
+			HOST=localhost
+			if false
+			then
+				VBoxManage controlvm "$VM" savestate
+				VBoxManage modifyvm "$VM" --natpf1 "ssh,tcp,,$PORT,,22"
+				VBoxManage startvm "$VM"
+				sleep 5
+			fi
+			;;
+		wheezy | jessie | stretch )
+			DEBIAN="$1";;	# target
+		* ) break;;
+	esac
+	shift
+done
 
-echo "mdeb-qtmoko: building qtmoko-gta04_\$VERSION-1_armhf.deb on $IP"
-ssh root@$IP "bash -s -- $@" <mdeb-qtmoko.rsh || exit 1
+[ "$HOST" ] || export HOST=192.168.2.202
+[ "$DEBIAN" ] || export DEBIAN=wheezy
+[ "$PORT" ] && SSHFLAG="-p $PORT"
 
-echo "mdeb-qtmoko: pull all Debian packages from $IP and send to server"
+SERVER=/Library/WebServer/Sites/www.qtmoko.net/download/dists/$DEBIAN/main
 
-ssh root@$IP bash <<END | ( mkdir -p $SERVER/binary-armhf && cd $SERVER/binary-armhf && tar xvjf - )
+VERSION=v56
+
+echo "mdeb-qtmoko: building qtmoko-gta04_$VERSION-1_armhf.deb on $SSHFLAG $USER@$HOST"
+
+# FIXME: pass down $DEBIAN
+ssh -o StrictHostKeyChecking=no $SSHFLAG $USER@$HOST "bash -s -- $@" <mdeb-qtmoko.rsh || exit 1
+
+echo "mdeb-qtmoko: pull all Debian packages from $PFLAG $USER:$IP and send to server"
+
+# binaries
+
+ssh -o StrictHostKeyChecking=no $SSHFLAG $USER@$HOST bash <<END | ( mkdir -p $SERVER/binary-armhf && cd $SERVER/binary-armhf && tar xvjf - )
 find $CHROOT -name 'qtmoko*_armhf.deb' | ( while read FILE
 do # collect all .deb and flatten
 FILES+=" -C \$(dirname "\$FILE") \$(basename "\$FILE")"
@@ -29,7 +63,9 @@ tar cjf - \$FILES
 )
 END
 
-ssh root@$IP bash <<END | ( mkdir -p $SERVER/source && cd $SERVER/source && tar xvjf - )
+# sources
+
+ssh -o StrictHostKeyChecking=no $SSHFLAG $USER@$HOST bash <<END | ( mkdir -p $SERVER/source && cd $SERVER/source && tar xvjf - )
 find $CHROOT -name 'qtmoko*.dsc' -o -name 'qtmoko*.changes' -o -name 'qtmoko*.tar.gz' | ( while read FILE
 do # collect all .dsc and flatten
 FILES+=" -C \$(dirname "\$FILE") \$(basename "\$FILE")"
@@ -38,3 +74,5 @@ done
 tar cjf - \$FILES
 )
 END
+
+## send success mail
