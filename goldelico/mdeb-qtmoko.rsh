@@ -10,8 +10,9 @@
 # -v56		select branch v56
 #
 
-CHROOT=/qtmoko-build
-SOURCE=/qtmoko-src
+ARCH=$(dpkg --print-architecture)
+DEBIAN=wheezy	# we need a Wheezy for now - change later...
+
 # echo "$@"
 
 [ "$VERSION" ] || VERSION="$(cat $CHROOT/.qtmoko-version 2>/dev/null)"
@@ -22,10 +23,14 @@ do
 	case "$1" in
 		-v ) shift; VERSION="$1";;
 		-v* ) VERSION=v${1:2};;
-		* ) break;
+		-s ) SYNC=yes;;
+		* ) break;;
 	esac
 	shift
 done
+
+CHROOT=/qtmoko-$DEBIAN-build
+SOURCE=/src/qtmoko-$VERSION	# this lies inside CHROOT!
 
 echo "mdeb-qtmoko: building version $VERSION on build server"
 
@@ -40,16 +45,19 @@ export LANGUAGE=C
 export LC_ALL=C
 export LANG=C
 
-if ! [ -d "$CHROOT" ]
-then
-	: debootstrap debian image
-fi
-
 if [ "$SYNC" ]
 then
 	echo "mdeb-qtmoko: updating Debian $(cat /etc/debian_version) on build server"
-	apt-get update -y || exit 1
+	apt-get update -y # || exit 1
 	apt-get upgrade -y || exit 1
+fi
+
+if ! [ -d "$CHROOT" ]
+then
+	[ "$(which debootstrap)" ] || apt-get install -y debootstrap
+	mkdir -p "$CHROOT"
+	cd /
+	debootstrap --arch "$ARCH" "$DEBIAN" "$CHROOT" http://ftp.us.debian.org/debian
 fi
 
 echo install developer toolset
@@ -89,6 +97,7 @@ fi
 umount $CHROOT/proc $CHROOT/sys $CHROOT 2>/dev/null
 
 trap "umount $CHROOT/proc $CHROOT/sys" 0
+mkdir -p $CHROOT/proc $CHROOT/sys
 mount -t proc proc $CHROOT/proc
 mount -t sysfs sys $CHROOT/sys
 
@@ -102,7 +111,6 @@ echo "chroot source on \$PWD"
 
 export PATH="/usr/lib/ccache:\$PATH"
 echo "chroot PATH=\$PATH"
-ccache -M 20GB	# default is 1GB but we need more
 
 if [ "$SYNC" ]
 then
@@ -130,11 +138,16 @@ then
 	apt-get install -y \$depends
 fi
 
+ccache -M 20GB	# default is 1GB but we need more
+
 echo "mdeb-qtmoko: prepare and start dpkg-buildpackage"
 
 # build binary and source packages but don't clean (so that a rebuild is faster)
 FLAGS="-F -nc"
 FLAGS="-F"
+
+# fix bug in scripts which prevents build on i486 system
+sed -i.bak s/DEB_HOST_GNU_CPU/DEB_HOST_ARCH_CPU/ debian/rules
 
 echo '3.0 (native)' > $SOURCE/debian/source/format # see http://code.google.com/p/pymds/issues/detail?id=1
 echo "chroot: dpkg-buildpackage \$FLAGS"
