@@ -33,6 +33,7 @@
 #include <qtopialog.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
@@ -503,7 +504,18 @@ QAudioStatePlugin(parent)
     usePulse = QFile::exists("/usr/bin/pasuspender");
     
     // On A4+ models use HW sound routing, on A3 do SW routing
-    gta04a3 = !(QFile::exists("/sys/class/gpio/gpio186/value"));
+    QFile modelname("/sys/firmware/devicetree/base/model");
+    gta04a3 = false;
+    if (modelname.open(QIODevice::ReadOnly)) {
+       char buf[80];
+       if (0 < modelname.readLine(buf, sizeof(buf))) {
+	   //qDebug() << "Model: " << modelname;
+	   gta04a3 = strstr(buf, "GTA04A3") != NULL;
+       }
+       modelname.close();
+    } else {
+       qWarning() << "failed to read model name: ";
+    }
 
     /* Priority ordering for phone calls: Headset (if available),
        Bluetooth (if available), Earpiece, Speaker. */
