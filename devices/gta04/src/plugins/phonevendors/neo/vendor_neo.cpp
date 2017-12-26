@@ -171,6 +171,7 @@ NeoModemService::NeoModemService
 
     chat("AT+CSCS=\"GSM\"");    // GSM encoding
     chat("AT_OSQI=1");          // unsolicited reporting of antenna signal strength, e.g. "_OSIGQ: 3,0"
+    chat("AT+CLVL=7");    // GTA04A5 modem has this muted by default
     chat("AT_OPCMENABLE=1");    // enable the PCM interface for voice calls
     chat(opsys);
 
