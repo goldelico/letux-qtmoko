@@ -48,11 +48,13 @@ dd if=/dev/zero of=/swapfile bs=1024 count=1048576
 mkswap /swapfile
 swapon /swapfile
   
-  * Install QtMoko dependecies:
+  * Install QtMoko dependecies (on jessie):
 
 apt-get update
-apt-get install git quilt debhelper build-essential libtiff4-dev libmng-dev quilt libxext-dev libasound2-dev libdbus-1-dev libssl-dev libts-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg8-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libpulse-dev libvorbis-dev libgps-dev
+apt-get install git quilt debhelper build-essential libtiff5-dev libmng-dev quilt libxext-dev libasound2-dev libdbus-1-dev libssl-dev libbluetooth-dev libxtst-dev libpng12-dev libjpeg62-turbo-dev libv4l-dev libspeexdsp-dev libglib2.0-dev libsqlite3-dev libgstreamer0.10-dev libgstreamer-plugins-base0.10-dev libpulse-dev libvorbis-dev libgps-dev
   
+you will additionally need tsconf_1.0-11_all.deb libts-dev_1.0-11_armhf.deb libts-0.0-0_1.0-11_armhf.deb from wheezy
+
   * Get sources:
   
 git clone git://github.com/radekp/qtmoko.git
