@@ -3,3 +3,4 @@
 -prefix /opt/qtmoko
 
 -sound-system pulse
+-extra-qt-embedded-config "-qt-mouse-linuxinput"
