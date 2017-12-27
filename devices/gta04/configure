@@ -2,6 +2,4 @@
 -arch arm 
 -prefix /opt/qtmoko
 
--extra-qt-embedded-config "-qt-mouse-tslib" 
-
 -sound-system pulse
