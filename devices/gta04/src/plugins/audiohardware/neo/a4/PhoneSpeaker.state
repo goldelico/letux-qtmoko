@@ -14,8 +14,8 @@ state.gta04 {
 	control.2 {
 		iface MIXER
 		name 'DAC1 Digital Fine Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 18
+		value.1 18
 		comment {
 			access 'read write'
 			type INTEGER
@@ -23,15 +23,15 @@ state.gta04 {
 			range '0 - 63'
 			dbmin -9999999
 			dbmax 0
-			dbvalue.0 -9999999
-			dbvalue.1 -9999999
+			dbvalue.0 -4500
+			dbvalue.1 -4500
 		}
 	}
 	control.3 {
 		iface MIXER
 		name 'DAC2 Digital Fine Playback Volume'
-		value.0 63
-		value.1 63
+		value.0 48
+		value.1 48
 		comment {
 			access 'read write'
 			type INTEGER
@@ -39,15 +39,15 @@ state.gta04 {
 			range '0 - 63'
 			dbmin -9999999
 			dbmax 0
-			dbvalue.0 0
-			dbvalue.1 0
+			dbvalue.0 -1500
+			dbvalue.1 -1500
 		}
 	}
 	control.4 {
 		iface MIXER
 		name 'DAC1 Digital Coarse Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 2
+		value.1 2
 		comment {
 			access 'read write'
 			type INTEGER
@@ -55,15 +55,15 @@ state.gta04 {
 			range '0 - 2'
 			dbmin 0
 			dbmax 1200
-			dbvalue.0 0
-			dbvalue.1 0
+			dbvalue.0 1200
+			dbvalue.1 1200
 		}
 	}
 	control.5 {
 		iface MIXER
 		name 'DAC2 Digital Coarse Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 2
+		value.1 2
 		comment {
 			access 'read write'
 			type INTEGER
@@ -71,29 +71,13 @@ state.gta04 {
 			range '0 - 2'
 			dbmin 0
 			dbmax 1200
-			dbvalue.0 0
-			dbvalue.1 0
+			dbvalue.0 1200
+			dbvalue.1 1200
 		}
 	}
 	control.6 {
 		iface MIXER
 		name 'DAC1 Analog Playback Volume'
-		value.0 0
-		value.1 0
-		comment {
-			access 'read write'
-			type INTEGER
-			count 2
-			range '0 - 18'
-			dbmin -2400
-			dbmax 1200
-			dbvalue.0 -2400
-			dbvalue.1 -2400
-		}
-	}
-	control.7 {
-		iface MIXER
-		name 'DAC2 Analog Playback Volume'
 		value.0 18
 		value.1 18
 		comment {
@@ -107,11 +91,27 @@ state.gta04 {
 			dbvalue.1 1200
 		}
 	}
+	control.7 {
+		iface MIXER
+		name 'DAC2 Analog Playback Volume'
+		value.0 17
+		value.1 17
+		comment {
+			access 'read write'
+			type INTEGER
+			count 2
+			range '0 - 18'
+			dbmin -2400
+			dbmax 1200
+			dbvalue.0 1000
+			dbvalue.1 1000
+		}
+	}
 	control.8 {
 		iface MIXER
 		name 'DAC1 Analog Playback Switch'
-		value.0 false
-		value.1 false
+		value.0 true
+		value.1 true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -146,7 +146,7 @@ state.gta04 {
 	control.11 {
 		iface MIXER
 		name 'DAC Voice Analog Downlink Volume'
-		value 15
+		value 18
 		comment {
 			access 'read write'
 			type INTEGER
@@ -154,13 +154,13 @@ state.gta04 {
 			range '0 - 18'
 			dbmin -2400
 			dbmax 1200
-			dbvalue.0 600
+			dbvalue.0 1200
 		}
 	}
 	control.12 {
 		iface MIXER
 		name 'DAC Voice Analog Downlink Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -170,8 +170,8 @@ state.gta04 {
 	control.13 {
 		iface MIXER
 		name 'PreDriv Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 1
+		value.1 1
 		comment {
 			access 'read write'
 			type INTEGER
@@ -179,15 +179,15 @@ state.gta04 {
 			range '0 - 3'
 			dbmin -9999999
 			dbmax 600
-			dbvalue.0 -9999999
-			dbvalue.1 -9999999
+			dbvalue.0 -600
+			dbvalue.1 -600
 		}
 	}
 	control.14 {
 		iface MIXER
 		name 'Headset Playback Volume'
-		value.0 0
-		value.1 0
+		value.0 2
+		value.1 2
 		comment {
 			access 'read write'
 			type INTEGER
@@ -195,8 +195,8 @@ state.gta04 {
 			range '0 - 3'
 			dbmin -9999999
 			dbmax 600
-			dbvalue.0 -9999999
-			dbvalue.1 -9999999
+			dbvalue.0 0
+			dbvalue.1 0
 		}
 	}
 	control.15 {
@@ -218,7 +218,7 @@ state.gta04 {
 	control.16 {
 		iface MIXER
 		name 'Earpiece Playback Volume'
-		value 0
+		value 1
 		comment {
 			access 'read write'
 			type INTEGER
@@ -226,14 +226,14 @@ state.gta04 {
 			range '0 - 3'
 			dbmin -9999999
 			dbmax 1200
-			dbvalue.0 -9999999
+			dbvalue.0 0
 		}
 	}
 	control.17 {
 		iface MIXER
 		name 'TX1 Digital Capture Volume'
-		value.0 0
-		value.1 0
+		value.0 12
+		value.1 12
 		comment {
 			access 'read write'
 			type INTEGER
@@ -241,8 +241,8 @@ state.gta04 {
 			range '0 - 31'
 			dbmin 0
 			dbmax 3100
-			dbvalue.0 0
-			dbvalue.1 0
+			dbvalue.0 1200
+			dbvalue.1 1200
 		}
 	}
 	control.18 {
@@ -264,8 +264,8 @@ state.gta04 {
 	control.19 {
 		iface MIXER
 		name 'Analog Capture Volume'
-		value.0 5
-		value.1 5
+		value.0 4
+		value.1 4
 		comment {
 			access 'read write'
 			type INTEGER
@@ -273,8 +273,8 @@ state.gta04 {
 			range '0 - 5'
 			dbmin 0
 			dbmax 3000
-			dbvalue.0 3000
-			dbvalue.1 3000
+			dbvalue.0 2400
+			dbvalue.1 2400
 		}
 	}
 	control.20 {
@@ -322,7 +322,7 @@ state.gta04 {
 	control.23 {
 		iface MIXER
 		name 'Vibra H-bridge mode'
-		value 'Audio data MSB'
+		value 'Vibra H-bridge direction'
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -358,7 +358,7 @@ state.gta04 {
 	control.26 {
 		iface MIXER
 		name 'Voice PCM Out Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -748,7 +748,7 @@ state.gta04 {
 	control.63 {
 		iface MIXER
 		name 'Vibra Mux'
-		value AudioL2
+		value AudioR2
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -786,7 +786,7 @@ state.gta04 {
 	control.66 {
 		iface MIXER
 		name 'TX2 Capture Route'
-		value Digimic1
+		value Analog
 		comment {
 			access 'read write'
 			type ENUMERATED
@@ -808,7 +808,7 @@ state.gta04 {
 	control.68 {
 		iface MIXER
 		name 'Analog Left Headset Mic Capture Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -818,7 +818,7 @@ state.gta04 {
 	control.69 {
 		iface MIXER
 		name 'Analog Left AUXL Capture Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -838,7 +838,7 @@ state.gta04 {
 	control.71 {
 		iface MIXER
 		name 'Analog Right Sub Mic Capture Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
@@ -848,7 +848,7 @@ state.gta04 {
 	control.72 {
 		iface MIXER
 		name 'Analog Right AUXR Capture Switch'
-		value false
+		value true
 		comment {
 			access 'read write'
 			type BOOLEAN
