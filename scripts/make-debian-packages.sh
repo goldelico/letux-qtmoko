@@ -1,7 +1,9 @@
 #!/bin/sh
 
+echo $0 newversion
+
 # output dir
-outdir=$PWD/debian_packages
+outdir=$PWD/qtmoko-packages
 rm -rf $outdir
 mkdir $outdir
 
@@ -15,6 +17,7 @@ then
 fi
 
 echo PWD=$PWD
+echo 0=$0
 echo script_path=$script_path
 
 script_dir=${script_path%/*}
@@ -22,6 +25,15 @@ echo script_dir=$script_dir
 
 qtmoko_dir=${script_dir%/*}
 echo qtmoko_dir=$qtmoko_dir
+
+# we need a build directory on highest level or we will get
+# problems by ../../../../../build/bin/qbuild
+ln -sf build-gta04 $qtmoko_dir/../build
+
+# a much better solution would be to add the build/ to PATH
+PATH=$PATH:$qtmoko_dir/../build/bin
+# and modify all debian/rules of all packages to assume qbuild
+# can be found in $PATH
 
 PACKAGES="$PACKAGES src/3rdparty/plugins/inputmethods/keyboard-russian-abc"
 PACKAGES="$PACKAGES src/3rdparty/plugins/inputmethods/keyboard-skin-silver"
@@ -35,6 +47,7 @@ PACKAGES="$PACKAGES etc/themes/home_wvga"
 PACKAGES="$PACKAGES etc/themes/qtopia"
 PACKAGES="$PACKAGES etc/themes/smart"
 # FIXME: aborts with cp: cannot stat `../../../../../../build/sdk/lib/libmad.so*': No such file or directory
+# this required lib has been deletec by debian/rules in install_%:
 # PACKAGES="$PACKAGES src/3rdparty/plugins/codecs/libmad"
 # PACKAGES="$PACKAGES src/3rdparty/plugins/codecs/codecs-package"
 PACKAGES="$PACKAGES src/3rdparty/applications/qgcide"
@@ -68,7 +81,7 @@ PACKAGES="$PACKAGES src/3rdparty/applications/shopper"
 for i in $PACKAGES
 do
 	(
-	echo "=================================================== Building qtmoko-$(basename $i).deb"
+	echo; echo "=== Building qtmoko-$(basename $i).deb ==="
 	cd $qtmoko_dir/$i && pwd &&
 # FIXME: does not find ../../../../../build/bin/qbuild
 	dpkg-buildpackage -tc &&
@@ -76,4 +89,4 @@ do
 	)
 done
 
-echo "============================================= Packages should be now in $outdir"
+echo "=== Packages should be now in $outdir ==="
