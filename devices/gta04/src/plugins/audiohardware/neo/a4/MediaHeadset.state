@@ -856,14 +856,6 @@ state.gta04 {
 		}
 	}
 }
-state.gta04voice {
-	control {
-	}
-}
-state.gta04headset {
-	control {
-	}
-}
 state.voice {
 	control {
 	}

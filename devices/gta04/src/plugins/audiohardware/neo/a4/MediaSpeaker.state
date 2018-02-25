@@ -418,7 +418,7 @@ state.gta04 {
 	control.32 {
 		iface MIXER
 		name 'Left Digital Loopback Volume'
-		value 7
+		value 0
 		comment {
 			access 'read write'
 			type INTEGER
@@ -426,13 +426,13 @@ state.gta04 {
 			range '0 - 7'
 			dbmin -9999999
 			dbmax 0
-			dbvalue.0 0
+			dbvalue.0 -9999999
 		}
 	}
 	control.33 {
 		iface MIXER
 		name 'Right Digital Loopback Volume'
-		value 7
+		value 0
 		comment {
 			access 'read write'
 			type INTEGER
@@ -440,7 +440,7 @@ state.gta04 {
 			range '0 - 7'
 			dbmin -9999999
 			dbmax 0
-			dbvalue.0 0
+			dbvalue.0 -9999999
 		}
 	}
 	control.34 {
@@ -854,36 +854,6 @@ state.gta04 {
 			type BOOLEAN
 			count 1
 		}
-	}
-}
-state.gta04voice {
-	control {
-	}
-}
-state.gta04headset {
-	control {
-	}
-}
-state.gta04fm {
-	control.1 {
-		comment.access 'read write'
-		comment.type INTEGER
-		comment.count 2
-		comment.range '0 - 255'
-		comment.dbmin -12750
-		comment.dbmax 0
-		iface MIXER
-		name 'Digital Playback Volume'
-		value.0 204
-		value.1 204
-	}
-	control.2 {
-		comment.access 'read write'
-		comment.type BOOLEAN
-		comment.count 1
-		iface MIXER
-		name Deemphasis
-		value false
 	}
 }
 state.voice {
