@@ -1,0 +1,32 @@
+#
+# run qpe under gdb
+#
+# scp this file to the device, e.g. to /root
+# example: scp scripts/qtmoko-debug root@192.168.0.202:/root
+#
+
+/etc/init.d/qtmoko-gta04 stop
+
+case $(cat /etc/debian_version) in
+	7.* ) DISTRO=wheezy;;
+	8.* ) DISTRO=jessie;;
+	9.* ) DISTRO=stretch;;
+esac
+
+[ "$(which gdb)" ] || apt-get install gdb git
+
+[ -d qtmoko ] || git clone git://git.goldelico.com/gta04-qtmoko.git qtmoko
+(cd qtmoko; git checkout $DISTRO)
+SOURCES=qtmoko/src
+
+. /opt/qtmoko/qpe.env
+
+export MALLOC_CHECK_=2
+gdb --core=core -ex 'handle SIGPIPE nostop noprint' -ex "dir $SOURCES" --args qpe "$@"
+
+# r
+# tap Q-button
+# tap Boxes button
+# choose Calendar
+# tap green back-arrow to trigger malloc/free problem
+
