@@ -54,6 +54,6 @@
 #define V4L_VIDEO_DEVICE            "" //no video
 #endif
 
-#define NMEA_GPS_DEVICE "/dev/ttyO1"
+#define NMEA_GPS_DEVICE "/dev/ttyGPS0"
 
 #define GOOGLE_CALENDAR_CONTEXT

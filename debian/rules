@@ -202,6 +202,7 @@ override_dh_shlibdeps:
 
 
 get-orig-source: VERSION=$(shell dpkg-parsechangelog | grep '^Version:' | awk '{print $$2}' | sed 's/\(.*\)-[^-]*/\1/')
+# get-orig-source: VERSION=$(shell date +%Y%m%d%H%M%S)
 get-orig-source: clean
-	! quilt app || quilt pop -a
+	! quilt app || quilt pop -af
 	tar caf $(CURDIR)/../qtmoko_$(VERSION).orig.tar.gz --exclude .pc --exclude .git --exclude $$(basename $(CURDIR))/debian -C $(CURDIR)/.. $$(basename $(CURDIR))

@@ -116,7 +116,7 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
 
     // Y sets usb charging limit to 600mA which can be too high and causes
     // charging voltage drops. We will set limit manually to prevent this.
-    qWriteFile("/sys/module/twl4030_charger/parameters/allow_usb", "N");
+    //qWriteFile("/sys/module/twl4030_charger/parameters/allow_usb", "N");
     
     QSettings cfg("Trolltech", "qpe");
     cfg.beginGroup("Charging");
@@ -139,7 +139,7 @@ void NeoHardware::setMaxChargeCurrent(int newValue)
     char buf[7];
     maxChargeCurrent = newValue;
     sprintf(buf, "%d", maxChargeCurrent);
-    qWriteFile("/sys/class/power_supply/twl4030_usb/max_current", buf);
+    qWriteFile("/sys/class/power_supply/twl4030_usb/input_current_limit", buf);
 }
 
 // Parse uevent string and return given attribute value. Example uevent file:
@@ -209,9 +209,9 @@ void NeoHardware::updateStatus()
 
     // Determine charging via USB
     QByteArray twlVbus =
-        qReadFile("/sys/bus/platform/devices/twl4030_usb/vbus");
+        qReadFile("/sys/class/power_supply/twl4030_usb/online");
 
-    bool chargerOn = twlVbus.contains("on");
+    bool chargerOn = twlVbus.contains("1");
     if (chargerOn)
         ac.setAvailability(QPowerSource::Available);
     else
@@ -243,7 +243,8 @@ void NeoHardware::updateStatus()
 
     int currentNow = getIntAttr("POWER_SUPPLY_CURRENT_NOW=", uevent);
     batteryVso.setAttribute("current_now", QString::number(currentNow / 1000));
-
+#if 0
+    // handled by kernel, not needed anymore
     // Now we will try to set max_current so that phone charges reliably.
     int chargerVoltage = -1;
     if (chargerOn) {
@@ -278,6 +279,7 @@ void NeoHardware::updateStatus()
         maxChargeCurrent = -1;
     }
     oldChargeNow = chargeNow;
+#endif
 
     // Charging log
     logCharge(now, chargeNow);

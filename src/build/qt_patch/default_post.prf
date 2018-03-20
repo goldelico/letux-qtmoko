@@ -49,7 +49,7 @@ defineTest(containsre) {
     splitter=$$4
     isEmpty(splitter):splitter=,
 
-    eval(tmp~=s$$splitter\$$re$$splitter ___CONTAINSTEXT_FOUND_THE_TEXT___ $$splitter\$$flags)
+    eval(tmp~=s$$splitter/$$re$$splitter ___CONTAINSTEXT_FOUND_THE_TEXT___ $$splitter/$$flags)
     contains(QMAKE_BEHAVIORS,var_split) {
         tmp=$$tmp
     } else {
@@ -75,9 +75,9 @@ unix:contains(QTOPIACORE_CONFIG,rpath) {
                 else\
                     target=$$OUT_PWD/$(TARGET);\
                 fi;\
-                mkdir -p \$$QPEDIR/bin;\
-                echo ln -sf \$$target \$$QPEDIR/bin;\
-                ln -sf \$$target \$$QPEDIR/bin
+                mkdir -p /$$QPEDIR/bin;\
+                echo ln -sf /$$target /$$QPEDIR/bin;\
+                ln -sf /$$target /$$QPEDIR/bin
             copytoqpedir.depends=$(TARGET)
             QMAKE_EXTRA_TARGETS+=copytoqpedir
             ALL_DEPS+=copytoqpedir
@@ -112,9 +112,7 @@ equals(TEMPLATE,lib):contains(MAYBE_REMOVE,$$QPE_TARGET):!contains(QT_CONF,$$QPE
     else:QMAKE_LINK=@true
 }
 
-LINE_SEP=$$quote(\n\t)
-foo=$$quote(\n)
-equals(foo,\n):LINE_SEP=$$escape_expand(\n\t)
+LINE_SEP=$$escape_expand(\\n\\t)
 
 contains(QTOPIACORE_CONFIG,subdirs) {
     win32 {
@@ -136,7 +134,7 @@ contains(QTOPIACORE_CONFIG,subdirs) {
             else\
                 target=$$OUT_PWD/$(TARGET);\
             fi;\
-            echo rm -f \$$target;\
+            echo rm -f /$$target;\
             rm -f \$$target
     } else {
         cmds=-$(DEL_FILE) $(DESTDIR)$(TARGET)

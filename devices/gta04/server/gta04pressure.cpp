@@ -28,6 +28,7 @@
 #include <QProcess>
 #include <QValueSpaceObject>
 #include <QValueSpaceItem>
+#include <QLocale>
 
 #include <qcontentset.h>
 #include <qtopiaapplication.h>
@@ -48,6 +49,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <glob.h>
 #include <ctype.h>
 #include <sys/un.h>
 #include <sys/socket.h>
@@ -57,6 +59,40 @@
 #include <QtDebug>
 
 QTOPIA_TASK(Gta04Pressure, Gta04Pressure);
+
+static char pressurefile[256];
+
+int get_pressure(char *buf, int buflen) {
+  if (pressurefile[0] == 0) {
+    glob_t glob_data;
+    // int i;
+    memset(&glob_data, 0, sizeof(glob_data));
+    if (!glob("/sys/bus/iio/devices/iio:device*/in_pressure*_input", 0,
+         NULL, &glob_data)) {
+      if (glob_data.gl_pathv[0] != NULL) {
+        if (strlen(glob_data.gl_pathv[0]) < sizeof(pressurefile)) {
+          strcpy(pressurefile, glob_data.gl_pathv[0]);
+        }
+      }
+      globfree(&glob_data);
+    }
+  }
+  if (pressurefile[0] != 0) {
+    FILE *f = fopen(pressurefile, "r");
+    if (f == NULL) {
+      pressurefile[0] = 0;
+      return 0;
+    }
+    if (fgets(buf, buflen, f)) {
+      buf[strcspn(buf,"\r\n")] = 0;
+      fclose(f);
+      return 1;
+    }
+    fclose(f);
+    return 0;
+  } 
+  return 0;
+}
 
 Gta04Pressure::Gta04Pressure()
 :
@@ -79,17 +115,20 @@ Gta04Pressure::~Gta04Pressure()
     delete pressure_space;
 }
 
+
 void Gta04Pressure::updateStatus()
 {
-    QString pressureStr = qReadFile(
-        "/sys/bus/i2c/drivers/bmp085/2-0077/pressure0_input");
-    QString tempStr = qReadFile(
-        "/sys/bus/i2c/drivers/bmp085/2-0077/temp0_input");
+    char buf[64];
+    if (!get_pressure(buf,sizeof(buf)))
+        return;
+    QLocale loc(QLocale::C);
+    QString pressure_str(buf);
+    double pressure = loc.toDouble(pressure_str, 0);
+    QString pa = QString::number((int) (pressure * 1000.0));
+    QString mb = QString::number(pressure * 10.0,'f', 1);
 
-    pressureStr = pressureStr.trimmed();
-    pressure_space->setAttribute("Pa", pressureStr);
-    pressure_space->setAttribute("mb",
-				 QString::number((pressureStr.toInt() + 50) / 100));
+    pressure_space->setAttribute("Pa", pa);
+    pressure_space->setAttribute("mb", mb);
 
     // Also export the BMP085-reported temperature.  Note that this is
     // a GTA04-internal temperature, not the ambient environmental
@@ -99,7 +138,7 @@ void Gta04Pressure::updateStatus()
     // There's nothing in the UI that shows CelsiusInternal by
     // default, but it's easy for interested people to modify their
     // theme to include it.
-    tempStr = tempStr.trimmed();
-    pressure_space->setAttribute("CelsiusInternal",
-				 QString::number((tempStr.toInt() + 5) / 10));
+    //tempStr = tempStr.trimmed();
+    //pressure_space->setAttribute("CelsiusInternal",
+    //				 QString::number((tempStr.toInt() + 5) / 10));
 }

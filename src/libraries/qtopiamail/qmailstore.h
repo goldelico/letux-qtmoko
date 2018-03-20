@@ -64,6 +64,7 @@ public:
         NoRemovalRecord = 1,
         CreateRemovalRecord
     };
+    enum AttemptResult { Success = 0, Failure, DatabaseFailure };
 
     struct ReadAccess {};
     struct WriteAccess {};
@@ -163,7 +164,6 @@ signals:
     void messageRemovalRecordsRemoved(const QMailAccountIdList& ids);
 
 private:
-    enum AttemptResult { Success = 0, Failure, DatabaseFailure };
     
     QMailStore();
 

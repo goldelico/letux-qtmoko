@@ -31,9 +31,25 @@
 #include <QValueSpaceObject>
 #include <QDebug>
 
+#define BACKLIGHT_PATH "/sys/class/backlight/backlight/"
+
+
 QTOPIABASE_EXPORT int qpe_sysBrightnessSteps()
 {
-    return 100;
+    int fd = open(BACKLIGHT_PATH "max_brightness", O_RDONLY);
+    char buf[16];
+    if (fd < 0) {
+      perror("cannot open max_brightness, returning default");
+      return 100;
+    }
+    int l = read(fd, buf, sizeof(buf) - 1);
+    if (l <= 0) {
+      perror("cannot read max_brightness, returning default");
+      close(fd);
+      return 100;
+    }
+    close(fd);
+    return atoi(buf); 
 }
 
 // Write string count bytes long to file
@@ -53,7 +69,7 @@ QTOPIABASE_EXPORT void qpe_setBrightness(int b)
     char str[8];
     int n = sprintf(str, "%d", b);
     for(int i = 10; i >= 0; i--) {
-        if(write_file("/sys/class/backlight/pwm-backlight/brightness", str, n) == n)
+        if(write_file(BACKLIGHT_PATH "brightness", str, n) == n)
             return;
         perror("qpe_setBrightness failed");
     }

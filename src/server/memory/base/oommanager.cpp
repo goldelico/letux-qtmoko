@@ -89,7 +89,7 @@
   process is critical, expendable, or important. The oom_adj
   value is used by the linux kernel to help it determine which
   processes to kill when a hard out-of-memory condition occurs.
-  The oom_adj value is stored in /proc/<pid>/oom_adj.
+  The oom_adj value is stored in /proc/<pid>/oom_score_adj.
 
   Hopefully, if the OOM Manager and the MemoryMonitor do the
   right stuff, they will prevent any hard out-of-memory events.
@@ -233,7 +233,7 @@ void OomPrivate::insert(const QString& app, int pid)
         expendable_procs_.insert(app,pid);
         qLog(OOM) << "Expendable proc added:" << app << pid;
     }
-    QString oom_file = QString("/proc/%1/oom_adj").arg(pid);
+    QString oom_file = QString("/proc/%1/oom_score_adj").arg(pid);
     QFile file(oom_file);
     if (!file.exists()) {
         qLog(OOM) << oom_file << "does not exist";
@@ -377,7 +377,7 @@ void OomPrivate::printOomValues(bool score) const
             if (score)
                 oom_file = oom_file + QString("/oom_score");
             else
-                oom_file = oom_file + QString("/oom_adj");
+                oom_file = oom_file + QString("/oom_score_adj");
             QFile file(oom_file);
             if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
                 qLog(OOM) << "Unable to open " << oom_file;
@@ -389,7 +389,7 @@ void OomPrivate::printOomValues(bool score) const
             if (score)
                 qLog(OOM) << oom_file << "oom_score = " << oom_value;
             else
-                qLog(OOM) << oom_file << "oom_adj = " << oom_value;
+                qLog(OOM) << oom_file << "oom_score_adj = " << oom_value;
         }
     }
 }
@@ -458,7 +458,7 @@ Q_GLOBAL_STATIC(OomPrivate, oomPrivate);
   process is critical, expendable, or important. The oom_adj
   value is used by the linux kernel to help it determine which
   processes to kill when a hard out-of-memory condition occurs.
-  The oom_adj value is stored in \c{/proc/<pid>/oom_adj}.
+  The oom_adj value is stored in \c{/proc/<pid>/oom_score_adj}.
 
   \bold{Note:} All OomManager instances share the same internal list
   of applications.
@@ -501,7 +501,7 @@ OomManager::~OomManager()
   \a app. This function must be called when process \a pid
   enters the running state.
 
-  The value in \c{/proc/pid/oom_adj} is set to a value read from
+  The value in \c{/proc/pid/oom_score_adj} is set to a value read from
   oom.conf according to whether the process is a critical,
   expendable, or important process.
  */
