@@ -1,3 +1,12 @@
+qtmoko (60-1) unstable; urgency=low
+
+  * fixed to build natively on Wheezy 7.11 and Jessie 8.10
+  * retiredGTA02 support
+  * upgrade to latest kernel APIs (4.15)
+  * fix modem state files
+
+ -- Nikolaus Schaller <hns@goldelico.com>  Thu, 01 Mar 2018 09:00:00 +0100
+
 qtmoko (59-1) unstable; urgency=low
 
   * fixed automatic suspend after inactivity
