@@ -125,7 +125,7 @@ AccelHandle *accelerometer_open()
         accel->type = ACCEL_UNKNOWN;
 
         struct stat st;
-        char gta04_accel_file[] = "/dev/input/event1";
+        char gta04_accel_file[] = "/dev/input/accel";
 
         if (stat(gta04_accel_file, &st) == 0)
         {
