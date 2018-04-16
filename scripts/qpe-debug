@@ -13,10 +13,19 @@ case $(cat /etc/debian_version) in
 	9.* ) DISTRO=stretch;;
 esac
 
-[ "$(which gdb)" ] || apt-get install gdb git
+[ "$(which gdb 2>/dev/null)" ] || apt-get install gdb
+[ "$(which git 2>/dev/null)" ] || apt-get install git
 
-[ -d qtmoko ] || git clone git://git.goldelico.com/gta04-qtmoko.git qtmoko
-(cd qtmoko; git checkout $DISTRO)
+if ! [ -d qtmoko ]
+then
+	git clone git://git.goldelico.com/gta04-qtmoko.git qtmoko
+	(
+	cd qtmoko
+	git checkout $DISTRO
+	git submodule init
+	git submodule update
+	)
+fi
 SOURCES=qtmoko/src
 
 . /opt/qtmoko/qpe.env
