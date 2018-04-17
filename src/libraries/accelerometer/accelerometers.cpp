@@ -68,7 +68,7 @@ double acx=0,acy=0,acz=0;
 
 #ifdef QT_QWS_GTA04
 
-#define GET_DATA_INTERVAL 12500 //25000
+#define GET_DATA_INTERVAL 2000 // 12500 //25000
 
 typedef enum {
 	ACCEL_UNKNOWN,
@@ -324,15 +324,15 @@ void* accel_work(void *data)
 
 		/* Call accelerometer_moo() until we have an
 		   acceleration measurement. */
-		while (!accelerometer_moo(accel))
-		  ;
+		if (accelerometer_moo(accel))
+		  {
 
 		/* If the library user specified a callback, call
 		   it. */
 		if (my_thread_data->callback)
 		  (*my_thread_data->callback)(my_thread_data->closure,
 					      acx, acy, acz);
-
+		  }
 		/* Sleep before taking another measurement. */
                 usleep(my_thread_data->interval_us);
         }
