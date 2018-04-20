@@ -322,17 +322,15 @@ void* accel_work(void *data)
 	accel = accelerometer_open();
 	while ( !(my_thread_data->finished) ) {
 
-		/* Call accelerometer_moo() until we have an
-		   acceleration measurement. */
-		if (accelerometer_moo(accel))
-		  {
+		/* update readings if new data is available */
+		accelerometer_moo(accel);
 
 		/* If the library user specified a callback, call
 		   it. */
 		if (my_thread_data->callback)
 		  (*my_thread_data->callback)(my_thread_data->closure,
 					      acx, acy, acz);
-		  }
+
 		/* Sleep before taking another measurement. */
                 usleep(my_thread_data->interval_us);
         }
