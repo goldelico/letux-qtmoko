@@ -101,7 +101,8 @@ ac(QPowerSource::Wall, "PrimaryAC", this)
     }
 
     hasSmartBattery =
-        QFile::exists("/sys/class/power_supply/bq27000-battery/status");
+        QFile::exists("/sys/class/power_supply/bq27000-battery/status") ||
+	QFile::exists("/sys/class/power_supply/bq27421-0/status");
 
     connect(&timer, SIGNAL(timeout()), this, SLOT(updateStatus()));
     timer.start(30 * 1000);
@@ -139,7 +140,10 @@ void NeoHardware::setMaxChargeCurrent(int newValue)
     char buf[7];
     maxChargeCurrent = newValue;
     sprintf(buf, "%d", maxChargeCurrent);
-    qWriteFile("/sys/class/power_supply/twl4030_usb/input_current_limit", buf);
+    if(QFile::exists("/sys/class/power_supply/twl4030_usb/input_current_limit"))
+	qWriteFile("/sys/class/power_supply/twl4030_usb/input_current_limit", buf);
+    if(QFile::exists("/sys/class/power_supply/bq24297/input_current_limit"))
+       qWriteFile("/sys/class/power_supply/bq24297/input_current_limit", buf);
 }
 
 // Parse uevent string and return given attribute value. Example uevent file:
@@ -208,8 +212,11 @@ void NeoHardware::updateStatus()
     QDateTime now = QDateTime::currentDateTime();
 
     // Determine charging via USB
-    QByteArray twlVbus =
-        qReadFile("/sys/class/power_supply/twl4030_usb/online");
+    QByteArray twlVbus;
+    if(QFile::exists("/sys/class/power_supply/twl4030_usb/online"))
+       twlVbus = qReadFile("/sys/class/power_supply/twl4030_usb/online");
+    else
+	twlVbus=qReadFile("/sys/class/power_supply/bq24297/online");
 
     bool chargerOn = twlVbus.contains("1");
     if (chargerOn)
@@ -220,8 +227,11 @@ void NeoHardware::updateStatus()
     battery.setCharging(chargerOn);
 
     // Update battery status
-    QByteArray uevent =
-        qReadFile("/sys/class/power_supply/bq27000-battery/uevent");
+    QByteArray uevent;
+    if(QFile::exists("/sys/class/power_supply/bq27000-battery/uevent"))
+        uevent = qReadFile("/sys/class/power_supply/bq27000-battery/uevent");
+    else
+	uevent = qReadFile("/sys/class/power_supply/bq27421-0/uevent");
 
     int timeToEmpty = getIntAttr("POWER_SUPPLY_TIME_TO_EMPTY_NOW=", uevent);
     if (timeToEmpty >= 0)

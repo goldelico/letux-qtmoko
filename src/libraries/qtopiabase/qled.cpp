@@ -41,23 +41,76 @@
   file, -1 of some of the arguments is NULL, 0 if writing to the sysfs file
   failed.
   */
+
+/* FIXME:
+  a better soultion would not have the caller provie "device" and "color".
+  Rather, there should only be abstract functions, i.e.
+
+  "power", "sms", "call", "charging", ...
+
+  and
+
+  int setLed(const char *function, const char *attr, const char *value)
+
+  should translate into device and color, ideally by some config table.
+
+  This makes the caller code completely independent on the device LED
+  mapping and get rid of #ifdef QT_QWS_GTA04 etc.
+
+  */
+
 int setLed(const char *device, const char *color,
            const char *function, const char *attr, const char *value)
 {
-    if (device == 0 || color == 0 || function == 0 || attr == 0)
+    if (device == NULL || color == NULL || function == NULL || attr == NULL)
         return -1;              // device does not have this attribute/led type
 
     char filename[255];
     sprintf(filename, "/sys/class/leds/%s:%s:%s/%s", device, color, function, attr);    // e.g. /sys/class/leds/gta04:green:power/brightness
     QFile f(filename);
     if (!f.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
-        qWarning() << "setLed failed" << filename << f.errorString();
-        return 0;
+	/* try Pyra LED names by translation */
+	if(strcmp(function, "aux") == 0) device="logo", function = "top";
+	if(strcmp(function, "power") == 0) device="pyra", function = "mid";
+	sprintf(filename, "/sys/class/leds/%s:%s:%s/%s", device, color, function, attr);    // e.g. /sys/class/leds/pyra:green:mid/brightness
+	QFile f2(filename);
+	if (!f2.open(QIODevice::WriteOnly | QIODevice::Text | QIODevice::Truncate)) {
+		qWarning() << "setLed failed" << filename << f2.errorString();
+		return 0;
+	}
+	f2.write(value);
+	f2.close();
+	return 1;
     }
     f.write(value);
     f.close();
     return 1;
 }
+
+/* FIXME: get rid of these compile time definitions
+   and replace by run-time variations */
+
+#if CODE_FRAGMENT
+
+char *device_model(void)
+	{
+	int fd = open("/proc/device-tree/model", O_RDONLY, 0);
+	if ( fd >= 0 )
+		{
+		static char model[200];
+		int n = read(fd, model, sizeof(model)-1);
+		if (n > 0)
+			{
+			close(fd);
+			model[n] = 0;
+			return model;
+			}
+		close(fd);
+		}
+	return "unknown";
+	}
+
+#endif
 
 #ifdef QT_QWS_GTA04
 

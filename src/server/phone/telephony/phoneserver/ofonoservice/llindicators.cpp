@@ -20,6 +20,10 @@
 #include <QFile>
 #include <QDebug>
 #include "llindicators.h"
+#include <qled.h>
+
+#if REMOVEME
+/* FIXME: merge with qled.cpp */
 
 // Turn on/off led. Device can be "gta02" or "gta04".
 // GTA04: color can be "green" or "red" type can be "power" or "aux"
@@ -38,11 +42,15 @@ static bool setLed(const char *device, const char *color,
     f.close();
     return true;
 }
+#endif
+
+// FIXME: get rid of compile time variants
 
 #ifdef QT_QWS_GTA04
 
 static void missedCallLedOn()
 {
+// FIXME: setLed(qLedDevice(), qLedColorCalls(), qLedFunctionPower(), qLedAttrBrightness(), qLedMaxBrightness());
     setLed("gta04", "green", "power", "brightness", "255");
     setLed("gta04", "green", "power", "trigger", "timer");
     setLed("gta04", "green", "power", "delay_off", "1024");

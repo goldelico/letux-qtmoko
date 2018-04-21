@@ -68,7 +68,7 @@ double acx=0,acy=0,acz=0;
 
 #ifdef QT_QWS_GTA04
 
-#define GET_DATA_INTERVAL 12500 //25000
+#define GET_DATA_INTERVAL 2000 // 12500 //25000
 
 typedef enum {
 	ACCEL_UNKNOWN,
@@ -89,6 +89,11 @@ typedef struct {
 	int		lx;
 	int		ly;
 	int		lz;
+
+	double		xscale;
+	double		yscale;
+	double		zscale;
+	bool		swap_xy;
 
 } AccelHandle;
 
@@ -124,8 +129,65 @@ AccelHandle *accelerometer_open()
         accel->lz = 0;
         accel->type = ACCEL_UNKNOWN;
 
+	/* The GTA04 implementation of the accelerometer interface
+	   aims for the reported acceleration values to be in units of
+	   1g.  That seems to be about right for the QtMaze game, so I
+	   guess that units of 1g is in line with what the
+	   accelerometer interface has generated on other devices.
+	   (And we need to guess, because I don't think it's
+	   explicitly documented anywhere.)  On my GTA04, sitting flat
+	   on the table, the raw Z acceleration value is about 256, so
+	   we divide by 256 here. */
+
+	accel->xscale = 256.0;
+	accel->yscale = 256.0;
+	accel->zscale = 256.0;
+	accel->swap_xy = false;
+
+	/* on GTA04A5 it turns out that some axis are inverted
+	   compared to the GTA04A4. This should have been
+	   handled/unified by the kernel, but it isn't.
+
+		Values			GTA04A4		GTA04A5		Pyra(Phone)
+					X / Y / Z	X / Y / Z
+		Device
+		- flat on table		0 / 0 / +1	0 / 0 / -1	0/0/-
+		- upright (phone2ear)	0 / +1 / 0	0 / +1 / 0	+/0/0
+		- on right edge		-1 / 0 / 0	+1 / 0 / 0	0/-/0
+
+	 */
+
+	accel->fd = open("/proc/device-tree/model", O_RDONLY, 0);
+	if ( accel->fd != -1 )
+	{
+		char model[200];
+		int n = read(accel->fd, model, sizeof(model)-1);
+		if (n > 0)
+		{
+			model[n] = 0;
+			/* fprintf(stderr, "GTA04 model: %s\n", model); */
+			if(strstr(model, "GTA04A5"))
+			{ /* invert X and Z */
+			/*	fprintf(stderr, "GTA04A5 found\n"); */
+				accel->xscale *= -1;
+				accel->yscale *= 1;
+				accel->zscale *= -1;
+			}
+			else if(strstr(model, "Pyra"))
+			{ /* invert X and Z and swap X and Y */
+			/*	fprintf(stderr, "Pyra found\n"); */
+				float h;
+				accel->xscale *= 1;
+				accel->yscale *= 1;
+				accel->zscale *= -1;
+				accel->swap_xy = true;
+			}
+		}
+		close(accel->fd);
+	}
+
         struct stat st;
-        char gta04_accel_file[] = "/dev/input/event1";
+        char gta04_accel_file[] = "/dev/input/accel";
 
         if (stat(gta04_accel_file, &st) == 0)
         {
@@ -210,25 +272,24 @@ int accelerometer_moo_gta04(AccelHandle *accel)
 
 	if ( ev.type == EV_SYN ) {
 		if ( ev.code == SYN_REPORT ) {
-			accel->x = accel->lx;
-			accel->y = accel->ly;
+			if (accel->swap_xy)
+				{
+				accel->x = accel->ly;
+				accel->y = accel->lx;
+				}
+			else
+				{
+				accel->x = accel->lx;
+				accel->y = accel->ly;
+				}
 			accel->z = accel->lz;
 			got_measurement = 1;
 		}
 	}
 
-	/* The GTA04 implementation of the accelerometer interface
-	   aims for the reported acceleration values to be in units of
-	   1g.  That seems to be about right for the QtMaze game, so I
-	   guess that units of 1g is in line with what the
-	   accelerometer interface has generated on other devices.
-	   (And we need to guess, because I don't think it's
-	   explicitly documented anywhere.)  On my GTA04, sitting flat
-	   on the table, the raw Z acceleration value is about 256, so
-	   we divide by 256 here. */
-	acx = - accel->x / 256.0;
-	acy = - accel->y / 256.0;
-	acz = - accel->z / 256.0;
+	acx = - accel->x / accel->xscale;
+	acy = - accel->y / accel->yscale;
+	acz = - accel->z / accel->zscale;
 
         if (acx<-1) acx=-1; if (acx>1) acx=1;
         if (acy<-1) acy=-1; if (acy>1) acy=1;
@@ -261,10 +322,8 @@ void* accel_work(void *data)
 	accel = accelerometer_open();
 	while ( !(my_thread_data->finished) ) {
 
-		/* Call accelerometer_moo() until we have an
-		   acceleration measurement. */
-		while (!accelerometer_moo(accel))
-		  ;
+		/* update readings if new data is available */
+		accelerometer_moo(accel);
 
 		/* If the library user specified a callback, call
 		   it. */

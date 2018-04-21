@@ -26,8 +26,10 @@ rm -f /dev/input/mice
 echo '1' > /proc/sys/kernel/printk
 echo 0 > /sys/devices/virtual/graphics/fbcon/cursor_blink
 echo timer > /sys/class/leds/gta04:green:power/trigger
-echo 0 > /sys/class/leds/gta04\:red\:power/brightness
-echo 0 > /sys/class/leds/gta04\:green\:power/brightness
+for i in /sys/class/leds/*
+do
+	echo 0 > $i/brightness
+done
 stty -F /dev/tty1 -echo
 mkdir -p /var/cache/apt/archives/partial
 

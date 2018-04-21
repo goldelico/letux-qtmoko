@@ -309,7 +309,7 @@ static qint16 uploadEffect(int fd, quint16 strength, int timeoutMs)
     e.replay.length = timeoutMs ? timeoutMs : 3000;
     e.replay.delay = 0;
     e.u.rumble.strong_magnitude = strength;
-    e.u.rumble.weak_magnitude = 0;
+    e.u.rumble.weak_magnitude = strength;
 
     // Write the event
     if (ioctl(fd, EVIOCSFF, &e) == -1) {
