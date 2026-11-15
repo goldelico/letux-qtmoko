@@ -1,7 +1,0 @@
-#!/bin/sh
-
-/usr/bin/bootcharger
-
-# Disable Qtopia's internal boot charger screen
-touch /tmp/warm-boot
-
