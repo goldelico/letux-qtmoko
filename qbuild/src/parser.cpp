@@ -628,7 +628,7 @@ Block *QMakeParser::parseScript()
     SKIP_SPACE;
 
     if (token() != SCRIPT_START)
-        FAIL_PARSE;
+        FAIL_PARSE_VAL(0);
     PreprocessorToken itoken = ptoken();
 
     int scriptStart = currentToken;
@@ -652,14 +652,14 @@ Block *QMakeParser::parseScript()
     }
 
     if (!scriptEndSeen)
-        FAIL_PARSE;
+        FAIL_PARSE_VAL(0);
 
     int scriptEnd = currentToken;
     adv();
 
     SKIP_SPACE;
     if (token() != NEWLINE && !atEnd())
-        FAIL_PARSE;
+        FAIL_PARSE_VAL(0);
 
     if (!atEnd())
         adv();
