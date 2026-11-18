@@ -529,6 +529,8 @@ set_optvar("arch", +{
                 push(@avail, basename($_));
             }
         }
+        # Validated before the external Qt setup; no Qt source tree is required.
+        push(@avail, "arm") unless grep { $_ eq "arm" } @avail;
         @avail;
     },
     "visible" => $qtopia_visref,
@@ -2069,7 +2071,7 @@ if ( opt("qtopia_ui") ) {
     if ( opt("arch") eq "x86" || (opt("arch", "auto") && opt("arch") eq "generic") ) {
         opt("arch") = $x86_64?"x86_64":"i386";
     }
-    if ( ! -d "$qt_depot_path/src/corelib/arch/".opt("arch") ) {
+    if ( !opt("system_qt") && ! -d "$qt_depot_path/src/corelib/arch/".opt("arch") ) {
         die "ERROR: Architecture ".opt("arch")." is not supported by Qt Embedded.\n".
             "       Please see the documentation for information about porting to a new architecture.\n";
     }
@@ -2086,6 +2088,10 @@ chdir $cwd;
 if ( opt("device") && -e opt("device", "config_path")."/mkspecs/".opt("platform") ) {
     opt("platform", "absolute") = opt("device", "config_path")."/mkspecs/".opt("platform");
 }
+if ( opt("system_qt") && ! -d opt("platform", "absolute") ) {
+    my $installed_spec = "$HOST_QT/mkspecs/".opt("platform");
+    opt("platform", "absolute") = $installed_spec if -d $installed_spec;
+}
 if ( ! -d opt("platform", "absolute") ) {
     opt("platform", "absolute") = "$qt_depot_path/mkspecs/".opt("platform");
 }
@@ -2093,6 +2099,10 @@ if ( opt("qtopia_ui") ) {
     # The spec file might be inside the device configuration directory
     if ( opt("device") && -e opt("device", "config_path")."/mkspecs/qws/".opt("xplatform") ) {
         opt("xplatform", "absolute") = opt("device", "config_path")."/mkspecs/qws/".opt("xplatform");
+    }
+    if ( opt("system_qt") && ! -d opt("xplatform", "absolute") ) {
+        my $installed_spec = "$HOST_QT/mkspecs/qws/".opt("xplatform");
+        opt("xplatform", "absolute") = $installed_spec if -d $installed_spec;
     }
     if ( ! -d opt("xplatform", "absolute") ) {
         opt("xplatform", "absolute") = "$qt_depot_path/mkspecs/qws/".opt("xplatform");
@@ -4131,7 +4141,18 @@ sub getQtVersion
         close IN;
     }
     if ( $qtVersionStr eq "0.0.0" ) {
-        die "ERROR: Could not read version from ".fixpath("$qt_depot_path/src/corelib/global/qglobal.h")."\n";
+        # A separately installed Qt has no source tree in qtopiacore/qt.
+        # This runs before the -system-qt option has been resolved.
+        my $version = `qmake -query QT_VERSION 2>/dev/null`;
+        chomp $version;
+        if ( $version =~ /^(\d+)\.(\d+)\.(\d+)(.*)$/ ) {
+            $qtVersionStr = "$1.$2.$3";
+            @qtVersionStr = ( $1, $2, $3, $4 );
+        } else {
+            die "ERROR: Could not read Qt version from ".
+                fixpath("$qt_depot_path/src/corelib/global/qglobal.h").
+                " or qmake -query QT_VERSION\n";
+        }
     }
 
 #    if ( $qtMajorVersion != 4 || ( $qtMinorVersion != 4 && $qtMinorVersion != 5 ) ) {

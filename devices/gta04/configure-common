@@ -40,4 +40,5 @@
 -D _FORTIFY_SOURCE=0
 -rtti
 -force-pkg-config
--build-qt
+# Qt selection is controlled by the top-level configure invocation.
+# Do not force -build-qt here; this overrides an explicit -system-qt.
