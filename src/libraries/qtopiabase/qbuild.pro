@@ -72,6 +72,8 @@ PRIVATE_HEADERS=\
     qfixedpointnumber_p.h
 
 SEMI_PRIVATE_HEADERS=\
+    qunixsocket_p.h\
+    qunixsocketserver_p.h\
     testslaveinterface_p.h\
     qcopenvelope_p.h
 
@@ -103,6 +105,8 @@ SOURCES=\
     quniqueid.cpp\
     # Valuespace code
     applayer.cpp\
+    qunixsocket.cpp\
+    qunixsocketserver.cpp\
     qexpressionevaluator.cpp\
     qfilemonitor.cpp\
     qfixedpointnumber.cpp\
@@ -138,13 +142,9 @@ X11 [
     HEADERS=\
         qcopchannel_x11.h
     PRIVATE_HEADERS=\
-        qcopchannel_x11_p.h \
-        qunixsocket_p.h \
-        qunixsocketserver_p.h
+        qcopchannel_x11_p.h
     SOURCES=\
         qcopchannel_x11.cpp \
-        qunixsocket.cpp \
-        qunixsocketserver.cpp \
         qglobalpixmapcache_x11.cpp
 ]
 

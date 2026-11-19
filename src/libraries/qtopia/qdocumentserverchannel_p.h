@@ -30,7 +30,7 @@
 // We mean it.
 //
 
-#include <private/qunixsocket_p.h>
+#include "../qtopiabase/qunixsocket_p.h"
 #include <qtopiaipcmarshal.h>
 #include <QVariantList>
 

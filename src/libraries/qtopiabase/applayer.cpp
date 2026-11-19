@@ -32,8 +32,8 @@
 #include <unistd.h>
 #include <QCoreApplication>
 #include <QThread>
-#include <private/qunixsocketserver_p.h>
-#include <private/qunixsocket_p.h>
+#include "qunixsocketserver_p.h"
+#include "qunixsocket_p.h"
 
 #ifndef QT_NO_SXE
 // TODO: Enabling SXE support breaks change notifications.  Force disable until this
