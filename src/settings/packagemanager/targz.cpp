@@ -272,7 +272,7 @@ TAR * get_tar_ptr( const QString &tarfile )
            if ( !tfs.exists() )
            {
                qWarning( "get_tar_ptr(): file %s doesnt exist", pathname );
-               return false;
+               return NULL;
            }
            tfs.open(QIODevice::ReadOnly);
            QDataStream tarbytes( &tfs );
@@ -290,7 +290,7 @@ TAR * get_tar_ptr( const QString &tarfile )
     if ( result < 0 )
     {
         qWarning( "error opening tar file %s: %s", pathname, strerror(errno) );
-        return false;
+        return NULL;
     }
     return tarHandle;
 }
