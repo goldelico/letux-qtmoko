@@ -20,15 +20,14 @@
 #include "qtopiainputdialog_p.h"
 
 #include <QtGui>
-#include <private/qdialog_p.h>
 #include <qwindowsystem_qws.h>
 #include <QtopiaApplication>
 #include "keyboard_p.h"
 
-class QtopiaInputDialogPrivate : public QDialogPrivate
+class QtopiaInputDialogPrivate
 {
-    Q_DECLARE_PUBLIC(QtopiaInputDialog)
 public:
+    QtopiaInputDialog *q;
     QtopiaInputDialogPrivate();
     void init(const QString &title, QWidget* label, QWidget *input);
     EmbeddableKeyboardWidget *m_keyboard;
@@ -79,7 +78,7 @@ void QtopiaInputDialogPrivate::_q_erase()
 }
 
 QtopiaInputDialogPrivate::QtopiaInputDialogPrivate()
-    : QDialogPrivate(), m_keyboard(0), m_input(0), m_widget(0)
+    : q(0), m_keyboard(0), m_input(0), m_widget(0)
 {
 }
 
@@ -106,7 +105,6 @@ static QString stringForHint(QtopiaApplication::InputMethodHint hint, const QStr
 
 void QtopiaInputDialogPrivate::init(const QString &title, QWidget* label, QWidget *input)
 {
-    Q_Q(QtopiaInputDialog);
     q->setWindowTitle(title);
     QVBoxLayout *vbox = new QVBoxLayout(q);
     //vbox->setSpacing(QApplication::style()->pixelMetric(QStyle::PM_LayoutVerticalSpacing)/2);   //### use widget-specific numbers instead
@@ -152,23 +150,39 @@ void QtopiaInputDialogPrivate::init(const QString &title, QWidget* label, QWidge
 }
 
 QtopiaInputDialog::QtopiaInputDialog(QWidget *parent, const QString &title, const QString &label, QWidget *input)
-    : QDialog(*new QtopiaInputDialogPrivate, parent)
+    : QDialog(parent), d(new QtopiaInputDialogPrivate)
 {
-    Q_D(QtopiaInputDialog);
+    d->q = this;
     QLabel *l = new QLabel(label);
     l->setBuddy(input);
     d->init(title, l, input);
 }
 
 QtopiaInputDialog::QtopiaInputDialog(QWidget *parent, const QString &title, QWidget* label, QWidget *input)
-    : QDialog(*new QtopiaInputDialogPrivate, parent)
+    : QDialog(parent), d(new QtopiaInputDialogPrivate)
 {
-    Q_D(QtopiaInputDialog);
+    d->q = this;
     d->init(title, label, input);
 }
 
 QtopiaInputDialog::~QtopiaInputDialog()
 {
+    delete d;
+}
+
+void QtopiaInputDialog::_q_preedit(QString text)
+{
+    d->_q_preedit(text);
+}
+
+void QtopiaInputDialog::_q_submitWord(QString word)
+{
+    d->_q_submitWord(word);
+}
+
+void QtopiaInputDialog::_q_erase()
+{
+    d->_q_erase();
 }
 
 QString QtopiaInputDialog::getText(QWidget *parent, const QString &title, const QString &label, QLineEdit::EchoMode mode,

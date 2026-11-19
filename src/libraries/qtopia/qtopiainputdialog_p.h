@@ -44,7 +44,7 @@ class QTime;
 class QTOPIA_EXPORT QtopiaInputDialog : public QDialog
 {
     Q_OBJECT
-    Q_DECLARE_PRIVATE(QtopiaInputDialog)
+
 private:
     QtopiaInputDialog(QWidget *parent, const QString &title, const QString &label, QWidget *input);
 
@@ -78,9 +78,12 @@ public:
 private:
     Q_DISABLE_COPY(QtopiaInputDialog)
 
-    Q_PRIVATE_SLOT(d_func(), void _q_preedit(QString text))
-    Q_PRIVATE_SLOT(d_func(), void _q_submitWord(QString word))
-    Q_PRIVATE_SLOT(d_func(), void _q_erase())
+    QtopiaInputDialogPrivate *d;
+
+private slots:
+    void _q_preedit(QString text);
+    void _q_submitWord(QString word);
+    void _q_erase();
 };
 
 #endif
