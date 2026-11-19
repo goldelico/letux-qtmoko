@@ -34,9 +34,7 @@
 #include <QtCore/QFile>
 #include <QtCore/QRegExp>
 #include <QtCore/QStringList>
-#include <QtDBus/QtDBus>
 #include <QtCore/QDate>
-//#include <QtDBus/QDBusConnection>
 
 // KDE
 #include <QDebug>
