@@ -1045,7 +1045,7 @@ bool Qtopia::isDocumentFileName(const QString& file)
 bool Qtopia::mousePreferred()
 {
 #ifdef QT_KEYPAD_NAVIGATION
-    return !qApp->keypadNavigationEnabled(); //keypad phone
+    return !qApp->property("qtopiaKeypadNavigation").toBool(); // keypad phone
 #else
     return true;
 #endif
