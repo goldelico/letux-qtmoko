@@ -1,19 +1,23 @@
-TEMPLATE=app
-TARGET=sqlite
+# The SQLite command-line utility is provided by Debian when using an
+# external Qt installation.  Do not look for sources in Qt's source tree.
+!system_qt {
+    TEMPLATE=app
+    TARGET=sqlite
 
-CONFIG+=qt
-QT=core
-CONFIG-=moc
+    CONFIG+=qt
+    QT=core
+    CONFIG-=moc
 
-release:DEFINES*=NDEBUG
-DEFINES+=SQLITE_OMIT_LOAD_EXTENSION SQLITE_CORE
+    release:DEFINES*=NDEBUG
+    DEFINES+=SQLITE_OMIT_LOAD_EXTENSION SQLITE_CORE
 
-SOURCEPATH=/qtopiacore/qt/src/3rdparty/sqlite
+    SOURCEPATH=/qtopiacore/qt/src/3rdparty/sqlite
 
-HEADERS=\
-    sqlite3.h
+    HEADERS=\
+        sqlite3.h
 
-SOURCES=\
-    sqlite3.c\
-    shell.c
+    SOURCES=\
+        sqlite3.c\
+        shell.c
+}
 

@@ -35,8 +35,8 @@ SERVER_PROJECTS*=\
 equals(LAUNCH_METHOD,quicklaunch):SERVER_PROJECTS*=server/processctrl/quickexe
 !no_quicklaunch|enable_singleexec:PROJECTS*=tools/quicklauncher
 
-build_qtopia_sqlite:PROJECTS*=\
-    3rdparty/applications/sqlite
+# Use the system sqlite3 command-line utility (Debian package sqlite3)
+# instead of building the copy from the bundled Qt source tree.
 
 enable_dbusipc {
     PROJECTS*=\
