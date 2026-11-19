@@ -1,3 +1,4 @@
+#include "../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -435,7 +436,7 @@ void CameraMainWindow::showZoom()
     if(d->zoomActive) return;
     d->zoomActive = true;
     d->m_zoom->show();
-    d->m_zoom->setEditFocus(true);
+    qtmokoSetEditFocus(d->m_zoom, true);
     d->m_zoom->setVisible(true);
     if(hasStill)basicControls->photo->setEnabled(false);
     if(hasVideo)basicControls->video->setEnabled(false);

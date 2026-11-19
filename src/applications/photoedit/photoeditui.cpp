@@ -1,3 +1,4 @@
+#include "../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -770,7 +771,7 @@ void PhotoEditUI::zoomViewer()
 {
     m_viewerZoomSlider->setVisible(true);
 
-    m_viewerZoomSlider->setEditFocus(true);
+    qtmokoSetEditFocus(m_viewerZoomSlider, true);
 }
 
 void PhotoEditUI::zoomViewerToActualSize()

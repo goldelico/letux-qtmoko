@@ -1,3 +1,4 @@
+#include "../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -492,22 +493,22 @@ void TextEdit::editFind(bool s)
         searchVisible = true;
         mFindTextEntry->setFocus();
         if( !Qtopia::mousePreferred() ) {
-            if (!mFindTextEntry->hasEditFocus())
-                mFindTextEntry->setEditFocus(true);
+            if (!qtmokoHasEditFocus(mFindTextEntry))
+                qtmokoSetEditFocus(mFindTextEntry, true);
         }
     } else {
         searchVisible = false;
         if( !Qtopia::mousePreferred() ) {
-            if (mFindTextEntry->hasEditFocus())
-                mFindTextEntry->setEditFocus(false);
+            if (qtmokoHasEditFocus(mFindTextEntry))
+                qtmokoSetEditFocus(mFindTextEntry, false);
         }
         editor->setFocusPolicy(Qt::StrongFocus);
         mFindTextWidget->hide();
         editor->setFocus();
         editor->clearSearchResults();
         if( !Qtopia::mousePreferred() ) {
-            if (!editor->hasEditFocus())
-                editor->setEditFocus(true);
+            if (!qtmokoHasEditFocus(editor))
+                qtmokoSetEditFocus(editor, true);
         }
     }
 }
@@ -858,7 +859,7 @@ bool TextEdit::eventFilter(QObject *o, QEvent *e)
     if (e->type() == QEvent::KeyPress) {
         QKeyEvent* ke = static_cast<QKeyEvent*>(e);
         if (ke->key() == Qt::Key_Select) {
-            if (editor->hasEditFocus()) {
+            if (qtmokoHasEditFocus(editor)) {
                 if ( doc->name().isEmpty() )
                     fileName();
                 if (qCopActivated)
@@ -866,18 +867,18 @@ bool TextEdit::eventFilter(QObject *o, QEvent *e)
                 else
                     fileOpen();
                 return true;
-            } else if (mFindTextEntry && mFindTextEntry->hasEditFocus()) {
+            } else if (mFindTextEntry && qtmokoHasEditFocus(mFindTextEntry)) {
                 searchNext();
                 return true;
             }
         } else if (ke->key() == Qt::Key_Back) {
-            if (mFindTextEntry && mFindTextEntry->hasEditFocus()) {
+            if (mFindTextEntry && qtmokoHasEditFocus(mFindTextEntry)) {
                 if (mFindTextEntry->text().isEmpty()) {
                     editFind(false);
                     findAction->setChecked(false);
                     return true;
                 }
-            } else if (!editor->hasEditFocus()) {
+            } else if (!qtmokoHasEditFocus(editor)) {
                 if (!editor->document()->isEmpty() && doc->name().isEmpty())
                     fileName();
                 if (qCopActivated)
@@ -896,7 +897,7 @@ bool TextEdit::eventFilter(QObject *o, QEvent *e)
             clear();
             ke->ignore();
         } else if (ke->key() == Qt::Key_Down) {
-            if (mFindTextEntry && mFindTextEntry->hasEditFocus()) {
+            if (mFindTextEntry && qtmokoHasEditFocus(mFindTextEntry)) {
                 searchNext();
             } else {
                 QTextCursor c = editor->textCursor();
@@ -908,7 +909,7 @@ bool TextEdit::eventFilter(QObject *o, QEvent *e)
                 }
             }
         } else if (ke->key() == Qt::Key_Up) {
-            if (mFindTextEntry && mFindTextEntry->hasEditFocus()) {
+            if (mFindTextEntry && qtmokoHasEditFocus(mFindTextEntry)) {
                 searchPrevious();
             }
         }

@@ -1,3 +1,4 @@
+#include "../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -124,7 +125,7 @@ Calculator::Calculator( QWidget * p, Qt::WFlags fl) : QWidget (p, fl)
         connect(si, SIGNAL(close()), this, SLOT(close()) );
         calculatorLayout->addWidget(si);
         si->setFocus( );
-        si->setEditFocus( true );
+        qtmokoSetEditFocus(si,  true );
         LCD->setFocusPolicy( Qt::NoFocus );
     } else {
         calculatorLayout->addWidget(new FormSimple());

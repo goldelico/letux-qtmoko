@@ -1,3 +1,4 @@
+#include "../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -564,7 +565,7 @@ bool ProfileEditDialog::eventFilter( QObject *, QEvent *e )
         }
 #endif
     } else if ( e->type() == QEvent::MouseButtonPress ) {
-        masterVolume->setEditFocus( true );
+        qtmokoSetEditFocus(masterVolume,  true );
         editVolume = true;
         return false;
     } else if ( e->type() == QEvent::MouseButtonRelease ) {

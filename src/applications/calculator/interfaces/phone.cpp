@@ -1,3 +1,4 @@
+#include "../../../libraries/qtopia/qtmoko_editfocus_compat.h"
 /****************************************************************************
 **
 ** This file is part of the Qt Extended Opensource Package.
@@ -340,7 +341,7 @@ void FormPhone::clearAll(){
     else
         systemEngine->hardReset();
     if( !Qtopia::mousePreferred() )
-        setEditFocus(true);
+        qtmokoSetEditFocus(this, true);
 
     QSoftMenuBar::setLabel(this, Qt::Key_Select, QSoftMenuBar::NoLabel);
     lockEvaluation = true;
