@@ -22,8 +22,6 @@ pkg [
     maintainer=$$QTOPIA_MAINTAINER
 ]
 
-DEFINES+=QTOPIA_PAGE_SIZE=$$define_value($$QTOPIA_PAGE_SIZE)
-DEFINES+=QTOPIA_PAGE_MASK=$$define_value($$QTOPIA_PAGE_MASK)
 # Needed for includes from qtextengine_p.h
 INCLUDEPATH+=$$QT_DEPOT_PATH/src/3rdparty/harfbuzz/src
 
