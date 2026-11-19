@@ -295,7 +295,7 @@ QAudio::AudioCapabilities QAudioStateConfiguration::availableCapabilities(const 
             m_data->m_states.find(state);
     if (it == m_data->m_states.end()) {
         qWarning("Trying to find availability for an undefined state.");
-        return false;
+        return QAudio::AudioCapabilities();
     }
 
     return it.value().second;
