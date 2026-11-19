@@ -879,11 +879,12 @@ void RuleEngineThread::runRule()
                    (out.count() == 1 && out.first() == "false") ||
                    (out.count() == 1 && out.first().isEmpty()));
 
-            if (options.debug & Options::RuleExec)
+            if (options.debug & Options::RuleExec) {
                 if (!run)
                     qTraceOutput() << "QBuild(" << m_id << "):         Test function" << test << "output" << out << "will NOT cause rule execution";
                 else
                     qTraceOutput() << "QBuild(" << m_id << "):         Test function" << test << "output" << out << "will cause rule execution";
+            }
 
         }
 
@@ -2199,11 +2200,12 @@ bool RuleVariables::value(const QString &name, QStringList &rv)
             return true;
         } else if (_name.at(5) == QChar('.')) {
             int idx = _name.mid(6).toInt();
-            if (idx >= 0 && idx < m_rule->inputFiles.count())
+            if (idx >= 0 && idx < m_rule->inputFiles.count()) {
                 if (abs)
                     rv << m_thread->absfile(m_rule->inputFiles.at(idx));
                 else
                     rv << m_rule->inputFiles.at(idx);
+            }
             return true;
         }
 
@@ -2220,11 +2222,12 @@ bool RuleVariables::value(const QString &name, QStringList &rv)
             return true;
         } else if (_name.at(5) == QChar('.')) {
             int idx = _name.mid(6).toInt();
-            if (idx >= 0 && idx < m_rule->other.count())
+            if (idx >= 0 && idx < m_rule->other.count()) {
                 if (abs)
                     rv << m_thread->absfile(m_rule->other.at(idx));
                 else
                     rv << m_rule->other.at(idx);
+            }
             return true;
         }
     } else if (_name.startsWith("OUTPUT")) {
@@ -2240,11 +2243,12 @@ bool RuleVariables::value(const QString &name, QStringList &rv)
             return true;
         } else if (_name.at(6) == QChar('.')) {
             int idx = _name.mid(7).toInt();
-            if (idx >= 0 && idx < m_rule->outputFiles().count())
+            if (idx >= 0 && idx < m_rule->outputFiles().count()) {
                 if (abs)
                     rv << m_thread->absfile(m_rule->outputFiles().at(idx));
                 else
                     rv << m_rule->outputFiles().at(idx);
+            }
             return true;
         }
     }
