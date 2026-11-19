@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 
+#include "qtmoko_editfocus_compat.h"
 #include "qsoftmenubar.h"
 #include "contextkeymanager_p.h"
 #include <QMenu>
@@ -226,7 +227,7 @@ private slots:
             }
         }
 
-        if (te && te->hasEditFocus() || le && le->hasEditFocus()) {
+        if (te && qtmokoHasEditFocus(te) || le && qtmokoHasEditFocus(le)) {
             if ( (te && te->textCursor().hasSelection()) ||
                     (le && le->hasSelectedText()) ) {
                 if (selectAction)
@@ -268,7 +269,7 @@ private slots:
 
         if (action == copyAction) {
             if (te) {
-                if (te->hasEditFocus()) {
+                if (qtmokoHasEditFocus(te)) {
                     te->copy();
                 } else {
                     QTextCursor c = te->textCursor();
@@ -277,7 +278,7 @@ private slots:
                     te->setTextCursor(c);   // reset selection
                 }
             } else if (le) {
-                if (le->hasEditFocus()) {
+                if (qtmokoHasEditFocus(le)) {
                     le->copy();
                 } else {
                     qApp->clipboard()->setText(le->text());
@@ -288,18 +289,18 @@ private slots:
             // activated, otherwise the line/textedit might be cleared
             // without pasting anything back into it
             if (te) {
-                if (!te->hasEditFocus())
+                if (!qtmokoHasEditFocus(te))
                     te->clear();
                 te->paste();
-                if (!te->hasEditFocus()) {
+                if (!qtmokoHasEditFocus(te)) {
                     te->moveCursor(QTextCursor::Start);
                     te->ensureCursorVisible();
                 }
             } else if (le) {
-                if (!le->hasEditFocus())
+                if (!qtmokoHasEditFocus(le))
                     le->clear();
                 le->paste();
-                if (!le->hasEditFocus())
+                if (!qtmokoHasEditFocus(le))
                     le->home(false);
             }
         }
@@ -746,7 +747,7 @@ bool MenuManager::eventFilter(QObject *o, QEvent *e)
         else
             w = *it;
         if (w) {
-            QMenu *menu = internalMenuFor(w, w->hasEditFocus() ? QSoftMenuBar::EditFocus : QSoftMenuBar::NavigationFocus);
+            QMenu *menu = internalMenuFor(w, qtmokoHasEditFocus(w) ? QSoftMenuBar::EditFocus : QSoftMenuBar::NavigationFocus);
             if (menu && menu->isVisible()) {
                 menu->close();
             }
@@ -805,7 +806,7 @@ bool MenuManager::eventFilter(QObject *o, QEvent *e)
                 w = *it;
             }
             if (w) {
-                QMenu *menu = internalMenuFor(w, w->hasEditFocus() ? QSoftMenuBar::EditFocus : QSoftMenuBar::NavigationFocus);
+                QMenu *menu = internalMenuFor(w, qtmokoHasEditFocus(w) ? QSoftMenuBar::EditFocus : QSoftMenuBar::NavigationFocus);
                 if (menu) {
                     activeMenu = menu;
                     popup(w, menu);

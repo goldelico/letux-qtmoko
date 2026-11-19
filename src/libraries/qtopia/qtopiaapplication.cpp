@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 
+#include "qtmoko_editfocus_compat.h"
 #include <qtopialog.h>
 #include "qtopiamessagehandler_p.h"
 #include <QValueSpaceObject>
@@ -601,7 +602,7 @@ private slots:
             w->setSelectedDate(targetWidget->date());
             w->blockSignals(false);
         }
-        w->setEditFocus(true);
+        qtmokoSetEditFocus(w, true);
         w->showMaximized();
     }
 
@@ -1229,9 +1230,9 @@ public:
 
     static void updateContext(QWidget *w)
     {
-        if (!w->hasEditFocus())
+        if (!qtmokoHasEditFocus(w))
             return;
-        if (ContextKeyManager::instance()->haveLabelForWidget(w, Qt::Key_Back, w->hasEditFocus()))
+        if (ContextKeyManager::instance()->haveLabelForWidget(w, Qt::Key_Back, qtmokoHasEditFocus(w)))
             return;
         if (ContextKeyManager::instance()->findHelper(w))
             return;
@@ -1290,7 +1291,7 @@ public:
         };
 #ifndef QTOPIA_TURN_OFF_OLD_SOFTKEY_HANDLING
         QTextBrowser *tb = qobject_cast<QTextBrowser*>(w);
-        if (!tb || ContextKeyManager::instance()->haveCustomLabelForWidget(w, Qt::Key_Select, w->hasEditFocus()))
+        if (!tb || ContextKeyManager::instance()->haveCustomLabelForWidget(w, Qt::Key_Select, qtmokoHasEditFocus(w)))
             return;
         if (tb->textCursor().hasSelection() &&
             !tb->textCursor().charFormat().anchorHref().isEmpty()) {
@@ -1825,7 +1826,7 @@ void QtopiaApplication::init(int argc, char **argv, Type t)
     QString pi = config.value( QLatin1String("PrimaryInput"), QLatin1String("Keypad") ).toString().toLower();
     // anything other than touchscreen means keypad modal editing gets enabled
     bool keypadNavigation = pi != QLatin1String("touchscreen");
-    QApplication::setKeypadNavigationEnabled(keypadNavigation);
+    setProperty("qtopiaKeypadNavigation", keypadNavigation);
     mousePreferred = !keypadNavigation;
 
     d = new QtopiaApplicationData;
@@ -3210,7 +3211,7 @@ bool QtopiaApplication::eventFilter( QObject *o, QEvent *e )
                 return true;
             }
         }
-        else if ( !mousePreferred && w->hasEditFocus()
+        else if ( !mousePreferred && qtmokoHasEditFocus(w)
             && (key == Qt::Key_Left || key == Qt::Key_Right
                 || key == Qt::Key_Up || key == Qt::Key_Down)) {
             QtopiaApplicationData::updateContext(w);
@@ -3219,7 +3220,7 @@ bool QtopiaApplication::eventFilter( QObject *o, QEvent *e )
                 && key == QSoftMenuBar::menuKey()) {
             qLog(UI) << "Menu key for:" << w;
             QWidget *cw = ContextKeyManager::instance()->findTargetWidget(w,
-                        key, mousePreferred || w->hasEditFocus());
+                        key, mousePreferred || qtmokoHasEditFocus(w));
             if (cw && cw != w)
             {
                 sendEvent(cw,e);
@@ -3237,7 +3238,7 @@ bool QtopiaApplication::eventFilter( QObject *o, QEvent *e )
         if (type == QEvent::FocusIn && !mousePreferred
                 && w->focusPolicy() != Qt::NoFocus) {
             if (isSingleFocusWidget(w))
-                w->setEditFocus(true);
+                qtmokoSetEditFocus(w, true);
         }
 
         if (!activeWindow())
@@ -3259,7 +3260,7 @@ bool QtopiaApplication::eventFilter( QObject *o, QEvent *e )
         }
 #endif
 #ifndef QT_NO_CLIPBOARD
-        if ((mousePreferred || w->hasEditFocus()) &&
+        if ((mousePreferred || qtmokoHasEditFocus(w)) &&
                 (qobject_cast<QLineEdit*>(w)
                  || (qobject_cast<QTextEdit*>(w) && !qobject_cast<QTextBrowser*>(w)))) {
             if(!QSoftMenuBar::hasMenu(w, QSoftMenuBar::EditFocus)) {
@@ -3945,7 +3946,7 @@ bool QtopiaApplication::notify(QObject* o, QEvent* e)
         }
 
         if (!accepted
-                || (w && !w->hasEditFocus() && isSingleFocusWidget(w)
+                || (w && !qtmokoHasEditFocus(w) && isSingleFocusWidget(w)
                     && !Qtopia::mousePreferred())) {
 
             // We already have special handling for Message Boxes.  Don't do so here
@@ -4012,7 +4013,7 @@ bool QtopiaApplication::notify(QObject* o, QEvent* e)
         bool setBack = false;
         QSoftMenuBar::StandardLabel label = QSoftMenuBar::NoLabel;
         if (QLineEdit *le = qobject_cast<QLineEdit*>(o)) {
-            if (!ContextKeyManager::instance()->haveLabelForWidget(le, Qt::Key_Back, le->hasEditFocus())) {
+            if (!ContextKeyManager::instance()->haveLabelForWidget(le, Qt::Key_Back, qtmokoHasEditFocus(le))) {
                 setBack = true;
                 QInputMethodEvent *ime = static_cast<QInputMethodEvent*>(e);
                 if (mousePreferred) {
@@ -4026,7 +4027,7 @@ bool QtopiaApplication::notify(QObject* o, QEvent* e)
                 }
             }
         } else if (QTextEdit *te = qobject_cast<QTextEdit*>(o)) {
-            if (!ContextKeyManager::instance()->haveLabelForWidget(te, Qt::Key_Back, te->hasEditFocus())) {
+            if (!ContextKeyManager::instance()->haveLabelForWidget(te, Qt::Key_Back, qtmokoHasEditFocus(te))) {
                 setBack = true;
                 QInputMethodEvent *ime = static_cast<QInputMethodEvent*>(e);
                 if (mousePreferred) {

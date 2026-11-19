@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 // Local includes
+#include "qtmoko_editfocus_compat.h"
 #include "qworldmap.h"
 #include "qworldmap_sun_p.h"
 #include "qworldmap_stylusnorm_p.h"
@@ -180,7 +181,7 @@ ZoomButton::ZoomButton( QWidget *parent )
 
 void ZoomButton::focusInEvent(QFocusEvent *e)
 {
-    if ( QApplication::keypadNavigationEnabled() ) {
+    if ( qtmokoKeypadNavigationEnabled() ) {
         QPalette pal;
         pal.setColor( QPalette::Button, pal.color(QPalette::Highlight) );
         setPalette( pal );
@@ -190,7 +191,7 @@ void ZoomButton::focusInEvent(QFocusEvent *e)
 
 void ZoomButton::focusOutEvent( QFocusEvent *e )
 {
-    if ( QApplication::keypadNavigationEnabled() ) {
+    if ( qtmokoKeypadNavigationEnabled() ) {
         QPalette pal;
         setPalette( pal );
     }
@@ -696,7 +697,7 @@ void QWorldmap::selectNewZone()
         return;
     }
 
-    if ( Qtopia::mousePreferred() || !hasEditFocus() ) {
+    if ( Qtopia::mousePreferred() || !qtmokoHasEditFocus(this) ) {
         if( !Qtopia::mousePreferred() ) {
             // Generate a key event to put this widget into edit focus
             QKeyEvent keyEvent( QEvent::KeyPress, Qt::Key_Select, Qt::NoModifier );
@@ -765,9 +766,9 @@ void QWorldmap::keyPressEvent( QKeyEvent *ke )
     // On keypad devices, we must ignore all keys except the Select
     // key if we don't have edit focus.  This allows the parent window
     // to process key presses that navigate to other widgets or exit the app.
-    if ( !Qtopia::mousePreferred() && !hasEditFocus() ) {
+    if ( !Qtopia::mousePreferred() && !qtmokoHasEditFocus(this) ) {
         if ( ke->key() == Qt::Key_Select ) {
-            setEditFocus( true );
+            qtmokoSetEditFocus(this, true);
             startSelecting();
             ke->accept();
         } else
@@ -796,7 +797,7 @@ void QWorldmap::keyPressEvent( QKeyEvent *ke )
             stopSelecting();
             QTimer::singleShot( 0, this, SLOT(redraw()) );
             d->lblCity->hide();
-            setEditFocus( false );
+            qtmokoSetEditFocus(this, false);
         }
         ke->ignore();
         break;
@@ -853,7 +854,7 @@ void QWorldmap::keyPressEvent( QKeyEvent *ke )
                 stopSelecting();
                 QTimer::singleShot( 0, this, SLOT(redraw()) );
                 d->lblCity->hide();
-                setEditFocus( false );
+                qtmokoSetEditFocus(this, false);
             }
         }
         QAbstractScrollArea::keyPressEvent(ke);
@@ -1555,7 +1556,7 @@ void QWorldmap::paintEvent( QPaintEvent * )
       if ( d->m_last.isValid() )
         drawCity( &p, d->m_last );
 
-    if ( QApplication::keypadNavigationEnabled() && hasFocus() && !hasEditFocus() ) {
+    if ( qtmokoKeypadNavigationEnabled() && hasFocus() && !qtmokoHasEditFocus(this) ) {
         QColor color = palette().color( QPalette::Highlight );
         color.setAlpha( 50 );
         p.fillRect( rect(), color );

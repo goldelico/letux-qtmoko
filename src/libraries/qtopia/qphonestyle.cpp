@@ -18,6 +18,7 @@
 ****************************************************************************/
 
 
+#include "qtmoko_editfocus_compat.h"
 #include "qphonestyle.h"
 #include <custom.h>
 #ifdef QTOPIA_ENABLE_GLOBAL_BACKGROUNDS
@@ -51,7 +52,6 @@
 #include <QMap>
 #include <QDesktopWidget>
 #include <QPaintEngine>
-#include <private/qwidget_p.h>
 #include <QLabel>
 #include <QLayout>
 #include <QStylePainter>
@@ -112,30 +112,6 @@ static bool isSubMenu(const QWidget *widget)
     return false;
 }
 
-
-#ifdef Q_WS_QWS
-
-class ManagerAccessorPrivate;
-
-class ManagerAccessor : public QWidget
-{
-public:
-    QWSManager *manager();
-
-    Q_DECLARE_PRIVATE(ManagerAccessor);
-};
-
-class ManagerAccessorPrivate : public QWidgetPrivate
-{
-    Q_DECLARE_PUBLIC(ManagerAccessor);
-};
-
-QWSManager *ManagerAccessor::manager() {
-    Q_D(ManagerAccessor);
-    return d->topData()->qwsManager;
-}
-
-#endif
 
 static bool useCache = true; // (qgetenv("QPHONESTYLE_USE_CACHE").toInt() > 0);
 
@@ -379,7 +355,7 @@ protected:
         opt.initFrom(this);
         opt.rect = rect();
         /*
-        if (widget->hasEditFocus() || qobject_cast<QGroupBox*>(widget)) {
+        if (qtmokoHasEditFocus(widget) || qobject_cast<QGroupBox*>(widget)) {
             QRegion rgn(geometry());
             rgn -= widget->contentsRect().translated(widget->geometry().topLeft());
             rgn.translate(-geometry().topLeft());
@@ -395,7 +371,7 @@ protected:
         }
         p.setBrush(QBrush(col));
         p.setRenderHint(QPainter::Antialiasing);
-        if (widget && (widget->hasEditFocus() || qobject_cast<QGroupBox*>(widget))) {
+        if (widget && (qtmokoHasEditFocus(widget) || qobject_cast<QGroupBox*>(widget))) {
             if (widget->width() < width() && widget->height() < height()) {
                 QRect wgeom = widget->geometry();
                 QPainterPath rectPath;
@@ -494,17 +470,11 @@ public:
     }
 
     void updateDecoration() {
-#ifdef Q_WS_QWS
+        // Repaint the active top-level window through the public widget API.
+        // Accessing its QWSManager requires QWidgetPrivate.
         QWidget *active = QApplication::activeWindow();
-        if (active) {
-            QWSManager *manager = ((ManagerAccessor*)active)->manager();
-            if (manager) {
-                QDesktopWidget *desktop = QApplication::desktop();
-                QApplication::postEvent(manager,
-                    new QPaintEvent(desktop->screenGeometry(desktop->primaryScreen())));
-            }
-        }
-#endif
+        if (active)
+            active->update();
     }
 
 #ifdef QTOPIA_ENABLE_GLOBAL_BACKGROUNDS
@@ -524,7 +494,7 @@ public:
     void setTextColor(QWidget *w) {
         if (w) {
             bool focus = w->hasFocus();
-            bool editfocus = w->hasEditFocus();
+            bool editfocus = qtmokoHasEditFocus(w);
             if (!focus && !editfocus) {
                 //want original color
                 if (paletteManaged.contains(w)) {
@@ -705,11 +675,11 @@ bool QPhoneStylePrivate::eventFilter(QObject *o, QEvent *e)
         }
     }
 #endif
-    if (wgt && QApplication::keypadNavigationEnabled()) {
+    if (wgt && qApp->property("qtopiaKeypadNavigation").toBool()) {
         if (e->type() == QEvent::Paint) {   //handle background of textedit
             if (QTextEdit *te = qobject_cast<QTextEdit*>(wgt)) {
                 bool extendedFocus = q->styleHint((QStyle::StyleHint)QPhoneStyle::SH_ExtendedFocusHighlight, 0, 0);
-                if (te->hasFocus() && !te->hasEditFocus() && !extendedFocus) {
+                if (te->hasFocus() && !qtmokoHasEditFocus(te) && !extendedFocus) {
                     QPainter p(te);
                     QRect r = te->rect();
                     r.adjust(3,3,-3,-3);
@@ -800,7 +770,7 @@ void QPhoneStylePrivate::focusChangedSlot(QWidget *old, QWidget *now)
         return;
     }
 
-    if (QApplication::keypadNavigationEnabled()) {
+    if (qApp->property("qtopiaKeypadNavigation").toBool()) {
         QTextEdit *te = qobject_cast<QTextEdit*>(old);
         if (te) {
             te->viewport()->setBackgroundRole(QPalette::Background);
@@ -814,7 +784,7 @@ void QPhoneStylePrivate::focusChangedSlot(QWidget *old, QWidget *now)
             paletteManaged.insert(now, now->palette());
             te->viewport()->setBackgroundRole(QPalette::Background);
             setTextColor(now);
-            if (te->hasEditFocus()) //isSingleFocusWidget can cause us to get edit focus before we get here
+            if (qtmokoHasEditFocus(te)) //isSingleFocusWidget can cause us to get edit focus before we get here
                 te->viewport()->setBackgroundRole(QPalette::Base);
             te->installEventFilter(this);
         }

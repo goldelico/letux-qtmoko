@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 
+#include "qtmoko_editfocus_compat.h"
 #include "contextkeymanager_p.h"
 #include <qvalidator.h>
 #include <qlineedit.h>
@@ -167,7 +168,7 @@ void ContextKeyManager::updateLabelsForFocused()
 
     bool modal = true;
     if( !Qtopia::mousePreferred() )
-        modal = w->hasEditFocus();
+        modal = qtmokoHasEditFocus(w);
 
     int menuKey = QSoftMenuBar::menuKey();
     bool editMenu = false;
@@ -311,7 +312,7 @@ QAbstractSoftKeyLabelHelper *ContextKeyManager::findClassHelper(QWidget *w)
         };
         meta_w = meta_w->superClass();
     };
-    return false;
+    return 0;
 }
 
 QAbstractSoftKeyLabelHelper *ContextKeyManager::findHelper(QWidget *w)

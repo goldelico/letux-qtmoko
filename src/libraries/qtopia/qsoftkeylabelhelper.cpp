@@ -17,6 +17,7 @@
 **
 ****************************************************************************/
 
+#include "qtmoko_editfocus_compat.h"
 #include "qsoftkeylabelhelper.h"
 #include "qsoftkeylabelhelper_p.h"
 #include <QObject>
@@ -192,7 +193,7 @@ void QAbstractSoftKeyLabelHelper::setCurrentWidget(QWidget* newWidget)
     this->currentWidgetChangeNotification(m_widget, oldWidget);
 
     // Simulate missed signals if any:
-    if(m_widget->hasEditFocus()) {
+    if(qtmokoHasEditFocus(m_widget)) {
         enterEditFocus(m_widget);
     } else if(m_widget->hasFocus()) {
             focusIn(m_widget);
@@ -594,12 +595,12 @@ void QLineEditSoftKeyLabelHelper::updateAllLabels(QWidget* widget)
     }
 
     ContextKeyManager* keyManager = ContextKeyManager::instance();
-    if(lineedit->hasFocus() && !lineedit->hasEditFocus()){
+    if(lineedit->hasFocus() && !qtmokoHasEditFocus(lineedit)){
         keyManager->setStandard(lineedit, Qt::Key_Select,QSoftMenuBar::Edit);
         keyManager->setStandard(lineedit, Qt::Key_Back,QSoftMenuBar::Back);
     };
 
-    if(lineedit->hasEditFocus()) {
+    if(qtmokoHasEditFocus(lineedit)) {
         keyManager->setStandard(lineedit, Qt::Key_Select,QSoftMenuBar::EndEdit);
         if(lineedit->cursorPosition() || m_preeditTextFlag)
         {
@@ -742,12 +743,12 @@ void QDateTimeEditSoftKeyLabelHelper::updateAllLabels(QWidget *widget)
     if (QDateTimeEdit *dte = qobject_cast<QDateTimeEdit*>(widget)) {
         ContextKeyManager* keyManager = ContextKeyManager::instance();
         
-        if(dte->hasFocus() && !dte->hasEditFocus()){
+        if(dte->hasFocus() && !qtmokoHasEditFocus(dte)){
             keyManager->setStandard(dte, Qt::Key_Select, QSoftMenuBar::Edit);
             keyManager->setStandard(dte, Qt::Key_Back, QSoftMenuBar::Back);
         }
         
-        if (dte->hasEditFocus()) {
+        if (qtmokoHasEditFocus(dte)) {
             if (dte->currentSection() == QDateTimeEdit::NoSection) {
                 keyManager->setStandard(dte, Qt::Key_Select, QSoftMenuBar::Select);
                 keyManager->setStandard(dte, Qt::Key_Back, QSoftMenuBar::NoLabel);
