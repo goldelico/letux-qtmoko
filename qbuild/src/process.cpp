@@ -214,7 +214,8 @@ QByteArray ShellProcess::output() const
 */
 void ShellProcess::runCommand(int out_fd, int err_fd, const QString &command)
 {
-    char *shell = "/bin/sh";
+    char shell[] = "/bin/sh";
+    char option[] = "-c";
     char *argv[4];
     char *commandStr = 0;
 
@@ -226,7 +227,7 @@ void ShellProcess::runCommand(int out_fd, int err_fd, const QString &command)
     commandStr = new char[command.length() + 1];
     ::memcpy(commandStr, command.toAscii().constData(), command.length() + 1);
     argv[0] = shell;
-    argv[1] = "-c";
+    argv[1] = option;
     argv[2] = commandStr;
     argv[3] = 0;
 
