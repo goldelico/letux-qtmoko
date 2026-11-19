@@ -28,8 +28,10 @@
 #include <QCache>
 
 #include <QResource>
-#include <private/qresource_p.h>
 //#define ENABLE_RESOURCEFILEENGINE
+#ifdef ENABLE_RESOURCEFILEENGINE
+#include <private/qresource_p.h>
+#endif
 
 #include <QDebug>
 #include <QApplication>
