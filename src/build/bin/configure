@@ -1452,11 +1452,6 @@ set_optvar("version", +{
                     "QTOPIA_LICENSE=\"GPL v2\"\n".
                     "QTOPIA_MAINTAINER=\"QtMoko project (qtmoko.sourceforge.net)\"",
 });
-set_optvar("page_size", +{
-    "type" => "placeholder",
-    "config_pri" => [ "QTOPIA_PAGE_SIZE=%{page_size}",
-                      "QTOPIA_PAGE_MASK=%{page_mask}" ],
-});
 set_optvar("builder", +{
     "type" => "placeholder",
     "value" => (getlogin() || getpwuid($<) || "unknown").'@'.(hostname() || "unknown"),
@@ -2138,6 +2133,14 @@ for my $platform ( "platform", "xplatform" ) {
             symlink_file(opt($platform, "absolute"), "$SDKROOT/$_");
         } elsif ( s/^\Q$qt_depot_path\E(\/mkspecs)/\/qtopiacore\/$qt$1/ ) {
             # This mkspec came from Qt...
+        } elsif ( opt("system_qt") && $platform eq "platform" ) {
+            # An installed Qt has its own mkspec tree, outside our sources.
+            # Keep the absolute path for compiler tests and expose the spec
+            # through the SDK just as we do for device-specific mkspecs.
+            my $name = $_;
+            $name =~ s,.*/,,;
+            $_ = "/qtopiacore/host/mkspecs/$name";
+            symlink_file(opt($platform, "absolute"), "$SDKROOT/$_");
         } else {
             # Hmm... skip this one because we can't locate it in our sources
             warn "Can't locate $_ relative to the Qt Extended or Qt source trees";
@@ -2247,7 +2250,10 @@ while ( @combinations ) {
     my ( $cflags ) = ( (grep /^QMAKE_CFLAGS\s*\+?=/, @data)[0] =~ /=(.*)/ );
     my ( $cxxflags ) = ( (grep /^QMAKE_CXXFLAGS\s*\+?=/, @data)[0] =~ /=(.*)/ );
     my ( $lflags ) = ( (grep /^QMAKE_LFLAGS\s*\+?=/, @data)[0] =~ /=(.*)/ );
-    for ( $cxx, $cflags, $cxxflags, $lflags ) {
+    # qmake.conf may inherit flags from included specs. Missing explicit
+    # assignments mean that qmake uses its defaults, not an error.
+    for ( $cc, $cxx, $link, $cflags, $cxxflags, $lflags ) {
+        $_ = "" unless defined $_;
         chomp;
         s/^\s+//;
         s/\s+$//;
@@ -2535,7 +2541,9 @@ if ( opt("font") ) {
     my %fontref_handled;
     my @fonts;
     my @files;
-    push(@files, glob("$qt_depot_path/lib/fonts/*.qpf"),
+    push(@files, (opt_resolve("system_qt") ? glob("$HOST_QT_LIBS/fonts/*.qpf") : ()),
+                 (opt_resolve("system_qt") ? glob("$HOST_QT_LIBS/fonts/*.qpf2") : ()),
+                 glob("$qt_depot_path/lib/fonts/*.qpf"),
                  glob("$qt_depot_path/lib/fonts/*.qpf2"),
                  glob("$depotpath/dist/fonts/*.qpf"),
                  glob("$depotpath/dist/fonts/*.qpf2"));
@@ -2617,7 +2625,8 @@ if ( opt("font") ) {
     }
     # Now add the truetype font files
     @files = ();
-    push(@files, glob("$qt_depot_path/lib/fonts/*.ttf"),
+    push(@files, (opt_resolve("system_qt") ? glob("$HOST_QT_LIBS/fonts/*.ttf") : ()),
+                 glob("$qt_depot_path/lib/fonts/*.ttf"),
                  glob("$depotpath/dist/fonts/*.ttf"));
     for my $file ( @files ) {
         DEBUG and print "file $file\n";
@@ -3358,43 +3367,6 @@ if ( opt("error") ) {
     }
 }
 
-if ( opt("qtopia_ui") ) {
-    print "Checking for PAGE_SIZE and PAGE_MASK: ";
-    print "\n" if ( opt("verbose") );
-    my $out;
-    my $ret = configtest("page_size", "outvar", $out,
-                         "env", "XPLATFORM_ABSOLUTE=".opt("xplatform", "absolute")." ".
-                                (opt("qbuild")?"":("PLATFORM_ABSOLUTE=".opt("platform", "absolute")." ".
-                                 "MAKECMD=".opt("make")." ")).
-                                "QPEDIR=$QPEDIR QTOPIA_DEPOT_PATH=$depotpath ".
-                                "QMAKE=\"$TARGET_QMAKE\" VERBOSE=".opt("verbose"));
-    if ( $ret ) {
-        for ( split(/\n/, $out) ) {
-            if ( /page_size=(.*)$/ ) {
-                opt("page_size", "page_size") = $1;
-            }
-            if ( /page_mask=(.*)$/ ) {
-                opt("page_size", "page_mask") = $1;
-            }
-            if ( /kernel=(.*)$/ ) {
-                opt("page_size", "kernel") = 1;
-            }
-        }
-    }
-    if ( opt("page_size", "page_size") && opt("page_size", "page_mask") ) {
-        print "PRESENT";
-        if ( opt("page_size", "kernel") ) {
-            print " (KERNEL)";
-        }
-        print "\n";
-    } else {
-        print "MISSING\n";
-        print "WARNING: QSharedMemoryCache will not throw away unused pages\n";
-        my $dref = opt("extraDefines");
-        push(@$dref, "QTOPIA_NO_PAGE_SIZE_MASK");
-    }
-}
-
 if ( opt("readline") ) {
     print "Testing for GNU readline: ";
     print "\n" if ( opt("verbose") );
@@ -3593,8 +3565,8 @@ if ( opt("configure") ) {
     my @dirs;
     if ( !opt("system_qt") ) {
         push(@dirs, "/src/libraries/qt/configure");
+        push(@dirs, "/src/libraries/qtopiacore/configure");
     }
-    push(@dirs, "/src/libraries/qtopiacore/configure");
     for my $dir ( @dirs ) {
         print "Running configure (".basename(dirname($dir)).")...\n";
         my $command = "$TARGET_QMAKE -C $dir configure";
