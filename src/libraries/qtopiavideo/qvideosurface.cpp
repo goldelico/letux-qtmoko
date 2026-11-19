@@ -31,14 +31,15 @@
 
 #include "qtopiavideo.h"
 #include "qvideosurface.h"
-#include "private/qwindowsurface_qws_p.h"
-#include "qwsevent_qws.h"
-#include "qwsdisplay_qws.h"
+#include <QDirectPainter>
 #include "qabstractvideooutput.h"
 #include "qvideooutputloader.h"
 
 //#define VIDEO_SURFACE_GEOMETRY_DEBUG
 //#define VIDEO_SURFACE_PAINT_DEBUG
+
+// Shared mutex for video-surface state across instances.
+Q_GLOBAL_STATIC(QMutex, qt_video_surface_mutex);
 
 class QVideoSurfacePrivate
 {
@@ -54,7 +55,7 @@ public:
 
     QVideoSurface *q;
     QAbstractVideoOutput *videoOutput;
-    QWSDirectPainterSurface *surface;
+    QDirectPainter *surface;
     QScreen *screen;
     QPointer< QWSEmbedWidget > videoWidget;
 
@@ -74,96 +75,26 @@ public:
     QtopiaVideo::VideoScaleMode scaleMode;
     QtopiaVideo::VideoRotation rotation;
 
-    void processRegionEvent( QWSRegionEvent *e );
-    void processEmbedEvent( QWSEmbedEvent *e );
 
-    static QCoreApplication::EventFilter oldEventFilter;
-    static bool eventFilterInstalled;
-    static QMap<int,QVideoSurfacePrivate*> videoSurfaces;
 };
 
 
-QCoreApplication::EventFilter QVideoSurfacePrivate::oldEventFilter = 0;
-bool QVideoSurfacePrivate::eventFilterInstalled = false;
-QMap<int,QVideoSurfacePrivate*> QVideoSurfacePrivate::videoSurfaces;
-
-Q_GLOBAL_STATIC(QMutex, qt_video_surface_mutex);
-
-static bool qws_video_surface_event_filter(void *message, long *res )
+// QDirectPainter is a public Qt/Embedded API.  Its regionChanged() callback
+// replaces the private QWS event filter used by QWSDirectPainterSurface.
+class QtopiaVideoDirectPainter : public QDirectPainter
 {
-    QWSEvent* event = reinterpret_cast<QWSEvent *>(message);
+public:
+    explicit QtopiaVideoDirectPainter(QVideoSurface *owner)
+        : QDirectPainter(owner, QDirectPainter::ReservedSynchronous), q(owner) {}
 
-    if ( event->type == QWSEvent::Region || event->type == QWSEvent::Embed ) {
-        QVideoSurfacePrivate *vo = QVideoSurfacePrivate::videoSurfaces.value( event->window() );
-        if ( vo ) {
-            if ( event->type == QWSEvent::Region )
-                vo->processRegionEvent( static_cast<QWSRegionEvent*>(event) );
-
-            if ( event->type == QWSEvent::Embed )
-                vo->processEmbedEvent( static_cast<QWSEmbedEvent*>(event) );
-
-            return true;
-        }
+    virtual void regionChanged(const QRegion &)
+    {
+        QMetaObject::invokeMethod(q, "updateVideoOutputClipRegion",
+                                  Qt::QueuedConnection);
     }
-
-    if ( QVideoSurfacePrivate::oldEventFilter )
-        return QVideoSurfacePrivate::oldEventFilter( message, res );
-
-    return false;
-}
-
-void QVideoSurfacePrivate::processRegionEvent( QWSRegionEvent *e )
-{
-    QRegion r;
-    r.setRects( e->rectangles, e->simpleData.nrectangles );
-
-#ifdef VIDEO_SURFACE_GEOMETRY_DEBUG
-    qWarning() << "QVideoSurfacePrivate::processRegionEvent, is allocation event:" << (e->simpleData.type == QWSRegionEvent::Allocation) \
-               << "; region br:" << r.boundingRect();
-#endif
-
-    if ( r.isEmpty() )
-        disableUpdates = true;
-
-    if ( e->simpleData.type == QWSRegionEvent::Allocation ) {
-#ifdef VIDEO_SURFACE_GEOMETRY_DEBUG
-        qWarning() << "Set clip region to" << r.boundingRect();
-#endif
-
-        disableUpdates = true;
-        dirtyRegion += surface->region();
-        dirtyRegion -= r;
-
-        QRegion oldRegion = videoOutput->clipRegion();
-
-        if ( r != oldRegion ) {
-            QMutexLocker locker( mutex );
-            surface->setClipRegion( r );
-            videoOutput->setClipRegion( r );
-            QTimer::singleShot( 20, q, SLOT(updateVideoOutputClipRegion()) );
-        }
-
-        disableUpdates = r.isEmpty();
-
-        dirtyRegionUpdateTimer.stop();
-        if ( !dirtyRegion.isEmpty() ) {
-            dirtyRegionUpdateTimer.start(2000);
-        }
-    }
-}
-
-void QVideoSurfacePrivate::processEmbedEvent( QWSEmbedEvent *e )
-{
-#ifdef VIDEO_SURFACE_GEOMETRY_DEBUG
-    qWarning() << "QVideoSurfacePrivate::processEmbedEvent" << e->region.boundingRect() << "type | Region:" << (e->type|QWSEmbedEvent::Region);
-#endif
-    if ( e->type | QWSEmbedEvent::Region ) {
-        if ( e->region.isEmpty() )
-            disableUpdates = true;
-        q->setRegion( e->region );
-    }
-}
-
+private:
+    QVideoSurface *q;
+};
 
 QVideoSurface::QVideoSurface( QObject *parent, const QVideoFormatList& expectedFormats )
     :QObject(parent)
@@ -173,9 +104,7 @@ QVideoSurface::QVideoSurface( QObject *parent, const QVideoFormatList& expectedF
 
     d->expectedFormats = expectedFormats;
 
-    d->surface = new QWSDirectPainterSurface( true );
-    d->surface->setLocking(true);
-    QVideoSurfacePrivate::videoSurfaces[ winId() ] = d;
+    d->surface = new QtopiaVideoDirectPainter(this);
 
     d->screen = qt_screen;
     if ( !d->screen->subScreens().isEmpty() ) {
@@ -187,11 +116,6 @@ QVideoSurface::QVideoSurface( QObject *parent, const QVideoFormatList& expectedF
     d->supportedFormats = d->videoOutput->supportedFormats();
     d->scaleMode = d->videoOutput->scaleMode();
     d->rotation = d->videoOutput->rotation();
-
-    if ( !QVideoSurfacePrivate::eventFilterInstalled ) {
-        QVideoSurfacePrivate::oldEventFilter = qApp->setEventFilter( qws_video_surface_event_filter );
-        QVideoSurfacePrivate::eventFilterInstalled = true;
-    }
 
     moveToThread( qApp->thread() );
 
@@ -208,11 +132,10 @@ QVideoSurface::~QVideoSurface()
     delete d->videoOutput;
     d->videoOutput = 0;
     d->disableUpdates = true;
-    QVideoSurfacePrivate::videoSurfaces.remove( winId() );
     d->mutex->unlock();
 
     //force server to repaint the region
-    d->dirtyRegion |= d->surface->region();
+    d->dirtyRegion |= d->surface->allocatedRegion();
     updateDirtyRegion();
 
     d->surface->setRegion( QRegion() );
@@ -281,24 +204,15 @@ QVideoFormatList QVideoSurface::preferredFormats() const
 
 void QVideoSurface::renderFrame( const QVideoFrame& frame )
 {
-    if ( !d->disableUpdates ) {
-        bool isMainThread = ( QThread::currentThread() == qApp->thread() );
+    QMutexLocker locker(d->mutex);
+    if (d->disableUpdates || !d->videoOutput)
+        return;
 
-        if ( isMainThread ) {
-            d->surface->beginPaint( requestedRegion() );
-            if ( !d->disableUpdates )
-                d->videoOutput->renderFrame( frame );
-            d->surface->endPaint( requestedRegion() );
-        } else {
-            if ( !d->surface->hasPendingRegionEvents() ) {
-                QMutexLocker locker( d->mutex );
-                d->surface->lock();
-                if ( !d->disableUpdates && !d->surface->hasPendingRegionEvents() )
-                    d->videoOutput->renderFrame( frame );
-                d->surface->unlock();
-            }
-        }
-    }
+    // Public QDirectPainter handles display locking and QWS region changes.
+    d->surface->startPainting();
+    if (!d->disableUpdates)
+        d->videoOutput->renderFrame(frame);
+    d->surface->endPainting();
 }
 
 void QVideoSurface::setRotation( QtopiaVideo::VideoRotation rotation )
@@ -367,7 +281,8 @@ void QVideoSurface::setRegion( const QRegion& region )
 
     //d->videoOutput->setClipRegion( QRegion() );
     d->videoOutput->setRegion( region );
-    d->surface->setGeometry( region.boundingRect() );
+    d->surface->setRegion(region);
+    QTimer::singleShot(0, this, SLOT(updateVideoOutputClipRegion()));
 }
 
 
@@ -391,38 +306,23 @@ void QVideoSurface::reloadVideoOutput()
 
 void QVideoSurface::updateVideoOutputClipRegion()
 {
-    if ( !d->surface->hasPendingRegionEvents() ) {
-        QRegion r = d->videoOutput->clipRegion();
-        emit clipRegionChanged(r);
-        if ( !(r - d->prevClipRegion).isEmpty() )
-            emit updateRequested();
-        d->prevClipRegion = r;
-    } else
-        QTimer::singleShot( 100, this, SLOT(updateVideoOutputClipRegion()) );
+    QRegion r = d->surface->allocatedRegion();
+    QRegion oldRegion = d->videoOutput->clipRegion();
+    if (r != oldRegion) {
+        QMutexLocker locker(d->mutex);
+        d->videoOutput->setClipRegion(r);
+    }
+    d->disableUpdates = r.isEmpty();
+    emit clipRegionChanged(r);
+    if (!(r - d->prevClipRegion).isEmpty())
+        emit updateRequested();
+    d->prevClipRegion = r;
 }
 
 void QVideoSurface::updateDirtyRegion()
 {
-    // maybe video output was drawing on the space already belonging to other surface,
-    // let's ask the server to update space where we were
-    if ( !d->dirtyRegion.isEmpty() ) {
-#ifdef VIDEO_SURFACE_GEOMETRY_DEBUG
-        qWarning() << "update dirty region";
-        if ( d->dirtyRegion.numRects() < 2 )
-            qWarning() << d->dirtyRegion.boundingRect();
-        else
-            qWarning() << d->dirtyRegion;
-#endif
-        //this doesn't work for surfaces on top of video surface, for example after leaving fullscreeen mode
-        //QWSDisplay::instance()->repaintRegion( winId(), 0, true, d->dirtyRegion );
-        //d->dirtyRegion = QRegion();
-
-        QDirectPainter dp;
-        dp.setRegion( d->dirtyRegion );
-        d->dirtyRegion = QRegion();
-        //ensure the region is really on top
-        QWidget::qwsDisplay()->setAltitude( dp.winId(), 1 /* QWSChangeAltitudeCommand::StaysOnTop */, true );
-    }
+    // QDirectPainter releases its reserved region through the public QWS API.
+    d->dirtyRegion = QRegion();
 }
 
 /*!
@@ -435,7 +335,7 @@ void QVideoSurface::updateDirtyRegion()
 */
 void QVideoSurface::raise()
 {
-    QWidget::qwsDisplay()->setAltitude(winId(), 0 /* QWSChangeAltitudeCommand::Raise */ );
+    d->surface->raise();
 }
 
 /*!
@@ -448,7 +348,7 @@ void QVideoSurface::raise()
 */
 void QVideoSurface::lower()
 {
-    QWidget::qwsDisplay()->setAltitude(winId(), -1 /* QWSChangeAltitudeCommand::Lower */ );
+    d->surface->lower();
 }
 
 
