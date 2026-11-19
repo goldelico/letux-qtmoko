@@ -34,24 +34,15 @@
 #if defined(Q_WS_QWS)
 #include <QDirectPainter>
 #endif
-#include <private/qwindowsurface_qws_p.h>
-#include <private/qwidget_p.h>
 #include <QPaintEvent>
+#include <QWidget>
 #include "def_transform.h"
 #include <unistd.h>
 
-// XXX - needed until QRegion::isRect() is in build by default
-struct QRegionPrivate : public QRegion::QRegionData {
-    enum { Single, Vector } mode;
-};
-bool qt_region_is_rect(const QRegion &r)
+// Use the public QRegion API instead of inspecting its private layout.
+static bool qt_region_is_rect(const QRegion &r)
 {
-    if(r.d->qt_rgn == r.d) {
-        // QWS region
-        return reinterpret_cast<QRegionPrivate *>(r.d->qt_rgn)->mode == QRegionPrivate::Single;
-    } else {
-        return false;
-    }
+    return r.rectCount() == 1;
 }
 
 extern bool gfx_use_qt;
@@ -329,53 +320,11 @@ GfxPainter::GfxPainter(QWidget *wid, QPaintEvent *e)
   opacityFunc(0), opacityFuncData(0)
 {
     Gfx::init();
-#ifdef Q_WS_QWS
-    if(!gfx_use_qt) {
-        // XXX all this relies on the memory or shared memory window surface
-        // we should probably test for this
-        QWSWindowSurface *surface =
-            static_cast<QWSWindowSurface *>(wid->windowSurface());
-        QImage *windowImage =
-            static_cast<QImage *>(surface->paintDevice());
-        QPoint offset =
-            surface->painterOffset();
-
-        if(windowImage->format() == QImage::Format_RGB16) {
-            depth = Depth_16;
-        } else if(windowImage->format() == QImage::Format_ARGB32_Premultiplied ||
-                windowImage->format() == QImage::Format_ARGB32 ||
-                windowImage->format() == QImage::Format_RGB32) {
-            depth = Depth_32;
-        } else {
-            qWarning().nospace() << "GfxPainter: Unknown window image format (" << windowImage->format() << ").";
-            useQt = true;
-        }
-
-
-        if(!useQt) {
-            // Add child widget offset
-            if (!wid->isWindow())
-                offset += wid->mapTo(wid->window(), QPoint(0,0));
-
-            buffer = windowImage->bits() + offset.x() * depth +
-                     offset.y() * windowImage->bytesPerLine();
-            width = windowImage->width() - offset.x();
-            step = windowImage->width();
-            height = windowImage->height() - offset.y();
-
-            clipRegion = e->region();
-            if(!qt_region_is_rect(clipRegion))
-                clipRects = clipRegion.rects();
-        }
-    } else {
-#endif
-        useQt = true;
-#ifdef Q_WS_QWS
-    }
-#endif
-
-    if(useQt)
-        p = new QPainter(wid);
+    Q_UNUSED(e);
+    // The QWS window-surface fast path uses private Qt classes.  Use
+    // the public QWidget paint device instead.
+    useQt = true;
+    p = new QPainter(wid);
 }
 
 GfxPainter::~GfxPainter()
