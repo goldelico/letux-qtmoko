@@ -115,7 +115,7 @@ function qt_get_qtdir()
     if (!project.config("qt") || project.absName.match(/\{file\}\/$/) )
         return;
 
-    if ( !project.config("embedded") && project.config("system_qt") ) {
+    if ( project.config("system_qt") ) {
 ###
         # This matches the logic in src/libraries/qt/qbuild.pro
         QTDIR=$$[QT_PREFIX]
@@ -255,6 +255,10 @@ function qt_get_libs(qtdir,sdkdir)
     var suffix = ".so.4";
     if (project.config("enable_singleexec"))
         suffix = ".a";
+    // The installed Qt libraries are not built by QtMoko.
+    if (project.config("system_qt"))
+        return ret;
+
     ret.push(sdkdir+"/lib/libQtCore"+suffix);
     ret.push(sdkdir+"/lib/libQtGui"+suffix);
     ret.push(sdkdir+"/lib/libQtNetwork"+suffix);
