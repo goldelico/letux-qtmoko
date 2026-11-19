@@ -26,8 +26,7 @@
 #include <QObject>
 #include <QVector>
 #include <QDebug>
-#include <private/qlock_p.h>
-#include <private/qpixmapdata_p.h>
+#include "qtopiasharedmemorylock.h"
 #include <QStringList>
 #include <qglobal.h>
 
@@ -40,9 +39,6 @@
 # define TEST_SHM_AT_RANDOM_LOCATION
 #endif
 
-#ifndef QTOPIA_NO_PAGE_SIZE_MASK
-#define THROW_AWAY_UNUSED_PAGES
-#endif
 
 // Only define this if there really isn't going to be enough room for
 // a full cache, in which case it really means the cache is set too large
@@ -59,20 +55,32 @@
 #include <stdio.h>
 #include <signal.h>
 
-#ifdef THROW_AWAY_UNUSED_PAGES
-# include <sys/mman.h> // madvise
-# include <asm/page.h> // PAGE_SIZE,PAGE_MASK,PAGE_ALIGN
-# ifndef PAGE_SIZE
-# define PAGE_SIZE QTOPIA_TEST_PAGE_SIZE
-# endif
-# ifndef PAGE_MASK
-# define PAGE_MASK QTOPIA_TEST_PAGE_MASK
-# endif
-# ifndef PAGE_ALIGN
-# define PAGE_ALIGN(addr)       (((addr)+PAGE_SIZE-1)&PAGE_MASK)
-# endif // PAGE_ALIGN
-#endif // THROW_AWAY_UNUSED_PAGES
+#include <sys/mman.h>
+#include <unistd.h>
 
+// Only complete, unused pages may be discarded.  The page size is a
+// runtime property of the host OS, not a constant from kernel headers.
+static void discardUnusedPages(const void *begin, const void *end)
+{
+    static const long pageSize = sysconf(_SC_PAGESIZE);
+    if (pageSize <= 0)
+        return;
+
+    const quintptr size = static_cast<quintptr>(pageSize);
+    const quintptr first = reinterpret_cast<quintptr>(begin);
+    const quintptr last = reinterpret_cast<quintptr>(end);
+    // Round the start up and the end down, leaving boundary pages intact.
+    const quintptr alignedFirst = first + (size - first % size) % size;
+    const quintptr alignedLast = last - last % size;
+    if (alignedFirst < first || alignedLast <= alignedFirst)
+        return;
+
+    if (madvise(reinterpret_cast<void *>(alignedFirst),
+                alignedLast - alignedFirst, MADV_DONTNEED)) {
+        perror("madvise of shared memory");
+        qWarning("madvise error with marking shared memory pages as not needed");
+    }
+}
 
 char *qt_sharedMemoryData = 0;
 QSharedMemoryManager *qt_getSMManager();
@@ -206,7 +214,7 @@ public:
         CHECK_CONSISTENCY("Pre free item");
         CHECK_CACHE_CONSISTENCY();
         {
-            QLockHandle lh(qt_getSMManager()->lock(),QLock::Write);
+            QtopiaSharedMemoryLockHandle lh(qt_getSMManager()->lock(),QtopiaSharedMemoryLock::Write);
             if ( d->freeItemCount >= d->freeItemsSize )
                 if ( !cleanUp(false) )
                     // all the items have been referenced again, clear the list
@@ -248,7 +256,7 @@ bool QSharedMemoryCache::cleanUp(bool needLock)
     CHECK_CACHE_CONSISTENCY();
     bool ret = false;
     if ( needLock ) {
-        QLockHandle lh(qt_getSMManager()->lock(),QLock::Write);
+        QtopiaSharedMemoryLockHandle lh(qt_getSMManager()->lock(),QtopiaSharedMemoryLock::Write);
         ret = cleanUp_internal();
     } else {
         ret = cleanUp_internal();
@@ -441,7 +449,7 @@ QSharedMemoryManager::QSharedMemoryManager()
     QByteArray ipcFile = tmp.toLatin1();
     key_t key = ftok(ipcFile.data(), 0xEEDDCCC2);
 
-    l = new QLock(ipcFile.data(), 't', server);
+    l = new QtopiaSharedMemoryLock(ipcFile.data(), 't', server);
 
     if ( server ) {
         shmId = shmget(key, 0, 0);
@@ -483,16 +491,8 @@ QSharedMemoryManager::QSharedMemoryManager()
         shm->tail = QSMemNode(QSMemPtr((char*)&shm->first),QSMemPtr());
         shm->tail.setFree(false);
         shm->tail.setNextFree(QSMemPtr());
-#ifdef THROW_AWAY_UNUSED_PAGES
-        long freePageStart = PAGE_ALIGN((long)&shm->first + sizeof(QSMemNode));
-        long freePagesLength = PAGE_ALIGN((long)&shm->tail) - freePageStart;
-        if ( freePagesLength ) {
-            if ( madvise((void*)freePageStart, freePagesLength, MADV_DONTNEED) ) {
-                perror("madvise of shared memory");
-                qWarning("madvise error with marking shared memory pages as not needed");
-            }
-        }
-#endif // THROW_AWAY_UNUSED_PAGES
+        discardUnusedPages(reinterpret_cast<const char *>(&shm->first) + sizeof(QSMemNode),
+                           &shm->tail);
         cache->init();
     }
 
@@ -600,7 +600,7 @@ QSMemPtr QSharedMemoryManager::alloc(int size, bool needLock)
     CHECK_CONSISTENCY_A("Pre Alloc");
     QSMemPtr ret;
     if ( needLock ) {
-        QLockHandle lh(lock(),QLock::Write);
+        QtopiaSharedMemoryLockHandle lh(lock(),QtopiaSharedMemoryLock::Write);
         ret = internal_alloc(size);
     } else {
         ret = internal_alloc(size);
@@ -654,7 +654,7 @@ void QSharedMemoryManager::free(QSMemPtr ptr, bool needLock)
 {
     CHECK_CONSISTENCY_A("Pre Free");
     if ( needLock ) {
-        QLockHandle lh(lock(),QLock::Write);
+        QtopiaSharedMemoryLockHandle lh(lock(),QtopiaSharedMemoryLock::Write);
         internal_free(ptr);
     } else {
         internal_free(ptr);
@@ -716,16 +716,8 @@ void QSharedMemoryManager::internal_free(QSMemPtr ptr)
     // set the new free node to point to the next one
     node = newFreeNode->next();
 
-#ifdef THROW_AWAY_UNUSED_PAGES
-    long freePageStart = PAGE_ALIGN((long)newFreeNode+sizeof(QSMemNode));
-    long freePagesLength = PAGE_ALIGN((long)node) - freePageStart;
-    if ( freePagesLength ) {
-        if ( madvise((void*)freePageStart, freePagesLength, MADV_DONTNEED) ) {
-            perror("madvise of shared memory");
-            qWarning("madvise error with marking shared memory pages as not needed");
-        }
-    }
-#endif // THROW_AWAY_UNUSED_PAGES
+    discardUnusedPages(reinterpret_cast<const char *>(newFreeNode) + sizeof(QSMemNode),
+                       node);
 
     newFreeNode->setNextFree(QSMemPtr());
     while ( node ) {
@@ -826,7 +818,7 @@ QSMCacheItemPtr QSharedMemoryCache::newItem(const char *key, int size, int type)
                 }
                 d->items++;
                 memcpy((char*)item->key, key, strLen+1);
-                QLockHandle lh(qt_getSMManager()->lock(),QLock::Write);
+                QtopiaSharedMemoryLockHandle lh(qt_getSMManager()->lock(),QtopiaSharedMemoryLock::Write);
                 int hashIndex, hashInc;
                 hash(key, hashIndex, hashInc);
                 qLog(SharedMemCache) << "hash for"<< key << "is" <<hashIndex;
@@ -891,7 +883,7 @@ QSMCacheItemPtr QSharedMemoryCache::newItem(const char *key, int size, int type)
 // Optimization: "type" is currently ignored, but could be used to find the hash table to look in
 QSMCacheItemPtr QSharedMemoryCache::findItem(const char *keyStr, bool ref, int /*type*/)
 {
-    QLockHandle lh(qt_getSMManager()->lock(),QLock::Read);
+    QtopiaSharedMemoryLockHandle lh(qt_getSMManager()->lock(),QtopiaSharedMemoryLock::Read);
 
     CHECK_CACHE_CONSISTENCY();
 
@@ -1009,8 +1001,7 @@ bool QSharedMemoryManager::insertPixmap(const QString& k, const QPixmap &pm)
 {
 
     if (isGlobalPixmap(k)) {
-        QPixmapData *data = const_cast<QPixmap&>(pm).pixmapData();
-        const QImage &img = data->toImage();
+        const QImage img = pm.toImage();
 
         int size = img.numBytes() + sizeof(PixmapShmItem);
         if (img.depth() <= 8)
@@ -1048,7 +1039,7 @@ bool QSharedMemoryManager::insertPixmap(const QString& k, const QPixmap &pm)
                 newimage.setColorTable(clut);
             }
             localSerialMap.insert(newimage.serialNumber(), (char*)item);
-            data->fromImage(newimage,0);
+            const_cast<QPixmap &>(pm) = QPixmap::fromImage(newimage);
 
             return true;
         }

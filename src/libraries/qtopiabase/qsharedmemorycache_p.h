@@ -143,7 +143,7 @@ private:
 
 class QSharedMemoryCache;
 class QSharedMemoryData;
-class QLock;
+class QtopiaSharedMemoryLock;
 
 class QSharedMemoryManager {
 public:
@@ -165,7 +165,7 @@ public:
     // deref this will get called, normally just use item->deref().
     static void freeItem(QSMCacheItem *item);
 
-    QLock *lock() { return l; }
+    QtopiaSharedMemoryLock *lock() { return l; }
     QSharedMemoryCache *pixmapCache() { return cache; }
     QSharedMemoryData *data() { return shm; }
 
@@ -184,7 +184,7 @@ private:
     bool isGlobalPixmap(const QString &) const { return true; }
 
     int shmId;
-    QLock *l;
+    QtopiaSharedMemoryLock *l;
     QSharedMemoryCache *cache;
     QSharedMemoryData *shm;
 
