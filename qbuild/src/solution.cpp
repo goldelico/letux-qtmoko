@@ -1099,7 +1099,7 @@ SolutionFiles Solution::files(const QString &_name,
 
     if (name.startsWith("!")) {
         name = name.mid(1);
-        type = (Type)(type & ~_Project | Absolute);
+        type = (Type)((type & ~_Project) | Absolute);
     }
 
     bool isRelative = QFastDir::isRelativePath(name);
@@ -1309,7 +1309,7 @@ SolutionFiles Solution::_paths(const QString &_name,
 
     if (name.startsWith("!")) {
         name = name.mid(1);
-        type = (Type)(type & ~_Project | Absolute);
+        type = (Type)((type & ~_Project) | Absolute);
     }
 
     bool isRelative = QFastDir::isRelativePath(name);
@@ -1442,7 +1442,7 @@ QStringList Solution::paths(const QString &_name,
 
     if (name.startsWith("!")) {
         name = name.mid(1);
-        type = (Type)(type & ~_Project | Absolute);
+        type = (Type)((type & ~_Project) | Absolute);
     }
 
     bool isRelative = QFastDir::isRelativePath(name);
@@ -1567,7 +1567,7 @@ QStringList Solution::filesystemPaths(const QString &_name,
     QString name = _name;
     if (name.startsWith("!")) {
         name = name.mid(1);
-        type = (Type)(type & ~_Project | Absolute);
+        type = (Type)((type & ~_Project) | Absolute);
     }
 
     QStringList absPaths;
