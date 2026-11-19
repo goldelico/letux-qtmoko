@@ -170,8 +170,8 @@ public:
     GfxValue *listPosition();
     GfxValue *alpha();
 
-    static const qreal MinAlpha = 0.0f;
-    static const qreal MaxAlpha = 0.9f;
+    static const qreal MinAlpha;
+    static const qreal MaxAlpha;
 
 private:
     void checkCache();
@@ -191,6 +191,9 @@ public:
 private:
     QRect m_snapRect;
 };
+
+const qreal Scrollbar::MinAlpha = 0.0f;
+const qreal Scrollbar::MaxAlpha = 0.9f;
 
 Scrollbar::Scrollbar(int height)
 : m_height(height), m_cacheValid(false)
