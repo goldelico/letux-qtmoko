@@ -426,13 +426,15 @@ QMakeObject *QMakeObject::property(const QString &property) const
         } else {
             QHash<QString, QMakeObject *>::ConstIterator iter =
                 m_properties.find(property);
-            if (iter == m_properties.end())
+            if (iter == m_properties.end()) {
                 if (!readOnly()) {
                     QMakeObject *o = new QMakeObject(this, property);
                     iter = m_properties.insert(property, o);
                     m_orderedProperties.append(o);
-                } else
+                } else {
                     return 0;
+                }
+            }
 
             return *iter;
         }

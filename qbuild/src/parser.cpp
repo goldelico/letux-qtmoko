@@ -738,8 +738,6 @@ Block *QMakeParser::parseUsing()
 {
     START_PARSE;
     SKIP_SPACE;
-
-    PreprocessorToken itoken = ptoken();
     QByteArray name;
     if (!parseName(name))
         FAIL_PARSE_VAL(0);
