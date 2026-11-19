@@ -17,33 +17,8 @@
 **
 ****************************************************************************/
 
-#include "qprintdialogcreator_p.h"
-#include "ui_printdialogbase.h"
-
-#include <QDebug>
-
-/*!
-    \internal
-    Creates a print dialog.
-*/
-static void createPrintDialog(QPrintDialog *parent)
-{
-    Ui::PrintDialogBase *dialogBase = new Ui::PrintDialogBase();
-    dialogBase->setupUi(parent);
-}
-
-typedef void (*QPrintDialogCreator)(QPrintDialog *parent);
-extern QPrintDialogCreator _qt_print_dialog_creator;
-/*!
-    \internal
-    _qt_print_dialog_creator is defined in QPrintDialog
-    and called when a QPrintDialog is contructed to ensure
-    that graphic representation of QPrintDialog fits to handheld devices.
-*/
-static int installCreatePrintDialog()
-{
-    _qt_print_dialog_creator = &createPrintDialog;
-    return 0;
-}
-
-Q_CONSTRUCTOR_FUNCTION(installCreatePrintDialog)
+// The original Qt Extended build installed its mobile print dialog via
+// _qt_print_dialog_creator, a private hook in the bundled QtGui library.
+// Stock Qt 4.8 does not export that hook.  Keep the normal Qt print dialog
+// rather than referencing a non-existent private symbol at link time.
+// The custom mobile dialog can be reintroduced through a public API later.
