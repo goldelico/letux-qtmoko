@@ -9,6 +9,9 @@ target_post [
     prerequisiteActions=sdk
 ]
 
+# An external Qt installation is already built and installed.  Do not run
+# the bundled Qt configure, build, install or clean rules in this mode.
+!system_qt {
 configure [
     TYPE=RULE
     tests=\
@@ -85,6 +88,21 @@ clean [
         "#(e)$$QT_PATCH_ENV $$MAKE -C $$QTDIR/src clean"
 ]
 
+} else {
+    # Other projects depend on /src/libraries/qtopiacore/qt (for example
+    # moc_args_test).  Keep the action, but do not rebuild external Qt.
+    qt [
+        TYPE=RULE
+    ]
+
+    # Keep target_post's SDK prerequisite satisfied without touching Qt.
+    sdk [
+        TYPE=RULE
+        outputFiles=sdkdone
+        commands="#(e):> $$[OUTPUT.0]"
+    ]
+}
+
 STRING_LANGUAGE=en_US
 AVAILABLE_LANGUAGES=$$QTOPIA_AVAILABLE_LANGUAGES
 LANGUAGES=$$QTOPIA_LANGUAGES
@@ -114,7 +132,7 @@ function getAllTranslatables(iter)
 getAllTranslatables(new PathIterator(project.property("QT_DEPOT").strValue()+"/src"));
 </script>
 
-!enable_singleexec {
+!system_qt:!enable_singleexec {
     libs [
         files=$$QTLIBS
         path=/lib
