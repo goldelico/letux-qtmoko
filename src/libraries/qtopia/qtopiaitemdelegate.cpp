@@ -36,7 +36,6 @@
 #include <qpixmapcache.h>
 #include <qmetaobject.h>
 #include <qtextlayout.h>
-#include <private/qtextengine_p.h>
 #include <qdebug.h>
 #include <qlocale.h>
 
@@ -91,11 +90,11 @@ QRect QtopiaItemDelegatePrivate::textLayoutBounds(const QStyleOptionViewItemV2 &
     switch (option.decorationPosition) {
     case QStyleOptionViewItem::Left:
     case QStyleOptionViewItem::Right:
-        rect.setWidth(wrapText && rect.isValid() ? rect.width() : (QFIXED_MAX));
+        rect.setWidth(wrapText && rect.isValid() ? rect.width() : (INT_MAX / 64));
         break;
     case QStyleOptionViewItem::Top:
     case QStyleOptionViewItem::Bottom:
-        rect.setWidth(wrapText ? option.decorationSize.width() : (QFIXED_MAX));
+        rect.setWidth(wrapText ? option.decorationSize.width() : (INT_MAX / 64));
         break;
     }
 
@@ -863,7 +862,7 @@ void QtopiaItemDelegate::doLayout(const QStyleOptionViewItem &option,
 // hacky but faster version of "QString::sprintf("%d-%d", i, enabled)"
 static QString qPixmapSerial(quint64 i, bool enabled)
 {
-    ushort arr[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '-', '0' + enabled };
+    ushort arr[] = { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, '-', ushort('0' + enabled) };
     ushort *ptr = &arr[16];
 
     while (i > 0) {
