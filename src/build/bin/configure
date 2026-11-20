@@ -4115,7 +4115,8 @@ sub getQtVersion
     if ( $qtVersionStr eq "0.0.0" ) {
         # A separately installed Qt has no source tree in qtopiacore/qt.
         # This runs before the -system-qt option has been resolved.
-        my $version = `qmake -query QT_VERSION 2>/dev/null`;
+        my $qmake = $ENV{"QTMOKO_QMAKE"} || "qmake";
+        my $version = `$qmake -query QT_VERSION 2>/dev/null`;
         chomp $version;
         if ( $version =~ /^(\d+)\.(\d+)\.(\d+)(.*)$/ ) {
             $qtVersionStr = "$1.$2.$3";
@@ -4123,7 +4124,7 @@ sub getQtVersion
         } else {
             die "ERROR: Could not read Qt version from ".
                 fixpath("$qt_depot_path/src/corelib/global/qglobal.h").
-                " or qmake -query QT_VERSION\n";
+                " or $qmake -query QT_VERSION\n";
         }
     }
 
