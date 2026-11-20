@@ -4337,6 +4337,13 @@ sub get_host_qt
 {
     my ( $make, $verbose ) = @_;
     my @locations;
+    # Prefer the explicitly selected Qt installation over qmake from PATH.
+    # Keep the PATH search for builds without an explicit selection.
+    if ( defined($ENV{QTMOKO_QMAKE}) && -x $ENV{QTMOKO_QMAKE} ) {
+        my $qmake = $ENV{QTMOKO_QMAKE};
+        $qmake =~ s!/qmake$!!;
+        push(@locations, $qmake);
+    }
     if ( defined($ENV{PATH}) ) {
         push(@locations, split(/:/, $ENV{PATH}));
     }
