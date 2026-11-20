@@ -98,6 +98,7 @@ endif
 # Retrieve Qt version from the selected Qt installation
 ifneq (,$(QTMOKO_SYSTEM_QT))
 QT_QMAKE ?= /opt/qt-embedded/bin/qmake
+export QTMOKO_QMAKE := $(QT_QMAKE)
 QT_VERSION := $(shell $(QT_QMAKE) -query QT_VERSION)
 else
 QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
