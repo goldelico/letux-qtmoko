@@ -95,8 +95,13 @@ QMAKE_LDFLAGS += -Wl,-rpath-link,$(CURDIR)/pulseaudio-cross/usr/lib/$(DEB_HOST_M
 endif
 endif
 
-# Retrieve Qt version from sources
+# Retrieve Qt version from the selected Qt installation
+ifneq (,$(QTMOKO_SYSTEM_QT))
+QT_QMAKE ?= /opt/qt-embedded/bin/qmake
+QT_VERSION := $(shell $(QT_QMAKE) -query QT_VERSION)
+else
 QT_VERSION := $(shell grep '^\# *define *QT_VERSION_STR' "qtopiacore/qt/src/corelib/global/qglobal.h" | awk '{print $$3}')
+endif
 
 # Tell quilt where to look for specific patches
 export QUILT_PATCHES=debian/patches
