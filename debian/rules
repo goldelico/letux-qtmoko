@@ -41,7 +41,11 @@ CROSS_CPPFLAGS+=-marm
 endif
 
 # Add dpkg-buildflags settings
-QMAKE_CFLAGS=-pipe $(shell CC=$(CC) dpkg-buildflags --get CFLAGS) $(CROSS_CPPFLAGS)
+# dpkg-buildflags remaps the source tree, but QBuild also compiles generated
+# sources in the separate per-device build tree. Keep its absolute path out
+# of DWARF without requiring -ffile-prefix-map (unavailable with GCC 4.9).
+QMAKE_CFLAGS=-pipe $(shell CC=$(CC) dpkg-buildflags --get CFLAGS) \
+	-fdebug-prefix-map=$(abspath ../build-$(DEVICE))=/usr/src/qtmoko-build-$(DEVICE) $(CROSS_CPPFLAGS)
 QMAKE_LDFLAGS=$(shell CC=$(CC) dpkg-buildflags --get LDFLAGS) $(CROSS_LDFLAGS)
 
 # Configure flags
