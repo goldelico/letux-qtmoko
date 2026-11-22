@@ -33,7 +33,7 @@
 
 #include <QObject>
 
-#include <private/qringbuffer_p.h>
+#include "../qtopiaringbuffer_p.h"
 #include <qbluetoothabstractsocket.h>
 
 class QSocketNotifier;
@@ -74,8 +74,8 @@ public:
     QSocketNotifier *m_writeNotifier;
     QTimer *m_timer;
 
-    QRingBuffer m_writeBuffer;
-    QRingBuffer m_readBuffer;
+    QtopiaRingBuffer m_writeBuffer;
+    QtopiaRingBuffer m_readBuffer;
 
     bool m_readSocketNotifierCalled;
     bool m_readSocketNotifierState;

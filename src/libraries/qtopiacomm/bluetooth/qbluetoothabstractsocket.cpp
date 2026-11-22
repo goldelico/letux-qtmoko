@@ -17,7 +17,6 @@
 **
 ****************************************************************************/
 
-#include <private/qringbuffer_p.h>
 #include <QSocketNotifier>
 #include <QTimer>
 #include <QTime>
