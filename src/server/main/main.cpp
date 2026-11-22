@@ -407,7 +407,7 @@ int initApplication( int argc, char ** argv )
 
     const QByteArray warmBootFile = "/tmp/warm-boot";
     if ( !QFile::exists( warmBootFile ) &&
-         QValueSpaceItem("/Hardware/Accessories/QPowerSource/DefaultBattery/Charging", false).value().toBool() ) {
+         QValueSpaceItem("/Hardware/Accessories/QPowerSource/DefaultBattery/Charging").value().toBool() ) {
 
         QBootSourceAccessory bsa;
         if (bsa.bootSource() == QBootSourceAccessory::Charger) {

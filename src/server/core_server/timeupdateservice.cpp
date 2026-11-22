@@ -267,7 +267,7 @@ void TimeUpdateService::updateFromExternalSources(bool autotz, bool autotm, bool
     bool tzchanged = autotz && externalTimeZone != QTimeZone::current().id();
     bool tchanged = autotm;
 
-    if (!tzchanged && !tchanged || externalTimeZone.isEmpty())
+    if ((!tzchanged && !tchanged) || externalTimeZone.isEmpty())
         return;
 
     QTimeZone zone(externalTimeZone.toLatin1());
@@ -277,10 +277,12 @@ void TimeUpdateService::updateFromExternalSources(bool autotz, bool autotm, bool
     connect(updater,SIGNAL(changeSystemTime(uint,QString)),
                this,SLOT(changeSystemTime(uint,QString)));
 
-    if ( ask_time && abs(externalTime-externalTimeTimeStamp) < maxtimejitter )
+    if (ask_time && (externalTime >= externalTimeTimeStamp
+            ? externalTime - externalTimeTimeStamp
+            : externalTimeTimeStamp - externalTime) < maxtimejitter)
         ask_time = false;
 
-    if ( ask_tz && tzchanged || ask_time && tchanged )
+    if ((ask_tz && tzchanged) || (ask_time && tchanged))
         updater->ask();
     else
         updater->commitUpdate();
