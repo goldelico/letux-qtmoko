@@ -1454,7 +1454,7 @@ set_optvar("version", +{
 });
 set_optvar("builder", +{
     "type" => "placeholder",
-    "value" => (getlogin() || getpwuid($<) || "unknown").'@'.(hostname() || "unknown"),
+    "value" => $ENV{"QTMOKO_BUILDER"} || (getlogin() || getpwuid($<) || "unknown").'@'.(hostname() || "unknown"),
     "config_pri" => "BUILDER=%",
 });
 set_optvar("libqtopiaphone", +{
