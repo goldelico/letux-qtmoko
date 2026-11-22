@@ -162,10 +162,14 @@ configure_%: configure_main
 	mkdir -p ../build-$(DEVICE)
 	cd ../build-$(DEVICE) && "$(CURDIR)/configure" -device $(DEVICE) $(CONFIGURE_FLAGS)
 
+# QBuild uses all CPUs unless -j is specified; Debian parallel=N is not automatic.
+QBUILD_JOBS := $(patsubst parallel=%,%,$(filter parallel=%,$(DEB_BUILD_OPTIONS)))
+QBUILD_JOBS := $(if $(QBUILD_JOBS),$(QBUILD_JOBS),1)
+
 override_dh_auto_build: $(foreach device,$(QTMOKO_DEVICES),build_$(device))
 build_%: DEVICE=$(patsubst build_%,%,$@)
 build_%:
-	$(MAKE) -C ../build-$(DEVICE)
+	cd ../build-$(DEVICE) && ./sdk/bin/qbuild -j $(QBUILD_JOBS) default
 
 
 override_dh_auto_clean: $(foreach device,$(QTMOKO_DEVICES),clean_$(device))

@@ -1,3 +1,9 @@
+qtmoko (60-2) unstable; urgency=low
+
+  * Development towards the next release.
+
+ -- Nikolaus Schaller <hns@goldelico.com>  Sun, 22 Nov 2026 09:09:00 +0100
+
 qtmoko (60-1) unstable; urgency=low
 
   * fixed to build natively on Wheezy 7.11 and Jessie 8.10
