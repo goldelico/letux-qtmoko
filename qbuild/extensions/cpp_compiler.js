@@ -486,21 +486,21 @@ function cpp_compiler_object_args(objdir)
 {
 ###
     QBUILD_CXX_IMP = "#(eh)echo $$MKSPEC.CXX $$[INPUT.0]" \
-                     "#(Et)$$MKSPEC.CXX -MMD -MF $$[OUTPUT.1] -c $${COMPILER.CXXFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                     "#(Et)$$MKSPEC.CXX -MMD -MF $$[OUTPUT.1] -c $${COMPILER.CXXFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
     QBUILD_CC_IMP = "#(eh)echo $$MKSPEC.CC $$[INPUT.0]" \
-                    "#(Et)$$MKSPEC.CC -MMD -MF $$[OUTPUT.1] -c $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                    "#(Et)$$MKSPEC.CC -MMD -MF $$[OUTPUT.1] -c $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
 
     QBUILD_CC_PP_IMP = "#(eh)echo $$MKSPEC.CC -E $$[OUTPUT.0.ABS]" \
-                    "#(Et)$$MKSPEC.CC -E $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                    "#(Et)$$MKSPEC.CC -E $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
     QBUILD_CXX_PP_IMP = "#(eh)echo $$MKSPEC.CXX -E $$[OUTPUT.0.ABS]" \
-                    "#(Et)$$MKSPEC.CXX -E $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                    "#(Et)$$MKSPEC.CXX -E $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
 
     QBUILD_CC_ASM_IMP = "#(eh)echo $$MKSPEC.CC -S $$[OUTPUT.0.ABS]" \
-                    "#(Et)$$MKSPEC.CC -S $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                    "#(Et)$$MKSPEC.CC -S $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
     QBUILD_CXX_ASM_IMP = "#(eh)echo $$MKSPEC.CXX -S $$[OUTPUT.0.ABS]" \
-                    "#(Et)$$MKSPEC.CXX -S $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] $$[INPUT.0]"
+                    "#(Et)$$MKSPEC.CXX -S $${COMPILER.CFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH} -o $$[OUTPUT.0] `realpath --relative-to=. $$[INPUT.0]`"
 
-    QBUILD_CPP_ARGS_TEST = "$$MKSPEC.CXX $${COMPILER.CXXFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH};" \
+    QBUILD_CPP_ARGS_TEST = "relative-source-path-v1; $$MKSPEC.CXX $${COMPILER.CXXFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH};" \
                            "$$MKSPEC.CC $${COMPILER.CCFLAGS} $${COMPILER.DEFINES} $${COMPILER.INCLUDEPATH}"
 ###
 
