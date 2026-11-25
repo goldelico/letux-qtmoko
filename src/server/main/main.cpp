@@ -471,7 +471,7 @@ int initApplication( int argc, char ** argv )
 static void check_prefix()
 {
     // Construct a string with the path to the binary that we'll expect to see at runtime
-    QString prefix_bin = QDir(QString("%1/bin/%2").arg(QLibraryInfo::location(QLibraryInfo::PrefixPath)).arg(QTOPIA_TARGET)).absolutePath();
+    QString prefix_bin = QDir(QString("%1/bin/%2").arg(Qtopia::qtopiaDir()).arg(QTOPIA_TARGET)).absolutePath();
     QString prefix_check = QDir(prefix_bin).canonicalPath(); // handle symlinks
     // Get the path to the currently running binary
     QString proc_check = QDir(QString("/proc/%1/exe").arg(getpid())).canonicalPath();

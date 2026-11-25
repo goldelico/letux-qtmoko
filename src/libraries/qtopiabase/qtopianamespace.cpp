@@ -129,7 +129,9 @@ QtopiaPathHelper *QtopiaPathHelper::instance()
         }
 
         // The installation directory is always searched before QTOPIA_PATH
-        ph.prefixPath = QLibraryInfo::location(QLibraryInfo::PrefixPath);
+        const char *qpeDir = getenv("QPEDIR");
+        ph.prefixPath = (qpeDir && *qpeDir) ? QString::fromLocal8Bit(qpeDir)
+                                             : QLibraryInfo::location(QLibraryInfo::PrefixPath);
         if ( ph.prefixPath[ph.prefixPath.length()-1] != sl )
             ph.prefixPath += sl;
         ph.installPaths.prepend(ph.prefixPath);
