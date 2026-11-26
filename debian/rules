@@ -66,7 +66,7 @@ CONFIGURE_FLAGS += -extra-qt-embedded-config="-system-sqlite -system-libtiff -sy
 # The configure step defaults to '-build-qt'. If QTMOKO_SYSTEM_QT isn't
 # empty, we use 'system-qt' instead. 
 ifneq (,$(QTMOKO_SYSTEM_QT))
-SYSTEM_QT_BUILD_DEPS := , libqt4-dev, libqt4-sql-sqlite
+SYSTEM_QT_BUILD_DEPS := , letux-qt4-embedded-dev
 CONFIGURE_FLAGS += -system-qt
 else
 # Shorten native Qt build
@@ -101,7 +101,7 @@ endif
 
 # Retrieve Qt version from the selected Qt installation
 ifneq (,$(QTMOKO_SYSTEM_QT))
-QT_QMAKE ?= /opt/qt-embedded/bin/qmake
+QT_QMAKE ?= /opt/letux-qt4-embedded/bin/qmake
 export QTMOKO_QMAKE := $(QT_QMAKE)
 QT_VERSION := $(shell $(QT_QMAKE) -query QT_VERSION)
 else
