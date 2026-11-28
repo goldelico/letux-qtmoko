@@ -1199,7 +1199,7 @@ void ProfileSelect::setPlaneMode(bool p)
 
 void ProfileSelect::updateIcons()
 {
-    if (itemlist->currentItem() < 0)
+    if (!itemlist->currentItem())
         return;
 
     QPhoneProfile p = ((PhoneProfileItem *)itemlist->item(itemlist->currentRow()))->profile();
