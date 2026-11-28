@@ -34,6 +34,7 @@
 
 #include <string.h>
 #include <stdio.h>
+#include <unistd.h>
 
 #include "obex_main.h"
 #ifdef HAVE_IRDA
