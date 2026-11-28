@@ -532,7 +532,7 @@ void QMediaList::refreshData()
         if(d->filterState & QMediaList::MimeType) {
             bool check = false;
             foreach( const QString &mimeType, d->mimeTypes ) {
-                if(d->mediaPlaylist.content(d->mediaPlaylist.index(i,0)).type().contains(mimeType) > 0) {
+                if(d->mediaPlaylist.content(d->mediaPlaylist.index(i,0)).type().contains(mimeType)) {
                     check = true;
                 }
             }
@@ -574,7 +574,7 @@ void QMediaList::refreshData()
                         d->mediaPlaylist.data(d->mediaPlaylist.index(i,0),d->displayRole).toString().length()) {
                     if((d->count != 0) && !check) {
                         if(d->mediaPlaylist.data(d->map[k],d->displayRole).toString().contains(
-                                    d->mediaPlaylist.data(d->mediaPlaylist.index(i,0),d->displayRole).toString()) > 0) {
+                                    d->mediaPlaylist.data(d->mediaPlaylist.index(i,0),d->displayRole).toString())) {
                             check = true;
                         }
                     } else
