@@ -32,13 +32,8 @@ class QTOPIAIL_EXPORT IValueSpaceLayer : public QObject
 {
 Q_OBJECT
 public:
-#ifdef QT_ARCH_X86_64
-    typedef unsigned long HANDLE;
-    static const HANDLE InvalidHandle = 0xFFFFFFFFFFFFFFFF;
-#else
-    typedef unsigned int HANDLE;
-    static const HANDLE InvalidHandle = 0xFFFFFFFF;
-#endif
+    typedef quintptr HANDLE;
+    static const HANDLE InvalidHandle = ~HANDLE(0);
 
     /* Returns the layer name */
     virtual QString name() = 0;
@@ -87,7 +82,7 @@ public:
     virtual void remHandle(HANDLE) = 0;
 
 signals:
-    void handleChanged(unsigned int);
+    void handleChanged(quintptr);
 };
 
 // syncqtopia header QValueSpace

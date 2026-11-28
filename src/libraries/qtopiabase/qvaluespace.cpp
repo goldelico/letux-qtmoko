@@ -219,7 +219,7 @@
  */
 
 /*!
-  \fn void IValueSpaceLayer::handleChanged(unsigned int handle)
+  \fn void IValueSpaceLayer::handleChanged(quintptr handle)
 
   Emitted whenever the \a handle's value, or any sub value, changes.
   */
@@ -461,7 +461,7 @@ signals:
     void changed();
 
 public slots:
-    void handleChanged(unsigned int handle)
+    void handleChanged(quintptr handle)
     {
         for(int ii = 0; ii < readers.count(); ++ii)
             if(readers.at(ii).second == handle) {
@@ -538,7 +538,7 @@ struct QValueSpaceItemPrivateData : public QValueSpaceItemPrivate
                              space, SIGNAL(contentsChanged()));
             for(int ii = 0; ii < readers.count(); ++ii) {
                 readers.at(ii).first->setProperty(readers.at(ii).second, IValueSpaceLayer::Publish);
-                QObject::connect(readers.at(ii).first, SIGNAL(handleChanged(uint)), connections, SLOT(handleChanged(uint)));
+                QObject::connect(readers.at(ii).first, SIGNAL(handleChanged(quintptr)), connections, SLOT(handleChanged(quintptr)));
             }
         } else if(!connections->connections.contains(space)) {
             connections->connections[space] = 1;
