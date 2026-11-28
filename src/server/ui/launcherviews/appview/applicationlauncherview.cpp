@@ -113,7 +113,7 @@ void ApplicationLauncherView::properties()
         QStringList apps = cfg.value("PreloadApps").toStringList();
         QString exe = doc.executableName();
 
-        if ( (apps.contains(exe) > 0) != prop->isChecked() ) {
+        if ( bool(apps.contains(exe)) != prop->isChecked() ) {
             if ( prop->isChecked() ) {
                 apps.append(exe);
                 QtopiaIpcEnvelope e("QPE/Application/"+exe,
