@@ -133,7 +133,11 @@ void QGpsdWhereabouts::timerEvent(QTimerEvent *event)
     }
 #endif    
 
+#if GPSD_API_MAJOR_VERSION >= 7
+    if(gps_read(gps_data, 0, 0) == -1) {
+#else
     if(gps_read(gps_data) == -1) {
+#endif
         errorprintf("timerEvent: read error");
     }
     else {
@@ -178,7 +182,12 @@ void QGpsdWhereabouts::parseFix(struct gps_data_t *fix)
 
     /* update time */
     if(fix->set & TIME_SET) {
+#if GPSD_API_MAJOR_VERSION >= 9
+        QDateTime dt = QDateTime::fromMSecsSinceEpoch(
+            qint64(fix->fix.time.tv_sec) * 1000 + fix->fix.time.tv_nsec / 1000000);
+#else
         QDateTime dt = QDateTime::fromTime_t(fix->fix.time);
+#endif
         dt = dt.toUTC();
         update.setUpdateDateTime(dt);
 	debugprintf("TIME_SET: time %s", dt.toString().toUtf8().constData());
