@@ -523,6 +523,8 @@ set_optvar("arch", +{
     "arg" => "architecture",
     "default_tested" => 1,
     "available" => sub {
+        # With external Qt, the target architecture is supplied by the caller.
+        return (opt("arch")) if opt_resolve("system_qt") && defined(opt("arch"));
         my @avail;
         for ( glob("$qt_depot_path/src/corelib/arch/*") ) {
             if ( -d $_ ) {
