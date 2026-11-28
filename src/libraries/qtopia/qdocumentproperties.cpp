@@ -274,7 +274,7 @@ void QDocumentPropertiesWidget::applyChanges()
         cfg.beginGroup("AppLoading");
         QStringList apps = cfg.value("PreloadApps").toStringList();
         QString exe = lnk.executableName();
-        if ( (apps.contains(exe) > 0) != d->fastLoad->isChecked() ) {
+        if ( (apps.contains(exe) != 0) != d->fastLoad->isChecked() ) {
             if ( d->fastLoad->isChecked() ) {
                 apps.append(exe);
                 QtopiaIpcEnvelope e("QPE/Application/"+exe,
