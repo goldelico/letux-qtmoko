@@ -61,6 +61,12 @@ ShellProcess::ShellProcess(const QString &command,
                            bool echoCommandBeforeOutput)
 : m_exitCode(-1)
 {
+    // Prepare all Qt data before fork: the child must not acquire locks.
+    const QByteArray cwdBytes = cwd.toAscii();
+    const QByteArray commandBytes = command.toAscii();
+    const char *cwdPath = cwdBytes.constData();
+    const char *commandStr = commandBytes.constData();
+    const bool changeDirectory = !cwd.isEmpty();
     pid_t pid;
     int err_fds[2] = { -1, -1 };
     int out_fds[2] = { -1, -1 };
@@ -88,11 +94,11 @@ ShellProcess::ShellProcess(const QString &command,
         ::close(err_fds[0]);
         ::close(out_fds[0]);
 
-        if (!cwd.isEmpty())
-            ::chdir(cwd.toAscii().constData());
+        if (changeDirectory)
+            ::chdir(cwdPath);
 
-        runCommand(out_fds[1], err_fds[1], command);
-        Q_ASSERT(!"runCommand should not return");
+        runCommand(out_fds[1], err_fds[1], commandStr);
+        ::_exit(255);
     } else {
         ::close(err_fds[1]);
         ::close(out_fds[1]);
@@ -212,34 +218,21 @@ QByteArray ShellProcess::output() const
 /*!
   \internal
 */
-void ShellProcess::runCommand(int out_fd, int err_fd, const QString &command)
+void ShellProcess::runCommand(int out_fd, int err_fd, const char *command)
 {
     char shell[] = "/bin/sh";
     char option[] = "-c";
-    char *argv[4];
-    char *commandStr = 0;
+    char *argv[] = { shell, option, const_cast<char *>(command), 0 };
 
-    if (-1 == ::dup2(err_fd, ::fileno(stderr)))
-        goto fail;
-    if (-1 == ::dup2(out_fd, ::fileno(stdout)))
-        goto fail;
+    if (-1 == ::dup2(err_fd, STDERR_FILENO))
+        ::_exit(255);
+    if (-1 == ::dup2(out_fd, STDOUT_FILENO))
+        ::_exit(255);
 
-    commandStr = new char[command.length() + 1];
-    ::memcpy(commandStr, command.toAscii().constData(), command.length() + 1);
-    argv[0] = shell;
-    argv[1] = option;
-    argv[2] = commandStr;
-    argv[3] = 0;
-
-    if (-1 == ::execve(shell, argv, environ)) {
-        goto fail;
-    }
-
-    Q_ASSERT(!"execve should not return");
-
-fail:
-    exit(-1);
+    ::execve(shell, argv, environ);
+    ::_exit(255);
 }
+
 
 struct TTyTracking {
     QSet<ushort> used;

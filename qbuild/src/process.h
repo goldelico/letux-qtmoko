@@ -40,7 +40,7 @@ private:
     ShellProcess(const ShellProcess &);
     ShellProcess &operator=(const ShellProcess &);
 
-    void runCommand(int out_fd, int err_fd, const QString &);
+    void runCommand(int out_fd, int err_fd, const char *);
 
     bool openTTy(int *fds);
 
