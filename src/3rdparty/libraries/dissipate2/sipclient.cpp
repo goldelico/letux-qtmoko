@@ -466,7 +466,7 @@ void SipClient::incomingMessage( int socketfd )
 		}
 		QString s;
 		if( isTcpSocket() ) {
-			if( fullmessage.contains( "\r\n\r\n" ) > 0 ) {
+			if( fullmessage.contains( "\r\n\r\n" ) ) {
 				if( fullmessage.lastIndexOf( "Content-Length: " ) < fullmessage.lastIndexOf( "\r\n\r\n" ) ) {
 					s = fullmessage.mid( fullmessage.lastIndexOf( "Content-Length: " ) + 16 );
 					s = s.left( s.indexOf( '\r' ) );
@@ -503,7 +503,7 @@ void SipClient::incomingMessage( int socketfd )
 		QString s;
 		while( !fullmessage.isEmpty() ) {
 			contentLength = 0;
-			if( fullmessage.contains( "Content-Length: " ) > 0 ) {
+			if( fullmessage.contains( "Content-Length: " ) ) {
 				if( fullmessage.indexOf( "Content-Length: " ) < fullmessage.indexOf( QString( "\r\n\r\n" ) ) ) {
 					s = fullmessage.mid( fullmessage.indexOf( "Content-Length: " ) + 16 );
 					s = s.left( s.indexOf( '\r' ) );
